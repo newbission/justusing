@@ -15,7 +15,8 @@
     "format:check": "prettier --check .",
     "predev": "node scripts/copy-pdfjs-assets.mjs",
     "prebuild": "node scripts/copy-pdfjs-assets.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:ad-preview": "SHOW_AD_PLACEHOLDERS=1 npm run build"
   },
   "dependencies": {
     "@astrojs/svelte": "^9.0.1",

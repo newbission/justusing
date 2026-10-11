@@ -17,6 +17,7 @@ PDF·이미지 같은 파일을 **브라우저 안에서만** 처리하는 무�
 npm run dev           # 개발 서버 (http://localhost:4321)
 npm run build         # dist/ 에 정적 사이트 생성
 npm run preview       # 빌드 결과 미리보기 (격리·CSP가 켜진 실제 배포 상태)
+npm run build:ad-preview  # 광고 자리 점선 칸을 넣어 빌드 (위치 확인용, 배포에 쓰지 않음)
 npm run check         # 타입 검사 (astro check + svelte-check)
 npm run format        # 포맷 정리
 npm run format:check  # 포맷 검사 (CI에서 실행)
