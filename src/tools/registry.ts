@@ -12,6 +12,7 @@ import type { ToolMeta } from './types';
 /** 노출 순서대로, 한 줄에 하나 (포맷터가 한 줄로 합치지 않게 prettier-ignore) */
 // prettier-ignore
 const TOOL_IDS: readonly string[] = [
+  'pdf/view',
 ];
 
 export interface Tool extends ToolMeta {
