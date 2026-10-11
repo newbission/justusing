@@ -1,0 +1,33 @@
+---
+/**
+ * 모바일(768px 미만) 화면 하단에 고정되는 광고 칸.
+ * 칸이 그려질 때만 본문 아래에 같은 높이의 여백을 줘서 버튼이 광고 밑에 가려지지 않게 한다.
+ */
+import AdSlot from './AdSlot.astro';
+---
+
+<div class="mobile-anchor">
+  <AdSlot id="mobile-anchor" />
+</div>
+
+<style>
+  .mobile-anchor {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    .mobile-anchor:has(.ad-slot) {
+      display: block;
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      border-top: 1px solid var(--color-line);
+      background: var(--color-bg);
+    }
+    /* 50px = slots.ts의 mobile-anchor 높이, 1px = 위 테두리 */
+    :global(body:has(.mobile-anchor .ad-slot)) {
+      padding-bottom: calc(50px + 1px + env(safe-area-inset-bottom));
+    }
+  }
+</style>
