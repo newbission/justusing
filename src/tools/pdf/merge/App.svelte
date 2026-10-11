@@ -443,8 +443,10 @@
     display: flex;
     gap: 4px;
   }
+  /* 좁은 화면에서는 남은 폭만큼만 차지해 옆 버튼 밑으로 들어가지 않게 한다 */
   .password input {
-    width: 140px;
+    flex: 0 1 140px;
+    min-width: 0;
     height: 28px;
     padding: 0 8px;
     border: 1px solid var(--color-line);
