@@ -1,7 +1,7 @@
 import { defineTool } from '../../types';
 
 export default defineTool({
-  status: 'soon',
+  status: 'live',
   text: {
     ko: {
       name: 'PDF 합치기',
