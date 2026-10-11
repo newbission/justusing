@@ -1,0 +1,110 @@
+---
+/**
+ * 홈의 약속 카드 3개 (업로드 없음 · 설치·가입 없음 · 무료).
+ * 사이트를 처음 본 사람이 "왜 여기서 써야 하는지"를 바로 알 수 있게 크게 보여준다.
+ * 사실과 다른 약속은 쓰지 않는다 (예: 용량 제한 없음 — 기기 메모리에 따라 실패할 수 있다).
+ */
+const items = [
+  {
+    title: '업로드 없음',
+    text: '파일이 서버로 가지 않고 내 기기 안에서 처리됩니다. 회사 문서나 개인 서류도 안심하고 쓰세요.',
+    // 방패 안의 체크
+    icon: 'M12 3 5 6v5c0 4.4 3 8.3 7 9.5 4-1.2 7-5.1 7-9.5V6l-7-3Zm-3.5 9 2.5 2.5 4.5-5',
+  },
+  {
+    title: '설치·가입 없음',
+    text: '프로그램을 깔거나 회원가입할 필요 없이, 브라우저에서 바로 시작합니다.',
+    // 번개
+    icon: 'M13 2 4 14h7l-1 8 9-12h-7l1-8Z',
+  },
+  {
+    title: '무료',
+    text: '횟수 제한 없이 무료로 씁니다. PC와 휴대폰 모두에서 같은 기능을 씁니다.',
+    // 하트
+    icon: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z',
+  },
+];
+---
+
+<ul class="promises" aria-label="이 사이트의 약속">
+  {items.map((item) => (
+    <li>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24">
+          <path d={item.icon} />
+        </svg>
+      </span>
+      <div>
+        <strong>{item.title}</strong>
+        <p>{item.text}</p>
+      </div>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .promises {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+  .icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  strong {
+    display: block;
+    font-size: 18px;
+  }
+  p {
+    margin: 6px 0 0;
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* 휴대폰: 한 줄에 하나, 아이콘을 왼쪽에 두어 세로 길이를 줄인다 */
+  @media (max-width: 719px) {
+    .promises {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    li {
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 16px;
+    }
+    .icon {
+      flex: none;
+      width: 40px;
+      height: 40px;
+    }
+    strong {
+      font-size: 16px;
+    }
+  }
+</style>
