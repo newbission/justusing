@@ -1,0 +1,23 @@
+---
+/**
+ * PDF 페이지 정리 도구 화면 (격리 frame 페이지 /pdf/organize/frame/).
+ */
+import FrameLayout from '../../../frame/FrameLayout.astro';
+---
+
+<FrameLayout title="PDF 페이지 정리 도구 화면">
+  <div id="app"></div>
+</FrameLayout>
+
+<script>
+  import { mount } from 'svelte';
+  import App from './App.svelte';
+
+  mount(App, { target: document.getElementById('app')! });
+</script>
+
+<style>
+  #app {
+    height: 100%;
+  }
+</style>
