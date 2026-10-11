@@ -28,7 +28,7 @@
     size?: number;
   }
 
-  let { doc, pages, label, size = 96 }: Props = $props();
+  let { doc, pages = $bindable(), label, size = 96 }: Props = $props();
 
   const MOVE_MS = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
 

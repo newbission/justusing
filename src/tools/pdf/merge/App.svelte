@@ -399,7 +399,7 @@
           </div>
           {#if item.expanded && item.opened}
             <div class="pages" id="pages-{item.id}">
-              <PageGrid doc={item.opened.doc} pages={item.pages} label={item.name} size={88} />
+              <PageGrid doc={item.opened.doc} bind:pages={item.pages} label={item.name} size={88} />
             </div>
           {/if}
         </li>
