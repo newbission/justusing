@@ -29,10 +29,11 @@
   const pageCount = $derived(opened?.doc.numPages ?? 0);
 
   type Mode = 'range' | 'each' | 'select';
-  const MODES: { id: Mode; label: string }[] = [
-    { id: 'range', label: '범위로 나누기' },
-    { id: 'each', label: '한 장씩 나누기' },
-    { id: 'select', label: '고른 페이지만' },
+  /** short: 좁은 화면에서 쓰는 짧은 이름 (긴 이름은 두 줄로 깨진다) */
+  const MODES: { id: Mode; label: string; short: string }[] = [
+    { id: 'range', label: '범위로 나누기', short: '범위' },
+    { id: 'each', label: '한 장씩 나누기', short: '한 장씩' },
+    { id: 'select', label: '고른 페이지만', short: '고른 쪽' },
   ];
   let mode: Mode = $state('range');
 
@@ -222,7 +223,8 @@
         {#each MODES as option (option.id)}
           <label class:checked={mode === option.id}>
             <input type="radio" name="mode" value={option.id} bind:group={mode} />
-            {option.label}
+            <span class="long">{option.label}</span>
+            <span class="short">{option.short}</span>
           </label>
         {/each}
       </div>
@@ -448,6 +450,28 @@
     position: absolute;
     opacity: 0;
     pointer-events: none;
+  }
+  .modes .short {
+    display: none;
+  }
+  .modes label {
+    white-space: nowrap;
+  }
+  /* 좁은 화면: 짧은 이름으로, 셋이 폭을 똑같이 나눈다 */
+  @media (max-width: 520px) {
+    .modes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .modes label {
+      text-align: center;
+    }
+    .modes .long {
+      display: none;
+    }
+    .modes .short {
+      display: inline;
+    }
   }
   .mode-help {
     margin-bottom: 20px;
