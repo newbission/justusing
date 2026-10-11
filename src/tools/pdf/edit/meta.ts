@@ -9,4 +9,5 @@ export default defineTool({
       description: 'PDF에 텍스트, 이미지, 서명을 추가합니다. 파일은 기기를 떠나지 않습니다.',
     },
   },
+  related: ['pdf/view', 'pdf/merge'],
 });

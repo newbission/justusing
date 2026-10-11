@@ -9,4 +9,5 @@ export default defineTool({
       description: '옆으로 눕거나 뒤집힌 PDF 페이지를 원하는 방향으로 돌립니다.',
     },
   },
+  related: ['pdf/organize', 'pdf/view'],
 });

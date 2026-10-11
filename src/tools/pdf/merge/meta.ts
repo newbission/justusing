@@ -10,4 +10,5 @@ export default defineTool({
         '여러 PDF 파일을 원하는 순서로 하나로 합칩니다. 파일은 서버로 전송되지 않습니다.',
     },
   },
+  related: ['pdf/split', 'pdf/organize'],
 });
