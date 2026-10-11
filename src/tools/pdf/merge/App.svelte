@@ -161,11 +161,13 @@
     if (to < 0 || to >= items.length) return;
     items.splice(to, 0, ...items.splice(from, 1));
     markMoved(item.id);
-    // 줄이 옮겨지면 브라우저가 버튼 포커스를 놓치므로 같은 버튼에 다시 맞춘다
+    // 줄이 옮겨지면 브라우저가 버튼 포커스를 놓치므로 같은 버튼에 다시 맞춘다.
+    // 맨 위·맨 아래에 닿아 그 버튼이 꺼졌으면 반대 방향 버튼에 맞춘다.
     await tick();
-    document
-      .querySelector<HTMLButtonElement>(`[data-item="${item.id}"] [data-move="${delta}"]`)
-      ?.focus();
+    const row = document.querySelector(`[data-item="${item.id}"]`);
+    const same = row?.querySelector<HTMLButtonElement>(`[data-move="${delta}"]`);
+    const other = row?.querySelector<HTMLButtonElement>(`[data-move="${-delta}"]`);
+    (same && !same.disabled ? same : other)?.focus();
   }
 
   // 끌어서 순서 바꾸기. 끄는 줄 id와 놓일 자리(0 = 맨 위, items.length = 맨 아래)
