@@ -414,6 +414,14 @@
   .row[draggable='true'] {
     cursor: grab;
   }
+  /* 마우스를 올리거나 키보드로 줄 안의 버튼에 있을 때 어느 파일인지 보이게 한다 */
+  .row {
+    transition: background-color 0.12s;
+  }
+  .row:hover,
+  .row:focus-within {
+    background: var(--color-hover);
+  }
   .row.dragging {
     opacity: 0.4;
   }
