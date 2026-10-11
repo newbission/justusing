@@ -4,6 +4,7 @@
  */
 import * as pdfjs from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?worker&url';
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { createWorker } from '../worker';
 
 export type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
@@ -30,15 +31,28 @@ export function isPasswordError(error: unknown): boolean {
   return error instanceof Error && error.name === 'PasswordException';
 }
 
+export interface OpenedPdf {
+  doc: PDFDocumentProxy;
+  /** 문서를 닫고 메모리를 돌려준다 */
+  close: () => Promise<void>;
+}
+
 /** 메모리에 있는 PDF 바이트를 연다. 파일은 어디로도 전송되지 않는다. */
-export async function openPdf(data: Uint8Array, password?: string) {
+export async function openPdf(data: Uint8Array, password?: string): Promise<OpenedPdf> {
   await ensureWorker();
-  return pdfjs.getDocument({
+  const task = pdfjs.getDocument({
     data,
     password,
     cMapUrl: assetUrl('cmaps'),
     standardFontDataUrl: assetUrl('standard_fonts'),
     wasmUrl: assetUrl('wasm'),
     iccUrl: assetUrl('iccs'),
-  }).promise;
+  });
+  try {
+    return { doc: await task.promise, close: () => task.destroy() };
+  } catch (error) {
+    // 암호 오류·손상 파일이어도 여는 작업이 잡고 있던 메모리는 풀어 준다
+    await task.destroy();
+    throw error;
+  }
 }
