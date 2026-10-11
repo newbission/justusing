@@ -1,0 +1,47 @@
+---
+/**
+ * 현재 위치 표시 (홈 › PDF › PDF 합치기). 마지막 항목은 지금 페이지라 링크가 없다.
+ */
+interface Props {
+  items: { name: string; href?: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav class="breadcrumb" aria-label="현재 위치">
+  <ol>
+    {items.map((item, i) => (
+      <li>
+        {i < items.length - 1 && item.href ? (
+          <a href={item.href}>{item.name}</a>
+        ) : (
+          <span aria-current="page">{item.name}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+  li + li::before {
+    content: '›';
+    margin: 0 8px;
+  }
+  a {
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+  }
+</style>
