@@ -13,6 +13,7 @@ import type { ToolMeta } from './types';
 // prettier-ignore
 const TOOL_IDS: readonly string[] = [
   'pdf/view',
+  'pdf/merge',
 ];
 
 export interface Tool extends ToolMeta {
