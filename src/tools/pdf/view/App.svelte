@@ -61,10 +61,18 @@
   });
   const scale = $derived(fitWidth ? fitScale : manualScale);
 
-  async function open(file: File) {
-    await reset();
-    files = [{ id: nextId++, name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) }];
-    await show(files[0]!);
+  /** 파일들을 목록 끝에 더하고, 더한 것 중 첫 파일을 연다 */
+  async function add(list: File[]) {
+    if (list.length === 0) return;
+    const added = await Promise.all(
+      list.map(async (file) => ({
+        id: nextId++,
+        name: file.name,
+        bytes: new Uint8Array(await file.arrayBuffer()),
+      })),
+    );
+    files.push(...added);
+    await show(files[files.length - added.length]!);
   }
 
   /** 목록의 파일 하나를 연다 (보던 파일은 닫는다) */
@@ -77,10 +85,17 @@
   async function load(withPassword?: string) {
     if (!current) return;
     phase = 'loading';
+    const target = current;
     try {
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 다시 열 수 있게 복사본을 준다
-      opened = await openPdf(current.bytes.slice(), withPassword);
-      current.password = withPassword;
+      const result = await openPdf(target.bytes.slice(), withPassword);
+      // 여는 사이 다른 파일을 골랐으면 늦게 열린 이 파일은 버린다
+      if (current !== target) {
+        await result.close();
+        return;
+      }
+      opened = result;
+      target.password = withPassword;
       const { doc } = opened;
       pages = await Promise.all(Array.from({ length: doc.numPages }, (_, i) => doc.getPage(i + 1)));
       currentPage = 1;
@@ -89,6 +104,7 @@
       // 열리면 도구 칸이 화면을 꽉 채우도록 바깥 페이지를 스크롤한다
       requestShowTool();
     } catch (error) {
+      if (current !== target) return;
       if (isPasswordError(error)) {
         wrongPassword = withPassword !== undefined;
         password = '';
@@ -149,12 +165,8 @@
     }
   }
 
-  // 화면 어디에 놓든 받는다. 보는 중에 새 파일을 놓으면 그 파일로 바뀐다.
-  onMount(() =>
-    onFrameFiles(([file]) => {
-      if (file) open(file);
-    }),
-  );
+  // 화면 어디에 놓든 받는다. 보는 중에 놓으면 목록에 더하고 그 파일로 바뀐다.
+  onMount(() => onFrameFiles(add));
 
   // Esc로 빠져나와도 버튼 상태가 맞도록 브라우저 신호로 상태를 맞춘다
   onMount(() => {
@@ -172,120 +184,192 @@
 </script>
 
 <div class="viewer">
-  {#if phase === 'ready'}
-    <div class="toolbar" role="toolbar" aria-label="PDF 보기 도구">
-      <span class="file-name" title={fileName}>{fileName}</span>
-
-      <div class="group">
-        <button
-          type="button"
-          class="page-nav"
-          onclick={() => goTo(currentPage - 1)}
-          disabled={currentPage <= 1}
-          aria-label="이전 페이지">‹</button
-        >
-        <span class="page-count" aria-live="polite">{currentPage} / {pages.length}</span>
-        <button
-          type="button"
-          class="page-nav"
-          onclick={() => goTo(currentPage + 1)}
-          disabled={currentPage >= pages.length}
-          aria-label="다음 페이지">›</button
-        >
-      </div>
-
-      <div class="group">
-        <button type="button" onclick={() => zoom(-1)} aria-label="축소">−</button>
-        <span class="zoom">{Math.round(scale * 100)}%</span>
-        <button type="button" onclick={() => zoom(1)} aria-label="확대">+</button>
-        <button type="button" class="text" onclick={() => (fitWidth = true)} aria-pressed={fitWidth}
-          >폭 맞춤</button
-        >
-      </div>
-
-      {#if canFullscreen}
-        <button
-          type="button"
-          onclick={toggleFullscreen}
-          aria-label={fullscreen ? '전체 화면 끝내기' : '전체 화면'}
-          aria-pressed={fullscreen}
-        >
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-            {#if fullscreen}
-              <path d="M6 1v5H1M10 1v5h5M6 15v-5H1M10 15v-5h5" />
-            {:else}
-              <path d="M1 6V1h5M15 6V1h-5M1 10v5h5M15 10v5h-5" />
-            {/if}
-          </svg>
-        </button>
-      {/if}
-      <button type="button" class="text" onclick={reset}>다른 파일</button>
-    </div>
-
-    <!-- 키보드 사용자가 방향키로 스크롤할 수 있도록 스크롤 영역에 포커스를 허용한다 -->
-    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <div
-      class="pages"
-      bind:this={scroller}
-      bind:clientWidth={viewerWidth}
-      onscroll={updateCurrentPage}
-      tabindex="0"
-      role="document"
-      aria-label="{fileName} 페이지 목록"
-    >
-      {#each pages as page (page.pageNumber)}
-        <PdfPage {page} {scale} />
-      {/each}
-    </div>
-  {:else if phase === 'loading'}
-    <p class="status" role="status">PDF를 여는 중…</p>
-  {:else if phase === 'password'}
-    <!-- 격리 frame은 form 제출이 막혀 있어(sandbox에 allow-forms 없음) form 대신 직접 처리한다 -->
-    <div class="password" role="group" aria-label="암호가 걸린 PDF">
-      <p>암호가 걸린 PDF입니다. 암호를 입력하세요.</p>
-      <p class="hint">암호도 이 기기 안에서만 쓰이고 어디에도 전송되지 않습니다.</p>
-      <label>
-        PDF 암호
-        <input
-          type="password"
-          bind:value={password}
-          autocomplete="off"
-          onkeydown={(event) => {
-            if (event.key === 'Enter' && password) load(password);
-          }}
-        />
-      </label>
-      {#if wrongPassword}
-        <p class="error" role="alert">암호가 맞지 않습니다.</p>
-      {/if}
-      <div class="actions">
-        <button type="button" class="primary" disabled={!password} onclick={() => load(password)}
-          >열기</button
-        >
-        <button type="button" class="text" onclick={reset}>취소</button>
-      </div>
-    </div>
-  {:else}
-    {#if phase === 'error'}
-      <p class="error banner" role="alert">{errorMessage}</p>
-    {/if}
-    <div class="drop">
-      <FileDrop
-        accept="application/pdf,.pdf"
-        label="PDF 파일 선택"
-        hint="파일은 이 기기를 떠나지 않습니다"
-        onfiles={([file]) => file && open(file)}
-      />
-    </div>
+  {#if files.length > 1}
+    <nav class="files" aria-label="올린 파일 목록">
+      <p class="files-title">파일 {files.length}개</p>
+      <ol>
+        {#each files as file (file.id)}
+          <li>
+            <button
+              type="button"
+              aria-current={file === current ? 'true' : undefined}
+              title={file.name}
+              onclick={() => file !== current && show(file)}>{file.name}</button
+            >
+          </li>
+        {/each}
+      </ol>
+    </nav>
   {/if}
+  <div class="main">
+    {#if phase === 'ready'}
+      <div class="toolbar" role="toolbar" aria-label="PDF 보기 도구">
+        <span class="file-name" title={fileName}>{fileName}</span>
+
+        <div class="group">
+          <button
+            type="button"
+            class="page-nav"
+            onclick={() => goTo(currentPage - 1)}
+            disabled={currentPage <= 1}
+            aria-label="이전 페이지">‹</button
+          >
+          <span class="page-count" aria-live="polite">{currentPage} / {pages.length}</span>
+          <button
+            type="button"
+            class="page-nav"
+            onclick={() => goTo(currentPage + 1)}
+            disabled={currentPage >= pages.length}
+            aria-label="다음 페이지">›</button
+          >
+        </div>
+
+        <div class="group">
+          <button type="button" onclick={() => zoom(-1)} aria-label="축소">−</button>
+          <span class="zoom">{Math.round(scale * 100)}%</span>
+          <button type="button" onclick={() => zoom(1)} aria-label="확대">+</button>
+          <button
+            type="button"
+            class="text"
+            onclick={() => (fitWidth = true)}
+            aria-pressed={fitWidth}>폭 맞춤</button
+          >
+        </div>
+
+        {#if canFullscreen}
+          <button
+            type="button"
+            onclick={toggleFullscreen}
+            aria-label={fullscreen ? '전체 화면 끝내기' : '전체 화면'}
+            aria-pressed={fullscreen}
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              {#if fullscreen}
+                <path d="M6 1v5H1M10 1v5h5M6 15v-5H1M10 15v-5h5" />
+              {:else}
+                <path d="M1 6V1h5M15 6V1h-5M1 10v5h5M15 10v5h-5" />
+              {/if}
+            </svg>
+          </button>
+        {/if}
+        <button type="button" class="text" onclick={reset}>다른 파일</button>
+      </div>
+
+      <!-- 키보드 사용자가 방향키로 스크롤할 수 있도록 스크롤 영역에 포커스를 허용한다 -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <div
+        class="pages"
+        bind:this={scroller}
+        bind:clientWidth={viewerWidth}
+        onscroll={updateCurrentPage}
+        tabindex="0"
+        role="document"
+        aria-label="{fileName} 페이지 목록"
+      >
+        {#each pages as page (page.pageNumber)}
+          <PdfPage {page} {scale} />
+        {/each}
+      </div>
+    {:else if phase === 'loading'}
+      <p class="status" role="status">PDF를 여는 중…</p>
+    {:else if phase === 'password'}
+      <!-- 격리 frame은 form 제출이 막혀 있어(sandbox에 allow-forms 없음) form 대신 직접 처리한다 -->
+      <div class="password" role="group" aria-label="암호가 걸린 PDF">
+        <p>암호가 걸린 PDF입니다. 암호를 입력하세요.</p>
+        <p class="hint">암호도 이 기기 안에서만 쓰이고 어디에도 전송되지 않습니다.</p>
+        <label>
+          PDF 암호
+          <input
+            type="password"
+            bind:value={password}
+            autocomplete="off"
+            onkeydown={(event) => {
+              if (event.key === 'Enter' && password) load(password);
+            }}
+          />
+        </label>
+        {#if wrongPassword}
+          <p class="error" role="alert">암호가 맞지 않습니다.</p>
+        {/if}
+        <div class="actions">
+          <button type="button" class="primary" disabled={!password} onclick={() => load(password)}
+            >열기</button
+          >
+          <button type="button" class="text" onclick={reset}>취소</button>
+        </div>
+      </div>
+    {:else}
+      {#if phase === 'error'}
+        <p class="error banner" role="alert">{errorMessage}</p>
+      {/if}
+      <div class="drop">
+        <FileDrop
+          accept="application/pdf,.pdf"
+          label="PDF 파일 선택"
+          hint="파일은 이 기기를 떠나지 않습니다"
+          multiple
+          onfiles={add}
+        />
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
   .viewer {
     display: flex;
-    flex-direction: column;
     height: 100%;
     background: var(--color-surface);
+  }
+  .main {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* 여러 파일을 올리면 왼쪽에 목록을 둔다 */
+  .files {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: 200px;
+    border-right: 1px solid var(--color-line);
+  }
+  .files-title {
+    display: flex;
+    flex: none;
+    align-items: center;
+    height: 48px;
+    margin: 0;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--color-line);
+    font-size: 14px;
+  }
+  .files ol {
+    flex: 1;
+    margin: 0;
+    padding: 6px;
+    overflow: auto;
+    list-style: none;
+  }
+  .files button {
+    display: block;
+    width: 100%;
+    height: 36px;
+    overflow: hidden;
+    border-color: transparent;
+    font-size: 14px;
+    text-align: left;
+    text-overflow: ellipsis;
+  }
+  .files button:hover {
+    background: var(--color-hover);
+  }
+  .files button[aria-current='true'] {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-weight: 600;
   }
 
   /* 도구 막대: 높이 고정 (상태가 바뀌어도 아래 내용이 밀리지 않게) */
