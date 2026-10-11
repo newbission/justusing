@@ -165,3 +165,56 @@ test('격리 frame 안에서 전체 화면으로 볼 수 있다', async ({ page 
   await expect(frame.getByRole('button', { name: '전체 화면', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.fullscreenElement)).toBeNull();
 });
+
+test('여러 PDF를 올려 목록에서 바꿔 보고, 연 암호는 다시 묻지 않는다', async ({ page }) => {
+  const frame = await openViewer(page);
+  await frame
+    .locator('input[type=file]')
+    .first()
+    .setInputFiles([fixture('three-pages.pdf'), fixture('encrypted.pdf')]);
+  await expect(frame.getByText('1 / 3')).toBeVisible();
+
+  const list = frame.getByRole('navigation', { name: '올린 파일 목록' });
+  await list.getByRole('button', { name: 'encrypted.pdf', exact: true }).click();
+  await frame.getByLabel('PDF 암호').fill('1234');
+  await frame.getByLabel('PDF 암호').press('Enter');
+  await expect(frame.getByText('1 / 1')).toBeVisible();
+
+  await list.getByRole('button', { name: 'three-pages.pdf', exact: true }).click();
+  await expect(frame.getByText('1 / 3')).toBeVisible();
+  await list.getByRole('button', { name: 'encrypted.pdf', exact: true }).click();
+  await expect(frame.getByText('1 / 1')).toBeVisible();
+  await expect(frame.getByLabel('PDF 암호')).toHaveCount(0);
+});
+
+test('파일 추가로 목록에 더하고, 빼면 다음 파일을 연다', async ({ page }) => {
+  const frame = await openViewer(page);
+  await frame.locator('input[type=file]').first().setInputFiles(fixture('three-pages.pdf'));
+  await expect(frame.getByText('1 / 3')).toBeVisible();
+
+  await frame
+    .locator('label', { hasText: '파일 추가' })
+    .locator('input')
+    .setInputFiles(fixture('korean.pdf'));
+  await expect(frame.getByText('1 / 1')).toBeVisible();
+  await expect(frame.locator('.files li')).toHaveCount(2);
+
+  // 보던 파일(korean)을 빼면 남은 파일이 열리고, 하나만 남으면 목록은 사라진다
+  await frame.getByRole('button', { name: 'korean.pdf 목록에서 빼기' }).click();
+  await expect(frame.getByText('1 / 3')).toBeVisible();
+  await expect(frame.locator('.files')).toHaveCount(0);
+});
+
+test('좁은 화면에서는 고르기 상자로 파일을 바꾼다', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 760 });
+  const frame = await openViewer(page);
+  await frame
+    .locator('input[type=file]')
+    .first()
+    .setInputFiles([fixture('three-pages.pdf'), fixture('korean.pdf')]);
+  await expect(frame.getByText('1 / 3')).toBeVisible();
+  await expect(frame.locator('.files')).toBeHidden();
+
+  await frame.getByLabel('볼 파일').selectOption({ label: '2. korean.pdf' });
+  await expect(frame.getByText('1 / 1')).toBeVisible();
+});
