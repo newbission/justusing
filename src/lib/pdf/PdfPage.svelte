@@ -1,9 +1,9 @@
 <!--
-  PDF 한 페이지. 자리(크기)는 바로 잡고, 화면 근처에 왔을 때만 그린다.
+  PDF 한 페이지 (보기·미리보기 공통). 자리(크기)는 바로 잡고, 화면 근처에 왔을 때만 그린다.
   페이지가 수백 장이어도 보이는 페이지만 그려서 메모리와 시간을 아낀다.
 -->
 <script lang="ts">
-  import type { PDFPageProxy } from '../../../lib/pdf/pdfjs';
+  import type { PDFPageProxy } from './pdfjs';
 
   interface Props {
     page: PDFPageProxy;

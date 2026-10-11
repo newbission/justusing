@@ -7,7 +7,7 @@
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
-  import PdfPage from './PdfPage.svelte';
+  import PdfPage from '../../../lib/pdf/PdfPage.svelte';
   import {
     isPasswordError,
     openPdf,
