@@ -9,6 +9,7 @@ import DropGuard from '../components/DropGuard.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import MobileAnchor from '../components/MobileAnchor.astro';
+import AdSlot from '../components/AdSlot.astro';
 
 interface Props {
   /** 페이지 제목. 없으면 사이트명만 쓴다 (홈). */
@@ -46,6 +47,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <Header />
+    <!-- 머리글 바로 아래 가로 배너 (모든 페이지 공통). 광고 칸이 없으면 자리도 차지하지 않는다 -->
+    <div class="top-banner">
+      <AdSlot id="top-banner" />
+    </div>
     <main>
       <slot />
     </main>
@@ -53,3 +58,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <MobileAnchor />
   </body>
 </html>
+
+<style>
+  .top-banner {
+    padding: 16px var(--gutter) 0;
+  }
+  .top-banner:not(:has(.ad-slot)) {
+    display: none;
+  }
+</style>
