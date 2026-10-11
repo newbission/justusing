@@ -2,13 +2,39 @@
 /**
  * 모바일(768px 미만) 화면 하단에 고정되는 광고 칸.
  * 칸이 그려질 때만 본문 아래에 같은 높이의 여백을 줘서 버튼이 광고 밑에 가려지지 않게 한다.
+ *
+ * 광고 위쪽에 접기 탭을 둔다. 광고와 겹치지 않는 별도 영역이라 광고 클릭으로 오인되지 않는다.
+ * 접은 상태는 이 페이지에서만 유지된다 (다른 페이지로 가면 다시 펼쳐짐).
  */
 import AdSlot from './AdSlot.astro';
 ---
 
-<div class="mobile-anchor">
-  <AdSlot id="mobile-anchor" />
+<div class="mobile-anchor" data-mobile-anchor>
+  <button
+    type="button"
+    class="anchor-toggle"
+    aria-expanded="true"
+    aria-controls="mobile-anchor-body"
+    data-anchor-toggle
+  >
+    광고 접기
+  </button>
+  <div id="mobile-anchor-body" class="anchor-body">
+    <AdSlot id="mobile-anchor" />
+  </div>
 </div>
+
+<script>
+  const anchor = document.querySelector<HTMLElement>('[data-mobile-anchor]');
+  const toggle = anchor?.querySelector<HTMLButtonElement>('[data-anchor-toggle]');
+
+  toggle?.addEventListener('click', () => {
+    const collapse = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!collapse));
+    toggle.textContent = collapse ? '광고 펼치기' : '광고 접기';
+    anchor!.toggleAttribute('data-collapsed', collapse);
+  });
+</script>
 
 <style>
   .mobile-anchor {
@@ -25,9 +51,33 @@ import AdSlot from './AdSlot.astro';
       border-top: 1px solid var(--color-line);
       background: var(--color-bg);
     }
-    /* 50px = slots.ts의 mobile-anchor 높이, 1px = 위 테두리 */
+    .mobile-anchor[data-collapsed] .anchor-body {
+      display: none;
+    }
+
+    /* 광고 칸 바로 위, 오른쪽에 붙는 탭 */
+    .anchor-toggle {
+      position: absolute;
+      right: 8px;
+      bottom: 100%;
+      height: 28px;
+      padding: 0 10px;
+      border: 1px solid var(--color-line);
+      border-bottom: 0;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: var(--color-bg);
+      color: var(--color-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* 본문이 광고·탭 밑에 가려지지 않도록 하단 여백.
+       50px = slots.ts의 mobile-anchor 높이, 1px = 위 테두리, 28px = 접기 탭 */
     :global(body:has(.mobile-anchor .ad-slot)) {
-      padding-bottom: calc(50px + 1px + env(safe-area-inset-bottom));
+      padding-bottom: calc(50px + 1px + 28px + env(safe-area-inset-bottom));
+    }
+    :global(body:has(.mobile-anchor[data-collapsed])) {
+      padding-bottom: calc(1px + 28px + env(safe-area-inset-bottom));
     }
   }
 </style>
