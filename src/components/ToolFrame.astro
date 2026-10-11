@@ -18,7 +18,7 @@
  * frame과 주고받는 메시지 (내용 없이 신호만):
  *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height }
  *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
- *                 { type: 'drag-end' }
+ *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤)
  */
 interface Props {
   /** frame 페이지 주소 (예: /pdf/view/frame/) */
@@ -90,6 +90,12 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
       // drag-request: 도구 칸 안에서 시작된 끌기 (frame은 이미 덮개를 덮고 고정한 상태)
       if (event.data?.type === 'drag-ready' || event.data?.type === 'drag-request') expand();
       if (event.data?.type === 'drag-end') collapse();
+      // 파일을 열면 도구 칸 위쪽을 화면 위쪽(16px 여백)에 맞춰 칸이 화면을 꽉 채우게 한다
+      if (event.data?.type === 'show-tool') {
+        const top = frame.getBoundingClientRect().top + scrollY - 16;
+        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
+      }
     });
   }
 </script>
