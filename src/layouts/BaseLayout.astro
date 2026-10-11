@@ -4,6 +4,7 @@
  */
 import '../styles/global.css';
 import { siteConfig } from '../site.config';
+import ThemeInit from '../components/ThemeInit.astro';
 
 interface Props {
   /** 페이지 제목. 없으면 사이트명만 쓴다 (홈). */
@@ -22,6 +23,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <ThemeInit />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
