@@ -250,7 +250,9 @@
     font-variant-numeric: tabular-nums;
   }
   button {
+    flex: none;
     min-width: 32px;
+    white-space: nowrap;
     height: 32px;
     padding: 0 8px;
     border: 1px solid var(--color-line);
@@ -348,6 +350,12 @@
     }
     .zoom {
       display: none;
+    }
+    .page-count {
+      min-width: 3.2em;
+    }
+    .group {
+      gap: 2px;
     }
   }
 </style>
