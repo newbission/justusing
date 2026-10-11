@@ -87,8 +87,21 @@
       />
     </div>
   {:else}
-    <div class="summary" aria-live="polite">
-      파일 {items.length}개 · 총 {totalPages}쪽
+    <div class="summary">
+      <span aria-live="polite">파일 {items.length}개 · 총 {totalPages}쪽</span>
+      <label class="add">
+        파일 추가
+        <input
+          type="file"
+          class="visually-hidden"
+          accept="application/pdf,.pdf"
+          multiple
+          onchange={(event) => {
+            add([...(event.currentTarget.files ?? [])]);
+            event.currentTarget.value = '';
+          }}
+        />
+      </label>
     </div>
 
     <ol class="list" aria-label="합칠 파일 목록 (위에서부터 순서대로 합칩니다)">
@@ -139,6 +152,7 @@
     display: flex;
     flex: none;
     align-items: center;
+    justify-content: space-between;
     height: 48px;
     padding: 0 16px;
     border-bottom: 1px solid var(--color-line);
@@ -188,6 +202,21 @@
   }
   .meta strong {
     color: var(--color-text);
+  }
+
+  .add {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .add:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 
   button {
