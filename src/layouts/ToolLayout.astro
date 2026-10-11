@@ -1,0 +1,124 @@
+---
+/**
+ * 도구 페이지 틀: 도구 영역 → 사용법 → FAQ → 관련 도구, 그리고 광고 슬롯 배치.
+ *
+ * 광고 규칙:
+ * - 도구 영역(버튼 포함)과 below-tool 사이에는 로컬 처리 안내 + 버퍼 여백을 둔다.
+ * - 모달·오버레이는 이 레이아웃 밖에서 열리며, 그 안에는 AdSlot을 넣지 않는다.
+ */
+import BaseLayout from './BaseLayout.astro';
+import AdSlot from '../components/AdSlot.astro';
+
+interface Props {
+  /** 화면 제목 (h1) */
+  name: string;
+  /** <title>용 제목 */
+  title: string;
+  description: string;
+}
+
+const { name, title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="tool-shell">
+    <div class="rail rail-left">
+      <div class="rail-sticky">
+        <AdSlot id="rail-left" />
+      </div>
+    </div>
+
+    <article class="tool-page">
+      <header class="tool-header">
+        <h1>{name}</h1>
+        <p class="lead">{description}</p>
+      </header>
+
+      <section class="tool-area" aria-label={name}>
+        <slot name="tool" />
+      </section>
+
+      <p class="local-note">
+        파일은 이 기기를 떠나지 않습니다. 모든 처리는 브라우저 안에서 이루어지며 서버로 업로드되지
+        않습니다.
+      </p>
+
+      <div class="below-tool">
+        <AdSlot id="below-tool" />
+      </div>
+
+      <slot name="how-to" />
+
+      <div class="in-content">
+        <AdSlot id="in-content" />
+      </div>
+
+      <slot name="faq" />
+      <slot name="related" />
+    </article>
+
+    <div class="rail rail-right">
+      <div class="rail-sticky">
+        <AdSlot id="rail-right" />
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .tool-shell {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+  .rail {
+    display: none;
+  }
+
+  /* 넓은 화면: 양옆에 세로 광고 레일 (160px) */
+  @media (min-width: 1400px) {
+    .tool-shell {
+      display: grid;
+      grid-template-columns: 160px minmax(0, var(--content-max)) 160px;
+      gap: 40px;
+      max-width: calc(var(--content-max) + 2 * (160px + 40px));
+    }
+    .rail {
+      display: block;
+    }
+    .rail-sticky {
+      position: sticky;
+      top: 24px;
+    }
+  }
+
+  .tool-page {
+    min-width: 0;
+    padding-top: 24px;
+  }
+  .tool-header h1 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.3;
+  }
+  .lead {
+    margin: 8px 0 0;
+    color: var(--color-muted);
+  }
+  .tool-area {
+    margin-top: 24px;
+  }
+  .local-note {
+    margin: 16px 0 0;
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+
+  /* 버튼과 광고 사이 버퍼: 실수 클릭 방지 */
+  .below-tool {
+    margin-top: 48px;
+  }
+  .in-content {
+    margin: 32px 0;
+  }
+</style>
