@@ -647,5 +647,9 @@
     .action button {
       flex: 1;
     }
+    /* 펼친 페이지 격자: 들여쓰기를 줄여 한 줄에 더 많은 페이지가 들어가게 한다 */
+    .pages {
+      padding-left: 8px;
+    }
   }
 </style>
