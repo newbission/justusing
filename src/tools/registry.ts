@@ -9,8 +9,10 @@
 import { CATEGORIES, isCategoryId, type CategoryId } from './categories';
 import type { ToolMeta } from './types';
 
-/** 노출 순서대로, 한 줄에 하나 */
-const TOOL_IDS: readonly string[] = [];
+/** 노출 순서대로, 한 줄에 하나 (포맷터가 한 줄로 합치지 않게 prettier-ignore) */
+// prettier-ignore
+const TOOL_IDS: readonly string[] = [
+];
 
 export interface Tool extends ToolMeta {
   /** 'pdf/merge' */
