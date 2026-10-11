@@ -29,6 +29,11 @@ import { toolsInCategory, visibleCategories } from '../tools/registry';
       </ul>
     </section>
 
+    <!-- 제목 아래 가로 배너: 첫 화면에 보이면서 도구 첫 줄은 그대로 첫 화면에 남는 크기 -->
+    <div class="top-banner">
+      <AdSlot id="top-banner" />
+    </div>
+
     {visibleCategories.map((category) => (
       <section class="category">
         <h2>
@@ -85,6 +90,9 @@ import { toolsInCategory, visibleCategories } from '../tools/registry';
   }
   .category h2 a:hover {
     text-decoration: underline;
+  }
+  .top-banner {
+    margin-bottom: 32px;
   }
   /* 도구 카드와 헷갈려 누르지 않게 충분히 띄운다 */
   .in-content {
