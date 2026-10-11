@@ -8,6 +8,10 @@
  * 사용: import url from './x.worker.ts?worker&url'; const worker = await createWorker(url);
  */
 export async function createWorker(scriptUrl: string): Promise<Worker> {
+  // 개발 서버는 워커를 번들하지 않고 ES 모듈로 내려준다. 개발 중에는 격리도 꺼져 있어
+  // (ToolFrame 참고) 모듈 워커를 바로 띄울 수 있다.
+  if (import.meta.env.DEV) return new Worker(scriptUrl, { type: 'module' });
+
   const response = await fetch(scriptUrl);
   if (!response.ok) throw new Error(`워커 스크립트를 불러오지 못했습니다: ${response.status}`);
 
