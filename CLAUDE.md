@@ -97,6 +97,23 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
   `dev`에서 기능 브랜치를 따고 → 작은 커밋 → 작은 PR → `dev`에 병합 → `dev`를 `main`에 병합하면 배포.
 - CI: PR마다 포맷·타입 검사·빌드 (`.github/workflows/ci.yml`), main push 시 배포 (`deploy.yml`).
 
+### 커밋 메시지 규칙
+
+```
+<타입>(<영역>): <제목>
+
+<본문: 왜 바꿨는지. 무엇을 바꿨는지는 diff에 있으니 반복하지 않는다>
+
+Co-Authored-By: ...
+```
+
+- 타입: `feat`(기능) | `fix`(버그) | `refactor`(동작 그대로, 구조만) | `style`(포맷만, CSS 작성은 feat) |
+  `docs` | `test` | `build`(의존성·빌드 설정) | `ci` | `chore`(그 외)
+- 영역(생략 가능): `config`, `layout`, `theme`, `ads`, `registry`, `seo`, `entitlement`, `dev`,
+  도구는 `pdf-view`, `pdf-merge` 처럼 도구 ID를 쓴다.
+- 제목: 한국어, "~ 추가 / ~ 수정 / ~ 제거 / ~ 변경"으로 끝낸다. 50자 이내.
+- 마지막 줄에 `Co-Authored-By` 표기를 넣는다.
+
 ## 진행 상황
 
 단계마다 멈추고 사용자에게 결과를 보여 준 뒤 확인을 받고 다음 단계로 간다.
