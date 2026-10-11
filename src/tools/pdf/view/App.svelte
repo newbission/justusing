@@ -269,7 +269,20 @@
             </svg>
           </button>
         {/if}
-        <button type="button" class="text" onclick={reset}>다른 파일</button>
+        <!-- 보던 파일은 두고 목록에 더한다 (여러 개 고를 수 있음) -->
+        <label class="add">
+          파일 추가
+          <input
+            type="file"
+            class="visually-hidden"
+            accept="application/pdf,.pdf"
+            multiple
+            onchange={(event) => {
+              add([...(event.currentTarget.files ?? [])]);
+              event.currentTarget.value = '';
+            }}
+          />
+        </label>
       </div>
 
       <!-- 키보드 사용자가 방향키로 스크롤할 수 있도록 스크롤 영역에 포커스를 허용한다 -->
@@ -437,8 +450,25 @@
     opacity: 0.4;
     cursor: default;
   }
-  button.text {
+  button.text,
+  .add {
     font-size: 14px;
+  }
+  /* 파일 추가: 버튼처럼 보이는 파일 선택 라벨 */
+  .add {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .add:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
   button svg {
     display: block;
@@ -539,6 +569,9 @@
     }
     button {
       min-width: 30px;
+      padding: 0 6px;
+    }
+    .add {
       padding: 0 6px;
     }
   }
