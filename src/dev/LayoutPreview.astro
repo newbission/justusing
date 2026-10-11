@@ -1,0 +1,44 @@
+---
+/**
+ * 개발 서버 전용: 도구 페이지 레이아웃과 광고 슬롯 위치를 확인하는 미리보기.
+ * 주소: http://localhost:4321/_dev/layout/  (배포 빌드에는 포함되지 않음)
+ */
+import ToolLayout from '../layouts/ToolLayout.astro';
+---
+
+<ToolLayout
+  name="레이아웃 미리보기"
+  title="레이아웃 미리보기"
+  description="도구 페이지 틀과 광고 슬롯 위치를 확인하는 개발용 페이지입니다."
+>
+  <div slot="tool" class="mock tool">
+    도구 영역
+  </div>
+  <section slot="how-to">
+    <h2>사용법</h2>
+    <p class="mock">사용법 본문</p>
+  </section>
+  <section slot="faq">
+    <h2>자주 묻는 질문</h2>
+    <p class="mock">FAQ 본문</p>
+  </section>
+  <section slot="related">
+    <h2>관련 도구</h2>
+    <p class="mock">관련 도구 카드</p>
+  </section>
+</ToolLayout>
+
+<style>
+  .mock {
+    display: grid;
+    place-items: center;
+    min-height: 80px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-muted);
+  }
+  .tool {
+    min-height: 320px;
+  }
+</style>
