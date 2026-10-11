@@ -1,6 +1,10 @@
 ---
 import { siteConfig } from '../site.config';
+import { CATEGORIES } from '../tools/categories';
+import { visibleCategories } from '../tools/registry';
 import ThemeToggle from './ThemeToggle.astro';
+
+const currentPath = Astro.url.pathname;
 ---
 
 <header class="site-header">
@@ -8,6 +12,20 @@ import ThemeToggle from './ThemeToggle.astro';
     <a class="logo" href="/">
       {siteConfig.name}
     </a>
+    <nav class="nav" aria-label="도구 분류">
+      <ul>
+        {visibleCategories.map((category) => {
+          const href = `/${category}/`;
+          return (
+            <li>
+              <a href={href} aria-current={currentPath.startsWith(href) ? 'page' : undefined}>
+                {CATEGORIES[category].text.ko.name}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
     <ThemeToggle />
   </div>
 </header>
@@ -19,8 +37,7 @@ import ThemeToggle from './ThemeToggle.astro';
   .inner {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    gap: 24px;
     max-width: var(--content-max);
     height: 56px;
     margin: 0 auto;
@@ -31,5 +48,25 @@ import ThemeToggle from './ThemeToggle.astro';
     font-size: 18px;
     letter-spacing: -0.01em;
     text-decoration: none;
+  }
+  .nav {
+    flex: 1;
+    min-width: 0;
+  }
+  .nav ul {
+    display: flex;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .nav a {
+    color: var(--color-muted);
+    font-size: 15px;
+    text-decoration: none;
+  }
+  .nav a:hover,
+  .nav a[aria-current='page'] {
+    color: var(--color-text);
   }
 </style>
