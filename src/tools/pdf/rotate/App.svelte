@@ -7,6 +7,9 @@
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
+  import { downloadFile } from '../../../frame/download';
+  import { canUse } from '../../../lib/entitlement';
+  import { assemblePdf } from '../../../lib/pdf/assemble';
   import { isPasswordError, openPdf, type OpenedPdf } from '../../../lib/pdf/pdfjs';
   import RotateGrid, { normalize } from './RotateGrid.svelte';
 
@@ -30,6 +33,45 @@
 
   function rotateAll(delta: -90 | 90) {
     rotations = rotations.map((angle) => angle + delta);
+  }
+
+  type Run =
+    | { kind: 'idle' }
+    | { kind: 'working' }
+    | { kind: 'done'; name: string; bytes: Uint8Array; signature: string }
+    | { kind: 'failed'; message: string };
+  let run: Run = $state({ kind: 'idle' });
+
+  /** 쪽마다 실제 각도. 돌린 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
+  const signature = $derived(rotations.map(normalize).join(','));
+  const result = $derived(run.kind === 'done' && run.signature === signature ? run : undefined);
+
+  async function rotate() {
+    if (!bytes || turnedCount === 0 || run.kind === 'working') return;
+    const entitlement = await canUse('pdf/rotate');
+    if (!entitlement.allowed) {
+      run = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      return;
+    }
+
+    const startedWith = signature;
+    run = { kind: 'working' };
+    try {
+      const output = await assemblePdf({
+        sources: [{ bytes, password }],
+        pages: rotations.map((angle, index) => ({ source: 0, index, rotate: normalize(angle) })),
+      });
+      const base = fileName.replace(/\.pdf$/i, '');
+      run = { kind: 'done', name: `${base}_회전.pdf`, bytes: output, signature: startedWith };
+    } catch {
+      run = { kind: 'failed', message: '돌리지 못했습니다. 파일이 손상되었을 수 있습니다.' };
+    }
+  }
+
+  function formatSize(size: number) {
+    return size < 1024 * 1024
+      ? `${Math.max(1, Math.round(size / 1024))}KB`
+      : `${(size / 1024 / 1024).toFixed(1)}MB`;
   }
 
   /** 모두 원래 방향으로. 각 쪽이 가까운 쪽으로 돌아가게 한다 (360°인 쪽이 한 바퀴 도는 모션 방지) */
@@ -74,6 +116,7 @@
     bytes = undefined;
     password = undefined;
     wrongPassword = false;
+    run = { kind: 'idle' };
     phase = 'idle';
   }
 
@@ -91,6 +134,37 @@
       <span class="name" title={fileName}>{fileName}</span>
       <span class="meta">{pageCount}쪽</span>
       <button type="button" class="text" onclick={close}>다른 파일</button>
+    </div>
+
+    <!-- 실행·다운로드 막대: 높이 고정(처리 전후 같음). 모바일 하단 고정 광고와 멀도록 위에 둔다 -->
+    <div class="action" role="group" aria-label="회전">
+      <p class="action-text" aria-live="polite">
+        {#if run.kind === 'working'}
+          돌리는 중…
+        {:else if result}
+          완료: {result.name} · {formatSize(result.bytes.length)}
+        {:else if run.kind === 'failed'}
+          <strong>{run.message}</strong>
+        {:else if turnedCount === 0}
+          돌린 쪽이 없습니다.
+        {:else}
+          {turnedCount}쪽을 돌린 PDF를 만듭니다.
+        {/if}
+      </p>
+      {#if result}
+        <button
+          type="button"
+          class="primary"
+          onclick={() => downloadFile(result.bytes, result.name)}>다운로드</button
+        >
+      {:else}
+        <button
+          type="button"
+          class="primary"
+          disabled={turnedCount === 0 || run.kind === 'working'}
+          onclick={rotate}>{run.kind === 'working' ? '돌리는 중…' : 'PDF 회전'}</button
+        >
+      {/if}
     </div>
 
     <div class="body">
@@ -223,6 +297,33 @@
     background: var(--color-accent);
   }
 
+  .action {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  /* 좁은 화면에서도 안내를 다 읽을 수 있게 두 줄까지 보여 준다 (막대 높이는 그대로) */
+  .action-text {
+    display: -webkit-box;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .action-text strong {
+    color: var(--color-text);
+  }
+
   .body {
     flex: 1;
     padding: 16px;
@@ -288,5 +389,21 @@
   .actions {
     display: flex;
     gap: 8px;
+  }
+
+  /* 좁은 화면: 안내를 위 줄, 버튼을 아래 줄에 둔다 (높이는 처리 전후 같음) */
+  @media (max-width: 520px) {
+    .action {
+      flex-wrap: wrap;
+      align-content: center;
+      row-gap: 8px;
+      height: 112px;
+    }
+    .action-text {
+      flex-basis: 100%;
+    }
+    .action button {
+      flex: 1;
+    }
   }
 </style>
