@@ -31,17 +31,42 @@ export function setupFrameDrop() {
   // 끄는 동안 dragover가 계속 온다. 잠시 끊기면(창 밖으로 나감, 취소) 끝난 것으로 본다.
   // dragleave 계산보다 단순하고, 바깥에서 시작된 끌기에도 똑같이 동작한다.
   let lastDragOver = 0;
+  let active = false;
   let watch: ReturnType<typeof setInterval> | undefined;
 
+  // 넓어지는 동안 도구 화면 크기를 고정해 다시 그려지거나 늘어나 보이지 않게 한다
+  const root = document.getElementById('frame-root');
+  const freeze = (size?: { width: number; height: number }) => {
+    if (!root) return;
+    const { width, height } = size ?? root.getBoundingClientRect();
+    root.style.width = `${width}px`;
+    root.style.height = `${height}px`;
+  };
+  const unfreeze = () => {
+    root?.style.removeProperty('width');
+    root?.style.removeProperty('height');
+  };
+
   const end = () => {
-    if (overlay.hidden) return;
-    overlay.hidden = true;
+    if (!active) return;
+    active = false;
     clearInterval(watch);
     notifyParent('drag-end');
+    // 바깥이 frame을 원래 크기로 줄인 다음에 덮개를 걷는다 (넓어진 화면이 비치지 않게)
+    const finish = () => {
+      clearTimeout(fallback);
+      if (active) return; // 그사이 새 끌기가 시작됐으면 덮개를 그대로 둔다
+      overlay.hidden = true;
+      unfreeze();
+    };
+    const fallback = setTimeout(finish, 150);
+    addEventListener('resize', finish, { once: true });
   };
-  const show = () => {
+  const show = (size?: { width: number; height: number }) => {
     lastDragOver = Date.now();
-    if (!overlay.hidden) return;
+    if (active) return;
+    active = true;
+    freeze(size);
     overlay.hidden = false;
     watch = setInterval(() => {
       if (Date.now() - lastDragOver > 400) end();
@@ -50,19 +75,17 @@ export function setupFrameDrop() {
 
   addEventListener('message', (event) => {
     if (event.source !== parent || event.data?.type !== 'drag-start') return;
-    show();
+    const { width, height } = event.data;
+    show(typeof width === 'number' && typeof height === 'number' ? { width, height } : undefined);
     notifyParent('drag-ready');
-  });
-  // 커서가 바깥 페이지를 거치지 않고 도구 칸으로 바로 들어온 경우: 바깥에 넓혀 달라고 요청한다
-  addEventListener('dragenter', (event) => {
-    if (!event.dataTransfer?.types.includes('Files') || !overlay.hidden) return;
-    show();
-    notifyParent('drag-request');
   });
   addEventListener('dragover', (event) => {
     if (!event.dataTransfer?.types.includes('Files')) return;
     event.preventDefault();
+    // 커서가 바깥 페이지를 거치지 않고 도구 칸으로 바로 들어온 경우: 바깥에 넓혀 달라고 요청한다
+    const startedHere = !active;
     show();
+    if (startedHere) notifyParent('drag-request');
   });
   addEventListener('drop', (event) => {
     event.preventDefault();

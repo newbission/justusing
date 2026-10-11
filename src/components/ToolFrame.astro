@@ -16,7 +16,7 @@
  * (끄는 동안 바깥 페이지가 아는 것은 '파일을 끌고 있다'는 사실뿐이고 내용은 알 수 없다)
  *
  * frame과 주고받는 메시지 (내용 없이 신호만):
- *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start' }
+ *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height }
  *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
  *                 { type: 'drag-end' }
  */
@@ -56,27 +56,39 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
       frame.contentWindow?.postMessage({ type: 'theme', theme: detail }, '*');
     });
 
-    // 파일을 끌고 들어오면 frame을 화면 전체로 넓힌다
+    // 파일을 끌고 들어오면 frame을 화면 전체로 넓힌다.
+    // 순서: frame에 알림(지금 크기 전달) → frame이 덮개를 덮고 도구 화면 크기를 고정한 뒤 응답
+    //       → 그때 넓힌다. 그래서 넓어지는 동안 도구 화면이 늘어나 보이지 않는다.
+    let waiting = false;
     let readyTimer: ReturnType<typeof setTimeout> | undefined;
     const collapse = () => {
+      waiting = false;
       clearTimeout(readyTimer);
       frame.removeAttribute('data-drag-active');
     };
     const expand = () => {
-      if (frame.hasAttribute('data-drag-active')) return;
+      waiting = false;
+      clearTimeout(readyTimer);
       frame.setAttribute('data-drag-active', '');
-      frame.contentWindow?.postMessage({ type: 'drag-start' }, '*');
-      // frame이 아직 준비되지 않아 응답이 없으면 원래대로 돌린다
-      readyTimer = setTimeout(collapse, 1000);
+    };
+    const start = () => {
+      if (waiting || frame.hasAttribute('data-drag-active')) return;
+      waiting = true;
+      frame.contentWindow?.postMessage(
+        { type: 'drag-start', width: frame.clientWidth, height: frame.clientHeight },
+        '*',
+      );
+      // frame이 아직 준비되지 않아 응답이 없으면 넓히지 않는다 (바깥에 놓여도 DropGuard가 막는다)
+      readyTimer = setTimeout(() => (waiting = false), 500);
     };
 
     addEventListener('dragenter', (event) => {
-      if (event.dataTransfer?.types.includes('Files')) expand();
+      if (event.dataTransfer?.types.includes('Files')) start();
     });
     addEventListener('message', (event) => {
       if (event.source !== frame.contentWindow) return;
-      if (event.data?.type === 'drag-request') expand();
-      if (event.data?.type === 'drag-ready') clearTimeout(readyTimer);
+      // drag-request: 도구 칸 안에서 시작된 끌기 (frame은 이미 덮개를 덮고 고정한 상태)
+      if (event.data?.type === 'drag-ready' || event.data?.type === 'drag-request') expand();
       if (event.data?.type === 'drag-end') collapse();
     });
   }

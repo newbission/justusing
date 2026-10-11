@@ -63,7 +63,10 @@ if (csp) {
     </script>
   </head>
   <body>
-    <slot />
+    <!-- 파일을 끄는 동안 frame이 화면 전체로 넓어져도 이 안의 도구 화면은 원래 크기로 고정된다 -->
+    <div id="frame-root">
+      <slot />
+    </div>
   </body>
 </html>
 
@@ -75,7 +78,8 @@ if (csp) {
 
 <style is:global>
   html,
-  body {
+  body,
+  #frame-root {
     height: 100%;
   }
 
