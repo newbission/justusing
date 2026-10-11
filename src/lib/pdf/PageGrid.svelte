@@ -48,6 +48,34 @@
 
   let grid: HTMLOListElement;
 
+  // 끌어서 순서 바꾸기. 끄는 카드와 놓일 자리(0 = 맨 앞, pages.length = 맨 뒤).
+  // 격자는 합치기 목록 줄 안에도 들어가므로 끌기 신호가 바깥 목록으로 퍼지지 않게 막는다.
+  let dragIndex: number | undefined = $state();
+  let dropAt: number | undefined = $state();
+
+  function dragOver(event: DragEvent, position: number) {
+    if (dragIndex === undefined) return; // 파일 끌기는 frame 전체가 받는다
+    event.preventDefault();
+    event.stopPropagation();
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    dropAt = event.clientX < rect.left + rect.width / 2 ? position : position + 1;
+  }
+
+  function drop(event: DragEvent) {
+    if (dragIndex === undefined || dropAt === undefined) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const from = pages.findIndex((page) => page.index === dragIndex);
+    const to = dropAt > from ? dropAt - 1 : dropAt;
+    pages.splice(to, 0, ...pages.splice(from, 1));
+    dragEnd();
+  }
+
+  function dragEnd() {
+    dragIndex = undefined;
+    dropAt = undefined;
+  }
+
   async function move(page: GridPage, delta: -1 | 1) {
     const from = pages.indexOf(page);
     const to = from + delta;
@@ -67,6 +95,22 @@
     <li
       class="card"
       class:excluded={page.excluded}
+      class:dragging={dragIndex === page.index}
+      class:drop-before={dropAt === position}
+      class:drop-after={dropAt === pages.length && position === pages.length - 1}
+      draggable="true"
+      ondragstart={(event) => {
+        event.stopPropagation();
+        dragIndex = page.index;
+        event.dataTransfer!.effectAllowed = 'move';
+        event.dataTransfer!.setData('text/plain', '');
+      }}
+      ondragover={(event) => dragOver(event, position)}
+      ondrop={drop}
+      ondragend={(event) => {
+        event.stopPropagation();
+        dragEnd();
+      }}
       data-page-index={page.index}
       animate:flip={{ duration: MOVE_MS }}
       aria-label="원래 {page.index + 1}쪽{page.excluded
@@ -124,6 +168,19 @@
     padding: 6px;
     border-radius: var(--radius);
     transition: background-color 0.12s;
+  }
+  .card[draggable='true'] {
+    cursor: grab;
+  }
+  .card.dragging {
+    opacity: 0.4;
+  }
+  /* 놓일 자리 표시 (크기가 바뀌지 않도록 그림자로) */
+  .card.drop-before {
+    box-shadow: inset 3px 0 0 var(--color-accent);
+  }
+  .card.drop-after {
+    box-shadow: inset -3px 0 0 var(--color-accent);
   }
   .card:hover,
   .card:focus-within {
