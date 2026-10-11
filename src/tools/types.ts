@@ -2,7 +2,7 @@
  * 도구 정의 타입. 각 도구 폴더의 meta.ts가 defineTool()로 자기 정보를 내보낸다.
  *
  * 도구 ID와 URL은 폴더 경로에서 정해진다:
- *   src/tools/pdf/merge/meta.ts → ID 'pdf/merge' → 주소 /pdf/merge
+ *   src/tools/pdf/merge/meta.ts → ID 'pdf/merge' → 주소 /pdf/merge/
  */
 
 /** 화면·검색에 쓰이는 문구 (언어별) */

@@ -16,7 +16,7 @@ export interface Tool extends ToolMeta {
   /** 'pdf/merge' */
   id: string;
   category: CategoryId;
-  /** 페이지 주소 '/pdf/merge' */
+  /** 페이지 주소 '/pdf/merge/' */
   href: string;
 }
 
@@ -29,7 +29,7 @@ function loadTool(id: string): Tool {
   const category = id.split('/')[0] ?? '';
   if (!isCategoryId(category)) throw new Error(`등록되지 않은 카테고리입니다: ${id}`);
 
-  return { ...meta, id, category, href: `/${id}` };
+  return { ...meta, id, category, href: `/${id}/` };
 }
 
 export const tools: Tool[] = TOOL_IDS.map(loadTool);
