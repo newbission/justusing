@@ -111,6 +111,11 @@ frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동
 
 - 위치는 5개뿐: `rail-left`, `rail-right`, `below-tool`, `in-content`, `mobile-anchor` (`src/ads/slots.ts`).
   크기는 `src/ads/slots.css`가 유일한 출처다.
+- 광고는 사이트 모든 페이지에 있다.
+  - 도구 페이지: 양옆(`RailShell`) + `below-tool` + `in-content` + `mobile-anchor`
+  - 홈·카테고리 페이지: 양옆(`RailShell`) + 도구 목록 **아래** `in-content` + `mobile-anchor`
+    (목록 위에 두면 첫 화면에서 도구가 밀려나므로 두지 않는다)
+  - `mobile-anchor`는 `BaseLayout`에 있어 모든 페이지에 자동으로 붙는다. 새 페이지 틀을 만들면 `RailShell`을 쓴다.
 - 슬롯 크기는 미리 고정한다. 광고가 떠도 레이아웃이 밀리면 안 된다 (CLS 0).
 - `site.config.ts`의 `ads.enabled` 하나로 전체를 켜고 끈다 (기본 꺼짐).
   꺼져 있으면 개발 모드에서만 점선 칸을 보여주고, 배포 화면에는 아무것도 그리지 않는다.
