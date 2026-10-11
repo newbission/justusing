@@ -7,6 +7,9 @@
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
+  import { downloadFile } from '../../../frame/download';
+  import { canUse } from '../../../lib/entitlement';
+  import { assemblePdf } from '../../../lib/pdf/assemble';
   import Thumbnail from '../../../lib/pdf/Thumbnail.svelte';
   import {
     isPasswordError,
@@ -37,6 +40,57 @@
   let nextId = 0;
 
   const totalPages = $derived(items.reduce((sum, item) => sum + item.pageCount, 0));
+  const readyItems = $derived(items.filter((item) => item.status === 'ready'));
+
+  /** 합치기 버튼을 누를 수 없을 때 그 이유 (누를 수 있으면 undefined) */
+  const blocker = $derived.by(() => {
+    if (items.some((item) => item.status === 'loading')) return '파일을 읽는 중입니다…';
+    if (items.some((item) => item.status === 'password'))
+      return '암호를 입력하거나 그 파일을 빼 주세요.';
+    if (readyItems.length < 2) return '합칠 PDF를 2개 이상 넣어 주세요.';
+    return undefined;
+  });
+
+  type Phase =
+    | { kind: 'idle' }
+    | { kind: 'working' }
+    | { kind: 'done'; bytes: Uint8Array; fileName: string; signature: string }
+    | { kind: 'failed'; message: string };
+  let phase: Phase = $state({ kind: 'idle' });
+
+  /** 목록 상태(순서·파일). 합친 뒤 목록이 바뀌면 결과는 더 이상 맞지 않는다. */
+  const signature = $derived(readyItems.map((item) => item.id).join(','));
+  const result = $derived(
+    phase.kind === 'done' && phase.signature === signature ? phase : undefined,
+  );
+
+  async function merge() {
+    if (blocker || phase.kind === 'working') return;
+    const entitlement = await canUse('pdf/merge');
+    if (!entitlement.allowed) {
+      phase = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      return;
+    }
+
+    const sources = readyItems;
+    const startedWith = signature;
+    phase = { kind: 'working' };
+    try {
+      const bytes = await assemblePdf({
+        sources: sources.map(({ bytes, password }) => ({ bytes, password })),
+        pages: sources.flatMap((item, source) =>
+          Array.from({ length: item.pageCount }, (_, index) => ({ source, index })),
+        ),
+      });
+      const base = sources[0]!.name.replace(/\.pdf$/i, '');
+      phase = { kind: 'done', bytes, fileName: `${base}_합침.pdf`, signature: startedWith };
+    } catch {
+      phase = {
+        kind: 'failed',
+        message: '합치지 못했습니다. 손상된 파일이 있다면 빼고 다시 해 보세요.',
+      };
+    }
+  }
 
   async function add(files: File[]) {
     const pdfs = files.filter(
@@ -162,6 +216,35 @@
       </label>
     </div>
 
+    <!-- 실행·다운로드 막대: 높이 고정(처리 전후 같음). 모바일 하단 고정 광고와 멀도록 목록 위에 둔다 -->
+    <div class="action" role="group" aria-label="합치기">
+      <p class="action-text" aria-live="polite">
+        {#if phase.kind === 'working'}
+          합치는 중… 파일이 크면 시간이 걸릴 수 있습니다.
+        {:else if result}
+          완료: {result.fileName} · {formatSize(result.bytes.length)}
+        {:else if phase.kind === 'failed'}
+          <strong>{phase.message}</strong>
+        {:else}
+          {blocker ?? '위에서부터 목록 순서대로 합칩니다.'}
+        {/if}
+      </p>
+      {#if result}
+        <button
+          type="button"
+          class="primary"
+          onclick={() => downloadFile(result.bytes, result.fileName)}>다운로드</button
+        >
+      {:else}
+        <button
+          type="button"
+          class="primary"
+          disabled={blocker !== undefined || phase.kind === 'working'}
+          onclick={merge}>{phase.kind === 'working' ? '합치는 중…' : 'PDF 합치기'}</button
+        >
+      {/if}
+    </div>
+
     <ol class="list" aria-label="합칠 파일 목록 (위에서부터 순서대로 합칩니다)">
       {#each items as item, index (item.id)}
         <li
@@ -268,6 +351,38 @@
     padding: 0 16px;
     border-bottom: 1px solid var(--color-line);
     font-size: 14px;
+  }
+
+  .action {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .action-text {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .action-text strong {
+    color: var(--color-text);
+  }
+  button.primary {
+    min-width: 120px;
+    height: 40px;
+    padding: 0 20px;
+    border-color: var(--color-text);
+    background: var(--color-text);
+    color: var(--color-bg);
+    font-weight: 600;
   }
 
   .list {
