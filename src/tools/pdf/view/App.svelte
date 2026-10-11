@@ -124,6 +124,16 @@
     opened = undefined;
   }
 
+  /** 목록에서 뺀다. 보던 파일이면 다음(없으면 앞) 파일을 열고, 다 빼면 첫 화면으로 */
+  async function remove(file: ViewFile) {
+    const index = files.indexOf(file);
+    files.splice(index, 1);
+    if (file !== current) return;
+    const next = files[index] ?? files[index - 1];
+    if (next) await show(next);
+    else await reset();
+  }
+
   /** 목록을 비우고 첫 화면으로 돌아간다 */
   async function reset() {
     await closeDoc();
@@ -192,9 +202,16 @@
           <li>
             <button
               type="button"
+              class="file"
               aria-current={file === current ? 'true' : undefined}
               title={file.name}
               onclick={() => file !== current && show(file)}>{file.name}</button
+            >
+            <button
+              type="button"
+              class="remove"
+              onclick={() => remove(file)}
+              aria-label="{file.name} 목록에서 빼기">×</button
             >
           </li>
         {/each}
@@ -204,9 +221,10 @@
   <div class="main">
     {#if files.length > 1}
       <!-- 좁은 화면에서는 왼쪽 목록 대신 고르기 상자로 파일을 바꾼다 -->
-      <label class="file-select">
-        <span class="visually-hidden">볼 파일</span>
+      <div class="file-select">
+        <label class="visually-hidden" for="file-select">볼 파일</label>
         <select
+          id="file-select"
           value={current?.id}
           onchange={(event) => {
             const file = files.find((f) => f.id === Number(event.currentTarget.value));
@@ -217,7 +235,13 @@
             <option value={file.id}>{i + 1}. {file.name}</option>
           {/each}
         </select>
-      </label>
+        <button
+          type="button"
+          class="remove"
+          onclick={() => current && remove(current)}
+          aria-label="보고 있는 파일을 목록에서 빼기">×</button
+        >
+      </div>
     {/if}
     {#if phase === 'ready'}
       <div class="toolbar" role="toolbar" aria-label="PDF 보기 도구">
@@ -386,9 +410,15 @@
     overflow: auto;
     list-style: none;
   }
-  .files button {
+  .files li {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .files .file {
     display: block;
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     height: 36px;
     overflow: hidden;
     border-color: transparent;
@@ -396,10 +426,10 @@
     text-align: left;
     text-overflow: ellipsis;
   }
-  .files button:hover {
+  .files .file:hover {
     background: var(--color-hover);
   }
-  .files button[aria-current='true'] {
+  .files .file[aria-current='true'] {
     background: var(--color-accent-soft);
     color: var(--color-accent);
     font-weight: 600;
@@ -588,12 +618,15 @@
       display: none;
     }
     .file-select {
-      display: block;
+      display: flex;
+      gap: 6px;
       flex: none;
       padding: 8px;
       border-bottom: 1px solid var(--color-line);
     }
     .file-select select {
+      flex: 1;
+      min-width: 0;
       width: 100%;
       height: 36px;
       padding: 0 8px;
@@ -602,5 +635,19 @@
       background: var(--color-bg);
       font-size: 14px;
     }
+  }
+  /* 목록에서 빼기 (×) */
+  .remove {
+    min-width: 28px;
+    height: 28px;
+    padding: 0;
+    border-color: transparent;
+    color: var(--color-muted);
+    font-size: 16px;
+    line-height: 1;
+  }
+  .remove:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
   }
 </style>
