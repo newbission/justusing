@@ -1,4 +1,4 @@
-# PR마다 포맷·타입 검사와 빌드를 돌려서 리뷰 전에 깨진 코드를 걸러낸다.
+# PR마다 포맷·타입 검사, 빌드, E2E(로컬 처리 약속 포함)를 돌려서 리뷰 전에 깨진 코드를 걸러낸다.
 name: CI
 
 on:
@@ -17,3 +17,5 @@ jobs:
       - run: npm run format:check
       - run: npm run check
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
