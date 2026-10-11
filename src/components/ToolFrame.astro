@@ -17,7 +17,8 @@
  *
  * frame과 주고받는 메시지 (내용 없이 신호만):
  *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start' }
- *   frame → 바깥: { type: 'drag-ready' }, { type: 'drag-end' }
+ *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
+ *                 { type: 'drag-end' }
  */
 interface Props {
   /** frame 페이지 주소 (예: /pdf/view/frame/) */
@@ -74,6 +75,7 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
     });
     addEventListener('message', (event) => {
       if (event.source !== frame.contentWindow) return;
+      if (event.data?.type === 'drag-request') expand();
       if (event.data?.type === 'drag-ready') clearTimeout(readyTimer);
       if (event.data?.type === 'drag-end') collapse();
     });

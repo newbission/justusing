@@ -24,7 +24,7 @@ export function setupFrameDrop() {
     '<p><strong>여기에 파일을 놓으세요</strong><span>파일은 이 기기를 떠나지 않습니다</span></p>';
   document.body.append(overlay);
 
-  const notifyParent = (type: 'drag-ready' | 'drag-end') => {
+  const notifyParent = (type: 'drag-request' | 'drag-ready' | 'drag-end') => {
     if (parent !== window) parent.postMessage({ type }, '*');
   };
 
@@ -52,6 +52,12 @@ export function setupFrameDrop() {
     if (event.source !== parent || event.data?.type !== 'drag-start') return;
     show();
     notifyParent('drag-ready');
+  });
+  // 커서가 바깥 페이지를 거치지 않고 도구 칸으로 바로 들어온 경우: 바깥에 넓혀 달라고 요청한다
+  addEventListener('dragenter', (event) => {
+    if (!event.dataTransfer?.types.includes('Files') || !overlay.hidden) return;
+    show();
+    notifyParent('drag-request');
   });
   addEventListener('dragover', (event) => {
     if (!event.dataTransfer?.types.includes('Files')) return;
