@@ -8,6 +8,7 @@
  */
 import BaseLayout from './BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
 
 interface Props {
   /** 화면 제목 (h1) */
@@ -15,9 +16,11 @@ interface Props {
   /** <title>용 제목 */
   title: string;
   description: string;
+  /** 현재 위치 (홈 › 카테고리 › 도구) */
+  breadcrumb: { name: string; href?: string }[];
 }
 
-const { name, title, description } = Astro.props;
+const { name, title, description, breadcrumb } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
@@ -30,6 +33,7 @@ const { name, title, description } = Astro.props;
 
     <article class="tool-page">
       <header class="tool-header">
+        <Breadcrumb items={breadcrumb} />
         <h1>{name}</h1>
         <p class="lead">{description}</p>
       </header>
@@ -98,7 +102,7 @@ const { name, title, description } = Astro.props;
     padding-top: 24px;
   }
   .tool-header h1 {
-    margin: 0;
+    margin: 12px 0 0;
     font-size: 28px;
     line-height: 1.3;
   }

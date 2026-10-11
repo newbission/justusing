@@ -5,6 +5,7 @@
  */
 import type { GetStaticPaths } from 'astro';
 import ToolLayout from '../../layouts/ToolLayout.astro';
+import { CATEGORIES } from '../../tools/categories';
 import { liveTools, type Tool } from '../../tools/registry';
 
 export const getStaticPaths = (() =>
@@ -26,8 +27,18 @@ const ToolComponent = toolComponents[`../../tools/${tool.id}/Tool.astro`]?.defau
 if (!ToolComponent) throw new Error(`도구 화면 파일이 없습니다: src/tools/${tool.id}/Tool.astro`);
 
 const text = tool.text.ko;
+const breadcrumb = [
+  { name: '홈', href: '/' },
+  { name: CATEGORIES[tool.category].text.ko.name, href: `/${tool.category}/` },
+  { name: text.name },
+];
 ---
 
-<ToolLayout name={text.name} title={text.title} description={text.description}>
+<ToolLayout
+  name={text.name}
+  title={text.title}
+  description={text.description}
+  breadcrumb={breadcrumb}
+>
   <ToolComponent slot="tool" />
 </ToolLayout>
