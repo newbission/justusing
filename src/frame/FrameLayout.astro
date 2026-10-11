@@ -96,6 +96,10 @@ if (csp) {
   .frame-drop-overlay[hidden] {
     display: none;
   }
+  /* 끌기 신호가 덮개에만 가도록 안쪽 글자는 대상에서 뺀다 (덮개를 떠날 때만 dragleave) */
+  .frame-drop-overlay * {
+    pointer-events: none;
+  }
   .frame-drop-overlay p {
     display: grid;
     place-items: center;

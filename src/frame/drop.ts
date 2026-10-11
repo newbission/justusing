@@ -28,8 +28,11 @@ export function setupFrameDrop() {
     if (parent !== window) parent.postMessage({ type }, '*');
   };
 
-  // 끄는 동안 dragover가 계속 온다. 잠시 끊기면(창 밖으로 나감, 취소) 끝난 것으로 본다.
-  // dragleave 계산보다 단순하고, 바깥에서 시작된 끌기에도 똑같이 동작한다.
+  // 끝난 것은 두 가지로 알아챈다.
+  // 1) 덮개의 dragleave: 덮개가 frame 전체를 덮고 그 안의 글자는 끌기 대상에서 빠져 있어서
+  //    (CSS pointer-events: none) 덮개를 떠난다는 것은 곧 창 밖으로 나갔거나 취소했다는 뜻이다. 바로 끝낸다.
+  // 2) 안전장치: dragover가 1.5초 넘게 끊기면 끝낸다. 커서를 가만히 둬도 브라우저는
+  //    최대 0.55초 간격으로 dragover를 보내므로(규격) 끌고 있는 중에 끝나는 일은 없다.
   let lastDragOver = 0;
   let active = false;
   let watch: ReturnType<typeof setInterval> | undefined;
@@ -69,10 +72,13 @@ export function setupFrameDrop() {
     freeze(size);
     overlay.hidden = false;
     watch = setInterval(() => {
-      if (Date.now() - lastDragOver > 400) end();
-    }, 200);
+      if (Date.now() - lastDragOver > 1500) end();
+    }, 500);
   };
 
+  overlay.addEventListener('dragleave', (event) => {
+    if (event.target === overlay) end();
+  });
   addEventListener('message', (event) => {
     if (event.source !== parent || event.data?.type !== 'drag-start') return;
     const { width, height } = event.data;
