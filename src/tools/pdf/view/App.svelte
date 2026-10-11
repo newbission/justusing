@@ -17,19 +17,30 @@
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
+  interface ViewFile {
+    id: number;
+    name: string;
+    bytes: Uint8Array;
+    /** 한 번 연 암호. 다른 파일을 보다 돌아와도 다시 묻지 않는다. */
+    password?: string;
+  }
+
   /** 확대·축소 단계 (1 = 100%) */
   const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 3];
   /** 폭 맞춤일 때 페이지 양옆 여백 합계(px) */
   const SIDE_PADDING = 32;
 
   let phase: Phase = $state('idle');
-  let fileName = $state('');
+  /** 올린 파일 목록과 지금 보고 있는 파일 */
+  let files: ViewFile[] = $state([]);
+  let current: ViewFile | undefined = $state();
+  let nextId = 0;
+  const fileName = $derived(current?.name ?? '');
   let errorMessage = $state('');
   let wrongPassword = $state(false);
   let password = $state('');
 
   let opened: OpenedPdf | undefined;
-  let bytes: Uint8Array | undefined;
   let pages: PDFPageProxy[] = $state([]);
 
   let fitWidth = $state(true);
@@ -51,18 +62,25 @@
   const scale = $derived(fitWidth ? fitScale : manualScale);
 
   async function open(file: File) {
-    await close();
-    fileName = file.name;
-    bytes = new Uint8Array(await file.arrayBuffer());
-    await load();
+    await reset();
+    files = [{ id: nextId++, name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) }];
+    await show(files[0]!);
+  }
+
+  /** 목록의 파일 하나를 연다 (보던 파일은 닫는다) */
+  async function show(file: ViewFile) {
+    await closeDoc();
+    current = file;
+    await load(file.password);
   }
 
   async function load(withPassword?: string) {
-    if (!bytes) return;
+    if (!current) return;
     phase = 'loading';
     try {
-      // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 암호 재시도를 위해 복사본을 준다
-      opened = await openPdf(bytes.slice(), withPassword);
+      // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 다시 열 수 있게 복사본을 준다
+      opened = await openPdf(current.bytes.slice(), withPassword);
+      current.password = withPassword;
       const { doc } = opened;
       pages = await Promise.all(Array.from({ length: doc.numPages }, (_, i) => doc.getPage(i + 1)));
       currentPage = 1;
@@ -82,12 +100,19 @@
     }
   }
 
-  async function close() {
+  /** 보고 있는 문서를 닫는다 (목록은 그대로) */
+  async function closeDoc() {
     pages = [];
-    bytes = undefined;
     wrongPassword = false;
     await opened?.close();
     opened = undefined;
+  }
+
+  /** 목록을 비우고 첫 화면으로 돌아간다 */
+  async function reset() {
+    await closeDoc();
+    files = [];
+    current = undefined;
     phase = 'idle';
   }
 
@@ -194,7 +219,7 @@
           </svg>
         </button>
       {/if}
-      <button type="button" class="text" onclick={close}>다른 파일</button>
+      <button type="button" class="text" onclick={reset}>다른 파일</button>
     </div>
 
     <!-- 키보드 사용자가 방향키로 스크롤할 수 있도록 스크롤 영역에 포커스를 허용한다 -->
@@ -237,7 +262,7 @@
         <button type="button" class="primary" disabled={!password} onclick={() => load(password)}
           >열기</button
         >
-        <button type="button" class="text" onclick={close}>취소</button>
+        <button type="button" class="text" onclick={reset}>취소</button>
       </div>
     </div>
   {:else}
