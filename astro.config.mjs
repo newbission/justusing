@@ -18,5 +18,8 @@ export default defineConfig({
     // 도구 화면은 출처 없는(sandbox) iframe 안에서 돈다. 거기서는 ES 모듈 워커를 만들 수 없어
     // 워커 파일을 클래식 스크립트(IIFE)로 번들하고 blob URL로 띄운다 (src/lib/worker.ts).
     worker: { format: 'iife' },
+    // 출처 없는 iframe이 보내는 요청(Origin: null)도 로컬 미리보기 서버가 받도록 한다.
+    // 실제 배포처인 GitHub Pages는 모든 파일에 Access-Control-Allow-Origin: * 을 보낸다.
+    preview: { cors: { origin: true } },
   },
 });
