@@ -8,6 +8,7 @@
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
   import { isPasswordError, openPdf, type OpenedPdf } from '../../../lib/pdf/pdfjs';
+  import RotateGrid from './RotateGrid.svelte';
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
@@ -21,6 +22,9 @@
   let opened: OpenedPdf | undefined = $state.raw();
 
   const pageCount = $derived(opened?.doc.numPages ?? 0);
+
+  /** 쪽마다 누적 회전 각도 (RotateGrid 참고) */
+  let rotations: number[] = $state([]);
 
   async function open(file: File) {
     await close();
@@ -36,6 +40,7 @@
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 복사본을 준다 (원본은 돌릴 때 쓴다)
       opened = await openPdf(bytes.slice(), withPassword);
       password = withPassword;
+      rotations = Array.from({ length: opened.doc.numPages }, () => 0);
       phase = 'ready';
       requestShowTool();
     } catch (error) {
@@ -72,6 +77,10 @@
       <span class="name" title={fileName}>{fileName}</span>
       <span class="meta">{pageCount}쪽</span>
       <button type="button" class="text" onclick={close}>다른 파일</button>
+    </div>
+
+    <div class="body">
+      <RotateGrid doc={opened.doc} bind:rotations />
     </div>
   {:else if phase === 'loading'}
     <p class="status" role="status">PDF를 여는 중…</p>
@@ -188,6 +197,12 @@
   button.primary:hover:not(:disabled) {
     border-color: var(--color-accent);
     background: var(--color-accent);
+  }
+
+  .body {
+    flex: 1;
+    padding: 16px;
+    overflow: auto;
   }
 
   .status {
