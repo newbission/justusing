@@ -80,12 +80,40 @@ test('파일을 끌어오면 도구 화면이 화면 전체로 넓어지고, 놓
   await expect(iframe).not.toHaveAttribute('data-drag-active');
 });
 
-test('끌다가 놓지 않고 벗어나면 원래 크기로 돌아온다', async ({ page }) => {
+test('도구 칸 안으로 바로 끌어와도 화면 전체로 넓어진다', async ({ page }) => {
+  await openViewer(page);
+  const iframe = page.locator('iframe[data-tool-frame]');
+
+  // 바깥 페이지를 거치지 않고 frame 안에서 끌기가 시작된 경우
+  await toolFrame(page).evaluate(() => {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(new File(['x'], 'a.pdf', { type: 'application/pdf' }));
+    document.body.dispatchEvent(
+      new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer }),
+    );
+  });
+  await expect(iframe).toHaveAttribute('data-drag-active', '');
+});
+
+test('끌다가 창 밖으로 나가면 바로 원래 크기로 돌아온다', async ({ page }) => {
   await openViewer(page);
   const iframe = page.locator('iframe[data-tool-frame]');
 
   await dragEnterOuterPage(page);
   await expect(iframe).toHaveAttribute('data-drag-active', '');
-  // frame 위에서 dragover가 더 오지 않으면 끝난 것으로 보고 돌아온다
+
+  await toolFrame(page).evaluate(() => {
+    const overlay = document.querySelector('.frame-drop-overlay')!;
+    overlay.dispatchEvent(new DragEvent('dragleave', { bubbles: true }));
+  });
+  await expect(iframe).not.toHaveAttribute('data-drag-active', { timeout: 500 });
+});
+
+test('끌기 신호가 끊기면 안전장치로 원래 크기로 돌아온다', async ({ page }) => {
+  await openViewer(page);
+  const iframe = page.locator('iframe[data-tool-frame]');
+
+  await dragEnterOuterPage(page);
+  await expect(iframe).toHaveAttribute('data-drag-active', '');
   await expect(iframe).not.toHaveAttribute('data-drag-active', { timeout: 3000 });
 });
