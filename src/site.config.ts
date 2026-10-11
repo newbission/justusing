@@ -23,6 +23,8 @@ export const siteConfig = {
   name: 'justusing',
   domain: 'justus.ing',
   description: '파일을 업로드하지 않고 브라우저 안에서 바로 처리하는 무료 도구 모음',
+  /** 홈 화면 큰 제목 */
+  tagline: '업로드 없이, 브라우저에서 바로 쓰는 파일 도구',
   defaultLocale: 'ko',
   ads,
 } as const;
