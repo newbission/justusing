@@ -9,6 +9,7 @@
 export const AD_SLOT_IDS = [
   'rail-left', // 넓은 데스크톱 왼쪽 세로 영역 (sticky)
   'rail-right', // 넓은 데스크톱 오른쪽 세로 영역 (sticky)
+  'top-banner', // 홈·카테고리 제목 아래 가로 배너 (도구 페이지에는 두지 않음: 바로 아래가 도구 버튼)
   'below-tool', // 도구 영역 아래 (버퍼 여백 뒤)
   'in-content', // 사용법·FAQ 본문 사이
   'mobile-anchor', // 모바일 하단 고정

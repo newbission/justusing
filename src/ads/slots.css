@@ -18,6 +18,7 @@
   --ad-h-m: 600px;
 }
 
+[data-ad-slot='top-banner'],
 [data-ad-slot='below-tool'] {
   --ad-w: 728px;
   --ad-h: 90px;
