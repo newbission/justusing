@@ -1,0 +1,49 @@
+---
+/**
+ * 카테고리 페이지 (/pdf/ 등). 도구가 있는 카테고리마다 하나씩 만든다.
+ */
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolGrid from '../../components/ToolGrid.astro';
+import { CATEGORIES, type CategoryId } from '../../tools/categories';
+import { toolsInCategory, visibleCategories } from '../../tools/registry';
+
+export const getStaticPaths = (() =>
+  visibleCategories.map((category) => ({
+    params: { category },
+    props: { category },
+  }))) satisfies GetStaticPaths;
+
+interface Props {
+  category: CategoryId;
+}
+
+const { category } = Astro.props;
+const text = CATEGORIES[category].text.ko;
+const title = `${text.name} 도구`;
+---
+
+<BaseLayout title={title} description={text.description}>
+  <div class="category-page">
+    <h1>{title}</h1>
+    <p class="lead">{text.description}</p>
+    <ToolGrid tools={toolsInCategory(category)} headingLevel={2} />
+  </div>
+</BaseLayout>
+
+<style>
+  .category-page {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 24px var(--gutter) 0;
+  }
+  h1 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.3;
+  }
+  .lead {
+    margin: 8px 0 24px;
+    color: var(--color-muted);
+  }
+</style>
