@@ -12,6 +12,7 @@ import ToolHowTo from '../../components/ToolHowTo.astro';
 import ToolFaq from '../../components/ToolFaq.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import { CATEGORIES } from '../../tools/categories';
+import { COMMON_FAQ } from '../../tools/common-faq';
 import { liveTools, type Tool } from '../../tools/registry';
 
 export const getStaticPaths = (() =>
@@ -43,6 +44,6 @@ const breadcrumb = [
 >
   <ToolFrame slot="tool" src={`${tool.href}frame/`} title={`${text.name} 도구 화면`} />
   <ToolHowTo slot="how-to" name={text.name} steps={content.howTo} />
-  <ToolFaq slot="faq" items={content.faq} />
+  <ToolFaq slot="faq" items={[...COMMON_FAQ.ko, ...content.faq]} />
   <RelatedTools slot="related" ids={tool.related ?? []} />
 </ToolLayout>
