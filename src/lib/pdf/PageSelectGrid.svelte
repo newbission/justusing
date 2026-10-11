@@ -16,7 +16,7 @@
     size?: number;
   }
 
-  let { doc, selected, note, size = 96 }: Props = $props();
+  let { doc, selected = $bindable(), note, size = 96 }: Props = $props();
 
   const indices = $derived(Array.from({ length: doc.numPages }, (_, i) => i));
 
