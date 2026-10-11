@@ -405,5 +405,9 @@
     .action button {
       flex: 1;
     }
+    /* 안내는 한 줄 전체로, 전체 돌리기 버튼 셋은 그 아래 한 줄에 */
+    .all .help {
+      flex-basis: 100%;
+    }
   }
 </style>
