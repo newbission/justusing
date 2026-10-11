@@ -34,6 +34,15 @@ function loadTool(id: string): Tool {
 
 export const tools: Tool[] = TOOL_IDS.map(loadTool);
 
+// 관련 도구에 오타나 빠진 도구가 있으면 빌드를 멈춘다
+for (const tool of tools) {
+  for (const relatedId of tool.related ?? []) {
+    if (!TOOL_IDS.includes(relatedId)) {
+      throw new Error(`${tool.id}의 관련 도구가 레지스트리에 없습니다: ${relatedId}`);
+    }
+  }
+}
+
 export function getTool(id: string): Tool | undefined {
   return tools.find((tool) => tool.id === id);
 }
