@@ -1,0 +1,34 @@
+---
+/**
+ * 모든 페이지의 바깥 틀: <html>, <head>, 공통 스타일.
+ */
+import '../styles/global.css';
+import { siteConfig } from '../site.config';
+
+interface Props {
+  /** 페이지 제목. 없으면 사이트명만 쓴다 (홈). */
+  title?: string;
+  /** 검색 결과에 나오는 설명. 없으면 사이트 설명을 쓴다. */
+  description?: string;
+}
+
+const { title, description = siteConfig.description } = Astro.props;
+const fullTitle = title ? `${title} - ${siteConfig.name}` : siteConfig.name;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang={siteConfig.defaultLocale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
