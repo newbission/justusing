@@ -55,6 +55,9 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 - 광고·통계 스크립트는 바깥 페이지에만 둔다. 광고는 처리 중에도 계속 보인다.
 - frame 높이는 고정(`ToolFrame`), 안에서 스크롤한다. 처리 전후로 바깥 레이아웃이 밀리지 않는다.
 - 모든 페이지에 Astro CSP(`security.csp`)가 켜져 있다. 광고를 붙일 때 바깥 페이지 CSP에 광고 업체를 추가한다.
+- 파일 놓기: 바깥 페이지에서 파일 끌기가 시작되면 도구 iframe이 화면 전체로 넓어져
+  어디에 놓든 격리 frame이 받는다 (`ToolFrame`). 그래도 바깥에 놓이면 `DropGuard`가
+  `<head>` 맨 앞에서 가장 먼저 가로채 다른 스크립트(광고 등)에 전달되지 않게 막는다.
 
 **격리 frame 안에서 지킬 것** (어기면 배포 환경에서만 깨진다):
 
@@ -64,6 +67,8 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 - HTML `style="..."` 속성을 쓰지 않는다 (CSP가 막음). CSS 클래스나 Svelte `style:` 지시자를 쓴다.
 - `localStorage`를 쓸 수 없다. 테마는 바깥 페이지가 주소(`#theme=`)와 `postMessage`로 알려 준다.
 - `scrollIntoView`는 바깥 페이지까지 스크롤하므로 스크롤 영역의 `scrollTop`을 직접 바꾼다.
+- 파일 끌어다 놓기는 도구가 직접 처리하지 않는다. frame 전체가 받아서(`src/frame/drop.ts`)
+  도구는 `onFrameFiles(files => ...)`로 받기만 한다. 첫 화면 버튼은 `FileDrop`.
 - 외부 리소스가 필요하면 우리 사이트에 복사해 둔다 (예: pdf.js CMap → `public/vendor/pdfjs/`,
   `scripts/copy-pdfjs-assets.mjs`가 dev/build 전에 복사).
 
@@ -190,6 +195,8 @@ Co-Authored-By: ...
 - 방문 통계: GA4 + Microsoft Clarity. **도구 영역은 Clarity 녹화에서 반드시 마스킹**하고,
   이벤트에는 파일 개수·크기 구간만 남긴다 (파일 이름·내용 금지).
 - 광고 업체 스크립트 연결, `ads.txt` 채우기
+- 광고를 켠 뒤 확인: 커서가 광고 iframe 위로 바로 들어와 그 위에 파일을 놓으면 광고 iframe이
+  파일을 받을 수 있다 (우리 페이지는 끌기를 감지하지 못함). 광고 칸 위치·크기에서 이 경우를 검토할 것.
 - og:image (로고가 정해지면)
 
 ### 열린 결정
