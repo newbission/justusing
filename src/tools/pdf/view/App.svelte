@@ -3,8 +3,9 @@
   파일을 메모리에서 바로 열어 페이지를 세로로 이어 보여준다. 파일은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
-  import { untrack } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
+  import { onFrameFiles } from '../../../frame/drop';
   import PdfPage from './PdfPage.svelte';
   import {
     isPasswordError,
@@ -111,6 +112,13 @@
       }
     }
   }
+
+  // 화면 어디에 놓든 받는다. 보는 중에 새 파일을 놓으면 그 파일로 바뀐다.
+  onMount(() =>
+    onFrameFiles(([file]) => {
+      if (file) open(file);
+    }),
+  );
 
   // 배율이 바뀌면 보고 있던 페이지를 유지한다
   $effect(() => {
