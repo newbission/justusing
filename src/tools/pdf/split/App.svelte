@@ -7,9 +7,13 @@
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
+  import { downloadFile } from '../../../frame/download';
+  import { canUse } from '../../../lib/entitlement';
+  import { assemblePdfs } from '../../../lib/pdf/assemble';
+  import { makeZip } from '../../../lib/zip';
   import { isPasswordError, openPdf, type OpenedPdf } from '../../../lib/pdf/pdfjs';
   import PageSelectGrid from '../../../lib/pdf/PageSelectGrid.svelte';
-  import { parseRanges } from '../../../lib/pdf/ranges';
+  import { parseRanges, rangeLabel } from '../../../lib/pdf/ranges';
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
@@ -52,6 +56,68 @@
     if (mode === 'select' && selectedPages.length === 0) return '뽑을 페이지를 눌러 고르세요.';
     return undefined;
   });
+
+  type Run =
+    | { kind: 'idle' }
+    | { kind: 'working'; done: number; total: number }
+    | { kind: 'done'; name: string; bytes: Uint8Array; type: string; signature: string }
+    | { kind: 'failed'; message: string };
+  let run: Run = $state({ kind: 'idle' });
+
+  /** 나눌 내용(방법·결과 파일별 쪽). 나눈 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
+  const signature = $derived(`${mode}:${JSON.stringify(outputs ?? [])}`);
+  const result = $derived(run.kind === 'done' && run.signature === signature ? run : undefined);
+
+  /** 결과 파일 이름. 한 장씩이면 정렬되도록 앞에 0을 채운다 (01, 02 … 10) */
+  function outputName(pages: number[]) {
+    const base = fileName.replace(/\.pdf$/i, '');
+    if (mode === 'select') return `${base}_발췌.pdf`;
+    if (mode === 'each')
+      return `${base}_${String(pages[0]).padStart(String(pageCount).length, '0')}.pdf`;
+    return `${base}_${rangeLabel(pages)}.pdf`;
+  }
+
+  async function split() {
+    if (!outputs || !bytes || run.kind === 'working') return;
+    const entitlement = await canUse('pdf/split');
+    if (!entitlement.allowed) {
+      run = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      return;
+    }
+
+    const plan = outputs;
+    const startedWith = signature;
+    run = { kind: 'working', done: 0, total: plan.length };
+    try {
+      const files = await assemblePdfs(
+        {
+          sources: [{ bytes, password }],
+          outputs: plan.map((pages) => pages.map((page) => ({ source: 0, index: page - 1 }))),
+        },
+        (done, total) => (run = { kind: 'working', done, total }),
+      );
+      const named = files.map((file, i) => ({ name: outputName(plan[i]!), bytes: file }));
+      const base = fileName.replace(/\.pdf$/i, '');
+      run =
+        named.length === 1
+          ? { kind: 'done', ...named[0]!, type: 'application/pdf', signature: startedWith }
+          : {
+              kind: 'done',
+              name: `${base}_나눔.zip`,
+              bytes: makeZip(named),
+              type: 'application/zip',
+              signature: startedWith,
+            };
+    } catch {
+      run = { kind: 'failed', message: '나누지 못했습니다. 파일이 손상되었을 수 있습니다.' };
+    }
+  }
+
+  function formatSize(size: number) {
+    return size < 1024 * 1024
+      ? `${Math.max(1, Math.round(size / 1024))}KB`
+      : `${(size / 1024 / 1024).toFixed(1)}MB`;
+  }
 
   function selectAll(on: boolean) {
     selected = Array.from({ length: pageCount }, () => on);
@@ -98,6 +164,7 @@
     password = undefined;
     wrongPassword = false;
     rangeText = '';
+    run = { kind: 'idle' };
     phase = 'idle';
   }
 
@@ -115,6 +182,39 @@
       <span class="name" title={fileName}>{fileName}</span>
       <span class="meta">{pageCount}쪽</span>
       <button type="button" class="text" onclick={close}>다른 파일</button>
+    </div>
+
+    <!-- 실행·다운로드 막대: 높이 고정(처리 전후 같음). 모바일 하단 고정 광고와 멀도록 위에 둔다 -->
+    <div class="action" role="group" aria-label="나누기">
+      <p class="action-text" aria-live="polite">
+        {#if run.kind === 'working'}
+          나누는 중… {run.done}/{run.total}
+        {:else if result}
+          완료: {result.name} · {formatSize(result.bytes.length)}
+        {:else if run.kind === 'failed'}
+          <strong>{run.message}</strong>
+        {:else if problem || !outputs}
+          {problem ?? ''}
+        {:else if outputs.length === 1}
+          파일 1개({outputs[0]!.length}쪽)로 만듭니다.
+        {:else}
+          파일 {outputs.length}개로 나눕니다. ZIP 하나로 받습니다.
+        {/if}
+      </p>
+      {#if result}
+        <button
+          type="button"
+          class="primary"
+          onclick={() => downloadFile(result.bytes, result.name, result.type)}>다운로드</button
+        >
+      {:else}
+        <button
+          type="button"
+          class="primary"
+          disabled={!outputs || run.kind === 'working'}
+          onclick={split}>{run.kind === 'working' ? '나누는 중…' : 'PDF 나누기'}</button
+        >
+      {/if}
     </div>
 
     <div class="body">
@@ -283,6 +383,33 @@
     background: var(--color-accent);
   }
 
+  .action {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  /* 좁은 화면에서도 안내를 다 읽을 수 있게 두 줄까지 보여 준다 (막대 높이는 그대로) */
+  .action-text {
+    display: -webkit-box;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .action-text strong {
+    color: var(--color-text);
+  }
+
   .body {
     flex: 1;
     padding: 16px;
@@ -414,5 +541,21 @@
   .actions {
     display: flex;
     gap: 8px;
+  }
+
+  /* 좁은 화면: 안내를 위 줄, 버튼을 아래 줄에 둔다 (높이는 처리 전후 같음) */
+  @media (max-width: 520px) {
+    .action {
+      flex-wrap: wrap;
+      align-content: center;
+      row-gap: 8px;
+      height: 112px;
+    }
+    .action-text {
+      flex-basis: 100%;
+    }
+    .action button {
+      flex: 1;
+    }
   }
 </style>
