@@ -45,8 +45,14 @@
   let items: Item[] = $state([]);
   let nextId = 0;
 
-  const totalPages = $derived(items.reduce((sum, item) => sum + item.pageCount, 0));
-  const readyItems = $derived(items.filter((item) => item.status === 'ready'));
+  /** 결과에 넣을 페이지 (제외하지 않은 것, 정한 순서대로) */
+  const included = (item: Item) => item.pages.filter((page) => !page.excluded);
+
+  /** 합칠 파일: 열렸고 넣을 페이지가 하나라도 있는 파일 */
+  const readyItems = $derived(
+    items.filter((item) => item.status === 'ready' && included(item).length > 0),
+  );
+  const totalPages = $derived(readyItems.reduce((sum, item) => sum + included(item).length, 0));
 
   /** 합치기 버튼을 누를 수 없을 때 그 이유 (누를 수 있으면 undefined) */
   const blocker = $derived.by(() => {
@@ -64,8 +70,10 @@
     | { kind: 'failed'; message: string };
   let phase: Phase = $state({ kind: 'idle' });
 
-  /** 목록 상태(순서·파일). 합친 뒤 목록이 바뀌면 결과는 더 이상 맞지 않는다. */
-  const signature = $derived(readyItems.map((item) => item.id).join(','));
+  /** 목록 상태(파일 순서와 파일마다 넣을 페이지 순서). 합친 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
+  const signature = $derived(
+    readyItems.map((item) => `${item.id}:${included(item).map((page) => page.index)}`).join('|'),
+  );
   const result = $derived(
     phase.kind === 'done' && phase.signature === signature ? phase : undefined,
   );
@@ -85,7 +93,7 @@
       const bytes = await assemblePdf({
         sources: sources.map(({ bytes, password }) => ({ bytes, password })),
         pages: sources.flatMap((item, source) =>
-          Array.from({ length: item.pageCount }, (_, index) => ({ source, index })),
+          included(item).map(({ index }) => ({ source, index })),
         ),
       });
       const base = sources[0]!.name.replace(/\.pdf$/i, '');
@@ -339,7 +347,11 @@
                 {:else if item.status === 'error'}
                   <strong>열 수 없는 파일입니다. 빼고 합칩니다.</strong>
                 {:else}
-                  {item.pageCount}쪽 · {formatSize(item.bytes.length)}
+                  {@const count = included(item).length}
+                  {count === item.pageCount
+                    ? `${count}쪽`
+                    : `${item.pageCount}쪽 중 ${count}쪽 넣음`}
+                  · {formatSize(item.bytes.length)}
                 {/if}
               </span>
             </div>
