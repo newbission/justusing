@@ -32,6 +32,10 @@ const title = `${text.name} 도구`;
       <Breadcrumb items={[{ name: '홈', href: '/' }, { name: text.name }]} />
       <h1>{title}</h1>
       <p class="lead">{text.description}</p>
+      <!-- 제목 아래 가로 배너 -->
+      <div class="top-banner">
+        <AdSlot id="top-banner" />
+      </div>
       <ToolGrid tools={toolsInCategory(category)} headingLevel={2} />
 
       <!-- 도구 목록 아래 본문 광고 (홈과 같은 이유로 목록 아래, 48px 띄움) -->
@@ -54,6 +58,13 @@ const title = `${text.name} 도구`;
   .lead {
     margin: 8px 0 24px;
     color: var(--color-muted);
+  }
+  /* 제목 아래 가로 배너. 광고 칸이 없으면 자리도 차지하지 않는다 */
+  .top-banner:not(:has(.ad-slot)) {
+    display: none;
+  }
+  .top-banner {
+    margin-bottom: 32px;
   }
   .in-content {
     margin: 48px 0;

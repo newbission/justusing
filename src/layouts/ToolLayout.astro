@@ -35,6 +35,12 @@ const { name, title, description, breadcrumb, siblings } = Astro.props;
         <p class="lead">{description}</p>
       </header>
 
+      <!-- 제목 아래 가로 배너. 도구 칸(버튼)과 붙지 않게 아래로 32px 띄운다.
+           파일을 열면 도구 칸이 화면 위쪽에 맞춰 스크롤되어 배너는 화면 밖으로 나간다. -->
+      <div class="top-banner">
+        <AdSlot id="top-banner" />
+      </div>
+
       <section class="tool-area" aria-label={name}>
         <slot name="tool" />
       </section>
@@ -75,6 +81,16 @@ const { name, title, description, breadcrumb, siblings } = Astro.props;
   }
   .tool-area {
     margin-top: 24px;
+  }
+  /* 제목 아래 가로 배너. 광고 칸이 없으면 자리도 차지하지 않는다 */
+  .top-banner:not(:has(.ad-slot)) {
+    display: none;
+  }
+  .top-banner {
+    margin-top: 24px;
+  }
+  .top-banner:has(.ad-slot) + .tool-area {
+    margin-top: 32px;
   }
   .local-note {
     margin: 16px 0 0;
