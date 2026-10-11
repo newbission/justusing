@@ -4,6 +4,7 @@
 -->
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import { flip } from 'svelte/animate';
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
@@ -140,12 +141,26 @@
     item.opened?.close();
   }
 
+  /** 줄이 자리를 바꾸는 모션 시간. 움직임 줄이기 설정이면 모션 없이 바로 바꾼다. */
+  const MOVE_MS = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 250;
+
+  /** 방금 옮긴 줄. 잠깐 강조해서 무엇이 움직였는지 보이게 한다. */
+  let movedId: number | undefined = $state();
+
+  async function markMoved(id: number) {
+    // 같은 줄을 연달아 옮겨도 강조가 처음부터 다시 보이도록 한 번 지웠다가 붙인다
+    movedId = undefined;
+    await tick();
+    requestAnimationFrame(() => (movedId = id));
+  }
+
   /** 한 칸 위(-1)나 아래(1)로 옮긴다 */
   async function move(item: Item, delta: -1 | 1) {
     const from = items.indexOf(item);
     const to = from + delta;
     if (to < 0 || to >= items.length) return;
     items.splice(to, 0, ...items.splice(from, 1));
+    markMoved(item.id);
     // 줄이 옮겨지면 브라우저가 버튼 포커스를 놓치므로 같은 버튼에 다시 맞춘다
     await tick();
     document
@@ -170,6 +185,7 @@
     const from = items.findIndex((item) => item.id === dragId);
     const to = dropIndex > from ? dropIndex - 1 : dropIndex;
     items.splice(to, 0, ...items.splice(from, 1));
+    markMoved(dragId);
     dragEnd();
   }
 
@@ -249,6 +265,8 @@
       {#each items as item, index (item.id)}
         <li
           class="row"
+          animate:flip={{ duration: MOVE_MS }}
+          class:moved={movedId === item.id}
           class:dragging={dragId === item.id}
           class:drop-before={dropIndex === index}
           class:drop-after={dropIndex === items.length && index === items.length - 1}
@@ -421,6 +439,15 @@
   .row:hover,
   .row:focus-within {
     background: var(--color-hover);
+  }
+  .row.moved {
+    animation: moved 1.2s ease-out;
+  }
+  @keyframes moved {
+    from {
+      background: var(--color-accent-soft);
+      box-shadow: inset 3px 0 0 var(--color-accent);
+    }
   }
   .row.dragging {
     opacity: 0.4;
