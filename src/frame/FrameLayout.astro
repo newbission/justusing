@@ -1,0 +1,75 @@
+---
+/**
+ * 도구 화면(격리 frame) 페이지의 틀.
+ *
+ * 이 페이지는 도구 페이지 안의 sandbox iframe으로만 열린다. 출처가 없는(opaque) 상태라
+ * 바깥 페이지의 광고·통계 스크립트가 안쪽 내용(PDF 글자, 파일 이름)을 읽을 수 없다.
+ *
+ * 여기에 거는 CSP는 우리 사이트 파일(라이브러리·폰트·CMap)을 읽는 것만 허용하고
+ * 그 밖의 모든 외부 연결을 막는다. 도구 코드 자신도 파일을 밖으로 보낼 수 없다.
+ * blob URL로 띄운 워커도 이 CSP를 그대로 따른다.
+ */
+import '../styles/global.css';
+import { siteConfig } from '../site.config';
+
+interface Props {
+  /** frame 문서 제목 (스크린리더가 iframe 안에서 읽는다) */
+  title: string;
+}
+
+const { title } = Astro.props;
+
+const csp = Astro.csp;
+if (csp) {
+  csp.insertDirective("default-src 'none'");
+  csp.insertDirective("connect-src 'self'");
+  csp.insertDirective('worker-src blob:');
+  csp.insertDirective("img-src 'self' blob: data:");
+  csp.insertDirective("font-src 'self' data:");
+  csp.insertDirective("form-action 'none'");
+  csp.insertDirective("base-uri 'none'");
+  // pdf.js 등이 이미지 디코딩에 WebAssembly를 쓴다 (eval 자체는 계속 금지)
+  csp.insertScriptResource("'self'");
+  csp.insertScriptResource("'wasm-unsafe-eval'");
+} else if (!import.meta.env.DEV) {
+  // 개발 서버에는 CSP 기능이 없다. 배포 빌드에서 CSP 없이 frame이 나가는 일은 막는다.
+  throw new Error('도구 frame에 CSP를 걸 수 없습니다. astro.config의 security.csp를 확인하세요.');
+}
+---
+
+<!doctype html>
+<html lang={siteConfig.defaultLocale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{title}</title>
+    <!--
+      테마: frame은 localStorage를 읽을 수 없으므로 바깥 페이지가 주소(#theme=dark)와
+      postMessage({ type: 'theme', theme })로 알려 준다. 값이 없으면 OS 설정을 따른다.
+    -->
+    <script is:inline>
+      (() => {
+        const apply = (theme) => {
+          if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+          else delete document.documentElement.dataset.theme;
+        };
+        apply(new URLSearchParams(location.hash.slice(1)).get('theme'));
+        addEventListener('message', (event) => {
+          if (event.source !== parent || event.data?.type !== 'theme') return;
+          apply(event.data.theme);
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  html,
+  body {
+    height: 100%;
+  }
+</style>
