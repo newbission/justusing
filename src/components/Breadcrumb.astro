@@ -43,9 +43,9 @@ const jsonLd = {
           <details class="switcher" data-switcher>
             <summary>
               <span aria-current="page">{item.name}</span>
-              <span class="caret" aria-hidden="true">
-                ▾
-              </span>
+              <svg class="caret" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+                <path d="M2 3.5 5 6.5 8 3.5" />
+              </svg>
               <span class="visually-hidden">다른 도구로 이동</span>
             </summary>
             <ul class="menu">
@@ -134,7 +134,9 @@ const jsonLd = {
     background: var(--color-hover);
   }
   .caret {
-    font-size: 12px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
     transition: transform 0.12s;
   }
   .switcher[open] .caret {
