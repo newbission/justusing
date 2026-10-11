@@ -1,0 +1,23 @@
+---
+/**
+ * 바깥 페이지에 떨어뜨린 파일을 아무 스크립트도 받지 못하게 막는다.
+ *
+ * 파일은 격리된 도구 frame 안에서만 받아야 한다. 사용자가 실수로 바깥 페이지에
+ * 파일을 놓으면 같은 페이지의 다른 스크립트(광고 등)가 파일을 읽을 수 있기 때문이다.
+ *
+ * <head> 맨 앞에서 window의 캡처 단계에 가장 먼저 등록하고 stopImmediatePropagation으로
+ * 뒤에 등록되는 모든 drop 리스너에 이벤트가 가지 않게 한다. dragover의 preventDefault는
+ * 브라우저가 파일을 열면서 페이지를 떠나는 것도 막는다.
+ */
+---
+
+<script is:inline>
+  (() => {
+    const block = (event) => {
+      event.preventDefault();
+      if (event.type === 'drop') event.stopImmediatePropagation();
+    };
+    addEventListener('dragover', block, true);
+    addEventListener('drop', block, true);
+  })();
+</script>
