@@ -94,11 +94,10 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
       // drag-request: 도구 칸 안에서 시작된 끌기 (frame은 이미 덮개를 덮고 고정한 상태)
       if (event.data?.type === 'drag-ready' || event.data?.type === 'drag-request') expand();
       if (event.data?.type === 'drag-end') collapse();
-      // 파일을 열면 도구 칸 위쪽을 화면 위쪽(16px 여백)에 맞춰 칸이 화면을 꽉 채우게 한다
+      // 파일을 열면 도구 칸 위쪽을 화면 위쪽(16px 여백)에 맞춰 칸이 화면을 꽉 채우게 한다.
+      // 부드럽게 움직이면 그동안 버튼이 손 아래에서 움직여 엉뚱한 것을 누를 수 있어 바로 옮긴다.
       if (event.data?.type === 'show-tool') {
-        const top = frame.getBoundingClientRect().top + scrollY - 16;
-        const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-        scrollTo({ top, behavior: reduce ? 'auto' : 'smooth' });
+        scrollTo({ top: frame.getBoundingClientRect().top + scrollY - 16, behavior: 'instant' });
       }
     });
   }
