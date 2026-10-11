@@ -3,7 +3,8 @@
  * 광고 칸. 위치 ID만 받고, 크기는 src/ads/slots.ts에서 가져온다.
  *
  * - 광고 켜짐 + 이 슬롯 설정 있음: 크기를 미리 확보한 빈 칸 (업체 스크립트가 채움)
- * - 그 외: 아무것도 그리지 않는다 (빌드 때 결정되므로 화면이 밀리지 않음)
+ * - 개발 모드(npm run dev)에서 꺼져 있으면: 위치 확인용 점선 칸
+ * - 배포 화면에서 꺼져 있으면: 아무것도 그리지 않는다 (빌드 때 결정되므로 화면이 밀리지 않음)
  */
 import { AD_SLOT_SIZES, type AdSlotId } from '../ads/slots';
 import { siteConfig } from '../site.config';
@@ -15,6 +16,7 @@ interface Props {
 const { id } = Astro.props;
 const { desktop, mobile } = AD_SLOT_SIZES[id];
 const slot = siteConfig.ads.enabled ? siteConfig.ads.slots[id] : undefined;
+const showPlaceholder = !slot && import.meta.env.DEV;
 const sizeVars = `--ad-w:${desktop.width}px;--ad-h:${desktop.height}px;--ad-w-m:${mobile.width}px;--ad-h-m:${mobile.height}px`;
 ---
 
@@ -29,12 +31,27 @@ const sizeVars = `--ad-w:${desktop.width}px;--ad-h:${desktop.height}px;--ad-w-m:
   />
 )}
 
+{showPlaceholder && (
+  <div class="ad-slot ad-placeholder" style={sizeVars} aria-hidden="true">
+    광고 · {id}
+  </div>
+)}
+
 <style>
   .ad-slot {
     width: min(var(--ad-w), 100%);
     height: var(--ad-h);
     margin-inline: auto;
     overflow: hidden;
+  }
+  .ad-placeholder {
+    display: grid;
+    place-items: center;
+    border: 1px dashed var(--color-muted);
+    border-radius: var(--radius);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
   }
   @media (max-width: 767px) {
     .ad-slot {
