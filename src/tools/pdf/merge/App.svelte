@@ -12,6 +12,7 @@
   import { canUse } from '../../../lib/entitlement';
   import { assemblePdf } from '../../../lib/pdf/assemble';
   import Thumbnail from '../../../lib/pdf/Thumbnail.svelte';
+  import PageGrid, { type GridPage } from '../../../lib/pdf/PageGrid.svelte';
   import {
     isPasswordError,
     openPdf,
@@ -30,6 +31,10 @@
     passwordInput: string;
     wrongPassword: boolean;
     pageCount: number;
+    /** 이 파일에서 결과에 넣을 페이지 순서와 제외 여부 (펼쳐서 바꾼다) */
+    pages: GridPage[];
+    /** 페이지 격자를 펼쳤는지 */
+    expanded: boolean;
     firstPage?: PDFPageProxy;
     opened?: OpenedPdf;
   }
@@ -107,6 +112,8 @@
         bytes: new Uint8Array(await file.arrayBuffer()),
         status: 'loading',
         pageCount: 0,
+        pages: [],
+        expanded: false,
         passwordInput: '',
         wrongPassword: false,
       };
@@ -123,6 +130,10 @@
       item.opened = await openPdf(item.bytes.slice(), password);
       item.password = password;
       item.pageCount = item.opened.doc.numPages;
+      item.pages = Array.from({ length: item.pageCount }, (_, index) => ({
+        index,
+        excluded: false,
+      }));
       item.firstPage = await item.opened.doc.getPage(1);
       item.status = 'ready';
     } catch (error) {
@@ -284,6 +295,16 @@
             ondrop={dropRow}
             ondragend={dragEnd}
           >
+            <button
+              type="button"
+              class="icon expand"
+              aria-expanded={item.expanded}
+              aria-controls="pages-{item.id}"
+              disabled={item.status !== 'ready'}
+              onclick={() => (item.expanded = !item.expanded)}
+              aria-label="{item.name} 페이지 {item.expanded ? '접기' : '펼치기'}"
+              >{item.expanded ? '▾' : '▸'}</button
+            >
             <div class="thumb">
               {#if item.firstPage}
                 <Thumbnail page={item.firstPage} size={THUMB} />
@@ -348,6 +369,11 @@
               aria-label="{item.name} 빼기">×</button
             >
           </div>
+          {#if item.expanded && item.opened}
+            <div class="pages" id="pages-{item.id}">
+              <PageGrid doc={item.opened.doc} pages={item.pages} label={item.name} size={88} />
+            </div>
+          {/if}
         </li>
       {/each}
     </ol>
@@ -466,6 +492,14 @@
     flex: none;
     width: 56px;
     height: 56px;
+  }
+  .expand {
+    border-color: transparent;
+    font-size: 14px;
+  }
+  /* 펼친 페이지 격자: 줄 머리의 썸네일 위치에 맞춰 들여 쓴다 */
+  .pages {
+    padding: 8px 8px 16px 52px;
   }
   .info {
     display: flex;
