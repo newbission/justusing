@@ -2,7 +2,11 @@
  * 도구 레지스트리. 사이트에 노출되는 도구 목록의 유일한 출처.
  *
  * 새 도구 추가 방법:
- *   1. src/tools/<카테고리>/<이름>/ 폴더를 만들고 meta.ts, Tool.astro를 둔다.
+ *   1. src/tools/<카테고리>/<이름>/ 폴더를 만든다.
+ *      - meta.ts      상태·문구·관련 도구 (defineTool)
+ *      - content.ts   사용법·FAQ (defineContent) — live 도구는 필수
+ *      - Frame.astro  격리 frame 안의 도구 화면 (FrameLayout + App)
+ *      - App.svelte   실제 도구 UI
  *   2. 아래 TOOL_IDS에 '<카테고리>/<이름>' 한 줄을 넣는다.
  * 허브·카테고리 목록·사이트맵·메뉴·관련 도구가 이 목록에서 자동으로 만들어진다.
  */

@@ -1,10 +1,16 @@
 ---
 /**
- * 모든 도구 페이지를 만드는 라우트. 레지스트리의 live 도구마다 /<카테고리>/<이름> 페이지를 하나씩 만든다.
- * 도구 화면은 각 도구 폴더의 Tool.astro를 가져와 도구 영역에 넣는다.
+ * 모든 도구 페이지를 만드는 라우트. 레지스트리의 live 도구마다 /<카테고리>/<이름>/ 페이지를 하나씩 만든다.
+ *
+ * 도구 화면은 격리 iframe(/<카테고리>/<이름>/frame/)으로 띄우고,
+ * 그 아래 사용법·FAQ·관련 도구는 content.ts와 meta.ts에서 그린다.
  */
 import type { GetStaticPaths } from 'astro';
 import ToolLayout from '../../layouts/ToolLayout.astro';
+import ToolFrame from '../../components/ToolFrame.astro';
+import ToolHowTo from '../../components/ToolHowTo.astro';
+import ToolFaq from '../../components/ToolFaq.astro';
+import RelatedTools from '../../components/RelatedTools.astro';
 import { CATEGORIES } from '../../tools/categories';
 import { liveTools, type Tool } from '../../tools/registry';
 
@@ -18,15 +24,10 @@ interface Props {
   tool: Tool;
 }
 
-const toolComponents = import.meta.glob<{ default: any }>('../../tools/*/*/Tool.astro', {
-  eager: true,
-});
-
 const { tool } = Astro.props;
-const ToolComponent = toolComponents[`../../tools/${tool.id}/Tool.astro`]?.default;
-if (!ToolComponent) throw new Error(`도구 화면 파일이 없습니다: src/tools/${tool.id}/Tool.astro`);
-
 const text = tool.text.ko;
+// live 도구는 레지스트리가 content.ts를 보장한다
+const content = tool.content!.ko;
 const breadcrumb = [
   { name: '홈', href: '/' },
   { name: CATEGORIES[tool.category].text.ko.name, href: `/${tool.category}/` },
@@ -40,5 +41,8 @@ const breadcrumb = [
   description={text.description}
   breadcrumb={breadcrumb}
 >
-  <ToolComponent slot="tool" />
+  <ToolFrame slot="tool" src={`${tool.href}frame/`} title={`${text.name} 도구 화면`} />
+  <ToolHowTo slot="how-to" name={text.name} steps={content.howTo} />
+  <ToolFaq slot="faq" items={content.faq} />
+  <RelatedTools slot="related" ids={tool.related ?? []} />
 </ToolLayout>

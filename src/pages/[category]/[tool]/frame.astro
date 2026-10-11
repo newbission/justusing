@@ -1,0 +1,28 @@
+---
+/**
+ * 도구 화면 페이지 (/<카테고리>/<이름>/frame/). 도구 페이지 안의 격리 iframe으로만 열린다.
+ * 각 도구 폴더의 Frame.astro를 그대로 그린다 (Frame.astro가 FrameLayout과 App을 쓴다).
+ */
+import type { GetStaticPaths } from 'astro';
+import { liveTools, type Tool } from '../../../tools/registry';
+
+export const getStaticPaths = (() =>
+  liveTools.map((tool) => {
+    const [category, slug] = tool.id.split('/');
+    return { params: { category, tool: slug }, props: { tool } };
+  })) satisfies GetStaticPaths;
+
+interface Props {
+  tool: Tool;
+}
+
+const frames = import.meta.glob<{ default: any }>('../../../tools/*/*/Frame.astro', {
+  eager: true,
+});
+
+const { tool } = Astro.props;
+const Frame = frames[`../../../tools/${tool.id}/Frame.astro`]?.default;
+if (!Frame) throw new Error(`도구 화면 파일이 없습니다: src/tools/${tool.id}/Frame.astro`);
+---
+
+<Frame />
