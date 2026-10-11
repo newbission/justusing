@@ -16,12 +16,19 @@ PDF·이미지 같은 파일을 **브라우저 안에서만** 처리하는 무�
 ```sh
 npm run dev           # 개발 서버 (http://localhost:4321)
 npm run build         # dist/ 에 정적 사이트 생성
-npm run check         # 타입 검사
+npm run preview       # 빌드 결과 미리보기 (격리·CSP가 켜진 실제 배포 상태)
+npm run check         # 타입 검사 (astro check + svelte-check)
 npm run format        # 포맷 정리
 npm run format:check  # 포맷 검사 (CI에서 실행)
+npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
+python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 ```
 
 개발 서버에서 `/_dev/layout/` 주소로 도구 페이지 틀과 광고 슬롯 위치를 볼 수 있다 (배포에는 없음).
+
+**개발 서버는 도구 격리와 CSP가 꺼져 있다.** 도구를 만들면 반드시 `npm run build` 후
+`npm run preview` 또는 `npm run test:e2e`로 실제 배포 상태에서 확인한다.
+(예: 격리 frame에서 form 제출이 막히는 문제는 개발 서버에서 보이지 않았다.)
 
 ## 반드시 지킬 원칙
 
@@ -34,15 +41,30 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
 - 다운로드는 Blob URL + `<a download>`로만 한다.
 - 파일 이름·내용을 URL, 페이지 제목, 통계 이벤트에 넣지 않는다.
 
-### 도구 영역 격리 (결정됨, 3단계에서 구현)
+### 도구 영역 격리
 
 광고·통계 같은 외부 스크립트는 같은 페이지에서 실행되므로 화면의 PDF 글자·파일 이름을 읽을 수 있다.
 그래서 **도구 영역(파일 선택·미리보기·처리·다운로드)은 격리된 iframe 안에서만 동작**한다.
 
-- `sandbox` iframe(`allow-same-origin` 없음)으로 띄워서 바깥 페이지의 스크립트가 안쪽 내용에 접근하지 못하게 한다.
-- iframe 문서에는 외부 통신을 모두 막는 CSP(`connect-src 'none'` 등)를 건다. 도구 코드 자신도 아무것도 보낼 수 없다.
+- 바깥 페이지 `/pdf/view/`가 `ToolFrame`으로 `/pdf/view/frame/`을
+  `sandbox="allow-scripts allow-downloads"`(allow-same-origin 없음) iframe으로 띄운다.
+  frame은 출처가 `null`이 되어 바깥 스크립트와 서로 접근할 수 없다.
+- frame 문서(`src/frame/FrameLayout.astro`)의 CSP: `default-src 'none'`, `connect-src 'self'`
+  (우리 사이트 파일만 읽기), `worker-src blob:` 등. 외부 연결은 도구 코드 자신도 불가.
 - 광고·통계 스크립트는 바깥 페이지에만 둔다. 광고는 처리 중에도 계속 보인다.
-- 바깥 페이지에도 CSP를 걸어 허용한 곳(자기 사이트, 광고 업체)만 연결되게 한다.
+- frame 높이는 고정(`ToolFrame`), 안에서 스크롤한다. 처리 전후로 바깥 레이아웃이 밀리지 않는다.
+- 모든 페이지에 Astro CSP(`security.csp`)가 켜져 있다. 광고를 붙일 때 바깥 페이지 CSP에 광고 업체를 추가한다.
+
+**격리 frame 안에서 지킬 것** (어기면 배포 환경에서만 깨진다):
+
+- 워커는 `src/lib/worker.ts`의 `createWorker(url)`로만 띄운다 (`import url from './x.worker.ts?worker&url'`).
+  일반 `new Worker()`는 막히고, 워커는 IIFE로 번들된다 (`astro.config.mjs`).
+- `<form>` 제출을 쓰지 않는다 (sandbox에 allow-forms 없음). 버튼 클릭·Enter 키로 직접 처리한다.
+- HTML `style="..."` 속성을 쓰지 않는다 (CSP가 막음). CSS 클래스나 Svelte `style:` 지시자를 쓴다.
+- `localStorage`를 쓸 수 없다. 테마는 바깥 페이지가 주소(`#theme=`)와 `postMessage`로 알려 준다.
+- `scrollIntoView`는 바깥 페이지까지 스크롤하므로 스크롤 영역의 `scrollTop`을 직접 바꾼다.
+- 외부 리소스가 필요하면 우리 사이트에 복사해 둔다 (예: pdf.js CMap → `public/vendor/pdfjs/`,
+  `scripts/copy-pdfjs-assets.mjs`가 dev/build 전에 복사).
 
 ### 설정은 한 곳에
 
@@ -61,11 +83,15 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
 
 1. `src/tools/<카테고리>/<이름>/` 폴더를 만든다.
    - `meta.ts`: `defineTool({ status, text: { ko: { name, title, description } }, related })`
-   - `Tool.astro`: 도구 영역 화면
+   - `content.ts`: `defineContent({ ko: { howTo: [...], faq: [{ q, a }] } })` — live 도구는 필수
+   - `Frame.astro`: 격리 frame 페이지. `FrameLayout` 안에 `App.svelte`를 `mount`한다 (`pdf/view` 참고)
+   - `App.svelte`: 실제 도구 UI. 첫 화면은 `src/frame/FileDrop.svelte`를 쓴다
 2. `src/tools/registry.ts`의 `TOOL_IDS`에 `'<카테고리>/<이름>'` 한 줄을 넣는다.
+3. 다 만들면 `meta.ts`의 `status`를 `'live'`로 바꾸고 `tests/e2e/`에 E2E를 추가한다.
 
-도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지는 `src/pages/[category]/[tool].astro`가
-레지스트리에서 자동으로 만든다. 새 카테고리는 `src/tools/categories.ts`에 추가한다.
+도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
+frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동으로 만든다.
+새 카테고리는 `src/tools/categories.ts`에 추가한다. PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`를 쓴다.
 
 ### 도구 페이지 구성
 
@@ -75,6 +101,7 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
 ### 광고 슬롯 규칙
 
 - 위치는 5개뿐: `rail-left`, `rail-right`, `below-tool`, `in-content`, `mobile-anchor` (`src/ads/slots.ts`).
+  크기는 `src/ads/slots.css`가 유일한 출처다.
 - 슬롯 크기는 미리 고정한다. 광고가 떠도 레이아웃이 밀리면 안 된다 (CLS 0).
 - `site.config.ts`의 `ads.enabled` 하나로 전체를 켜고 끈다 (기본 꺼짐).
   꺼져 있으면 개발 모드에서만 점선 칸을 보여주고, 배포 화면에는 아무것도 그리지 않는다.
@@ -108,7 +135,8 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
 - MVP가 완성될 때까지는 main에서 작업하고, **MVP가 끝나면 한 번에 push**해서 첫 배포를 한다.
 - MVP 이후: `main`은 직접 건드리지 않는다.
   `dev`에서 기능 브랜치를 따고 → 작은 커밋 → 작은 PR → `dev`에 병합 → `dev`를 `main`에 병합하면 배포.
-- CI: PR마다 포맷·타입 검사·빌드 (`.github/workflows/ci.yml`), main push 시 배포 (`deploy.yml`).
+- CI: PR마다 포맷·타입 검사·빌드·E2E (`.github/workflows/ci.yml`),
+  main push 시 같은 검사를 통과해야 배포 (`deploy.yml`).
 
 ### 커밋 메시지 규칙
 
@@ -122,7 +150,7 @@ Co-Authored-By: ...
 
 - 타입: `feat`(기능) | `fix`(버그) | `refactor`(동작 그대로, 구조만) | `style`(포맷만, CSS 작성은 feat) |
   `docs` | `test` | `build`(의존성·빌드 설정) | `ci` | `chore`(그 외)
-- 영역(생략 가능): `config`, `layout`, `theme`, `ads`, `registry`, `seo`, `entitlement`, `dev`, `hub`, `category`,
+- 영역(생략 가능): `config`, `layout`, `theme`, `ads`, `registry`, `seo`, `entitlement`, `dev`, `hub`, `category`, `frame`,
   도구는 `pdf-view`, `pdf-merge` 처럼 도구 ID를 쓴다.
 - 제목: 한국어, "~ 추가 / ~ 수정 / ~ 제거 / ~ 변경"으로 끝낸다. 50자 이내.
 - 마지막 줄에 `Co-Authored-By` 표기를 넣는다.
@@ -133,8 +161,9 @@ Co-Authored-By: ...
 
 - [x] 1단계: 골격 — 설정 파일, 공통 레이아웃, 다크 모드, AdSlot, 레지스트리, 사이트맵·robots, 배포 워크플로
 - [x] 2단계: 허브(`/`), PDF 목록(`/pdf/`), 머리글 카테고리 메뉴, 브레드크럼(+구조화 데이터), 사이트맵에 카테고리 주소 추가.
-      PDF 도구 6개를 `status: 'soon'`(준비 중)으로 등록 — 도구를 만들 때마다 `live`로 바꾸고 `Tool.astro`를 추가한다.
-- [ ] 3단계: PDF 보기 (`/pdf/view/`) — 파일 선택·워커·상태 바·사용법/FAQ/관련 도구 공통 부품도 여기서
+      PDF 도구 6개를 `status: 'soon'`(준비 중)으로 등록 — 도구를 만들 때마다 `live`로 바꾼다.
+- [x] 3단계: PDF 보기 (`/pdf/view/`) + 공통 기반 — 격리 frame, CSP, blob 워커, pdf.js 직접 호스팅,
+      FileDrop, 사용법/FAQ/관련 도구 섹션, E2E(로컬 처리 약속 검증)와 CI 연결
 - [ ] 4단계: PDF 합치기 (`/pdf/merge/`)
 - [ ] 5단계: 나머지 PDF 도구 하나씩 — 나누기, 회전, 정리(순서·삭제), 편집(텍스트·이미지·서명)
 - [ ] MVP 범위 확정 후 GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 → 아래 수동 설정
