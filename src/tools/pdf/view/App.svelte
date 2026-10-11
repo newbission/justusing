@@ -154,6 +154,7 @@
       <div class="group">
         <button
           type="button"
+          class="page-nav"
           onclick={() => goTo(currentPage - 1)}
           disabled={currentPage <= 1}
           aria-label="이전 페이지">‹</button
@@ -161,6 +162,7 @@
         <span class="page-count" aria-live="polite">{currentPage} / {pages.length}</span>
         <button
           type="button"
+          class="page-nav"
           onclick={() => goTo(currentPage + 1)}
           disabled={currentPage >= pages.length}
           aria-label="다음 페이지">›</button
@@ -409,6 +411,12 @@
     button {
       min-width: 30px;
       padding: 0 6px;
+    }
+  }
+  /* 아주 좁은 화면: 페이지 이동은 손가락 스크롤로 하고 버튼은 숨긴다 (쪽 번호는 그대로 보인다) */
+  @media (max-width: 400px) {
+    .page-nav {
+      display: none;
     }
   }
 </style>
