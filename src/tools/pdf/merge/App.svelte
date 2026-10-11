@@ -79,6 +79,31 @@
       ?.focus();
   }
 
+  // 끌어서 순서 바꾸기. 끄는 줄 id와 놓일 자리(0 = 맨 위, items.length = 맨 아래)
+  let dragId: number | undefined = $state();
+  let dropIndex: number | undefined = $state();
+
+  function dragOver(event: DragEvent, index: number) {
+    if (dragId === undefined) return; // 파일 끌기는 frame 전체가 받는다 (drop.ts)
+    event.preventDefault();
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    dropIndex = event.clientY < rect.top + rect.height / 2 ? index : index + 1;
+  }
+
+  function dropRow(event: DragEvent) {
+    if (dragId === undefined || dropIndex === undefined) return;
+    event.preventDefault();
+    const from = items.findIndex((item) => item.id === dragId);
+    const to = dropIndex > from ? dropIndex - 1 : dropIndex;
+    items.splice(to, 0, ...items.splice(from, 1));
+    dragEnd();
+  }
+
+  function dragEnd() {
+    dragId = undefined;
+    dropIndex = undefined;
+  }
+
   function formatSize(bytes: number) {
     return bytes < 1024 * 1024
       ? `${Math.max(1, Math.round(bytes / 1024))}KB`
@@ -119,7 +144,23 @@
 
     <ol class="list" aria-label="합칠 파일 목록 (위에서부터 순서대로 합칩니다)">
       {#each items as item, index (item.id)}
-        <li class="row" data-item={item.id}>
+        <li
+          class="row"
+          class:dragging={dragId === item.id}
+          class:drop-before={dropIndex === index}
+          class:drop-after={dropIndex === items.length && index === items.length - 1}
+          data-item={item.id}
+          draggable="true"
+          ondragstart={(event) => {
+            dragId = item.id;
+            event.dataTransfer!.effectAllowed = 'move';
+            // 일부 브라우저는 데이터가 없으면 끌기를 시작하지 않는다 (내용은 쓰지 않음)
+            event.dataTransfer!.setData('text/plain', '');
+          }}
+          ondragover={(event) => dragOver(event, index)}
+          ondrop={dropRow}
+          ondragend={dragEnd}
+        >
           <div class="thumb">
             {#if item.firstPage}
               <Thumbnail page={item.firstPage} size={THUMB} />
@@ -206,6 +247,19 @@
   }
   .row + .row {
     border-top: 1px solid var(--color-line);
+  }
+  .row[draggable='true'] {
+    cursor: grab;
+  }
+  .row.dragging {
+    opacity: 0.4;
+  }
+  /* 놓일 자리 표시 (테두리 대신 그림자로 그려 줄 높이가 바뀌지 않게) */
+  .row.drop-before {
+    box-shadow: inset 0 3px 0 var(--color-accent);
+  }
+  .row.drop-after {
+    box-shadow: inset 0 -3px 0 var(--color-accent);
   }
   .thumb {
     flex: none;
