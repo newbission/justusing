@@ -49,6 +49,8 @@
         // 저장이 막혀도 이번 페이지에는 적용된다
       }
       updateLabel(button);
+      // 도구 frame 등 테마를 따로 맞춰야 하는 곳에 알린다
+      document.dispatchEvent(new CustomEvent<Theme>('themechange', { detail: next }));
     });
   }
 </script>
