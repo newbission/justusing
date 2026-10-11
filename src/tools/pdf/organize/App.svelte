@@ -7,6 +7,9 @@
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
+  import { downloadFile } from '../../../frame/download';
+  import { canUse } from '../../../lib/entitlement';
+  import { assemblePdf } from '../../../lib/pdf/assemble';
   import { isPasswordError, openPdf, type OpenedPdf } from '../../../lib/pdf/pdfjs';
   import PageGrid, { type GridPage } from '../../../lib/pdf/PageGrid.svelte';
 
@@ -28,6 +31,54 @@
   const keptCount = $derived(pages.filter((page) => !page.excluded).length);
   const reordered = $derived(pages.some((page, position) => page.index !== position));
   const changed = $derived(reordered || keptCount !== pageCount);
+
+  type Run =
+    | { kind: 'idle' }
+    | { kind: 'working' }
+    | { kind: 'done'; name: string; bytes: Uint8Array; signature: string }
+    | { kind: 'failed'; message: string };
+  let run: Run = $state({ kind: 'idle' });
+
+  /** 결과에 넣을 쪽 순서. 정리한 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
+  const signature = $derived(
+    pages
+      .filter((page) => !page.excluded)
+      .map((page) => page.index)
+      .join(','),
+  );
+  const result = $derived(run.kind === 'done' && run.signature === signature ? run : undefined);
+  /** 실행할 수 없을 때 그 이유 */
+  const problem = $derived(
+    keptCount === 0 ? '남길 쪽이 하나도 없습니다.' : !changed ? '바꾼 내용이 없습니다.' : undefined,
+  );
+
+  async function organize() {
+    if (!bytes || problem || run.kind === 'working') return;
+    const entitlement = await canUse('pdf/organize');
+    if (!entitlement.allowed) {
+      run = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      return;
+    }
+
+    const startedWith = signature;
+    run = { kind: 'working' };
+    try {
+      const output = await assemblePdf({
+        sources: [{ bytes, password }],
+        pages: pages.filter((page) => !page.excluded).map(({ index }) => ({ source: 0, index })),
+      });
+      const base = fileName.replace(/\.pdf$/i, '');
+      run = { kind: 'done', name: `${base}_정리.pdf`, bytes: output, signature: startedWith };
+    } catch {
+      run = { kind: 'failed', message: '정리하지 못했습니다. 파일이 손상되었을 수 있습니다.' };
+    }
+  }
+
+  function formatSize(size: number) {
+    return size < 1024 * 1024
+      ? `${Math.max(1, Math.round(size / 1024))}KB`
+      : `${(size / 1024 / 1024).toFixed(1)}MB`;
+  }
 
   /** 처음 상태(원래 순서, 모두 넣음)로 */
   function resetPages() {
@@ -68,6 +119,7 @@
     bytes = undefined;
     password = undefined;
     wrongPassword = false;
+    run = { kind: 'idle' };
     phase = 'idle';
   }
 
@@ -85,6 +137,37 @@
       <span class="name" title={fileName}>{fileName}</span>
       <span class="meta">{pageCount}쪽</span>
       <button type="button" class="text" onclick={close}>다른 파일</button>
+    </div>
+
+    <!-- 실행·다운로드 막대: 높이 고정(처리 전후 같음). 모바일 하단 고정 광고와 멀도록 위에 둔다 -->
+    <div class="action" role="group" aria-label="페이지 정리">
+      <p class="action-text" aria-live="polite">
+        {#if run.kind === 'working'}
+          정리하는 중…
+        {:else if result}
+          완료: {result.name} · {formatSize(result.bytes.length)}
+        {:else if run.kind === 'failed'}
+          <strong>{run.message}</strong>
+        {:else if problem}
+          {problem}
+        {:else}
+          {keptCount}쪽짜리 PDF를 만듭니다.
+        {/if}
+      </p>
+      {#if result}
+        <button
+          type="button"
+          class="primary"
+          onclick={() => downloadFile(result.bytes, result.name)}>다운로드</button
+        >
+      {:else}
+        <button
+          type="button"
+          class="primary"
+          disabled={problem !== undefined || run.kind === 'working'}
+          onclick={organize}>{run.kind === 'working' ? '정리하는 중…' : 'PDF 정리'}</button
+        >
+      {/if}
     </div>
 
     <div class="body">
@@ -218,6 +301,33 @@
     background: var(--color-accent);
   }
 
+  .action {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    height: 64px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  /* 좁은 화면에서도 안내를 다 읽을 수 있게 두 줄까지 보여 준다 (막대 높이는 그대로) */
+  .action-text {
+    display: -webkit-box;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .action-text strong {
+    color: var(--color-text);
+  }
+
   .body {
     flex: 1;
     padding: 16px;
@@ -282,5 +392,21 @@
   .actions {
     display: flex;
     gap: 8px;
+  }
+
+  /* 좁은 화면: 안내를 위 줄, 버튼을 아래 줄에 둔다 (높이는 처리 전후 같음) */
+  @media (max-width: 520px) {
+    .action {
+      flex-wrap: wrap;
+      align-content: center;
+      row-gap: 8px;
+      height: 112px;
+    }
+    .action-text {
+      flex-basis: 100%;
+    }
+    .action button {
+      flex: 1;
+    }
   }
 </style>
