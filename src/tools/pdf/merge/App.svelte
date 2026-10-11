@@ -3,7 +3,7 @@
   넣은 PDF들을 목록으로 보여주고, 정한 순서대로 하나로 합친다. 파일은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
@@ -66,6 +66,19 @@
     item.opened?.close();
   }
 
+  /** 한 칸 위(-1)나 아래(1)로 옮긴다 */
+  async function move(item: Item, delta: -1 | 1) {
+    const from = items.indexOf(item);
+    const to = from + delta;
+    if (to < 0 || to >= items.length) return;
+    items.splice(to, 0, ...items.splice(from, 1));
+    // 줄이 옮겨지면 브라우저가 버튼 포커스를 놓치므로 같은 버튼에 다시 맞춘다
+    await tick();
+    document
+      .querySelector<HTMLButtonElement>(`[data-item="${item.id}"] [data-move="${delta}"]`)
+      ?.focus();
+  }
+
   function formatSize(bytes: number) {
     return bytes < 1024 * 1024
       ? `${Math.max(1, Math.round(bytes / 1024))}KB`
@@ -105,8 +118,8 @@
     </div>
 
     <ol class="list" aria-label="합칠 파일 목록 (위에서부터 순서대로 합칩니다)">
-      {#each items as item (item.id)}
-        <li class="row">
+      {#each items as item, index (item.id)}
+        <li class="row" data-item={item.id}>
           <div class="thumb">
             {#if item.firstPage}
               <Thumbnail page={item.firstPage} size={THUMB} />
@@ -124,6 +137,22 @@
               {/if}
             </span>
           </div>
+          <button
+            type="button"
+            class="icon"
+            data-move="-1"
+            onclick={() => move(item, -1)}
+            disabled={index === 0}
+            aria-label="{item.name} 위로">↑</button
+          >
+          <button
+            type="button"
+            class="icon"
+            data-move="1"
+            onclick={() => move(item, 1)}
+            disabled={index === items.length - 1}
+            aria-label="{item.name} 아래로">↓</button
+          >
           <button
             type="button"
             class="icon"
