@@ -4,6 +4,7 @@
  *
  * - 광고 켜짐 + 이 슬롯 설정 있음: 크기를 미리 확보한 빈 칸 (업체 스크립트가 채움)
  * - 개발 모드(npm run dev)에서 꺼져 있으면: 위치 확인용 점선 칸
+ *   (배포용 빌드도 SHOW_AD_PLACEHOLDERS=1 로 빌드하면 점선 칸을 보여준다. 실제 배포에는 쓰지 않는다)
  * - 배포 화면에서 꺼져 있으면: 아무것도 그리지 않는다 (빌드 때 결정되므로 화면이 밀리지 않음)
  */
 import '../ads/slots.css';
@@ -16,7 +17,7 @@ interface Props {
 
 const { id } = Astro.props;
 const slot = siteConfig.ads.enabled ? siteConfig.ads.slots[id] : undefined;
-const showPlaceholder = !slot && import.meta.env.DEV;
+const showPlaceholder = !slot && (import.meta.env.DEV || process.env.SHOW_AD_PLACEHOLDERS === '1');
 ---
 
 {slot && (
