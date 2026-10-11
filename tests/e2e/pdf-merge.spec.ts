@@ -113,7 +113,7 @@ test('줄을 끌어서 순서를 바꾼다', async ({ page }) => {
     .locator('input[type=file]')
     .first()
     .setInputFiles([fixture('three-pages.pdf'), fixture('korean.pdf')]);
-  const rows = frame.locator('li.row');
+  const rows = frame.locator('.row');
   await expect(rows.nth(1)).toContainText('1쪽');
 
   // 두 번째 줄을 첫 번째 줄 윗부분에 놓는다

@@ -265,88 +265,89 @@
 
     <ol class="list" aria-label="합칠 파일 목록 (위에서부터 순서대로 합칩니다)">
       {#each items as item, index (item.id)}
-        <li
-          class="row"
-          animate:flip={{ duration: MOVE_MS }}
-          class:moved={movedId === item.id}
-          class:dragging={dragId === item.id}
-          class:drop-before={dropIndex === index}
-          class:drop-after={dropIndex === items.length && index === items.length - 1}
-          data-item={item.id}
-          draggable={item.status !== 'password'}
-          ondragstart={(event) => {
-            dragId = item.id;
-            event.dataTransfer!.effectAllowed = 'move';
-            // 일부 브라우저는 데이터가 없으면 끌기를 시작하지 않는다 (내용은 쓰지 않음)
-            event.dataTransfer!.setData('text/plain', '');
-          }}
-          ondragover={(event) => dragOver(event, index)}
-          ondrop={dropRow}
-          ondragend={dragEnd}
-        >
-          <div class="thumb">
-            {#if item.firstPage}
-              <Thumbnail page={item.firstPage} size={THUMB} />
-            {/if}
-          </div>
-          <div class="info">
-            <span class="name" title={item.name}>{item.name}</span>
-            <span class="meta">
-              {#if item.status === 'loading'}
-                읽는 중…
-              {:else if item.status === 'password'}
-                <!-- 격리 frame은 form 제출이 막혀 있어 Enter 키와 버튼으로 직접 처리한다 -->
-                <span class="password">
-                  <input
-                    type="password"
-                    bind:value={item.passwordInput}
-                    autocomplete="off"
-                    placeholder={item.wrongPassword ? '암호가 맞지 않습니다' : '암호 입력'}
-                    aria-label="{item.name} 암호"
-                    aria-invalid={item.wrongPassword}
-                    onkeydown={(event) => {
-                      if (event.key === 'Enter' && item.passwordInput)
-                        load(item, item.passwordInput);
-                    }}
-                  />
-                  <button
-                    type="button"
-                    disabled={!item.passwordInput}
-                    onclick={() => load(item, item.passwordInput)}>열기</button
-                  >
-                </span>
-              {:else if item.status === 'error'}
-                <strong>열 수 없는 파일입니다. 빼고 합칩니다.</strong>
-              {:else}
-                {item.pageCount}쪽 · {formatSize(item.bytes.length)}
-              {/if}
-            </span>
-          </div>
-          <!-- 암호를 넣기 전에는 끌기와 마찬가지로 순서 버튼도 숨겨 암호 칸에 자리를 준다 -->
-          {#if item.status !== 'password'}
-            <button
-              type="button"
-              class="icon"
-              data-move="-1"
-              onclick={() => move(item, -1)}
-              disabled={index === 0}
-              aria-label="{item.name} 위로">↑</button
-            >
-            <button
-              type="button"
-              class="icon"
-              data-move="1"
-              onclick={() => move(item, 1)}
-              disabled={index === items.length - 1}
-              aria-label="{item.name} 아래로">↓</button
-            >
-          {/if}
-          <button
-            type="button"
-            class="icon"
-            onclick={() => remove(item)}
-            aria-label="{item.name} 빼기">×</button
+        <li class="item" data-item={item.id} animate:flip={{ duration: MOVE_MS }}>
+          <!-- 줄 머리만 끌린다 (펼친 페이지 격자는 따로 끌기를 처리한다) -->
+          <div
+            class="row"
+            class:moved={movedId === item.id}
+            class:dragging={dragId === item.id}
+            class:drop-before={dropIndex === index}
+            class:drop-after={dropIndex === items.length && index === items.length - 1}
+            draggable={item.status !== 'password'}
+            ondragstart={(event) => {
+              dragId = item.id;
+              event.dataTransfer!.effectAllowed = 'move';
+              // 일부 브라우저는 데이터가 없으면 끌기를 시작하지 않는다 (내용은 쓰지 않음)
+              event.dataTransfer!.setData('text/plain', '');
+            }}
+            ondragover={(event) => dragOver(event, index)}
+            ondrop={dropRow}
+            ondragend={dragEnd}
           >
+            <div class="thumb">
+              {#if item.firstPage}
+                <Thumbnail page={item.firstPage} size={THUMB} />
+              {/if}
+            </div>
+            <div class="info">
+              <span class="name" title={item.name}>{item.name}</span>
+              <span class="meta">
+                {#if item.status === 'loading'}
+                  읽는 중…
+                {:else if item.status === 'password'}
+                  <!-- 격리 frame은 form 제출이 막혀 있어 Enter 키와 버튼으로 직접 처리한다 -->
+                  <span class="password">
+                    <input
+                      type="password"
+                      bind:value={item.passwordInput}
+                      autocomplete="off"
+                      placeholder={item.wrongPassword ? '암호가 맞지 않습니다' : '암호 입력'}
+                      aria-label="{item.name} 암호"
+                      aria-invalid={item.wrongPassword}
+                      onkeydown={(event) => {
+                        if (event.key === 'Enter' && item.passwordInput)
+                          load(item, item.passwordInput);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!item.passwordInput}
+                      onclick={() => load(item, item.passwordInput)}>열기</button
+                    >
+                  </span>
+                {:else if item.status === 'error'}
+                  <strong>열 수 없는 파일입니다. 빼고 합칩니다.</strong>
+                {:else}
+                  {item.pageCount}쪽 · {formatSize(item.bytes.length)}
+                {/if}
+              </span>
+            </div>
+            <!-- 암호를 넣기 전에는 끌기와 마찬가지로 순서 버튼도 숨겨 암호 칸에 자리를 준다 -->
+            {#if item.status !== 'password'}
+              <button
+                type="button"
+                class="icon"
+                data-move="-1"
+                onclick={() => move(item, -1)}
+                disabled={index === 0}
+                aria-label="{item.name} 위로">↑</button
+              >
+              <button
+                type="button"
+                class="icon"
+                data-move="1"
+                onclick={() => move(item, 1)}
+                disabled={index === items.length - 1}
+                aria-label="{item.name} 아래로">↓</button
+              >
+            {/if}
+            <button
+              type="button"
+              class="icon"
+              onclick={() => remove(item)}
+              aria-label="{item.name} 빼기">×</button
+            >
+          </div>
         </li>
       {/each}
     </ol>
@@ -428,7 +429,7 @@
     padding: 0 8px;
     border-radius: var(--radius);
   }
-  .row + .row {
+  .item + .item {
     border-top: 1px solid var(--color-line);
   }
   .row[draggable='true'] {
