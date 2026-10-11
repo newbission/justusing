@@ -8,6 +8,7 @@
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
   import { isPasswordError, openPdf, type OpenedPdf } from '../../../lib/pdf/pdfjs';
+  import PageGrid, { type GridPage } from '../../../lib/pdf/PageGrid.svelte';
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
@@ -21,6 +22,17 @@
   let opened: OpenedPdf | undefined = $state.raw();
 
   const pageCount = $derived(opened?.doc.numPages ?? 0);
+
+  /** 결과에 넣을 페이지 순서와 제외 여부 (PageGrid가 바꾼다) */
+  let pages: GridPage[] = $state([]);
+  const keptCount = $derived(pages.filter((page) => !page.excluded).length);
+  const reordered = $derived(pages.some((page, position) => page.index !== position));
+  const changed = $derived(reordered || keptCount !== pageCount);
+
+  /** 처음 상태(원래 순서, 모두 넣음)로 */
+  function resetPages() {
+    pages = Array.from({ length: pageCount }, (_, index) => ({ index, excluded: false }));
+  }
 
   async function open(file: File) {
     await close();
@@ -36,6 +48,7 @@
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 복사본을 준다 (원본은 정리할 때 쓴다)
       opened = await openPdf(bytes.slice(), withPassword);
       password = withPassword;
+      resetPages();
       phase = 'ready';
       requestShowTool();
     } catch (error) {
@@ -72,6 +85,21 @@
       <span class="name" title={fileName}>{fileName}</span>
       <span class="meta">{pageCount}쪽</span>
       <button type="button" class="text" onclick={close}>다른 파일</button>
+    </div>
+
+    <div class="body">
+      <div class="summary">
+        <span class="help" aria-live="polite">
+          {#if changed}
+            {pageCount}쪽 중 {keptCount}쪽 남김{reordered ? ' · 순서 바뀜' : ''}
+          {:else}
+            쪽을 끌거나 ◀ ▶로 순서를 바꾸고, 필요 없는 쪽은 "제외"하세요.
+          {/if}
+        </span>
+        <button type="button" class="text" disabled={!changed} onclick={resetPages}>되돌리기</button
+        >
+      </div>
+      <PageGrid doc={opened.doc} bind:pages label={fileName} size={112} />
     </div>
   {:else if phase === 'loading'}
     <p class="status" role="status">PDF를 여는 중…</p>
@@ -188,6 +216,24 @@
   button.primary:hover:not(:disabled) {
     border-color: var(--color-accent);
     background: var(--color-accent);
+  }
+
+  .body {
+    flex: 1;
+    padding: 16px;
+    overflow: auto;
+  }
+  .summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .summary .help {
+    flex: 1 1 200px;
+    color: var(--color-muted);
+    font-size: 13px;
   }
 
   .status {
