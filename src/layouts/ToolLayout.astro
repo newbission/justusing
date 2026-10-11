@@ -19,16 +19,18 @@ interface Props {
   description: string;
   /** 현재 위치 (홈 › 카테고리 › 도구) */
   breadcrumb: { name: string; href?: string }[];
+  /** 브레드크럼에서 넘어갈 수 있는 같은 분류의 도구들 */
+  siblings?: { name: string; href?: string; current?: boolean }[];
 }
 
-const { name, title, description, breadcrumb } = Astro.props;
+const { name, title, description, breadcrumb, siblings } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
   <RailShell>
     <article class="tool-page">
       <header class="tool-header">
-        <Breadcrumb items={breadcrumb} />
+        <Breadcrumb items={breadcrumb} {siblings} />
         <h1>{name}</h1>
         <p class="lead">{description}</p>
       </header>

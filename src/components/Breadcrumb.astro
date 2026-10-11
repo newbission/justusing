@@ -1,12 +1,23 @@
 ---
 /**
  * 현재 위치 표시 (홈 › PDF › PDF 합치기). 마지막 항목은 지금 페이지라 링크가 없다.
+ *
+ * siblings를 주면 마지막 항목 옆에 ▾를 두어 같은 분류의 다른 도구로 바로 넘어갈 수 있다.
+ * (details 요소라 스크립트 없이도 열리고, 스크립트는 바깥 클릭·Esc로 닫는 것만 맡는다)
  */
-interface Props {
-  items: { name: string; href?: string }[];
+interface Sibling {
+  name: string;
+  /** 없으면 아직 준비 중이라 누를 수 없다 */
+  href?: string;
+  current?: boolean;
 }
 
-const { items } = Astro.props;
+interface Props {
+  items: { name: string; href?: string }[];
+  siblings?: Sibling[];
+}
+
+const { items, siblings } = Astro.props;
 
 // 검색 결과에 위치 경로를 보여주기 위한 구조화 데이터 (schema.org BreadcrumbList)
 const jsonLd = {
@@ -28,6 +39,31 @@ const jsonLd = {
       <li>
         {i < items.length - 1 && item.href ? (
           <a href={item.href}>{item.name}</a>
+        ) : siblings && siblings.length > 1 ? (
+          <details class="switcher" data-switcher>
+            <summary>
+              <span aria-current="page">{item.name}</span>
+              <span class="caret" aria-hidden="true">
+                ▾
+              </span>
+              <span class="visually-hidden">다른 도구로 이동</span>
+            </summary>
+            <ul class="menu">
+              {siblings.map((sibling) => (
+                <li>
+                  {sibling.current ? (
+                    <span class="current">{sibling.name}</span>
+                  ) : sibling.href ? (
+                    <a href={sibling.href}>{sibling.name}</a>
+                  ) : (
+                    <span class="soon">
+                      {sibling.name} <small>준비 중</small>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </details>
         ) : (
           <span aria-current="page">{item.name}</span>
         )}
@@ -35,6 +71,21 @@ const jsonLd = {
     ))}
   </ol>
 </nav>
+
+<script>
+  // 바깥을 누르거나 Esc를 누르면 닫는다
+  for (const switcher of document.querySelectorAll<HTMLDetailsElement>('[data-switcher]')) {
+    document.addEventListener('click', (event) => {
+      if (!switcher.contains(event.target as Node)) switcher.open = false;
+    });
+    switcher.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && switcher.open) {
+        switcher.open = false;
+        switcher.querySelector('summary')?.focus();
+      }
+    });
+  }
+</script>
 
 <style>
   ol {
@@ -46,7 +97,8 @@ const jsonLd = {
     color: var(--color-muted);
     font-size: 14px;
   }
-  li + li::before {
+  /* 위치 사이 구분 기호 (도구 전환 메뉴 안의 항목에는 붙이지 않는다) */
+  ol > li + li::before {
     content: '›';
     margin: 0 8px;
   }
@@ -56,5 +108,73 @@ const jsonLd = {
   a:hover {
     color: var(--color-text);
     text-decoration: underline;
+  }
+
+  /* details는 기본이 블록이라 다음 줄로 떨어지므로 같은 줄에 둔다 */
+  .switcher {
+    position: relative;
+    display: inline-block;
+  }
+  summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    margin: -2px -6px;
+    border-radius: var(--radius);
+    color: var(--color-text);
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary:hover,
+  .switcher[open] summary {
+    background: var(--color-hover);
+  }
+  .caret {
+    font-size: 12px;
+    transition: transform 0.12s;
+  }
+  .switcher[open] .caret {
+    transform: rotate(180deg);
+  }
+  .menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: -6px;
+    z-index: 20;
+    min-width: 180px;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+    list-style: none;
+  }
+  .menu a,
+  .menu span {
+    display: block;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    white-space: nowrap;
+  }
+  .menu a {
+    color: var(--color-text);
+  }
+  .menu a:hover {
+    background: var(--color-hover);
+    text-decoration: none;
+  }
+  .menu .current {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .menu .soon {
+    color: var(--color-muted);
+    opacity: 0.6;
   }
 </style>

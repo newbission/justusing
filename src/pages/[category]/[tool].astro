@@ -13,7 +13,7 @@ import ToolFaq from '../../components/ToolFaq.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import { CATEGORIES } from '../../tools/categories';
 import { COMMON_FAQ } from '../../tools/common-faq';
-import { liveTools, type Tool } from '../../tools/registry';
+import { liveTools, toolsInCategory, type Tool } from '../../tools/registry';
 
 export const getStaticPaths = (() =>
   liveTools.map((tool) => {
@@ -34,6 +34,12 @@ const breadcrumb = [
   { name: CATEGORIES[tool.category].text.ko.name, href: `/${tool.category}/` },
   { name: text.name },
 ];
+// 브레드크럼에서 같은 분류의 다른 도구로 넘어가기 (준비 중인 도구는 링크 없이)
+const siblings = toolsInCategory(tool.category).map((other) => ({
+  name: other.text.ko.name,
+  href: other.status === 'live' ? other.href : undefined,
+  current: other.id === tool.id,
+}));
 ---
 
 <ToolLayout
@@ -41,6 +47,7 @@ const breadcrumb = [
   title={text.title}
   description={text.description}
   breadcrumb={breadcrumb}
+  {siblings}
 >
   <ToolFrame slot="tool" src={`${tool.href}frame/`} title={`${text.name} 도구 화면`} />
   <ToolHowTo slot="how-to" name={text.name} steps={content.howTo} />
