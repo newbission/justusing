@@ -8,7 +8,7 @@
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
   import { isPasswordError, openPdf, type OpenedPdf } from '../../../lib/pdf/pdfjs';
-  import RotateGrid from './RotateGrid.svelte';
+  import RotateGrid, { normalize } from './RotateGrid.svelte';
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
@@ -25,6 +25,20 @@
 
   /** 쪽마다 누적 회전 각도 (RotateGrid 참고) */
   let rotations: number[] = $state([]);
+  /** 실제로 돌린 쪽 수 (0·360처럼 제자리면 빼고) */
+  const turnedCount = $derived(rotations.filter((angle) => normalize(angle) !== 0).length);
+
+  function rotateAll(delta: -90 | 90) {
+    rotations = rotations.map((angle) => angle + delta);
+  }
+
+  /** 모두 원래 방향으로. 각 쪽이 가까운 쪽으로 돌아가게 한다 (360°인 쪽이 한 바퀴 도는 모션 방지) */
+  function resetAll() {
+    rotations = rotations.map((angle) => {
+      const offset = normalize(angle);
+      return offset <= 180 ? angle - offset : angle + 360 - offset;
+    });
+  }
 
   async function open(file: File) {
     await close();
@@ -80,6 +94,16 @@
     </div>
 
     <div class="body">
+      <div class="all" role="group" aria-label="모든 쪽">
+        <span class="help" aria-live="polite">
+          {turnedCount > 0 ? `${turnedCount}쪽을 돌렸습니다.` : '돌릴 쪽의 ↺ ↻를 누르세요.'}
+        </span>
+        <button type="button" class="text" onclick={() => rotateAll(-90)}>전체 ↺</button>
+        <button type="button" class="text" onclick={() => rotateAll(90)}>전체 ↻</button>
+        <button type="button" class="text" disabled={turnedCount === 0} onclick={resetAll}
+          >되돌리기</button
+        >
+      </div>
       <RotateGrid doc={opened.doc} bind:rotations />
     </div>
   {:else if phase === 'loading'}
@@ -203,6 +227,19 @@
     flex: 1;
     padding: 16px;
     overflow: auto;
+  }
+
+  .all {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .all .help {
+    flex: 1 1 200px;
+    color: var(--color-muted);
+    font-size: 13px;
   }
 
   .status {
