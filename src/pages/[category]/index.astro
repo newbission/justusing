@@ -5,6 +5,7 @@
 import type { GetStaticPaths } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ToolGrid from '../../components/ToolGrid.astro';
+import Breadcrumb from '../../components/Breadcrumb.astro';
 import { CATEGORIES, type CategoryId } from '../../tools/categories';
 import { toolsInCategory, visibleCategories } from '../../tools/registry';
 
@@ -25,6 +26,7 @@ const title = `${text.name} 도구`;
 
 <BaseLayout title={title} description={text.description}>
   <div class="category-page">
+    <Breadcrumb items={[{ name: '홈', href: '/' }, { name: text.name }]} />
     <h1>{title}</h1>
     <p class="lead">{text.description}</p>
     <ToolGrid tools={toolsInCategory(category)} headingLevel={2} />
@@ -38,7 +40,7 @@ const title = `${text.name} 도구`;
     padding: 24px var(--gutter) 0;
   }
   h1 {
-    margin: 0;
+    margin: 12px 0 0;
     font-size: 28px;
     line-height: 1.3;
   }
