@@ -1,0 +1,19 @@
+# PR마다 포맷·타입 검사와 빌드를 돌려서 리뷰 전에 깨진 코드를 걸러낸다.
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run check
+      - run: npm run build
