@@ -15,11 +15,10 @@ async function assemble({ sources, pages }: AssembleRequest['job']): Promise<Uin
 
   // 같은 원본의 페이지는 한 번에 복사해야 글꼴·이미지 같은 공유 자원이 한 번만 들어간다
   const copied = await Promise.all(
-    docs.map((doc, source) => {
+    docs.map(async (doc, source) => {
       const indices = [...new Set(pages.filter((p) => p.source === source).map((p) => p.index))];
-      return out
-        .copyPages(doc, indices)
-        .then((list) => new Map(indices.map((index, i) => [index, list[i]!])));
+      const list = await out.copyPages(doc, indices);
+      return new Map(indices.map((index, i) => [index, list[i]!]));
     }),
   );
 
