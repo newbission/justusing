@@ -7,8 +7,21 @@ interface Props {
 }
 
 const { items } = Astro.props;
+
+// 검색 결과에 위치 경로를 보여주기 위한 구조화 데이터 (schema.org BreadcrumbList)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: item.name,
+    item: new URL(item.href ?? Astro.url.pathname, Astro.site).href,
+  })),
+};
 ---
 
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <nav class="breadcrumb" aria-label="현재 위치">
   <ol>
     {items.map((item, i) => (
