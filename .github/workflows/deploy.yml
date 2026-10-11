@@ -28,6 +28,9 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
+      # 로컬 처리 약속(격리·CSP·외부 요청 없음)을 확인한 뒤에만 배포한다
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
