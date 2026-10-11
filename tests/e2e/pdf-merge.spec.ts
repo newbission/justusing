@@ -121,3 +121,57 @@ test('줄을 끌어서 순서를 바꾼다', async ({ page }) => {
   await expect(rows.nth(0)).toContainText('korean.pdf');
   await expect(rows.nth(1)).toContainText('three-pages.pdf');
 });
+
+test('펼친 페이지에서 순서를 바꾸고 뺀 대로 합친다', async ({ page }) => {
+  const frame = await openMerge(page);
+  await frame
+    .locator('input[type=file]')
+    .first()
+    .setInputFiles([fixture('three-pages.pdf'), fixture('encrypted.pdf')]);
+  await frame.getByLabel('encrypted.pdf 암호').fill('1234');
+  await frame.getByLabel('encrypted.pdf 암호').press('Enter');
+
+  await frame.getByRole('button', { name: 'three-pages.pdf 페이지 펼치기' }).click();
+  await frame.getByRole('button', { name: '원래 2쪽 제외' }).click();
+  // 3쪽을 맨 앞으로: 1 2 3 → 3 1 2 (2쪽은 제외)
+  await frame.getByRole('button', { name: '원래 3쪽 앞으로' }).click();
+  await frame.getByRole('button', { name: '원래 3쪽 앞으로' }).click();
+  await expect(frame.getByText('3쪽 중 2쪽 넣음')).toBeVisible();
+  await expect(frame.getByText('파일 2개 · 총 3쪽')).toBeVisible();
+
+  // 미리보기는 합칠 순서 그대로 보여 준다
+  await frame.getByRole('button', { name: '미리보기' }).click();
+  await expect(frame.getByRole('dialog').locator('.caption')).toHaveText([
+    '1쪽 · three-pages.pdf 3쪽',
+    '2쪽 · three-pages.pdf 1쪽',
+    '3쪽 · encrypted.pdf 1쪽',
+  ]);
+  await frame.getByRole('button', { name: '닫기' }).click();
+
+  await frame.getByRole('button', { name: 'PDF 합치기' }).click();
+  const download = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  expect(await pageTexts(await (await download).path())).toEqual([
+    'Page 3',
+    'Page 1',
+    'Secret page',
+  ]);
+});
+
+test('펼친 페이지를 끌어서 순서를 바꾼다', async ({ page }) => {
+  const frame = await openMerge(page);
+  await frame
+    .locator('input[type=file]')
+    .first()
+    .setInputFiles([fixture('three-pages.pdf'), fixture('korean.pdf')]);
+  await frame.getByRole('button', { name: 'three-pages.pdf 페이지 펼치기' }).click();
+
+  const cards = frame.locator('[data-page-index]');
+  // 세 번째 페이지를 첫 번째 페이지 왼쪽에 놓는다
+  await cards.nth(2).dragTo(cards.nth(0), { targetPosition: { x: 5, y: 40 } });
+  await expect
+    .poll(() => cards.evaluateAll((list) => list.map((card) => card.dataset.pageIndex)))
+    .toEqual(['2', '0', '1']);
+  // 페이지 끌기는 파일 순서를 건드리지 않는다
+  await expect(frame.locator('.row').first()).toContainText('three-pages.pdf');
+});
