@@ -27,3 +27,20 @@ export interface ToolMeta {
 export function defineTool(meta: ToolMeta): ToolMeta {
   return meta;
 }
+
+/** 도구 페이지 아래쪽 글 (사용법·FAQ). 검색 노출과 광고 심사를 위해 충분히 쓴다. */
+export interface ToolContentText {
+  /** 사용법 단계. 순서대로 한 단계씩 */
+  howTo: string[];
+  /** 자주 묻는 질문 */
+  faq: { q: string; a: string }[];
+}
+
+/** 각 도구 폴더의 content.ts가 내보낸다. 기본 언어(ko)는 필수. */
+export interface ToolContent {
+  ko: ToolContentText;
+}
+
+export function defineContent(content: ToolContent): ToolContent {
+  return content;
+}
