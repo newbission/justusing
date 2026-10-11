@@ -1,0 +1,33 @@
+---
+/**
+ * 모든 도구 페이지를 만드는 라우트. 레지스트리의 live 도구마다 /<카테고리>/<이름> 페이지를 하나씩 만든다.
+ * 도구 화면은 각 도구 폴더의 Tool.astro를 가져와 도구 영역에 넣는다.
+ */
+import type { GetStaticPaths } from 'astro';
+import ToolLayout from '../../layouts/ToolLayout.astro';
+import { liveTools, type Tool } from '../../tools/registry';
+
+export const getStaticPaths = (() =>
+  liveTools.map((tool) => {
+    const [category, slug] = tool.id.split('/');
+    return { params: { category, tool: slug }, props: { tool } };
+  })) satisfies GetStaticPaths;
+
+interface Props {
+  tool: Tool;
+}
+
+const toolComponents = import.meta.glob<{ default: any }>('../../tools/*/*/Tool.astro', {
+  eager: true,
+});
+
+const { tool } = Astro.props;
+const ToolComponent = toolComponents[`../../tools/${tool.id}/Tool.astro`]?.default;
+if (!ToolComponent) throw new Error(`도구 화면 파일이 없습니다: src/tools/${tool.id}/Tool.astro`);
+
+const text = tool.text.ko;
+---
+
+<ToolLayout name={text.name} title={text.title} description={text.description}>
+  <ToolComponent slot="tool" />
+</ToolLayout>
