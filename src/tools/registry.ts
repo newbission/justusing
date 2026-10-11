@@ -7,7 +7,7 @@
  * 허브·카테고리 목록·사이트맵·메뉴·관련 도구가 이 목록에서 자동으로 만들어진다.
  */
 import { CATEGORIES, isCategoryId, type CategoryId } from './categories';
-import type { ToolMeta } from './types';
+import type { ToolContent, ToolMeta } from './types';
 
 /** 노출 순서대로, 한 줄에 하나 (포맷터가 한 줄로 합치지 않게 prettier-ignore) */
 // prettier-ignore
@@ -26,9 +26,14 @@ export interface Tool extends ToolMeta {
   category: CategoryId;
   /** 페이지 주소 '/pdf/merge/' */
   href: string;
+  /** 사용법·FAQ (content.ts). live 도구는 반드시 있다. */
+  content?: ToolContent;
 }
 
 const metaModules = import.meta.glob<{ default: ToolMeta }>('./*/*/meta.ts', { eager: true });
+const contentModules = import.meta.glob<{ default: ToolContent }>('./*/*/content.ts', {
+  eager: true,
+});
 
 function loadTool(id: string): Tool {
   const meta = metaModules[`./${id}/meta.ts`]?.default;
@@ -37,7 +42,12 @@ function loadTool(id: string): Tool {
   const category = id.split('/')[0] ?? '';
   if (!isCategoryId(category)) throw new Error(`등록되지 않은 카테고리입니다: ${id}`);
 
-  return { ...meta, id, category, href: `/${id}/` };
+  const content = contentModules[`./${id}/content.ts`]?.default;
+  if (meta.status === 'live' && !content) {
+    throw new Error(`공개(live) 도구에는 사용법·FAQ가 필요합니다: src/tools/${id}/content.ts`);
+  }
+
+  return { ...meta, id, category, href: `/${id}/`, content };
 }
 
 export const tools: Tool[] = TOOL_IDS.map(loadTool);
