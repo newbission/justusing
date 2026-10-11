@@ -1,0 +1,58 @@
+---
+/**
+ * 본문 + 양옆 세로 광고(rail) 틀. 도구 페이지·허브·카테고리 페이지가 함께 쓴다.
+ * 넓은 화면(1400px 이상)에서만 양옆 160px 광고 칸을 두고, 좁으면 본문만 보인다.
+ * 본문 폭·여백도 이 틀이 잡으므로 안쪽 페이지는 max-width·좌우 여백을 따로 두지 않는다.
+ */
+import AdSlot from './AdSlot.astro';
+---
+
+<div class="rail-shell">
+  <div class="rail rail-left">
+    <div class="rail-sticky">
+      <AdSlot id="rail-left" />
+    </div>
+  </div>
+
+  <div class="rail-main">
+    <slot />
+  </div>
+
+  <div class="rail rail-right">
+    <div class="rail-sticky">
+      <AdSlot id="rail-right" />
+    </div>
+  </div>
+</div>
+
+<style>
+  .rail-shell {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+  .rail {
+    display: none;
+  }
+  .rail-main {
+    min-width: 0;
+  }
+
+  /* 넓은 화면: 양옆에 세로 광고 레일 (160px) */
+  @media (min-width: 1400px) {
+    .rail-shell {
+      display: grid;
+      grid-template-columns: 160px minmax(0, var(--content-max)) 160px;
+      gap: 40px;
+      max-width: calc(var(--content-max) + 2 * (160px + 40px));
+    }
+    .rail {
+      display: block;
+      padding-top: 24px;
+    }
+    .rail-sticky {
+      position: sticky;
+      top: 24px;
+    }
+  }
+</style>

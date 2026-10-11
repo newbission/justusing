@@ -8,6 +8,7 @@
  */
 import BaseLayout from './BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
+import RailShell from '../components/RailShell.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 
 interface Props {
@@ -24,13 +25,7 @@ const { name, title, description, breadcrumb } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
-  <div class="tool-shell">
-    <div class="rail rail-left">
-      <div class="rail-sticky">
-        <AdSlot id="rail-left" />
-      </div>
-    </div>
-
+  <RailShell>
     <article class="tool-page">
       <header class="tool-header">
         <Breadcrumb items={breadcrumb} />
@@ -60,45 +55,11 @@ const { name, title, description, breadcrumb } = Astro.props;
       <slot name="faq" />
       <slot name="related" />
     </article>
-
-    <div class="rail rail-right">
-      <div class="rail-sticky">
-        <AdSlot id="rail-right" />
-      </div>
-    </div>
-  </div>
+  </RailShell>
 </BaseLayout>
 
 <style>
-  .tool-shell {
-    max-width: var(--content-max);
-    margin: 0 auto;
-    padding: 0 var(--gutter);
-  }
-  .rail {
-    display: none;
-  }
-
-  /* 넓은 화면: 양옆에 세로 광고 레일 (160px) */
-  @media (min-width: 1400px) {
-    .tool-shell {
-      display: grid;
-      grid-template-columns: 160px minmax(0, var(--content-max)) 160px;
-      gap: 40px;
-      max-width: calc(var(--content-max) + 2 * (160px + 40px));
-    }
-    .rail {
-      display: block;
-      padding-top: 24px;
-    }
-    .rail-sticky {
-      position: sticky;
-      top: 24px;
-    }
-  }
-
   .tool-page {
-    min-width: 0;
     padding-top: 24px;
   }
   .tool-header h1 {
