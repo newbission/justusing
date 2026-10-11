@@ -85,6 +85,7 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 1. `src/tools/<카테고리>/<이름>/` 폴더를 만든다.
    - `meta.ts`: `defineTool({ status, text: { ko: { name, title, description } }, related })`
    - `content.ts`: `defineContent({ ko: { howTo: [...], faq: [{ q, a }] } })` — live 도구는 필수
+     (업로드 여부·광고 안전성 같은 모든 도구 공통 질문은 `src/tools/common-faq.ts`에 있고 자동으로 붙는다)
    - `Frame.astro`: 격리 frame 페이지. `FrameLayout` 안에 `App.svelte`를 `mount`한다 (`pdf/view` 참고)
    - `App.svelte`: 실제 도구 UI. 첫 화면은 `src/frame/FileDrop.svelte`를 쓴다
 2. `src/tools/registry.ts`의 `TOOL_IDS`에 `'<카테고리>/<이름>'` 한 줄을 넣는다.
