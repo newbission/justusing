@@ -14,6 +14,7 @@ import type { ToolMeta } from './types';
 const TOOL_IDS: readonly string[] = [
   'pdf/view',
   'pdf/merge',
+  'pdf/split',
 ];
 
 export interface Tool extends ToolMeta {
