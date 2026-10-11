@@ -36,6 +36,9 @@
   let manualScale = $state(1);
   let viewerWidth = $state(0);
   let currentPage = $state(1);
+  /** 전체 화면을 지원하는 브라우저인지 (아이폰 사파리 등은 지원하지 않아 버튼을 숨긴다) */
+  const canFullscreen = document.fullscreenEnabled;
+  let fullscreen = $state(false);
   let scroller: HTMLDivElement | undefined = $state();
 
   /** 폭 맞춤 배율: 첫 페이지가 화면 폭에 꼭 맞는 배율 */
@@ -104,6 +107,11 @@
     if (scroller && target) scroller.scrollTop = target.offsetTop - 16;
   }
 
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+
   /** 스크롤 위치에서 지금 보고 있는 페이지(화면 위쪽 1/3에 걸친 페이지)를 찾는다 */
   function updateCurrentPage() {
     if (!scroller) return;
@@ -122,6 +130,13 @@
       if (file) open(file);
     }),
   );
+
+  // Esc로 빠져나와도 버튼 상태가 맞도록 브라우저 신호로 상태를 맞춘다
+  onMount(() => {
+    const sync = () => (fullscreen = document.fullscreenElement !== null);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  });
 
   // 배율이 바뀌면 보고 있던 페이지를 유지한다
   $effect(() => {
@@ -161,6 +176,22 @@
         >
       </div>
 
+      {#if canFullscreen}
+        <button
+          type="button"
+          onclick={toggleFullscreen}
+          aria-label={fullscreen ? '전체 화면 끝내기' : '전체 화면'}
+          aria-pressed={fullscreen}
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            {#if fullscreen}
+              <path d="M6 1v5H1M10 1v5h5M6 15v-5H1M10 15v-5h5" />
+            {:else}
+              <path d="M1 6V1h5M15 6V1h-5M1 10v5h5M15 10v5h-5" />
+            {/if}
+          </svg>
+        </button>
+      {/if}
       <button type="button" class="text" onclick={close}>다른 파일</button>
     </div>
 
@@ -278,6 +309,13 @@
   button.text {
     font-size: 14px;
   }
+  button svg {
+    display: block;
+    margin: auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+  }
   button[aria-pressed='true'] {
     border-color: var(--color-text);
   }
@@ -367,6 +405,10 @@
     }
     .group {
       gap: 2px;
+    }
+    button {
+      min-width: 30px;
+      padding: 0 6px;
     }
   }
 </style>
