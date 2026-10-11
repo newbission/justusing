@@ -202,6 +202,23 @@
     </nav>
   {/if}
   <div class="main">
+    {#if files.length > 1}
+      <!-- 좁은 화면에서는 왼쪽 목록 대신 고르기 상자로 파일을 바꾼다 -->
+      <label class="file-select">
+        <span class="visually-hidden">볼 파일</span>
+        <select
+          value={current?.id}
+          onchange={(event) => {
+            const file = files.find((f) => f.id === Number(event.currentTarget.value));
+            if (file) show(file);
+          }}
+        >
+          {#each files as file, i (file.id)}
+            <option value={file.id}>{i + 1}. {file.name}</option>
+          {/each}
+        </select>
+      </label>
+    {/if}
     {#if phase === 'ready'}
       <div class="toolbar" role="toolbar" aria-label="PDF 보기 도구">
         <span class="file-name" title={fileName}>{fileName}</span>
@@ -328,6 +345,9 @@
     min-width: 0;
   }
 
+  .file-select {
+    display: none;
+  }
   /* 여러 파일을 올리면 왼쪽에 목록을 둔다 */
   .files {
     display: flex;
@@ -526,6 +546,28 @@
   @media (max-width: 400px) {
     .page-nav {
       display: none;
+    }
+  }
+
+  /* 좁은 화면: 왼쪽 목록을 숨기고 고르기 상자를 보인다 */
+  @media (max-width: 719px) {
+    .files {
+      display: none;
+    }
+    .file-select {
+      display: block;
+      flex: none;
+      padding: 8px;
+      border-bottom: 1px solid var(--color-line);
+    }
+    .file-select select {
+      width: 100%;
+      height: 36px;
+      padding: 0 8px;
+      border: 1px solid var(--color-line);
+      border-radius: var(--radius);
+      background: var(--color-bg);
+      font-size: 14px;
     }
   }
 </style>
