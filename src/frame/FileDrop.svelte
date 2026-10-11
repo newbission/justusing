@@ -57,6 +57,14 @@
     border-radius: var(--radius);
     text-align: center;
   }
+  /* 좁은 화면(휴대폰): 버튼을 칸 위쪽에 둔다. 가운데 두면 도구 칸이 길어
+     화면 아래 하단 고정 광고와 버튼이 가까워진다. */
+  @media (max-width: 767px) {
+    .drop {
+      justify-content: flex-start;
+      padding-top: 96px;
+    }
+  }
   .title {
     margin: 0;
     color: var(--color-muted);
