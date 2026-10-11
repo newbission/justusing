@@ -25,3 +25,5 @@ pnpm-debug.log*
 
 # 빌드 전에 node_modules에서 복사하는 파일 (scripts/copy-pdfjs-assets.mjs)
 public/vendor/
+test-results/
+playwright-report/

@@ -4,3 +4,5 @@ node_modules/
 package-lock.json
 docs/99_inbox/
 public/vendor/
+test-results/
+playwright-report/
