@@ -122,7 +122,7 @@ Co-Authored-By: ...
 
 - 타입: `feat`(기능) | `fix`(버그) | `refactor`(동작 그대로, 구조만) | `style`(포맷만, CSS 작성은 feat) |
   `docs` | `test` | `build`(의존성·빌드 설정) | `ci` | `chore`(그 외)
-- 영역(생략 가능): `config`, `layout`, `theme`, `ads`, `registry`, `seo`, `entitlement`, `dev`,
+- 영역(생략 가능): `config`, `layout`, `theme`, `ads`, `registry`, `seo`, `entitlement`, `dev`, `hub`, `category`,
   도구는 `pdf-view`, `pdf-merge` 처럼 도구 ID를 쓴다.
 - 제목: 한국어, "~ 추가 / ~ 수정 / ~ 제거 / ~ 변경"으로 끝낸다. 50자 이내.
 - 마지막 줄에 `Co-Authored-By` 표기를 넣는다.
@@ -132,7 +132,8 @@ Co-Authored-By: ...
 단계마다 멈추고 사용자에게 결과를 보여 준 뒤 확인을 받고 다음 단계로 간다.
 
 - [x] 1단계: 골격 — 설정 파일, 공통 레이아웃, 다크 모드, AdSlot, 레지스트리, 사이트맵·robots, 배포 워크플로
-- [ ] 2단계: 허브(`/`), PDF 목록(`/pdf/`), 머리글 카테고리 메뉴, 사이트맵에 카테고리 주소 추가
+- [x] 2단계: 허브(`/`), PDF 목록(`/pdf/`), 머리글 카테고리 메뉴, 브레드크럼(+구조화 데이터), 사이트맵에 카테고리 주소 추가.
+      PDF 도구 6개를 `status: 'soon'`(준비 중)으로 등록 — 도구를 만들 때마다 `live`로 바꾸고 `Tool.astro`를 추가한다.
 - [ ] 3단계: PDF 보기 (`/pdf/view/`) — 파일 선택·워커·상태 바·사용법/FAQ/관련 도구 공통 부품도 여기서
 - [ ] 4단계: PDF 합치기 (`/pdf/merge/`)
 - [ ] 5단계: 나머지 PDF 도구 하나씩 — 나누기, 회전, 정리(순서·삭제), 편집(텍스트·이미지·서명)
