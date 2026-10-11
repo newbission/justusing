@@ -84,8 +84,8 @@
     // 옮긴 카드의 같은 버튼(끝에 닿아 꺼졌으면 반대 버튼)에 포커스를 다시 맞춘다
     await tick();
     const card = grid.querySelector(`[data-page-index="${page.index}"]`);
-    const same = card?.querySelector<HTMLButtonElement>(`[data-move="${delta}"]`);
-    const other = card?.querySelector<HTMLButtonElement>(`[data-move="${-delta}"]`);
+    const same = card?.querySelector<HTMLButtonElement>(`[data-page-move="${delta}"]`);
+    const other = card?.querySelector<HTMLButtonElement>(`[data-page-move="${-delta}"]`);
     (same && !same.disabled ? same : other)?.focus();
   }
 </script>
@@ -126,7 +126,7 @@
       <div class="tools">
         <button
           type="button"
-          data-move="-1"
+          data-page-move="-1"
           disabled={position === 0}
           onclick={() => move(page, -1)}
           aria-label="원래 {page.index + 1}쪽 앞으로">◀</button
@@ -141,7 +141,7 @@
         >
         <button
           type="button"
-          data-move="1"
+          data-page-move="1"
           disabled={position === pages.length - 1}
           onclick={() => move(page, 1)}
           aria-label="원래 {page.index + 1}쪽 뒤로">▶</button
