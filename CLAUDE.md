@@ -98,7 +98,9 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 
 도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
 frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동으로 만든다.
-새 카테고리는 `src/tools/categories.ts`에 추가한다. PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`를 쓴다.
+새 카테고리는 `src/tools/categories.ts`에 추가한다. PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
+결과 PDF는 `src/lib/pdf/assemble.ts`의 `assemblePdf()`로 만든다(페이지 고르기·순서·회전, 워커에서 pdf-lib).
+썸네일은 `src/lib/pdf/Thumbnail.svelte`, 다운로드는 `src/frame/download.ts`, 바깥 스크롤 요청은 `src/frame/parent.ts`.
 
 ### 도구 페이지 구성
 
@@ -158,6 +160,7 @@ Co-Authored-By: ...
 - 타입: `feat`(기능) | `fix`(버그) | `refactor`(동작 그대로, 구조만) | `style`(포맷만, CSS 작성은 feat) |
   `docs` | `test` | `build`(의존성·빌드 설정) | `ci` | `chore`(그 외)
 - 영역(생략 가능): `config`, `layout`, `theme`, `ads`, `registry`, `seo`, `entitlement`, `dev`, `hub`, `category`, `frame`,
+  `pdf`(PDF 도구 공통: `src/lib/pdf/`),
   도구는 `pdf-view`, `pdf-merge` 처럼 도구 ID를 쓴다.
 - 제목: 한국어, "~ 추가 / ~ 수정 / ~ 제거 / ~ 변경"으로 끝낸다. 50자 이내.
 - 마지막 줄에 `Co-Authored-By` 표기를 넣는다.
@@ -171,7 +174,7 @@ Co-Authored-By: ...
       PDF 도구 6개를 `status: 'soon'`(준비 중)으로 등록 — 도구를 만들 때마다 `live`로 바꾼다.
 - [x] 3단계: PDF 보기 (`/pdf/view/`) + 공통 기반 — 격리 frame, CSP, blob 워커, pdf.js 직접 호스팅,
       FileDrop, 사용법/FAQ/관련 도구 섹션, E2E(로컬 처리 약속 검증)와 CI 연결
-- [ ] 4단계: PDF 합치기 (`/pdf/merge/`) + PDF 수정 도구 공통 기반
+- [x] 4단계: PDF 합치기 (`/pdf/merge/`) + PDF 수정 도구 공통 기반
   - pdf-lib(`@cantoo/pdf-lib`)를 워커에서 돌리는 모듈 (`src/lib/pdf/`), 다운로드 도우미(`src/frame/`)
   - 페이지 썸네일, 처리 전후 높이가 같은 상태 막대(진행 → 다운로드), 실행 전 `canUse()`
   - 파일 목록: 여러 개 추가·순서 바꾸기(끌기 + 키보드)·빼기, 암호 PDF는 파일마다 암호 입력
