@@ -1,0 +1,40 @@
+/*
+ * 광고 슬롯 크기. 크기를 미리 잡아 두어 광고가 늦게 떠도 레이아웃이 밀리지 않게 한다 (CLS 0).
+ * 슬롯 ID 목록은 slots.ts, 크기는 이 파일이 유일한 출처다.
+ * (CSP 때문에 style="" 속성을 쓸 수 없어서 CSS 파일로 둔다)
+ *
+ * desktop: 768px 이상, mobile: 768px 미만
+ */
+:root {
+  /* 모바일 하단 고정 광고 높이. MobileAnchor의 본문 하단 여백 계산에도 쓴다. */
+  --ad-mobile-anchor-h: 50px;
+}
+
+[data-ad-slot='rail-left'],
+[data-ad-slot='rail-right'] {
+  --ad-w: 160px;
+  --ad-h: 600px;
+  --ad-w-m: 160px;
+  --ad-h-m: 600px;
+}
+
+[data-ad-slot='below-tool'] {
+  --ad-w: 728px;
+  --ad-h: 90px;
+  --ad-w-m: 320px;
+  --ad-h-m: 100px;
+}
+
+[data-ad-slot='in-content'] {
+  --ad-w: 336px;
+  --ad-h: 280px;
+  --ad-w-m: 300px;
+  --ad-h-m: 250px;
+}
+
+[data-ad-slot='mobile-anchor'] {
+  --ad-w: 320px;
+  --ad-h: var(--ad-mobile-anchor-h);
+  --ad-w-m: 320px;
+  --ad-h-m: var(--ad-mobile-anchor-h);
+}

@@ -1,6 +1,5 @@
 /**
- * 광고 슬롯의 위치(ID)와 크기.
- * 크기를 미리 잡아 두어 광고가 늦게 떠도 레이아웃이 밀리지 않게 한다 (CLS 0).
+ * 광고 슬롯의 위치(ID). 크기는 slots.css에 있다.
  *
  * 배치 규칙 (CLAUDE.md에도 있음):
  * - 다운로드·파일 선택·실행 버튼 근처에 두지 않는다.
@@ -16,17 +15,3 @@ export const AD_SLOT_IDS = [
 ] as const;
 
 export type AdSlotId = (typeof AD_SLOT_IDS)[number];
-
-interface Size {
-  width: number;
-  height: number;
-}
-
-/** desktop: 768px 이상, mobile: 768px 미만 */
-export const AD_SLOT_SIZES: Record<AdSlotId, { desktop: Size; mobile: Size }> = {
-  'rail-left': { desktop: { width: 160, height: 600 }, mobile: { width: 160, height: 600 } },
-  'rail-right': { desktop: { width: 160, height: 600 }, mobile: { width: 160, height: 600 } },
-  'below-tool': { desktop: { width: 728, height: 90 }, mobile: { width: 320, height: 100 } },
-  'in-content': { desktop: { width: 336, height: 280 }, mobile: { width: 300, height: 250 } },
-  'mobile-anchor': { desktop: { width: 320, height: 50 }, mobile: { width: 320, height: 50 } },
-};
