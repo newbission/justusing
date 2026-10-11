@@ -13,6 +13,7 @@
   import { assemblePdf } from '../../../lib/pdf/assemble';
   import Thumbnail from '../../../lib/pdf/Thumbnail.svelte';
   import PageGrid, { type GridPage } from '../../../lib/pdf/PageGrid.svelte';
+  import Preview, { type PreviewPage } from './Preview.svelte';
   import {
     isPasswordError,
     openPdf,
@@ -77,6 +78,15 @@
   const result = $derived(
     phase.kind === 'done' && phase.signature === signature ? phase : undefined,
   );
+
+  /** 미리보기에 보여 줄 페이지 (합칠 순서 그대로). 열려 있지 않으면 undefined */
+  let previewPages: PreviewPage[] | undefined = $state();
+
+  function openPreview() {
+    previewPages = readyItems.flatMap((item) =>
+      included(item).map(({ index }) => ({ doc: item.opened!.doc, index, fileName: item.name })),
+    );
+  }
 
   async function merge() {
     if (blocker || phase.kind === 'working') return;
@@ -266,6 +276,12 @@
           {blocker ?? '위에서부터 목록 순서대로 합칩니다.'}
         {/if}
       </p>
+      <button
+        type="button"
+        class="secondary"
+        disabled={blocker !== undefined || phase.kind === 'working'}
+        onclick={openPreview}>미리보기</button
+      >
       {#if result}
         <button
           type="button"
@@ -390,10 +406,15 @@
       {/each}
     </ol>
   {/if}
+
+  {#if previewPages}
+    <Preview pages={previewPages} onclose={() => (previewPages = undefined)} />
+  {/if}
 </div>
 
 <style>
   .merge {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -440,6 +461,10 @@
   }
   .action-text strong {
     color: var(--color-text);
+  }
+  button.secondary {
+    height: 40px;
+    padding: 0 16px;
   }
   button.primary {
     min-width: 120px;
