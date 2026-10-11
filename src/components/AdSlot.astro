@@ -1,0 +1,45 @@
+---
+/**
+ * 광고 칸. 위치 ID만 받고, 크기는 src/ads/slots.ts에서 가져온다.
+ *
+ * - 광고 켜짐 + 이 슬롯 설정 있음: 크기를 미리 확보한 빈 칸 (업체 스크립트가 채움)
+ * - 그 외: 아무것도 그리지 않는다 (빌드 때 결정되므로 화면이 밀리지 않음)
+ */
+import { AD_SLOT_SIZES, type AdSlotId } from '../ads/slots';
+import { siteConfig } from '../site.config';
+
+interface Props {
+  id: AdSlotId;
+}
+
+const { id } = Astro.props;
+const { desktop, mobile } = AD_SLOT_SIZES[id];
+const slot = siteConfig.ads.enabled ? siteConfig.ads.slots[id] : undefined;
+const sizeVars = `--ad-w:${desktop.width}px;--ad-h:${desktop.height}px;--ad-w-m:${mobile.width}px;--ad-h-m:${mobile.height}px`;
+---
+
+{slot && (
+  <aside
+    class="ad-slot"
+    style={sizeVars}
+    aria-label="광고"
+    data-ad-slot={id}
+    data-ad-provider={slot.provider}
+    data-ad-unit={slot.unit}
+  />
+)}
+
+<style>
+  .ad-slot {
+    width: min(var(--ad-w), 100%);
+    height: var(--ad-h);
+    margin-inline: auto;
+    overflow: hidden;
+  }
+  @media (max-width: 767px) {
+    .ad-slot {
+      width: min(var(--ad-w-m), 100%);
+      height: var(--ad-h-m);
+    }
+  }
+</style>
