@@ -5,6 +5,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolGrid from '../components/ToolGrid.astro';
 import RailShell from '../components/RailShell.astro';
+import AdSlot from '../components/AdSlot.astro';
 import { siteConfig } from '../site.config';
 import { CATEGORIES } from '../tools/categories';
 import { toolsInCategory, visibleCategories } from '../tools/registry';
@@ -36,6 +37,11 @@ import { toolsInCategory, visibleCategories } from '../tools/registry';
         <ToolGrid tools={toolsInCategory(category)} headingLevel={3} />
       </section>
     ))}
+
+    <!-- 도구 목록 아래 본문 광고. 목록 위에 두면 첫 화면에서 도구가 밀려나므로 아래에 둔다 -->
+    <div class="in-content">
+      <AdSlot id="in-content" />
+    </div>
   </RailShell>
 </BaseLayout>
 
@@ -79,5 +85,9 @@ import { toolsInCategory, visibleCategories } from '../tools/registry';
   }
   .category h2 a:hover {
     text-decoration: underline;
+  }
+  /* 도구 카드와 헷갈려 누르지 않게 충분히 띄운다 */
+  .in-content {
+    margin: 48px 0;
   }
 </style>
