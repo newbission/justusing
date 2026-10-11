@@ -4,13 +4,14 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolGrid from '../components/ToolGrid.astro';
+import RailShell from '../components/RailShell.astro';
 import { siteConfig } from '../site.config';
 import { CATEGORIES } from '../tools/categories';
 import { toolsInCategory, visibleCategories } from '../tools/registry';
 ---
 
 <BaseLayout>
-  <div class="hub">
+  <RailShell>
     <section class="hero">
       <h1>{siteConfig.tagline}</h1>
       <p class="lead">{siteConfig.description}</p>
@@ -35,15 +36,10 @@ import { toolsInCategory, visibleCategories } from '../tools/registry';
         <ToolGrid tools={toolsInCategory(category)} headingLevel={3} />
       </section>
     ))}
-  </div>
+  </RailShell>
 </BaseLayout>
 
 <style>
-  .hub {
-    max-width: var(--content-max);
-    margin: 0 auto;
-    padding: 0 var(--gutter);
-  }
   .hero {
     padding: 48px 0 32px;
   }
