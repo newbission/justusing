@@ -1,6 +1,7 @@
 <!--
-  파일 선택 + 끌어다 놓기. 모든 도구가 처음 화면에서 쓰는 공통 부품.
+  파일 선택 버튼. 모든 도구가 처음 화면에서 쓰는 공통 부품.
   고른 파일은 onfiles로 넘길 뿐 어디에도 보내지 않는다.
+  끌어다 놓기는 frame 전체에서 처리한다 (src/frame/drop.ts, 도구는 onFrameFiles로 받음).
 -->
 <script lang="ts">
   interface Props {
@@ -15,7 +16,6 @@
   }
 
   let { accept, label, multiple = false, hint, onfiles }: Props = $props();
-  let dragging = $state(false);
 
   function pick(list: FileList | null | undefined) {
     const files = [...(list ?? [])];
@@ -23,22 +23,7 @@
   }
 </script>
 
-<div
-  class="drop"
-  class:dragging
-  role="region"
-  aria-label="파일 놓는 곳"
-  ondragover={(event) => {
-    event.preventDefault();
-    dragging = true;
-  }}
-  ondragleave={() => (dragging = false)}
-  ondrop={(event) => {
-    event.preventDefault();
-    dragging = false;
-    pick(event.dataTransfer?.files);
-  }}
->
+<div class="drop">
   <p class="title">파일을 여기로 끌어다 놓거나</p>
   <label class="button">
     {label}
@@ -71,9 +56,6 @@
     border: 2px dashed var(--color-line);
     border-radius: var(--radius);
     text-align: center;
-  }
-  .drop.dragging {
-    border-color: var(--color-accent);
   }
   .title {
     margin: 0;
