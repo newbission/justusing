@@ -112,10 +112,11 @@ frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동
 - 위치는 6개뿐: `rail-left`, `rail-right`, `top-banner`, `below-tool`, `in-content`, `mobile-anchor` (`src/ads/slots.ts`).
   크기는 `src/ads/slots.css`가 유일한 출처다.
 - 광고는 사이트 모든 페이지에 있다.
-  - 모든 페이지: 머리글 바로 아래 `top-banner`(`BaseLayout`), 모바일 하단 `mobile-anchor`(`BaseLayout`)
-  - 도구 페이지: + 양옆(`RailShell`) + `below-tool` + `in-content`
-  - 홈·카테고리 페이지: + 양옆(`RailShell`) + 도구 목록 아래 `in-content`
-  - `top-banner`와 도구 칸 사이에는 제목·설명이 있어야 한다 (버튼과 붙지 않게). 새 페이지 틀을 만들면 `RailShell`을 쓴다.
+  - 모든 페이지: 제목 아래 `top-banner`, 모바일 하단 `mobile-anchor`(`BaseLayout`), 넓은 화면 양옆(`RailShell`)
+  - 도구 페이지: + `below-tool` + `in-content`. `top-banner`와 도구 칸 사이는 32px 띄운다.
+  - 홈·카테고리 페이지: + 도구 목록 아래 `in-content`
+  - 휴대폰에서 버튼이 하단 고정 광고와 가까워지지 않게 한다 (첫 화면 파일 선택 버튼은 칸 위쪽에 둔다).
+    화면을 바꾸면 390×844에서 버튼과 하단 광고 사이를 재 본다.
 - 칸 수를 늘린다고 수익이 비례하지 않는다. 보이는 자리에 적당히 두고, 광고가 콘텐츠보다 많아 보이지 않게 한다
   (AdSense 심사의 '가치 없는 콘텐츠' 거절 위험, 페이지 속도 저하).
   - `mobile-anchor`는 `BaseLayout`에 있어 모든 페이지에 자동으로 붙는다. 새 페이지 틀을 만들면 `RailShell`을 쓴다.
