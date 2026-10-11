@@ -171,27 +171,31 @@
   {:else if phase === 'loading'}
     <p class="status" role="status">PDF를 여는 중…</p>
   {:else if phase === 'password'}
-    <form
-      class="password"
-      onsubmit={(event) => {
-        event.preventDefault();
-        load(password);
-      }}
-    >
+    <!-- 격리 frame은 form 제출이 막혀 있어(sandbox에 allow-forms 없음) form 대신 직접 처리한다 -->
+    <div class="password" role="group" aria-label="암호가 걸린 PDF">
       <p>암호가 걸린 PDF입니다. 암호를 입력하세요.</p>
       <p class="hint">암호도 이 기기 안에서만 쓰이고 어디에도 전송되지 않습니다.</p>
       <label>
         PDF 암호
-        <input type="password" bind:value={password} autocomplete="off" required />
+        <input
+          type="password"
+          bind:value={password}
+          autocomplete="off"
+          onkeydown={(event) => {
+            if (event.key === 'Enter' && password) load(password);
+          }}
+        />
       </label>
       {#if wrongPassword}
         <p class="error" role="alert">암호가 맞지 않습니다.</p>
       {/if}
       <div class="actions">
-        <button type="submit" class="primary">열기</button>
+        <button type="button" class="primary" disabled={!password} onclick={() => load(password)}
+          >열기</button
+        >
         <button type="button" class="text" onclick={close}>취소</button>
       </div>
-    </form>
+    </div>
   {:else}
     {#if phase === 'error'}
       <p class="error banner" role="alert">{errorMessage}</p>
