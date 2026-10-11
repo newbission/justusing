@@ -24,14 +24,24 @@
 
   const pageCount = $derived(opened?.doc.numPages ?? 0);
 
+  type Mode = 'range' | 'each';
+  const MODES: { id: Mode; label: string }[] = [
+    { id: 'range', label: '범위로 나누기' },
+    { id: 'each', label: '한 장씩 나누기' },
+  ];
+  let mode: Mode = $state('range');
+
   /** 범위 입력 (예: 1-3, 4-6, 7) */
   let rangeText = $state('');
   const rangeResult = $derived(parseRanges(rangeText, pageCount));
 
   /** 결과 파일마다 넣을 쪽 번호(1부터). 아직 나눌 수 없으면 undefined */
-  const outputs: number[][] | undefined = $derived(rangeResult.ok ? rangeResult.ranges : undefined);
+  const outputs: number[][] | undefined = $derived.by(() => {
+    if (mode === 'each') return Array.from({ length: pageCount }, (_, i) => [i + 1]);
+    return rangeResult.ok ? rangeResult.ranges : undefined;
+  });
   /** 나눌 수 없을 때 그 이유 */
-  const problem = $derived(rangeResult.ok ? undefined : rangeResult.message);
+  const problem = $derived(mode === 'range' && !rangeResult.ok ? rangeResult.message : undefined);
 
   /** 쪽마다 어느 결과 파일로 가는지 ('파일 1', 겹치면 '파일 1·2') */
   function noteFor(index: number) {
@@ -93,25 +103,38 @@
     </div>
 
     <div class="body">
-      <div class="range">
-        <label for="range-input">나눌 범위</label>
-        <input
-          id="range-input"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          placeholder="예: 1-3, 4-6, 7"
-          bind:value={rangeText}
-          aria-describedby="range-help"
-          aria-invalid={rangeText.trim() !== '' && problem !== undefined}
-        />
-        <p id="range-help" class="help">
-          쉼표로 구분한 범위마다 파일 하나가 됩니다. 1-3은 1~3쪽, 5-는 5쪽부터 끝까지입니다.
-        </p>
-        {#if rangeText.trim() && problem}
-          <p class="error" role="alert">{problem}</p>
-        {/if}
+      <div class="modes" role="radiogroup" aria-label="나누는 방법">
+        {#each MODES as option (option.id)}
+          <label class:checked={mode === option.id}>
+            <input type="radio" name="mode" value={option.id} bind:group={mode} />
+            {option.label}
+          </label>
+        {/each}
       </div>
+
+      {#if mode === 'range'}
+        <div class="range">
+          <label for="range-input">나눌 범위</label>
+          <input
+            id="range-input"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="예: 1-3, 4-6, 7"
+            bind:value={rangeText}
+            aria-describedby="range-help"
+            aria-invalid={rangeText.trim() !== '' && problem !== undefined}
+          />
+          <p id="range-help" class="help">
+            쉼표로 구분한 범위마다 파일 하나가 됩니다. 1-3은 1~3쪽, 5-는 5쪽부터 끝까지입니다.
+          </p>
+          {#if rangeText.trim() && problem}
+            <p class="error" role="alert">{problem}</p>
+          {/if}
+        </div>
+      {:else}
+        <p class="help mode-help">모든 쪽을 한 장씩, {pageCount}개 파일로 나눕니다.</p>
+      {/if}
 
       <PageSelectGrid doc={opened.doc} note={noteFor} size={88} />
     </div>
@@ -237,6 +260,44 @@
     padding: 16px;
     overflow: auto;
   }
+  /* 나누는 방법: 라디오 버튼을 붙은 버튼 모양으로 (방향키로도 바뀐다) */
+  .modes {
+    display: inline-flex;
+    margin-bottom: 16px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .modes label {
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.12s;
+  }
+  .modes label + label {
+    border-left: 1px solid var(--color-line);
+  }
+  .modes label:hover {
+    background: var(--color-hover);
+  }
+  .modes label.checked {
+    background: var(--color-text);
+    color: var(--color-bg);
+    font-weight: 600;
+  }
+  .modes label:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+  .modes input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .mode-help {
+    margin-bottom: 20px;
+  }
+
   .range {
     display: flex;
     flex-direction: column;
