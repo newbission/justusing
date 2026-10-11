@@ -10,6 +10,14 @@
  * 격리 상태는 빌드 결과로 도는 E2E 테스트에서 확인한다.
  *
  * 높이는 고정이다. frame 안에서 스크롤하므로 처리 전후로 바깥 레이아웃(광고 위치)이 밀리지 않는다.
+ *
+ * 파일을 끌고 페이지에 들어오면 iframe을 잠시 화면 전체로 넓힌다. 사용자가 어디에 놓든
+ * 파일이 바깥 페이지가 아니라 격리 frame 안으로 들어가게 하기 위함이다.
+ * (끄는 동안 바깥 페이지가 아는 것은 '파일을 끌고 있다'는 사실뿐이고 내용은 알 수 없다)
+ *
+ * frame과 주고받는 메시지 (내용 없이 신호만):
+ *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start' }
+ *   frame → 바깥: { type: 'drag-ready' }, { type: 'drag-end' }
  */
 interface Props {
   /** frame 페이지 주소 (예: /pdf/view/frame/) */
@@ -46,6 +54,29 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
       const detail = (event as CustomEvent<string>).detail;
       frame.contentWindow?.postMessage({ type: 'theme', theme: detail }, '*');
     });
+
+    // 파일을 끌고 들어오면 frame을 화면 전체로 넓힌다
+    let readyTimer: ReturnType<typeof setTimeout> | undefined;
+    const collapse = () => {
+      clearTimeout(readyTimer);
+      frame.removeAttribute('data-drag-active');
+    };
+    const expand = () => {
+      if (frame.hasAttribute('data-drag-active')) return;
+      frame.setAttribute('data-drag-active', '');
+      frame.contentWindow?.postMessage({ type: 'drag-start' }, '*');
+      // frame이 아직 준비되지 않아 응답이 없으면 원래대로 돌린다
+      readyTimer = setTimeout(collapse, 1000);
+    };
+
+    addEventListener('dragenter', (event) => {
+      if (event.dataTransfer?.types.includes('Files')) expand();
+    });
+    addEventListener('message', (event) => {
+      if (event.source !== frame.contentWindow) return;
+      if (event.data?.type === 'drag-ready') clearTimeout(readyTimer);
+      if (event.data?.type === 'drag-end') collapse();
+    });
   }
 </script>
 
@@ -61,6 +92,14 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
     border: 1px solid var(--color-line);
     border-radius: var(--radius);
     background: var(--color-surface);
+  }
+  /* 파일을 끄는 동안: 화면 전체를 덮어 어디에 놓든 frame이 받는다 (떠 있는 상태라 레이아웃은 그대로) */
+  .tool-frame[data-drag-active] {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    border: 0;
+    border-radius: 0;
   }
   .noscript {
     color: var(--color-muted);
