@@ -5,6 +5,7 @@
 import '../styles/global.css';
 import { siteConfig } from '../site.config';
 import ThemeInit from '../components/ThemeInit.astro';
+import Header from '../components/Header.astro';
 
 interface Props {
   /** 페이지 제목. 없으면 사이트명만 쓴다 (홈). */
@@ -40,6 +41,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta name="twitter:card" content="summary" />
   </head>
   <body>
-    <slot />
+    <Header />
+    <main>
+      <slot />
+    </main>
   </body>
 </html>
