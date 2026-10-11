@@ -13,6 +13,9 @@
   --color-muted: light-dark(#6e6e6a, #9a9a96);
   --color-line: light-dark(#e2e2de, #2a2a2a);
   --color-accent: light-dark(#2f6f55, #6fb394);
+  /* 마우스를 올린 버튼 배경, 마우스를 올리거나 방금 옮긴 줄 배경 */
+  --color-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
 
   /* 글꼴: 웹폰트를 받지 않고 시스템 폰트를 쓴다 */
   --font-sans:
