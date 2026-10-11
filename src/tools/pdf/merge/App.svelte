@@ -502,4 +502,21 @@
     font-size: 18px;
     line-height: 1;
   }
+
+  /* 마우스를 올린 버튼이 어느 것인지 보이게 한다 */
+  button,
+  .add {
+    transition:
+      background-color 0.12s,
+      border-color 0.12s;
+  }
+  button:hover:not(:disabled),
+  .add:hover {
+    border-color: var(--color-muted);
+    background: var(--color-hover);
+  }
+  button.primary:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
 </style>
