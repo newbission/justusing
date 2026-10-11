@@ -6,6 +6,7 @@
   import { onMount, untrack } from 'svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
+  import { requestShowTool } from '../../../frame/parent';
   import PdfPage from './PdfPage.svelte';
   import {
     isPasswordError,
@@ -64,6 +65,8 @@
       currentPage = 1;
       fitWidth = true;
       phase = 'ready';
+      // 열리면 도구 칸이 화면을 꽉 채우도록 바깥 페이지를 스크롤한다
+      requestShowTool();
     } catch (error) {
       if (isPasswordError(error)) {
         wrongPassword = withPassword !== undefined;
