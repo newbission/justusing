@@ -302,22 +302,25 @@
               {/if}
             </span>
           </div>
-          <button
-            type="button"
-            class="icon"
-            data-move="-1"
-            onclick={() => move(item, -1)}
-            disabled={index === 0}
-            aria-label="{item.name} 위로">↑</button
-          >
-          <button
-            type="button"
-            class="icon"
-            data-move="1"
-            onclick={() => move(item, 1)}
-            disabled={index === items.length - 1}
-            aria-label="{item.name} 아래로">↓</button
-          >
+          <!-- 암호를 넣기 전에는 끌기와 마찬가지로 순서 버튼도 숨겨 암호 칸에 자리를 준다 -->
+          {#if item.status !== 'password'}
+            <button
+              type="button"
+              class="icon"
+              data-move="-1"
+              onclick={() => move(item, -1)}
+              disabled={index === 0}
+              aria-label="{item.name} 위로">↑</button
+            >
+            <button
+              type="button"
+              class="icon"
+              data-move="1"
+              onclick={() => move(item, 1)}
+              disabled={index === items.length - 1}
+              aria-label="{item.name} 아래로">↓</button
+            >
+          {/if}
           <button
             type="button"
             class="icon"
