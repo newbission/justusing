@@ -8,13 +8,23 @@
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
   import Thumbnail from '../../../lib/pdf/Thumbnail.svelte';
-  import { openPdf, type OpenedPdf, type PDFPageProxy } from '../../../lib/pdf/pdfjs';
+  import {
+    isPasswordError,
+    openPdf,
+    type OpenedPdf,
+    type PDFPageProxy,
+  } from '../../../lib/pdf/pdfjs';
 
   interface Item {
     id: number;
     name: string;
     bytes: Uint8Array;
-    status: 'loading' | 'ready' | 'error';
+    status: 'loading' | 'password' | 'ready' | 'error';
+    /** 암호 PDF를 연 암호. 합칠 때 같은 암호로 풀어서 넣는다. */
+    password?: string;
+    /** 암호 입력 칸의 값과 틀렸는지 여부 */
+    passwordInput: string;
+    wrongPassword: boolean;
     pageCount: number;
     firstPage?: PDFPageProxy;
     opened?: OpenedPdf;
@@ -42,6 +52,8 @@
         bytes: new Uint8Array(await file.arrayBuffer()),
         status: 'loading',
         pageCount: 0,
+        passwordInput: '',
+        wrongPassword: false,
       };
       items.push(item);
       load(items.at(-1)!);
@@ -49,15 +61,23 @@
   }
 
   /** 페이지 수와 첫 페이지 썸네일을 읽는다 */
-  async function load(item: Item) {
+  async function load(item: Item, password?: string) {
+    item.status = 'loading';
     try {
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 복사본을 준다 (원본은 합칠 때 쓴다)
-      item.opened = await openPdf(item.bytes.slice());
+      item.opened = await openPdf(item.bytes.slice(), password);
+      item.password = password;
       item.pageCount = item.opened.doc.numPages;
       item.firstPage = await item.opened.doc.getPage(1);
       item.status = 'ready';
-    } catch {
-      item.status = 'error';
+    } catch (error) {
+      if (isPasswordError(error)) {
+        item.wrongPassword = password !== undefined;
+        item.passwordInput = '';
+        item.status = 'password';
+      } else {
+        item.status = 'error';
+      }
     }
   }
 
@@ -150,7 +170,7 @@
           class:drop-before={dropIndex === index}
           class:drop-after={dropIndex === items.length && index === items.length - 1}
           data-item={item.id}
-          draggable="true"
+          draggable={item.status !== 'password'}
           ondragstart={(event) => {
             dragId = item.id;
             event.dataTransfer!.effectAllowed = 'move';
@@ -171,6 +191,27 @@
             <span class="meta">
               {#if item.status === 'loading'}
                 읽는 중…
+              {:else if item.status === 'password'}
+                <!-- 격리 frame은 form 제출이 막혀 있어 Enter 키와 버튼으로 직접 처리한다 -->
+                <span class="password">
+                  <input
+                    type="password"
+                    bind:value={item.passwordInput}
+                    autocomplete="off"
+                    placeholder={item.wrongPassword ? '암호가 맞지 않습니다' : '암호 입력'}
+                    aria-label="{item.name} 암호"
+                    aria-invalid={item.wrongPassword}
+                    onkeydown={(event) => {
+                      if (event.key === 'Enter' && item.passwordInput)
+                        load(item, item.passwordInput);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={!item.passwordInput}
+                    onclick={() => load(item, item.passwordInput)}>열기</button
+                  >
+                </span>
               {:else if item.status === 'error'}
                 <strong>열 수 없는 파일입니다. 빼고 합칩니다.</strong>
               {:else}
@@ -281,6 +322,23 @@
   }
   .meta {
     color: var(--color-muted);
+    font-size: 13px;
+  }
+  .password {
+    display: flex;
+    gap: 4px;
+  }
+  .password input {
+    width: 140px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    font-size: 13px;
+  }
+  .password button {
+    height: 28px;
     font-size: 13px;
   }
   .meta strong {
