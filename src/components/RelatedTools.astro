@@ -1,0 +1,30 @@
+---
+/**
+ * 도구 페이지 맨 아래 '관련 도구' 섹션. meta.ts의 related 목록을 카드로 보여준다.
+ */
+import { getTool, type Tool } from '../tools/registry';
+import ToolGrid from './ToolGrid.astro';
+
+interface Props {
+  ids: string[];
+}
+
+const tools = Astro.props.ids.map(getTool).filter((tool): tool is Tool => Boolean(tool));
+---
+
+{tools.length > 0 && (
+  <section class="related">
+    <h2>관련 도구</h2>
+    <ToolGrid tools={tools} headingLevel={3} />
+  </section>
+)}
+
+<style>
+  .related {
+    margin-top: 48px;
+  }
+  h2 {
+    margin: 0 0 12px;
+    font-size: 22px;
+  }
+</style>
