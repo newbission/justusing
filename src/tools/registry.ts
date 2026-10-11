@@ -6,7 +6,7 @@
  *   2. 아래 TOOL_IDS에 '<카테고리>/<이름>' 한 줄을 넣는다.
  * 허브·카테고리 목록·사이트맵·메뉴·관련 도구가 이 목록에서 자동으로 만들어진다.
  */
-import { isCategoryId, type CategoryId } from './categories';
+import { CATEGORIES, isCategoryId, type CategoryId } from './categories';
 import type { ToolMeta } from './types';
 
 /** 노출 순서대로, 한 줄에 하나 */
@@ -44,3 +44,8 @@ export function toolsInCategory(category: CategoryId): Tool[] {
 
 /** 실제 페이지가 있는 도구 */
 export const liveTools: Tool[] = tools.filter((tool) => tool.status === 'live');
+
+/** 도구가 하나라도 있는 카테고리. 목록 페이지와 메뉴는 이것만 보여준다. */
+export const visibleCategories: CategoryId[] = (Object.keys(CATEGORIES) as CategoryId[]).filter(
+  (category) => toolsInCategory(category).length > 0,
+);
