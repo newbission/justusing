@@ -24,10 +24,11 @@
 
   const pageCount = $derived(opened?.doc.numPages ?? 0);
 
-  type Mode = 'range' | 'each';
+  type Mode = 'range' | 'each' | 'select';
   const MODES: { id: Mode; label: string }[] = [
     { id: 'range', label: '범위로 나누기' },
     { id: 'each', label: '한 장씩 나누기' },
+    { id: 'select', label: '고른 페이지만' },
   ];
   let mode: Mode = $state('range');
 
@@ -35,13 +36,26 @@
   let rangeText = $state('');
   const rangeResult = $derived(parseRanges(rangeText, pageCount));
 
+  /** '고른 페이지만'에서 쪽마다 선택 여부 (index 0 = 1쪽) */
+  let selected: boolean[] = $state([]);
+  const selectedPages = $derived(selected.flatMap((on, index) => (on ? [index + 1] : [])));
+
   /** 결과 파일마다 넣을 쪽 번호(1부터). 아직 나눌 수 없으면 undefined */
   const outputs: number[][] | undefined = $derived.by(() => {
     if (mode === 'each') return Array.from({ length: pageCount }, (_, i) => [i + 1]);
+    if (mode === 'select') return selectedPages.length > 0 ? [selectedPages] : undefined;
     return rangeResult.ok ? rangeResult.ranges : undefined;
   });
   /** 나눌 수 없을 때 그 이유 */
-  const problem = $derived(mode === 'range' && !rangeResult.ok ? rangeResult.message : undefined);
+  const problem = $derived.by(() => {
+    if (mode === 'range' && !rangeResult.ok) return rangeResult.message;
+    if (mode === 'select' && selectedPages.length === 0) return '뽑을 페이지를 눌러 고르세요.';
+    return undefined;
+  });
+
+  function selectAll(on: boolean) {
+    selected = Array.from({ length: pageCount }, () => on);
+  }
 
   /** 쪽마다 어느 결과 파일로 가는지 ('파일 1', 겹치면 '파일 1·2') */
   function noteFor(index: number) {
@@ -63,6 +77,7 @@
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 복사본을 준다 (원본은 나눌 때 쓴다)
       opened = await openPdf(bytes.slice(), withPassword);
       password = withPassword;
+      selectAll(false);
       phase = 'ready';
       requestShowTool();
     } catch (error) {
@@ -132,11 +147,24 @@
             <p class="error" role="alert">{problem}</p>
           {/if}
         </div>
-      {:else}
+      {:else if mode === 'each'}
         <p class="help mode-help">모든 쪽을 한 장씩, {pageCount}개 파일로 나눕니다.</p>
+      {:else}
+        <div class="select-bar">
+          <p class="help" aria-live="polite">
+            뽑을 페이지를 누르세요. 고른 페이지가 파일 하나로 나옵니다. ({selectedPages.length}쪽
+            고름)
+          </p>
+          <button type="button" class="text" onclick={() => selectAll(true)}>전체 선택</button>
+          <button type="button" class="text" onclick={() => selectAll(false)}>선택 해제</button>
+        </div>
       {/if}
 
-      <PageSelectGrid doc={opened.doc} note={noteFor} size={88} />
+      {#if mode === 'select'}
+        <PageSelectGrid doc={opened.doc} bind:selected size={88} />
+      {:else}
+        <PageSelectGrid doc={opened.doc} note={noteFor} size={88} />
+      {/if}
     </div>
   {:else if phase === 'loading'}
     <p class="status" role="status">PDF를 여는 중…</p>
@@ -296,6 +324,16 @@
   }
   .mode-help {
     margin-bottom: 20px;
+  }
+  .select-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .select-bar .help {
+    flex: 1 1 240px;
   }
 
   .range {
