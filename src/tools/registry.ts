@@ -15,6 +15,7 @@ const TOOL_IDS: readonly string[] = [
   'pdf/view',
   'pdf/merge',
   'pdf/split',
+  'pdf/rotate',
 ];
 
 export interface Tool extends ToolMeta {
