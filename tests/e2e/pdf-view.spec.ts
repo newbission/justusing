@@ -140,3 +140,28 @@ test('PDF가 아닌 파일은 안내 문구를 보여준다', async ({ page }) =
   });
   await expect(frame.getByRole('alert')).toContainText('PDF를 열 수 없습니다');
 });
+
+test('PDF를 열면 도구 칸이 화면을 채우도록 스크롤된다', async ({ page }) => {
+  const frame = await openViewer(page);
+  await frame.locator('input[type=file]').setInputFiles(fixture('three-pages.pdf'));
+  await expect(frame.getByText('1 / 3')).toBeVisible();
+
+  // 칸 위쪽이 화면 위쪽 근처(16px 여백)에 오고, 칸 아래쪽이 화면 안에 들어온다
+  const box = page.locator('iframe[data-tool-frame]');
+  await expect.poll(async () => Math.round((await box.boundingBox())!.y)).toBe(16);
+  const { y, height } = (await box.boundingBox())!;
+  expect(y + height).toBeLessThanOrEqual(page.viewportSize()!.height);
+});
+
+test('격리 frame 안에서 전체 화면으로 볼 수 있다', async ({ page }) => {
+  const frame = await openViewer(page);
+  await frame.locator('input[type=file]').setInputFiles(fixture('three-pages.pdf'));
+
+  await frame.getByRole('button', { name: '전체 화면', exact: true }).click();
+  await expect(frame.getByRole('button', { name: '전체 화면 끝내기' })).toBeVisible();
+  expect(await page.evaluate(() => document.fullscreenElement?.tagName)).toBe('IFRAME');
+
+  await frame.getByRole('button', { name: '전체 화면 끝내기' }).click();
+  await expect(frame.getByRole('button', { name: '전체 화면', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.fullscreenElement)).toBeNull();
+});
