@@ -1,0 +1,87 @@
+---
+/**
+ * 라이트/다크 전환 버튼. 고른 값은 localStorage에 저장되어 모든 페이지에 적용된다.
+ */
+---
+
+<button type="button" class="theme-toggle" data-theme-toggle aria-label="테마 전환">
+  <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="currentColor"></path>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <circle cx="12" cy="12" r="4.5" fill="currentColor"></circle>
+    <path
+      d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+    ></path>
+  </svg>
+</button>
+
+<script>
+  import { THEME_STORAGE_KEY, type Theme } from '../lib/theme';
+
+  const root = document.documentElement;
+
+  /** 지금 화면에 적용된 테마 (저장값이 없으면 OS 설정) */
+  function currentTheme(): Theme {
+    const set = root.dataset.theme;
+    if (set === 'light' || set === 'dark') return set;
+    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function updateLabel(button: HTMLButtonElement) {
+    button.setAttribute(
+      'aria-label',
+      currentTheme() === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환',
+    );
+  }
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')) {
+    updateLabel(button);
+    button.addEventListener('click', () => {
+      const next: Theme = currentTheme() === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, next);
+      } catch {
+        // 저장이 막혀도 이번 페이지에는 적용된다
+      }
+      updateLabel(button);
+    });
+  }
+</script>
+
+<style>
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  /* 라이트에서는 달(→다크로), 다크에서는 해(→라이트로)를 보여준다 */
+  .icon-sun {
+    display: none;
+  }
+  :global(:root[data-theme='dark']) .icon-sun {
+    display: block;
+  }
+  :global(:root[data-theme='dark']) .icon-moon {
+    display: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .icon-sun {
+      display: block;
+    }
+    :global(:root:not([data-theme='light'])) .icon-moon {
+      display: none;
+    }
+  }
+</style>
