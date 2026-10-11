@@ -631,4 +631,21 @@
     border-color: var(--color-accent);
     background: var(--color-accent);
   }
+
+  /* 좁은 화면: 안내를 한 줄 위에 두고 버튼을 아래 줄에 나란히 둔다.
+     높이는 이 화면 크기 안에서 처리 전후가 같다. */
+  @media (max-width: 520px) {
+    .action {
+      flex-wrap: wrap;
+      align-content: center;
+      row-gap: 8px;
+      height: 112px;
+    }
+    .action-text {
+      flex-basis: 100%;
+    }
+    .action button {
+      flex: 1;
+    }
+  }
 </style>
