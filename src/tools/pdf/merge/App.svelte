@@ -552,8 +552,11 @@
     text-overflow: ellipsis;
   }
   .meta {
+    overflow: hidden;
     color: var(--color-muted);
     font-size: 13px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .password {
     display: flex;
