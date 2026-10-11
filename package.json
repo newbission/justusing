@@ -22,6 +22,7 @@
     "@astrojs/svelte": "^9.0.1",
     "@cantoo/pdf-lib": "^2.11.1",
     "astro": "^7.3.8",
+    "fflate": "^0.8.3",
     "pdfjs-dist": "^6.4.299",
     "svelte": "^5.57.2",
     "typescript": "^6.0.3"
