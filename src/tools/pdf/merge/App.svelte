@@ -362,15 +362,19 @@
     padding: 0 16px;
     border-bottom: 1px solid var(--color-line);
   }
+  /* 좁은 화면에서도 안내를 다 읽을 수 있게 두 줄까지 보여 준다 (막대 높이는 그대로) */
   .action-text {
+    display: -webkit-box;
     flex: 1;
     min-width: 0;
     margin: 0;
     overflow: hidden;
     color: var(--color-muted);
     font-size: 14px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
   .action-text strong {
     color: var(--color-text);
