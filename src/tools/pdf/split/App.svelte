@@ -8,6 +8,8 @@
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
   import { isPasswordError, openPdf, type OpenedPdf } from '../../../lib/pdf/pdfjs';
+  import PageSelectGrid from '../../../lib/pdf/PageSelectGrid.svelte';
+  import { parseRanges } from '../../../lib/pdf/ranges';
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
@@ -21,6 +23,21 @@
   let opened: OpenedPdf | undefined = $state.raw();
 
   const pageCount = $derived(opened?.doc.numPages ?? 0);
+
+  /** 범위 입력 (예: 1-3, 4-6, 7) */
+  let rangeText = $state('');
+  const rangeResult = $derived(parseRanges(rangeText, pageCount));
+
+  /** 결과 파일마다 넣을 쪽 번호(1부터). 아직 나눌 수 없으면 undefined */
+  const outputs: number[][] | undefined = $derived(rangeResult.ok ? rangeResult.ranges : undefined);
+  /** 나눌 수 없을 때 그 이유 */
+  const problem = $derived(rangeResult.ok ? undefined : rangeResult.message);
+
+  /** 쪽마다 어느 결과 파일로 가는지 ('파일 1', 겹치면 '파일 1·2') */
+  function noteFor(index: number) {
+    const files = (outputs ?? []).flatMap((pages, i) => (pages.includes(index + 1) ? [i + 1] : []));
+    return files.length > 0 ? `파일 ${files.join('·')}` : undefined;
+  }
 
   async function open(file: File) {
     await close();
@@ -55,6 +72,7 @@
     bytes = undefined;
     password = undefined;
     wrongPassword = false;
+    rangeText = '';
     phase = 'idle';
   }
 
@@ -72,6 +90,30 @@
       <span class="name" title={fileName}>{fileName}</span>
       <span class="meta">{pageCount}쪽</span>
       <button type="button" class="text" onclick={close}>다른 파일</button>
+    </div>
+
+    <div class="body">
+      <div class="range">
+        <label for="range-input">나눌 범위</label>
+        <input
+          id="range-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          placeholder="예: 1-3, 4-6, 7"
+          bind:value={rangeText}
+          aria-describedby="range-help"
+          aria-invalid={rangeText.trim() !== '' && problem !== undefined}
+        />
+        <p id="range-help" class="help">
+          쉼표로 구분한 범위마다 파일 하나가 됩니다. 1-3은 1~3쪽, 5-는 5쪽부터 끝까지입니다.
+        </p>
+        {#if rangeText.trim() && problem}
+          <p class="error" role="alert">{problem}</p>
+        {/if}
+      </div>
+
+      <PageSelectGrid doc={opened.doc} note={noteFor} size={88} />
     </div>
   {:else if phase === 'loading'}
     <p class="status" role="status">PDF를 여는 중…</p>
@@ -188,6 +230,43 @@
   button.primary:hover:not(:disabled) {
     border-color: var(--color-accent);
     background: var(--color-accent);
+  }
+
+  .body {
+    flex: 1;
+    padding: 16px;
+    overflow: auto;
+  }
+  .range {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 480px;
+    margin-bottom: 20px;
+  }
+  .range label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .range input {
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    font-size: 15px;
+  }
+  .range input[aria-invalid='true'] {
+    border-color: var(--color-text);
+  }
+  .help {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 13px;
+  }
+  .range .error {
+    margin: 0;
+    font-size: 13px;
   }
 
   .status {
