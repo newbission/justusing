@@ -219,7 +219,9 @@ Co-Authored-By: ...
    - 배포 브랜치(production) `main`, 빌드 명령 `npm run build`, 배포 명령 `npx wrangler deploy`
    - main이 아닌 브랜치의 미리보기 빌드는 끈다 (배포는 main만)
 2. 만든 Worker → Settings → Domains & Routes에 `site.config.ts`의 도메인과 `www.` 도메인 추가
-   (DNS 레코드와 인증서는 Cloudflare가 만든다)
+   (DNS 레코드와 인증서는 Cloudflare가 만든다). 같은 이름의 DNS 레코드가 이미 있으면 먼저 지운다
+   (예: 예전 GitHub Pages용 A 레코드 `185.199.x.x`, `www` CNAME). 연결한 뒤 같은 화면에서
+   `workers.dev` 주소와 Preview URLs를 끈다 (같은 사이트가 두 주소로 열려 검색엔진에 중복으로 잡히지 않게).
 3. GitHub 저장소 Settings → Branches에 `main`·`dev` 보호 규칙:
    PR로만 병합, CI(`check`) 통과 필수
 
