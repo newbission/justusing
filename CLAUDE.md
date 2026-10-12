@@ -218,8 +218,8 @@ Co-Authored-By: ...
 
 1. Cloudflare → Workers & Pages → Create → **Connect GitHub** → 이 저장소 선택
    - 배포 브랜치(production) `main`, 빌드 명령 `npm run build`, 배포 명령 `npx wrangler deploy`
-   - main이 아닌 브랜치도 빌드되지만(PR에 `Workers Builds` 검사로 보임) 실제 사이트에는 올라가지 않는다.
-     끄는 설정은 없다. Preview URLs를 꺼 두면 밖에서 볼 주소도 생기지 않는다
+   - main이 아닌 브랜치 빌드는 끈다: Worker → Settings → Build → Branch control →
+     **Enable Preview Builds** 체크 해제 (켜 두면 PR마다 빌드 알림이 온다)
 2. 만든 Worker → Settings → Domains & Routes에 `site.config.ts`의 도메인과 `www.` 도메인 추가
    (DNS 레코드와 인증서는 Cloudflare가 만든다). 같은 이름의 DNS 레코드가 이미 있으면 먼저 지운다
    (예: 예전 GitHub Pages용 A 레코드 `185.199.x.x`, `www` CNAME). 연결한 뒤 같은 화면에서
