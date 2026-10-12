@@ -26,7 +26,7 @@
     | { kind: 'working' }
     | { kind: 'done'; name: string; bytes: Uint8Array; signature: string }
     | { kind: 'failed'; message: string };
-  let run: Run = $state({ kind: 'idle' });
+  let run = $state<Run>({ kind: 'idle' });
 
   /** 쪽마다 실제 각도. 돌린 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
   const signature = $derived(rotations.map(normalize).join(','));

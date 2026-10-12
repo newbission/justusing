@@ -50,7 +50,7 @@
     | { kind: 'working'; done: number; total: number }
     | { kind: 'done'; name: string; bytes: Uint8Array; type: string; signature: string }
     | { kind: 'failed'; message: string };
-  let run: Run = $state({ kind: 'idle' });
+  let run = $state<Run>({ kind: 'idle' });
 
   /** 나눌 내용(방법·결과 파일별 쪽). 나눈 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
   const signature = $derived(`${mode}:${JSON.stringify(outputs ?? [])}`);

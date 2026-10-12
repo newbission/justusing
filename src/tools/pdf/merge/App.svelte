@@ -70,7 +70,7 @@
     | { kind: 'working' }
     | { kind: 'done'; bytes: Uint8Array; fileName: string; signature: string }
     | { kind: 'failed'; message: string };
-  let phase: Phase = $state({ kind: 'idle' });
+  let phase = $state<Phase>({ kind: 'idle' });
 
   /** 목록 상태(파일 순서와 파일마다 넣을 페이지 순서). 합친 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
   const signature = $derived(
