@@ -5,6 +5,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { flip } from 'svelte/animate';
+  import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
   import { requestShowTool } from '../../../frame/parent';
@@ -263,9 +264,9 @@
       </label>
     </div>
 
-    <!-- 실행·다운로드 막대: 높이 고정(처리 전후 같음). 모바일 하단 고정 광고와 멀도록 목록 위에 둔다 -->
-    <div class="action" role="group" aria-label="합치기">
-      <p class="action-text" aria-live="polite">
+    <!-- 모바일 하단 고정 광고와 멀도록 목록 위에 둔다 -->
+    <ActionBar label="합치기">
+      {#snippet text()}
         {#if phase.kind === 'working'}
           합치는 중… 파일이 크면 시간이 걸릴 수 있습니다.
         {:else if result}
@@ -275,7 +276,7 @@
         {:else}
           {blocker ?? '위에서부터 목록 순서대로 합칩니다.'}
         {/if}
-      </p>
+      {/snippet}
       <button
         type="button"
         class="secondary"
@@ -296,7 +297,7 @@
           onclick={merge}>{phase.kind === 'working' ? '합치는 중…' : 'PDF 합치기'}</button
         >
       {/if}
-    </div>
+    </ActionBar>
 
     <ol class="list" aria-label="합칠 파일 목록 (위에서부터 순서대로 합칩니다)">
       {#each items as item, index (item.id)}
@@ -436,32 +437,6 @@
     font-size: 14px;
   }
 
-  .action {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: 12px;
-    height: 64px;
-    padding: 0 16px;
-    border-bottom: 1px solid var(--color-line);
-  }
-  /* 좁은 화면에서도 안내를 다 읽을 수 있게 두 줄까지 보여 준다 (막대 높이는 그대로) */
-  .action-text {
-    display: -webkit-box;
-    flex: 1;
-    min-width: 0;
-    margin: 0;
-    overflow: hidden;
-    color: var(--color-muted);
-    font-size: 14px;
-    line-height: 1.35;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
-  .action-text strong {
-    color: var(--color-text);
-  }
   button.secondary {
     height: 40px;
     padding: 0 16px;
@@ -632,21 +607,7 @@
     background: var(--color-accent);
   }
 
-  /* 좁은 화면: 안내를 한 줄 위에 두고 버튼을 아래 줄에 나란히 둔다.
-     높이는 이 화면 크기 안에서 처리 전후가 같다. */
   @media (max-width: 520px) {
-    .action {
-      flex-wrap: wrap;
-      align-content: center;
-      row-gap: 8px;
-      height: 112px;
-    }
-    .action-text {
-      flex-basis: 100%;
-    }
-    .action button {
-      flex: 1;
-    }
     /* 펼친 페이지 격자: 들여쓰기를 줄여 한 줄에 더 많은 페이지가 들어가게 한다 */
     .pages {
       padding-left: 8px;
