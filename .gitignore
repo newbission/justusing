@@ -27,3 +27,6 @@ pnpm-debug.log*
 public/vendor/
 test-results/
 playwright-report/
+
+# wrangler 로컬 실행 캐시
+.wrangler/
