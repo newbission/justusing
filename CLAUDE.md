@@ -101,6 +101,8 @@ frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동
 새 카테고리는 `src/tools/categories.ts`에 추가한다. PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
 결과 PDF는 `src/lib/pdf/assemble.ts`의 `assemblePdf()`로 만든다(페이지 고르기·순서·회전, 워커에서 pdf-lib).
 썸네일은 `src/lib/pdf/Thumbnail.svelte`, 다운로드는 `src/frame/download.ts`, 바깥 스크롤 요청은 `src/frame/parent.ts`.
+PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고르기·암호·파일 이름 막대) 안에 화면을 그리고,
+실행·다운로드 막대는 `src/frame/ActionBar.svelte`를 쓴다 (나누기·회전·정리 참고).
 
 ### 도구 페이지 구성
 
