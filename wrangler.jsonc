@@ -1,0 +1,11 @@
+// Cloudflare 배포 설정. main에 병합되면 Cloudflare가 npm run build 뒤 dist/를 그대로 올린다.
+// 서버 코드 없이 정적 파일만 내보낸다 (파일 처리는 전부 브라우저 안에서).
+{
+  "name": "justusing",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // 주소는 항상 끝 슬래시로 (astro.config의 trailingSlash: 'always'와 맞춘다)
+    "html_handling": "force-trailing-slash",
+  },
+}
