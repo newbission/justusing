@@ -158,6 +158,8 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 - `main`·`dev`는 직접 건드리지 않는다.
   `dev`에서 기능 브랜치를 따고 → 작은 커밋 → 작은 PR → `dev`에 병합 → `dev`를 `main`에 병합하면 배포.
 - 브랜치 이름: `<타입>/<짧은-설명>` (예: `feat/pdf-edit`, `fix/merge-password`)
+- PR 병합은 **Rebase merge**로만 한다. 작은 커밋이 그대로 남고 규칙 밖의 병합 커밋이 생기지 않는다.
+  (Squash는 PR 제목·본문이 커밋 메시지가 되어 커밋 단위 리뷰가 사라진다)
 - CI: PR마다 포맷·타입 검사·빌드·E2E (`.github/workflows/ci.yml`). 통과해야 병합한다.
 - CD: `main`에 병합되면 Cloudflare가 직접 빌드(`npm run build`)하고 `dist/`를 배포한다.
   Cloudflare는 CI 결과를 보지 않으므로, main은 CI를 통과한 PR로만 들어오게 한다 (브랜치 보호).
