@@ -164,6 +164,9 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   GitHub의 Rebase merge는 커밋을 새로 만들어 해시가 바뀌므로, `dev`와 `main`의 기록이 갈라진다.
 - PR 제목은 커밋 제목과 같은 형식이다 (`<타입>(<영역>): <제목>`, "~ 추가/수정/제거/변경"으로 끝냄).
   PR 본문은 `## 왜` → `## 바뀐 것` → `## 확인` (필요하면 `## 병합 뒤 할 일`) 순서로 쓴다.
+- 코드 리뷰는 Codex(ChatGPT Codex Connector)가 한다. 자동 리뷰는 꺼 두고, 기능 → `dev` PR을 만든 직후
+  PR에 `@codex review` 댓글을 달아 부른다. `dev` → `main` PR은 이미 리뷰한 커밋이라 부르지 않는다.
+  리뷰 기준은 `AGENTS.md`에 있다.
 - CI: PR마다 포맷·타입 검사·빌드·E2E (`.github/workflows/ci.yml`). 통과해야 병합한다.
 - CD: `main`에 병합되면 Cloudflare가 직접 빌드(`npm run build`)하고 `dist/`를 배포한다.
   Cloudflare는 CI 결과를 보지 않으므로, main은 CI를 통과한 PR로만 들어오게 한다 (브랜치 보호).
