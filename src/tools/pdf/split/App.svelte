@@ -75,18 +75,25 @@
 
     const plan = outputs;
     const startedWith = signature;
+    /** 처리하는 동안 다른 파일을 열면 이 결과는 버린다 */
+    const source = pdf;
     run = { kind: 'working', done: 0, total: plan.length };
     try {
       const files = await assemblePdfs(
         {
-          sources: [{ bytes: pdf.bytes, password: pdf.password }],
+          sources: [{ bytes: source.bytes, password: source.password }],
           outputs: plan.map((pages) => pages.map((page) => ({ source: 0, index: page - 1 }))),
         },
-        (done, total) => (run = { kind: 'working', done, total }),
+        (done, total) => {
+          if (pdf === source) run = { kind: 'working', done, total };
+        },
       );
-      const name = pdf.name;
-      const named = files.map((file, i) => ({ name: outputName(name, plan[i]!), bytes: file }));
-      const base = name.replace(/\.pdf$/i, '');
+      if (pdf !== source) return;
+      const named = files.map((file, i) => ({
+        name: outputName(source.name, plan[i]!),
+        bytes: file,
+      }));
+      const base = source.name.replace(/\.pdf$/i, '');
       run =
         named.length === 1
           ? { kind: 'done', ...named[0]!, type: 'application/pdf', signature: startedWith }
@@ -98,6 +105,7 @@
               signature: startedWith,
             };
     } catch {
+      if (pdf !== source) return;
       run = { kind: 'failed', message: '나누지 못했습니다. 파일이 손상되었을 수 있습니다.' };
     }
   }

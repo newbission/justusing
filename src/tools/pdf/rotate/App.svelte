@@ -41,15 +41,19 @@
     }
 
     const startedWith = signature;
+    /** 처리하는 동안 다른 파일을 열면 이 결과는 버린다 */
+    const source = pdf;
     run = { kind: 'working' };
     try {
       const output = await assemblePdf({
-        sources: [{ bytes: pdf.bytes, password: pdf.password }],
+        sources: [{ bytes: source.bytes, password: source.password }],
         pages: rotations.map((angle, index) => ({ source: 0, index, rotate: normalize(angle) })),
       });
-      const base = pdf.name.replace(/\.pdf$/i, '');
+      if (pdf !== source) return;
+      const base = source.name.replace(/\.pdf$/i, '');
       run = { kind: 'done', name: `${base}_회전.pdf`, bytes: output, signature: startedWith };
     } catch {
+      if (pdf !== source) return;
       run = { kind: 'failed', message: '돌리지 못했습니다. 파일이 손상되었을 수 있습니다.' };
     }
   }
