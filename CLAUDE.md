@@ -16,7 +16,7 @@ PDF·이미지 같은 파일을 **브라우저 안에서만** 처리하는 무�
 ```sh
 npm run dev           # 개발 서버 (http://localhost:4321)
 npm run build         # dist/ 에 정적 사이트 생성
-npm run preview       # 빌드 결과 미리보기 (격리·CSP가 켜진 실제 배포 상태)
+npm run preview       # 빌드 결과 미리보기 (http://localhost:4322, Cloudflare와 같은 방식: 격리·CSP·_headers)
 npm run build:ad-preview  # 광고 자리 점선 칸을 넣어 빌드 (위치 확인용, 배포에 쓰지 않음)
 npm run check         # 타입 검사 (astro check + svelte-check)
 npm run format        # 포맷 정리
@@ -30,6 +30,8 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 **개발 서버는 도구 격리와 CSP가 꺼져 있다.** 도구를 만들면 반드시 `npm run build` 후
 `npm run preview` 또는 `npm run test:e2e`로 실제 배포 상태에서 확인한다.
 (예: 격리 frame에서 form 제출이 막히는 문제는 개발 서버에서 보이지 않았다.)
+미리보기와 E2E는 `wrangler dev`로 띄운다. `astro preview`는 CORS 헤더를 저절로 붙여서,
+격리 frame이 우리 파일을 못 받는 문제(배포에서만 생김)를 가린다. 응답 헤더는 `public/_headers`에 둔다.
 
 ## 반드시 지킬 원칙
 
