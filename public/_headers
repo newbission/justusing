@@ -1,0 +1,10 @@
+# Cloudflare 응답 헤더 (빌드하면 dist/_headers로 복사된다).
+#
+# 도구 iframe은 sandbox(allow-same-origin 없음)라 출처가 null이다. 그 안에서 우리 사이트의
+# 스크립트·워커·CMap을 불러오려면 응답에 CORS 허용이 있어야 한다 (없으면 도구가 아예 뜨지 않는다).
+# 누구나 받을 수 있는 공개 정적 파일이라 *로 허용해도 새로 드러나는 것은 없다.
+/_astro/*
+  Access-Control-Allow-Origin: *
+
+/vendor/*
+  Access-Control-Allow-Origin: *
