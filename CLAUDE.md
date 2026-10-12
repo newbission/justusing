@@ -9,7 +9,7 @@ PDF·이미지 같은 파일을 **브라우저 안에서만** 처리하는 무�
 
 - Astro (정적 빌드) + Svelte 5 (도구 화면의 움직이는 부분만) + TypeScript strict
 - npm, Node 24 LTS (CI 기준)
-- GitHub Pages 배포, 도메인 DNS는 Cloudflare
+- Cloudflare 배포 (Workers 정적 배포, `wrangler.jsonc`), 도메인 DNS도 Cloudflare
 
 ## 명령어
 
@@ -75,7 +75,7 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 ### 설정은 한 곳에
 
 - 사이트명·도메인·설명·광고 설정은 `src/site.config.ts`에만 둔다. 코드·문서에 하드코딩하지 않는다.
-- CNAME 파일은 두지 않는다. Actions 배포에서는 무시되고, 도메인은 아래 "배포 수동 설정"대로 지정한다.
+- 도메인 연결은 코드가 아니라 Cloudflare 대시보드에서 한다 (아래 "배포 수동 설정").
 
 ### 주소 구조
 
@@ -152,11 +152,13 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 
 - **커밋은 최소 단위.** 커밋 하나 = 변경 하나. 여러 수정을 한 커밋에 몰아넣지 않는다.
   사용자가 커밋 단위로 리뷰한다.
-- MVP가 완성될 때까지는 main에서 작업하고, **MVP가 끝나면 한 번에 push**해서 첫 배포를 한다.
-- MVP 이후: `main`은 직접 건드리지 않는다.
+- 저장소: `newbission/justusing` (공개). 이 폴더는 newbission 계정으로 push된다.
+- `main`·`dev`는 직접 건드리지 않는다.
   `dev`에서 기능 브랜치를 따고 → 작은 커밋 → 작은 PR → `dev`에 병합 → `dev`를 `main`에 병합하면 배포.
-- CI: PR마다 포맷·타입 검사·빌드·E2E (`.github/workflows/ci.yml`),
-  main push 시 같은 검사를 통과해야 배포 (`deploy.yml`).
+- 브랜치 이름: `<타입>/<짧은-설명>` (예: `feat/pdf-edit`, `fix/merge-password`)
+- CI: PR마다 포맷·타입 검사·빌드·E2E (`.github/workflows/ci.yml`). 통과해야 병합한다.
+- CD: `main`에 병합되면 Cloudflare가 직접 빌드(`npm run build`)하고 `dist/`를 배포한다.
+  Cloudflare는 CI 결과를 보지 않으므로, main은 CI를 통과한 PR로만 들어오게 한다 (브랜치 보호).
 
 ### 커밋 메시지 규칙
 
@@ -195,20 +197,20 @@ Co-Authored-By: ...
   - [x] 5-3 정리 (`/pdf/organize/`): 썸네일 끌어서 순서 바꾸기, 페이지 삭제
   - 5-4 편집 (`/pdf/edit/`): MVP에서 뺀다 (2026-10-11). 첫 배포 뒤 방문 데이터를 보고 만든다.
     텍스트·이미지·서명. 한글 글꼴을 직접 호스팅해 PDF에 넣어야 해서 가장 크다. 그때까지 `soon`으로 둔다.
-- [ ] MVP 범위 확정 후 GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 → 아래 수동 설정
+- [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
+- [ ] Cloudflare 배포 연결 (아래 수동 설정) → 첫 배포 확인
 
-### 배포 수동 설정 (첫 push 때 사용자가 직접, 에이전트는 이 단계를 반드시 안내할 것)
+### 배포 수동 설정 (사용자가 직접, 에이전트는 이 단계를 반드시 안내할 것)
 
-코드로는 할 수 없는 일이다. 이걸 안 하면 사이트는 `*.github.io`에서만 열린다.
+코드로는 할 수 없는 일이다.
 
-1. GitHub 저장소 Settings → Pages → Source를 **GitHub Actions**로 지정
-2. 같은 화면의 Custom domain에 `site.config.ts`의 도메인 입력
-3. Cloudflare DNS (레코드는 **DNS only, 회색 구름**):
-   - 루트 도메인: A 레코드 `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - (선택) AAAA 레코드 `2606:50c0:8000::153` ~ `2606:50c0:8003::153`
-4. GitHub 계정 Settings → Pages에서 도메인 소유 인증 (남이 도메인을 가로채는 것 방지)
-5. 인증서 발급 후 **Enforce HTTPS** 체크.
-   `.ing`는 브라우저가 HTTPS로만 여는 도메인이라, 인증서가 나오기 전에는 사이트가 아예 열리지 않는다.
+1. Cloudflare → Workers & Pages → Create → **Connect GitHub** → 이 저장소 선택
+   - 배포 브랜치(production) `main`, 빌드 명령 `npm run build`, 배포 명령 `npx wrangler deploy`
+   - main이 아닌 브랜치의 미리보기 빌드는 끈다 (배포는 main만)
+2. 만든 Worker → Settings → Domains & Routes에 `site.config.ts`의 도메인과 `www.` 도메인 추가
+   (DNS 레코드와 인증서는 Cloudflare가 만든다)
+3. GitHub 저장소 Settings → Branches에 `main`·`dev` 보호 규칙:
+   PR로만 병합, CI(`check`) 통과 필수
 
 ### 광고 심사 신청 전에 할 일 (지금은 보류)
 
