@@ -8,6 +8,7 @@ import { expect, test, type Page, type Request } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -83,12 +84,5 @@ test('정리하는 동안의 모든 요청은 우리 사이트로만 가고 본�
   await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
   await page.waitForLoadState('networkidle');
 
-  const origin = new URL(baseURL!).origin;
-  for (const request of requests) {
-    const url = new URL(request.url());
-    if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
-    expect(url.origin, request.url()).toBe(origin);
-    expect(request.method(), request.url()).toBe('GET');
-    expect(request.postData(), request.url()).toBeNull();
-  }
+  expectLocalOnly(requests, baseURL!);
 });
