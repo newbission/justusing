@@ -26,6 +26,10 @@ export const siteConfig = {
   /** 홈 화면 큰 제목 */
   tagline: '업로드 없이, 브라우저에서 바로 쓰는 파일 도구',
   defaultLocale: 'ko',
+  /** 검색엔진 소유 확인 값. 각 검색엔진의 관리 도구가 준 값을 넣는다 (공개되어도 되는 값). */
+  verification: {
+    naver: '37f0ce40d90c9d229800904890a112583730cd65',
+  },
   ads,
 } as const;
 

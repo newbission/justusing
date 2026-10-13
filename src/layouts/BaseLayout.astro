@@ -32,6 +32,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <!-- 네이버 서치어드바이저 소유 확인 -->
+    <meta name="naver-site-verification" content={siteConfig.verification.naver} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
 
