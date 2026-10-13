@@ -10,6 +10,7 @@ export const GET: APIRoute = ({ site }) => {
     ...visibleCategories.map((category) => `/${category}/`),
     ...liveTools.map((tool) => tool.href),
     '/about/',
+    '/privacy/',
   ];
   const urls = paths.map((path) => `  <url><loc>${new URL(path, site)}</loc></url>`).join('\n');
 
