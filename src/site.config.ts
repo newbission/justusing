@@ -30,6 +30,11 @@ export const siteConfig = {
   verification: {
     naver: '37f0ce40d90c9d229800904890a112583730cd65',
   },
+  /** 방문 통계. 바깥 페이지에만 넣는다 (도구 frame에는 넣지 않는다). */
+  analytics: {
+    /** Cloudflare Web Analytics 토큰 (쿠키 없음). 페이지에 그대로 드러나는 공개 값이다. */
+    cloudflareToken: '00d62d9abb124669a3c087f2843064ad',
+  },
   ads,
 } as const;
 
