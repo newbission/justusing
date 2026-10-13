@@ -8,6 +8,7 @@
  */
 import { expect, test, type Page, type Request } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -50,14 +51,7 @@ test('파일을 연 뒤의 모든 요청은 우리 사이트로만 가고 본문
   await expect(frame.getByText('1 / 1')).toBeVisible();
   await page.waitForLoadState('networkidle');
 
-  const origin = new URL(baseURL!).origin;
-  for (const request of requests) {
-    const url = new URL(request.url());
-    if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
-    expect(url.origin, request.url()).toBe(origin);
-    expect(request.method(), request.url()).toBe('GET');
-    expect(request.postData(), request.url()).toBeNull();
-  }
+  expectLocalOnly(requests, baseURL!);
 });
 
 test('도구 화면은 출처 없는 격리 frame이다', async ({ page }) => {
