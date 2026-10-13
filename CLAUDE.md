@@ -158,8 +158,15 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 - `main`·`dev`는 직접 건드리지 않는다.
   `dev`에서 기능 브랜치를 따고 → 작은 커밋 → 작은 PR → `dev`에 병합 → `dev`를 `main`에 병합하면 배포.
 - 브랜치 이름: `<타입>/<짧은-설명>` (예: `feat/pdf-edit`, `fix/merge-password`)
-- PR 병합은 **Rebase merge**로만 한다. 작은 커밋이 그대로 남고 규칙 밖의 병합 커밋이 생기지 않는다.
+- 기능 → `dev` PR은 **Rebase merge**로만 병합한다. 작은 커밋이 그대로 남는다.
   (Squash는 PR 제목·본문이 커밋 메시지가 되어 커밋 단위 리뷰가 사라진다)
+- `dev` → `main` PR은 **병합 커밋**으로 넣는다 (`gh pr merge --merge --subject "<규칙에 맞는 제목>"`).
+  GitHub의 Rebase merge는 커밋을 새로 만들어 해시가 바뀌므로, `dev`와 `main`의 기록이 갈라진다.
+- PR 제목은 커밋 제목과 같은 형식이다 (`<타입>(<영역>): <제목>`, "~ 추가/수정/제거/변경"으로 끝냄).
+  PR 본문은 `## 왜` → `## 바뀐 것` → `## 확인` (필요하면 `## 병합 뒤 할 일`) 순서로 쓴다.
+- 코드 리뷰는 Codex(ChatGPT Codex Connector)가 한다. 자동 리뷰는 꺼 두고, 기능 → `dev` PR을 만든 직후
+  PR에 `@codex review` 댓글을 달아 부른다. `dev` → `main` PR은 이미 리뷰한 커밋이라 부르지 않는다.
+  리뷰 기준은 `AGENTS.md`에 있다.
 - CI: PR마다 포맷·타입 검사·빌드·E2E (`.github/workflows/ci.yml`). 통과해야 병합한다.
 - CD: `main`에 병합되면 Cloudflare가 직접 빌드(`npm run build`)하고 `dist/`를 배포한다.
   Cloudflare는 CI 결과를 보지 않으므로, main은 CI를 통과한 PR로만 들어오게 한다 (브랜치 보호).
@@ -202,7 +209,8 @@ Co-Authored-By: ...
   - 5-4 편집 (`/pdf/edit/`): MVP에서 뺀다 (2026-10-11). 첫 배포 뒤 방문 데이터를 보고 만든다.
     텍스트·이미지·서명. 한글 글꼴을 직접 호스팅해 PDF에 넣어야 해서 가장 크다. 그때까지 `soon`으로 둔다.
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
-- [ ] Cloudflare 배포 연결 (아래 수동 설정) → 첫 배포 확인
+- [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
+- [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)
 
 ### 배포 수동 설정 (사용자가 직접, 에이전트는 이 단계를 반드시 안내할 것)
 
@@ -210,9 +218,12 @@ Co-Authored-By: ...
 
 1. Cloudflare → Workers & Pages → Create → **Connect GitHub** → 이 저장소 선택
    - 배포 브랜치(production) `main`, 빌드 명령 `npm run build`, 배포 명령 `npx wrangler deploy`
-   - main이 아닌 브랜치의 미리보기 빌드는 끈다 (배포는 main만)
+   - main이 아닌 브랜치 빌드는 끈다: Worker → Settings → Build → Branch control →
+     **Enable Preview Builds** 체크 해제 (켜 두면 PR마다 빌드 알림이 온다)
 2. 만든 Worker → Settings → Domains & Routes에 `site.config.ts`의 도메인과 `www.` 도메인 추가
-   (DNS 레코드와 인증서는 Cloudflare가 만든다)
+   (DNS 레코드와 인증서는 Cloudflare가 만든다). 같은 이름의 DNS 레코드가 이미 있으면 먼저 지운다
+   (예: 예전 GitHub Pages용 A 레코드 `185.199.x.x`, `www` CNAME). 연결한 뒤 같은 화면에서
+   `workers.dev` 주소와 Preview URLs를 끈다 (같은 사이트가 두 주소로 열려 검색엔진에 중복으로 잡히지 않게).
 3. GitHub 저장소 Settings → Branches에 `main`·`dev` 보호 규칙:
    PR로만 병합, CI(`check`) 통과 필수
 
