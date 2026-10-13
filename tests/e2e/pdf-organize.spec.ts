@@ -70,7 +70,7 @@ test('쪽을 끌어서 순서를 바꾼다', async ({ page }) => {
   expect((await downloadTexts(page, frame)).texts).toEqual(['Page 3', 'Page 1', 'Page 2']);
 });
 
-test('정리하는 동안의 모든 요청은 우리 사이트로만 가고 본문이 없다', async ({ page, baseURL }) => {
+test('정리하는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
   const requests: Request[] = [];
   page.on('request', (request) => requests.push(request));
 
@@ -84,5 +84,5 @@ test('정리하는 동안의 모든 요청은 우리 사이트로만 가고 본�
   await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
   await page.waitForLoadState('networkidle');
 
-  expectLocalOnly(requests, baseURL!);
+  expectLocalOnly(page, requests, baseURL!);
 });

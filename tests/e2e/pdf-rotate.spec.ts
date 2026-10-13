@@ -64,7 +64,7 @@ test('암호 PDF도 풀어서 돌린다', async ({ page }) => {
   expect((await downloadAngles(page, frame)).angles).toEqual([90]);
 });
 
-test('돌리는 동안의 모든 요청은 우리 사이트로만 가고 본문이 없다', async ({ page, baseURL }) => {
+test('돌리는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
   const requests: Request[] = [];
   page.on('request', (request) => requests.push(request));
 
@@ -78,5 +78,5 @@ test('돌리는 동안의 모든 요청은 우리 사이트로만 가고 본문�
   await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
   await page.waitForLoadState('networkidle');
 
-  expectLocalOnly(requests, baseURL!);
+  expectLocalOnly(page, requests, baseURL!);
 });
