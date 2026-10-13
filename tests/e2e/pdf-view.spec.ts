@@ -212,3 +212,10 @@ test('좁은 화면에서는 고르기 상자로 파일을 바꾼다', async ({ 
   await frame.getByLabel('볼 파일').selectOption({ label: '2. korean.pdf' });
   await expect(frame.getByText('1 / 1')).toBeVisible();
 });
+
+test('방문 통계 스크립트는 바깥 페이지에만 있고 도구 frame에는 없다', async ({ page }) => {
+  const frame = await openViewer(page);
+  const stats = 'script[src*="cloudflareinsights"]';
+  await expect(page.locator(stats)).toHaveCount(1);
+  await expect(frame.locator(stats)).toHaveCount(0);
+});
