@@ -3,7 +3,7 @@
  *
  * - 도구 frame(파일을 다루는 곳)의 요청: 우리 사이트로 가는 GET뿐이고 본문이 없어야 한다.
  * - 바깥 페이지의 요청: 위와 같거나, 방문 통계 주소로만 갈 수 있다.
- *   통계 요청에는 파일 이름도 PDF 내용도 없어야 한다.
+ *   통계 요청의 주소와 본문에는 파일 이름도 PDF 내용도 없어야 한다.
  */
 import { expect, type Page, type Request } from '@playwright/test';
 import { readdirSync } from 'node:fs';
@@ -29,9 +29,10 @@ export function expectLocalOnly(page: Page, requests: Request[], baseURL: string
 
     const fromOuterPage = request.frame() === page.mainFrame();
     if (fromOuterPage && STATS_ORIGINS.includes(url.origin)) {
-      const body = request.postData() ?? '';
+      // 본문뿐 아니라 주소(경로·쿼리)에 실어 보내는 것도 막는다
+      const sent = `${decodeURIComponent(url.href)}\n${request.postData() ?? ''}`;
       for (const text of [...fileNames, ...PDF_MARKS]) {
-        expect(body, request.url()).not.toContain(text);
+        expect(sent, request.url()).not.toContain(text);
       }
       continue;
     }
