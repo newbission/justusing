@@ -1,0 +1,28 @@
+---
+/**
+ * 방문 통계 스크립트. 바깥 페이지(BaseLayout)에만 넣는다.
+ * 도구 frame은 출처가 다른 격리 공간이라 이 스크립트가 파일 내용·파일 이름을 읽을 수 없다.
+ *
+ * Cloudflare Web Analytics: 쿠키를 쓰지 않고 방문자를 식별하지 않아 동의 없이 불러온다.
+ * 개발 서버에서는 넣지 않는다 (개발 중 방문이 통계에 섞이지 않게).
+ */
+import { siteConfig } from '../site.config';
+
+const token = siteConfig.analytics.cloudflareToken;
+const enabled = !import.meta.env.DEV;
+
+// 페이지 CSP는 우리 스크립트만 허용하므로 통계 스크립트 주소를 따로 허용한다
+if (enabled) {
+  Astro.csp?.insertScriptResource("'self'");
+  Astro.csp?.insertScriptResource('https://static.cloudflareinsights.com');
+}
+---
+
+{enabled && (
+  <script
+    is:inline
+    type="module"
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={JSON.stringify({ token })}
+  />
+)}
