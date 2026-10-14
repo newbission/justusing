@@ -102,7 +102,7 @@ const en: Ui = {
   nav: {
     categories: 'Tool categories',
     home: 'Home',
-    breadcrumb: 'You are here',
+    breadcrumb: 'Breadcrumb',
     switchTool: 'Switch to another tool',
     soon: 'Coming soon',
     language: 'Language',
@@ -123,7 +123,7 @@ const en: Ui = {
   tool: {
     localNote:
       'Your files never leave this device. Everything is processed inside your browser and nothing is uploaded to a server.',
-    howTo: (name: string) => `How to use ${name}`,
+    howTo: (name: string) => `How to use the ${name} tool`,
     faq: 'Frequently asked questions',
     related: 'Related tools',
     frameTitle: (name: string) => `${name} tool`,
@@ -142,21 +142,21 @@ const en: Ui = {
   adblock: {
     title: 'Please turn off your ad blocker',
     body: (site: string) =>
-      `${site} is free because of ads. Please turn off your ad blocker on this site.`,
+      `${site} is kept free by ads. Please turn off your ad blocker for this site.`,
     note: 'Ads only appear outside the tool area, so they can never see your files.',
     close: 'Close',
-    reload: 'Done, reload',
+    reload: "I've turned it off — reload",
   },
   promises: {
     label: 'Our promises',
     items: [
       {
         title: 'No uploads',
-        text: 'Your files are processed on your own device and never sent to a server. Safe for work documents and personal papers.',
+        text: 'Your files are processed on your own device and never sent to a server. Safe for work and personal documents.',
       },
       {
         title: 'Nothing to install',
-        text: 'No software and no sign-up. Start right away in your browser.',
+        text: 'No installation or sign-up required. Start right away in your browser.',
       },
       {
         title: 'Free',

@@ -11,7 +11,7 @@ export default defineTool({
     en: {
       name: 'Rotate PDF',
       title: 'Rotate PDF - Fix the orientation of PDF pages',
-      description: 'Rotate PDF pages that are sideways or upside down to the right direction.',
+      description: 'Rotate sideways or upside-down PDF pages to the orientation you want.',
     },
   },
   related: ['pdf/organize', 'pdf/view'],

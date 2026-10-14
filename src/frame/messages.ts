@@ -41,8 +41,7 @@ const ko = {
     restore: '복구',
     earlier: (page: number) => `원래 ${page}쪽 앞으로`,
     later: (page: number) => `원래 ${page}쪽 뒤로`,
-    toggle: (page: number, excluded: boolean) =>
-      `원래 ${page}쪽 ${excluded ? '다시 넣기' : '제외'}`,
+    toggle: (page: number, excluded: boolean) => `원래 ${page}쪽 ${excluded ? '복구' : '제외'}`,
     page: (n: number) => `${n}페이지`,
     pageShort: (n: number) => `${n}쪽`,
     selectGrid: '페이지',
@@ -53,7 +52,7 @@ type FrameMessages = typeof ko;
 
 const en: FrameMessages = {
   drop: {
-    title: 'Drag files here, or',
+    title: 'Drag and drop here, or',
     overlay: 'Drop your files here',
     overlayNote: 'Your files never leave this device',
   },
@@ -62,7 +61,7 @@ const en: FrameMessages = {
     chooseMany: 'Choose PDF files',
     stays: 'Your files never leave this device',
     pages: (count: number) => `${count} ${count === 1 ? 'page' : 'pages'}`,
-    otherFile: 'Another file',
+    otherFile: 'Change file',
     opening: 'Opening the PDF…',
     passwordGroup: 'Password-protected PDF',
     passwordPrompt: 'This PDF is password-protected. Enter the password.',
@@ -89,7 +88,7 @@ const en: FrameMessages = {
     earlier: (page: number) => `Move original page ${page} earlier`,
     later: (page: number) => `Move original page ${page} later`,
     toggle: (page: number, excluded: boolean) =>
-      `${excluded ? 'Put back' : 'Exclude'} original page ${page}`,
+      `${excluded ? 'Restore' : 'Exclude'} original page ${page}`,
     page: (n: number) => `Page ${n}`,
     pageShort: (n: number) => `Page ${n}`,
     selectGrid: 'Pages',

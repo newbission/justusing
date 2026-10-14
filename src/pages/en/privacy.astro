@@ -20,7 +20,10 @@ const effectiveDate = 'October 14, 2026';
     <li>We do not collect the files you use in the tools. Your files never leave your device.</li>
     <li>There is no sign-up, so we never ask for your name, phone number or similar details.</li>
     <li>Cookies are used only for ads.</li>
-    <li>We only collect visit statistics and cannot tell who visited.</li>
+    <li>
+      Apart from emails you send us, we only collect visit statistics, which cannot tell us who you
+      are.
+    </li>
   </ul>
 
   <h2>Your files</h2>
@@ -37,20 +40,20 @@ const effectiveDate = 'October 14, 2026';
     does not identify or track individual visitors. It collects:
   </p>
   <ul>
-    <li>The address of the page you visited and how you arrived there</li>
+    <li>The address of the page you visited and the page you came from (referrer)</li>
     <li>Your browser and operating system type, and the country you visited from</li>
     <li>How long the page took to load</li>
   </ul>
   <p>
-    These statistics run only outside the tool area. The tool area is an isolated space, so the
-    statistics cannot read your file content or file names.
+    The analytics script runs only outside the tool area. The tool area is an isolated space, so the
+    script cannot read your file content or file names.
   </p>
 
   <h3>Access logs</h3>
   <p>
-    This site is served through Cloudflare's servers. Cloudflare processes access logs such as IP
-    addresses to deliver the site and to block attacks. We do not use these logs to identify
-    visitors.
+    This site is served through Cloudflare's servers. Cloudflare processes access logs containing
+    information such as IP addresses to deliver the site and block attacks. We do not use these logs
+    to identify visitors.
   </p>
 
   <h3>Emails you send us</h3>
@@ -62,7 +65,7 @@ const effectiveDate = 'October 14, 2026';
 
   <h2>Ads and cookies</h2>
   <p>
-    This site is funded by Google AdSense ads. When you open a page, Google's ad program is loaded,
+    This site is funded by Google AdSense ads. When you open a page, Google's ad script is loaded,
     and Google and its partners may use cookies to show ads based on your visits to this and other
     sites.
   </p>
@@ -102,15 +105,21 @@ const effectiveDate = 'October 14, 2026';
     picked. These values are never sent to a server.
   </p>
 
-  <h2>Other companies that process information</h2>
-  <p>We never sell or hand over information. We use the following services to run the site.</p>
+  <h2>Third-party services</h2>
+  <p>
+    We do not sell your information. The following services process information as described in this
+    policy to help us run the site.
+  </p>
   <ul>
     <li>Cloudflare (USA): serving the site, visit statistics, forwarding contact emails</li>
     <li>Google (USA): storing contact emails (Gmail), ads (AdSense)</li>
   </ul>
-  <p>Their servers are located abroad, so this information may be processed outside Korea.</p>
+  <p>
+    These companies are based outside Korea, so this information may be transferred to and processed
+    in other countries, including the USA.
+  </p>
 
-  <h2>Your requests</h2>
+  <h2>Your rights</h2>
   <p>
     You can ask to see or delete the emails you sent us. Contact us at the address below and we will
     take care of it. Visit statistics cannot be linked to any person, so we cannot find or delete
@@ -119,8 +128,8 @@ const effectiveDate = 'October 14, 2026';
 
   <h2>Changes</h2>
   <p>
-    If the way we handle information changes, for example by adding an analytics tool or ads, we
-    will update this page and its effective date before the change.
+    If the way we handle information changes, for example by adding an analytics tool or ad
+    provider, we will update this page and its effective date before the change.
   </p>
 
   <h2>Language</h2>
@@ -131,7 +140,7 @@ const effectiveDate = 'October 14, 2026';
 
   <h2>Contact</h2>
   <p>
-    The {siteConfig.name} team
+    {siteConfig.name} (site operator)
     <br />
     <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
   </p>

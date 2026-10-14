@@ -20,7 +20,7 @@ export const COMMON_FAQ: Record<Locale, ToolContentText['faq']> = {
   en: [
     {
       q: 'Are my files uploaded to a server?',
-      a: "No. Files are processed only inside your browser and are never sent to any server. Only the programs and character data needed for processing are downloaded from this site; your file content never leaves. You can check this yourself in the Network tab of your browser's developer tools.",
+      a: "No. Files are processed only inside your browser and are never sent to any server. Only the code and character mapping data needed for processing are downloaded from this site; your files themselves never leave your device. You can check this yourself in the Network tab of your browser's developer tools.",
     },
     {
       q: 'Are my files safe even with ads on the page?',
