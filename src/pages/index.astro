@@ -9,8 +9,12 @@ import AdSlot from '../components/AdSlot.astro';
 import Promises from '../components/Promises.astro';
 import SafetyDiagram from '../components/SafetyDiagram.astro';
 import { siteConfig } from '../site.config';
+import { localeOf } from '../i18n/locales';
 import { CATEGORIES } from '../tools/categories';
 import { toolsInCategory, visibleCategories } from '../tools/registry';
+
+const locale = localeOf(Astro.url.pathname);
+const text = siteConfig.text[locale];
 
 // 검색 결과에 사이트 이름이 제대로 나오게 하는 구조화 데이터 (schema.org WebSite)
 const jsonLd = {
@@ -18,8 +22,8 @@ const jsonLd = {
   '@type': 'WebSite',
   name: siteConfig.name,
   url: Astro.site?.href,
-  description: siteConfig.description,
-  inLanguage: siteConfig.defaultLocale,
+  description: text.description,
+  inLanguage: locale,
 };
 ---
 
@@ -28,8 +32,8 @@ const jsonLd = {
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <RailShell>
     <section class="hero">
-      <h1>{siteConfig.tagline}</h1>
-      <p class="lead">{siteConfig.description}</p>
+      <h1>{text.tagline}</h1>
+      <p class="lead">{text.description}</p>
     </section>
 
     <!-- 제목 아래 가로 배너 -->
