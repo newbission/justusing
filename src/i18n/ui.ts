@@ -145,7 +145,7 @@ const en: Ui = {
       `${site} is kept free by ads. Please turn off your ad blocker for this site.`,
     note: 'Ads only appear outside the tool area, so they can never see your files.',
     close: 'Close',
-    reload: "I've turned it off, reload",
+    reload: "I've turned it off — reload",
   },
   promises: {
     label: 'Our promises',
