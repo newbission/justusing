@@ -3,6 +3,10 @@
   페이지가 수백 장이어도 보이는 페이지만 그려서 메모리와 시간을 아낀다.
 -->
 <script lang="ts">
+  import { pick } from '../../frame/locale';
+  import { FRAME_MESSAGES } from '../../frame/messages';
+
+  const t = pick(FRAME_MESSAGES);
   import type { PDFPageProxy } from './pdfjs';
 
   interface Props {
@@ -54,7 +58,7 @@
   bind:this={box}
   data-page={page.pageNumber}
   role="img"
-  aria-label="{page.pageNumber}페이지"
+  aria-label={t.pages.page(page.pageNumber)}
   style:width="{viewport.width}px"
   style:height="{viewport.height}px"
 >

@@ -18,6 +18,10 @@
 </script>
 
 <script lang="ts">
+  import { pick } from '../../frame/locale';
+  import { FRAME_MESSAGES } from '../../frame/messages';
+
+  const t = pick(FRAME_MESSAGES);
   import { onMount, type Snippet } from 'svelte';
   import FileDrop from '../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../frame/drop';
@@ -92,19 +96,19 @@
   {#if phase === 'ready' && loaded}
     <div class="filebar">
       <span class="name" title={loaded.name}>{loaded.name}</span>
-      <span class="meta">{loaded.doc.numPages}쪽</span>
-      <button type="button" class="text" onclick={close}>다른 파일</button>
+      <span class="meta">{t.pdf.pages(loaded.doc.numPages)}</span>
+      <button type="button" class="text" onclick={close}>{t.pdf.otherFile}</button>
     </div>
     {@render children(loaded)}
   {:else if phase === 'loading'}
-    <p class="status" role="status">PDF를 여는 중…</p>
+    <p class="status" role="status">{t.pdf.opening}</p>
   {:else if phase === 'password'}
     <!-- 격리 frame은 form 제출이 막혀 있어(sandbox에 allow-forms 없음) form 대신 직접 처리한다 -->
-    <div class="password" role="group" aria-label="암호가 걸린 PDF">
-      <p>암호가 걸린 PDF입니다. 암호를 입력하세요.</p>
-      <p class="hint">암호도 이 기기 안에서만 쓰이고 어디에도 전송되지 않습니다.</p>
+    <div class="password" role="group" aria-label={t.pdf.passwordGroup}>
+      <p>{t.pdf.passwordPrompt}</p>
+      <p class="hint">{t.pdf.passwordNote}</p>
       <label>
-        PDF 암호
+        {t.pdf.passwordLabel}
         <input
           type="password"
           bind:value={passwordInput}
@@ -115,29 +119,29 @@
         />
       </label>
       {#if wrongPassword}
-        <p class="error" role="alert">암호가 맞지 않습니다.</p>
+        <p class="error" role="alert">{t.pdf.wrongPassword}</p>
       {/if}
       <div class="actions">
         <button
           type="button"
           class="primary"
           disabled={!passwordInput}
-          onclick={() => load(passwordInput)}>열기</button
+          onclick={() => load(passwordInput)}>{t.pdf.open}</button
         >
-        <button type="button" class="text" onclick={close}>취소</button>
+        <button type="button" class="text" onclick={close}>{t.pdf.cancel}</button>
       </div>
     </div>
   {:else}
     {#if phase === 'error'}
       <p class="error banner" role="alert">
-        PDF를 열 수 없습니다. 파일이 손상되었거나 PDF 파일이 아닐 수 있습니다.
+        {t.pdf.cannotOpen}
       </p>
     {/if}
     <div class="drop">
       <FileDrop
         accept="application/pdf,.pdf"
-        label="PDF 파일 선택"
-        hint="파일은 이 기기를 떠나지 않습니다"
+        label={t.pdf.choose}
+        hint={t.pdf.stays}
         onfiles={([file]) => file && open(file)}
       />
     </div>

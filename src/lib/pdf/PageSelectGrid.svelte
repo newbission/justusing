@@ -3,6 +3,10 @@
   selected를 주지 않으면 보기 전용이다 (범위 모드에서 어느 쪽이 어느 파일로 가는지 표시).
 -->
 <script lang="ts">
+  import { pick } from '../../frame/locale';
+  import { FRAME_MESSAGES } from '../../frame/messages';
+
+  const t = pick(FRAME_MESSAGES);
   import Thumbnail from './Thumbnail.svelte';
   import type { PDFDocumentProxy } from './pdfjs';
 
@@ -28,7 +32,7 @@
   }
 </script>
 
-<ol class="grid" aria-label="페이지">
+<ol class="grid" aria-label={t.pages.selectGrid}>
   {#each indices as index (index)}
     {@const text = note?.(index)}
     <li>
@@ -38,7 +42,7 @@
           class="card"
           class:selected={selected[index]}
           aria-pressed={selected[index]}
-          aria-label="{index + 1}쪽"
+          aria-label={t.pages.pageShort(index + 1)}
           onclick={() => (selected[index] = !selected[index])}
         >
           {#await load(index) then page}
@@ -48,7 +52,11 @@
           {#if selected[index]}<span class="check" aria-hidden="true">✓</span>{/if}
         </button>
       {:else}
-        <div class="card" role="img" aria-label="{index + 1}쪽{text ? `, ${text}` : ''}">
+        <div
+          class="card"
+          role="img"
+          aria-label="{t.pages.pageShort(index + 1)}{text ? `, ${text}` : ''}"
+        >
           {#await load(index) then page}
             <Thumbnail {page} {size} />
           {/await}
