@@ -96,6 +96,8 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
       if (event.data?.type === 'drag-end') collapse();
       // 파일을 열면 도구 칸 위쪽을 화면 위쪽(16px 여백)에 맞춰 칸이 화면을 꽉 채우게 한다.
       // 부드럽게 움직이면 그동안 버튼이 손 아래에서 움직여 엉뚱한 것을 누를 수 있어 바로 옮긴다.
+      // 도구를 쓰는 순간 (내용 없는 신호). 광고 차단 안내가 듣는다
+      if (event.data?.type === 'activity') document.dispatchEvent(new CustomEvent('toolactivity'));
       if (event.data?.type === 'show-tool') {
         scrollTo({ top: frame.getBoundingClientRect().top + scrollY - 16, behavior: 'instant' });
       }
