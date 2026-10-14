@@ -1,0 +1,12 @@
+---
+/**
+ * 영어 도구 페이지 (/en/pdf/merge/). 한국어 도구 페이지와 같은 페이지를 그린다.
+ */
+import type { GetStaticPaths } from 'astro';
+import ToolPage from '../../[category]/[tool].astro';
+import { toolPaths } from '../../../tools/paths';
+
+export const getStaticPaths = toolPaths satisfies GetStaticPaths;
+---
+
+<ToolPage {...Astro.props} />
