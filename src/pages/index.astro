@@ -10,8 +10,19 @@ import Promises from '../components/Promises.astro';
 import { siteConfig } from '../site.config';
 import { CATEGORIES } from '../tools/categories';
 import { toolsInCategory, visibleCategories } from '../tools/registry';
+
+// 검색 결과에 사이트 이름이 제대로 나오게 하는 구조화 데이터 (schema.org WebSite)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteConfig.name,
+  url: Astro.site?.href,
+  description: siteConfig.description,
+  inLanguage: siteConfig.defaultLocale,
+};
 ---
 
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <BaseLayout>
   <RailShell>
     <section class="hero">
