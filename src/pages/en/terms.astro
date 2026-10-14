@@ -1,0 +1,83 @@
+---
+/**
+ * 영어 이용약관 (/en/terms/). 한국어 약관(src/pages/terms.astro)과 같은 내용이다.
+ * 두 언어가 다를 때는 한국어판이 기준임을 밝힌다.
+ */
+import DocLayout from '../../layouts/DocLayout.astro';
+import { contactEmail, siteConfig } from '../../site.config';
+
+/** 한국어판과 같은 날로 둔다 */
+const effectiveDate = 'October 13, 2026';
+---
+
+<DocLayout
+  title="Terms of Use"
+  description={`The terms that apply when you use ${siteConfig.name}.`}
+  note={`Effective: ${effectiveDate}`}
+>
+  <h2>The service</h2>
+  <p>
+    {siteConfig.name} provides free tools that process files inside your browser. Anyone can use
+    them without signing up, and by using this site you agree to these terms.
+  </p>
+
+  <h2>Your files and results</h2>
+  <ul>
+    <li>You keep all rights to the files you use and the results you create.</li>
+    <li>
+      Files are processed only on your device and are never sent to us. Because we do not keep any
+      files, we cannot recover lost files or results for you.
+    </li>
+    <li>Keep your original files; do not delete them.</li>
+  </ul>
+
+  <h2>What we ask of you</h2>
+  <ul>
+    <li>Only use files you have the right to handle.</li>
+    <li>Do not use the tools for anything illegal.</li>
+    <li>
+      Do not interfere with the site, for example by sending excessive requests with automated
+      programs.
+    </li>
+  </ul>
+
+  <h2>No warranty</h2>
+  <p>
+    The tools are provided as is. Depending on the type and condition of a file and the performance
+    of your device, processing may fail or the result may not be what you expected. For important
+    documents such as contracts or official submissions, open the result and check it before using
+    it.
+  </p>
+
+  <h2>Limitation of liability</h2>
+  <p>
+    To the extent permitted by law, we are not liable for any damage arising from using or being
+    unable to use this site, except for damage caused by our intent or gross negligence.
+  </p>
+
+  <h2>Ads</h2>
+  <p>
+    This site may be funded by ads. Ads are only shown outside the tool area. The content of sites
+    you reach by clicking an ad is the responsibility of those sites.
+  </p>
+
+  <h2>Changes to the service and these terms</h2>
+  <p>
+    We may add, change or remove tools, and may stop running the site. If we change these terms, we
+    will update this page and its effective date.
+  </p>
+
+  <h2>Governing law and language</h2>
+  <p>
+    These terms are governed by the laws of the Republic of Korea. This English version is a
+    translation; if it differs from the <a href="/terms/">Korean version</a>, the Korean version
+    prevails.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    The {siteConfig.name} team
+    <br />
+    <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+  </p>
+</DocLayout>
