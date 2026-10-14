@@ -35,3 +35,15 @@ test('도구 페이지에 무료 웹 도구 정보가 있고 제목과 이름이
   expect(app?.isAccessibleForFree).toBe(true);
   expect(app?.url).toMatch(/\/pdf\/merge\/$/);
 });
+
+test('구조화 데이터가 문서 틀(<html>) 안에 있고 페이지가 표준 방식으로 그려진다', async ({
+  page,
+  request,
+}) => {
+  for (const path of ['/', '/pdf/merge/']) {
+    const html = await (await request.get(path)).text();
+    expect(html.indexOf('<html'), path).toBeLessThan(html.indexOf('application/ld+json'));
+    await page.goto(path);
+    expect(await page.evaluate(() => document.compatMode), path).toBe('CSS1Compat');
+  }
+});
