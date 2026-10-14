@@ -7,6 +7,10 @@
  * 접은 상태는 이 페이지에서만 유지된다 (다른 페이지로 가면 다시 펼쳐짐).
  */
 import AdSlot from './AdSlot.astro';
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+const t = ui(localeOf(Astro.url.pathname)).ads;
 ---
 
 <div class="mobile-anchor" data-mobile-anchor>
@@ -16,8 +20,10 @@ import AdSlot from './AdSlot.astro';
     aria-expanded="true"
     aria-controls="mobile-anchor-body"
     data-anchor-toggle
+    data-label-collapse={t.collapse}
+    data-label-expand={t.expand}
   >
-    광고 접기
+    {t.collapse}
   </button>
   <div id="mobile-anchor-body" class="anchor-body">
     <AdSlot id="mobile-anchor" />
@@ -31,7 +37,8 @@ import AdSlot from './AdSlot.astro';
   toggle?.addEventListener('click', () => {
     const collapse = toggle.getAttribute('aria-expanded') === 'true';
     toggle.setAttribute('aria-expanded', String(!collapse));
-    toggle.textContent = collapse ? '광고 펼치기' : '광고 접기';
+    toggle.textContent =
+      (collapse ? toggle.dataset.labelExpand : toggle.dataset.labelCollapse) ?? '';
     anchor!.toggleAttribute('data-collapsed', collapse);
   });
 </script>
