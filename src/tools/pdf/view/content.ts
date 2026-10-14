@@ -39,7 +39,7 @@ export default defineContent({
     howTo: [
       'Click "Choose PDF files" or drag PDF files onto the page. You can open several files at once.',
       'Once a file opens, scroll down to flip through the pages. You can also use the ‹ › buttons at the top to move one page at a time.',
-      'Use − / + to zoom out and in. "Fit width" fits the page to the width of the screen again.',
+      'Use − / + to zoom out and in. Click "Fit width" to fit the page to the screen width again.',
       'If you opened several files, pick the one to view from the list on the left (the drop-down at the top on phones). Use "Add files" to open more, or × to remove one from the list.',
     ],
     faq: [
@@ -57,7 +57,7 @@ export default defineContent({
       },
       {
         q: 'Will Korean, Chinese or Japanese text display correctly?',
-        a: 'Yes, in most cases. Character data for East Asian scripts is included, so most PDFs display correctly. If a PDF does not include its fonts, a similar font may be used instead.',
+        a: 'Yes, in most cases. Font data for East Asian scripts is included, so most PDFs display correctly. If a PDF does not include its fonts, a similar font may be used instead.',
       },
       {
         q: 'Can I open large PDFs?',

@@ -31,13 +31,13 @@ export default defineContent({
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to split onto the page.',
       'Choose how to split. "Split by range" makes one file for each comma-separated range such as 1-3, 4-6, 7. "Split every page" makes a separate file for each page. "Selected pages only" collects the pages you click into one file.',
-      'Check in the page grid which file each page goes to, then click "Split PDF".',
+      'In the page grid, check which file each page goes to, then click "Split PDF".',
       'When it is done, click "Download". If there are several results, you get a single ZIP file.',
     ],
     faq: [
       {
         q: 'How do I enter ranges?',
-        a: 'Each comma-separated range becomes one file. 1-3 means pages 1 to 3, 7 means page 7 only, 5- means page 5 to the end, and -3 means the first page to page 3. Ranges may overlap.',
+        a: 'Each comma-separated range becomes one file. 1-3 means pages 1 to 3, 7 means page 7 only, 5- means page 5 to the end, and -3 means from the first page to page 3. You can also use ~ (1~3), and ranges may overlap.',
       },
       {
         q: 'How do I get the files if there are several?',
