@@ -8,6 +8,9 @@
  * 실제 구현과 어긋나는 그림을 그리지 않는다 (도구 격리: ToolFrame.astro, FrameLayout.astro).
  * 그림은 꾸밈이고(aria-hidden), 같은 내용을 아래 글(figcaption)로도 적는다.
  */
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
 interface Props {
   /** 제목 단계 (홈은 2, 소개 페이지 본문 안에서는 2) */
   headingLevel?: 2 | 3;
@@ -15,27 +18,28 @@ interface Props {
 
 const { headingLevel = 2 } = Astro.props;
 const Heading = `h${headingLevel}` as 'h2' | 'h3';
+const t = ui(localeOf(Astro.url.pathname)).safety;
 ---
 
 <section class="safety" aria-labelledby="safety-title">
   <Heading id="safety-title" class="title">
-    왜 안전한가요
+    {t.title}
   </Heading>
 
   <div class="cards">
     <figure>
       <div class="art" aria-hidden="true">
         <div class="row">
-          <span class="row-label">보통 온라인 도구</span>
+          <span class="row-label">{t.others}</span>
           <div class="flow">
             <div class="node">
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M4 5h16v11H4zM9 20h6M12 16v4" />
               </svg>
-              <span>내 기기</span>
+              <span>{t.myDevice}</span>
             </div>
             <div class="arrow">
-              <span>업로드</span>
+              <span>{t.upload}</span>
               <svg viewBox="0 0 64 12" preserveAspectRatio="none">
                 <path d="M0 6h58M52 1l6 5-6 5" />
               </svg>
@@ -44,8 +48,8 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3';
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01" />
               </svg>
-              <span>남의 서버</span>
-              <small>파일이 남음</small>
+              <span>{t.theirServer}</span>
+              <small>{t.fileStays}</small>
             </div>
           </div>
         </div>
@@ -57,11 +61,11 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3';
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M4 5h16v11H4zM9 20h6M12 16v4" />
               </svg>
-              <span>내 기기</span>
-              <small>여기서 처리하고 끝</small>
+              <span>{t.myDevice}</span>
+              <small>{t.doneHere}</small>
             </div>
             <div class="arrow blocked">
-              <span>전송 없음</span>
+              <span>{t.noTransfer}</span>
               <svg viewBox="0 0 64 12" preserveAspectRatio="none">
                 <path d="M0 6h20M44 6h20" class="dash" />
                 <path d="M27 1l10 10M37 1L27 11" />
@@ -71,18 +75,15 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3';
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01" />
               </svg>
-              <span>서버</span>
-              <small>파일이 오지 않음</small>
+              <span>{t.server}</span>
+              <small>{t.fileNeverArrives}</small>
             </div>
           </div>
         </div>
       </div>
       <figcaption>
-        <strong>파일이 내 기기를 떠나지 않습니다</strong>
-        <p>
-          보통 온라인 도구는 파일을 자기 서버로 올려서 처리합니다. 이 사이트는 내 브라우저 안에서
-          바로 처리하고, 파일을 어디로도 보내지 않습니다.
-        </p>
+        <strong>{t.localTitle}</strong>
+        <p>{t.localText}</p>
       </figcaption>
     </figure>
 
@@ -99,24 +100,21 @@ const Heading = `h${headingLevel}` as 'h2' | 'h3';
               <svg viewBox="0 0 24 24" class="icon">
                 <path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
               </svg>
-              <span>도구 화면</span>
-              <small>내 파일은 이 안에만</small>
+              <span>{t.toolScreen}</span>
+              <small>{t.filesOnlyHere}</small>
             </div>
             <div class="wall"></div>
             <div class="outside">
-              <div class="ad">광고</div>
-              <div class="ad">광고</div>
-              <small>벽 너머를 볼 수 없음</small>
+              <div class="ad">{t.ad}</div>
+              <div class="ad">{t.ad}</div>
+              <small>{t.cannotSeeThrough}</small>
             </div>
           </div>
         </div>
       </div>
       <figcaption>
-        <strong>광고는 내 파일을 볼 수 없습니다</strong>
-        <p>
-          파일을 다루는 도구 화면은 브라우저가 따로 떼어 놓은 잠긴 방입니다. 바깥의 광고는 방 안을
-          들여다볼 수 없고, 방 안에서도 밖으로 아무것도 보낼 수 없습니다.
-        </p>
+        <strong>{t.adsTitle}</strong>
+        <p>{t.adsText}</p>
       </figcaption>
     </figure>
   </div>
