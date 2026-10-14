@@ -7,6 +7,7 @@ import ToolGrid from '../components/ToolGrid.astro';
 import RailShell from '../components/RailShell.astro';
 import AdSlot from '../components/AdSlot.astro';
 import Promises from '../components/Promises.astro';
+import SafetyDiagram from '../components/SafetyDiagram.astro';
 import { siteConfig } from '../site.config';
 import { CATEGORIES } from '../tools/categories';
 import { toolsInCategory, visibleCategories } from '../tools/registry';
@@ -41,6 +42,11 @@ const jsonLd = {
       <Promises />
     </section>
 
+    <!-- 약속을 그림으로: 왜 안전한지 한눈에 -->
+    <div class="safety-section">
+      <SafetyDiagram />
+    </div>
+
     {visibleCategories.map((category) => (
       <section class="category">
         <h2>
@@ -72,6 +78,9 @@ const jsonLd = {
     color: var(--color-muted);
   }
   .promises-section {
+    margin-bottom: 40px;
+  }
+  .safety-section {
     margin-bottom: 40px;
   }
   .category {
