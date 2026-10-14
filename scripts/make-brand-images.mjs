@@ -19,6 +19,10 @@ const targets = [
   ['public/favicon-32.png', markSvg(), 32, 32],
   ['public/apple-touch-icon.png', fullBleedMark, 180, 180],
   ['public/og.png', ogImage, 1200, 630],
+  // 내려받기용 (/brand/). 글자 로고는 투명 바탕, 높이 200px
+  ['public/brand/mark-512.png', markSvg(), 512, 512],
+  ['public/brand/lockup-light.png', lockupSvg('light'), Math.round(LOCKUP.width * 2), 200],
+  ['public/brand/lockup-dark.png', lockupSvg('dark'), Math.round(LOCKUP.width * 2), 200],
 ];
 
 // 로컬 크롬으로 돌리려면 PLAYWRIGHT_CHANNEL=chrome (E2E와 같다)
