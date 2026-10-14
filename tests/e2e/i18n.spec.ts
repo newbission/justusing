@@ -122,3 +122,17 @@ test.describe('한국어 브라우저', () => {
     await expect(page).toHaveURL('/about/');
   });
 });
+
+test('홈의 안전 그림이 언어에 맞게 나온다', async ({ page }) => {
+  for (const [path, title, local, ads] of [
+    ['/', '왜 안전한가요', '파일이 내 기기를 떠나지 않습니다', '광고는 내 파일을 볼 수 없습니다'],
+    ['/en/', 'Why is it safe?', 'Your files never leave your device', 'Ads cannot see your files'],
+  ] as const) {
+    await page.goto(path);
+    const safety = page.getByRole('region', { name: title });
+    await expect(safety.getByRole('heading', { name: title })).toBeVisible();
+    await expect(safety.getByText(local)).toBeVisible();
+    await expect(safety.getByText(ads)).toBeVisible();
+    await expect(safety.getByText('justusing', { exact: true })).toBeVisible();
+  }
+});
