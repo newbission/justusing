@@ -10,6 +10,8 @@
 import '../ads/slots.css';
 import type { AdSlotId } from '../ads/slots';
 import { siteConfig } from '../site.config';
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 
 interface Props {
   id: AdSlotId;
@@ -23,7 +25,7 @@ const showPlaceholder = !slot && (import.meta.env.DEV || process.env.SHOW_AD_PLA
 {slot && (
   <aside
     class="ad-slot"
-    aria-label="광고"
+    aria-label={ui(localeOf(Astro.url.pathname)).ads.label}
     data-ad-slot={id}
     data-ad-provider={slot.provider}
     data-ad-unit={slot.unit}
