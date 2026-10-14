@@ -4,6 +4,8 @@
  */
 import { getTool, type Tool } from '../tools/registry';
 import ToolGrid from './ToolGrid.astro';
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 
 interface Props {
   ids: string[];
@@ -14,7 +16,7 @@ const tools = Astro.props.ids.map(getTool).filter((tool): tool is Tool => Boolea
 
 {tools.length > 0 && (
   <section class="related">
-    <h2>관련 도구</h2>
+    <h2>{ui(localeOf(Astro.url.pathname)).tool.related}</h2>
     <ToolGrid tools={tools} headingLevel={3} />
   </section>
 )}

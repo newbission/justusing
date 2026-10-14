@@ -3,6 +3,8 @@
  * 도구 카드. live 도구는 페이지 링크, soon 도구는 '준비 중' 표시만 하고 누를 수 없다.
  */
 import type { Tool } from '../tools/registry';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 
 interface Props {
   tool: Tool;
@@ -11,13 +13,14 @@ interface Props {
 }
 
 const { tool, headingLevel = 3 } = Astro.props;
-const text = tool.text.ko;
+const locale = localeOf(Astro.url.pathname);
+const text = tool.text[locale];
 const Heading = `h${headingLevel}` as const;
 const live = tool.status === 'live';
 ---
 
 {live ? (
-  <a class="card" href={tool.href}>
+  <a class="card" href={localizePath(tool.href, locale)}>
     <Heading class="name">{text.name}</Heading>
     <p class="desc">{text.description}</p>
   </a>
@@ -25,7 +28,7 @@ const live = tool.status === 'live';
   <div class="card soon">
     <Heading class="name">
       {text.name}
-      <span class="badge">준비 중</span>
+      <span class="badge">{ui(locale).nav.soon}</span>
     </Heading>
     <p class="desc">{text.description}</p>
   </div>
