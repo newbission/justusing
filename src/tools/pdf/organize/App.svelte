@@ -3,6 +3,12 @@
   페이지 순서를 바꾸고 필요 없는 쪽을 빼서 새 PDF로 받는다. 파일은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
+  import { pick } from '../../../frame/locale';
+  import { FRAME_MESSAGES } from '../../../frame/messages';
+  import { MESSAGES } from './messages';
+
+  const common = pick(FRAME_MESSAGES);
+  const t = pick(MESSAGES);
   import ActionBar from '../../../frame/ActionBar.svelte';
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
@@ -35,15 +41,13 @@
   );
   const result = $derived(run.kind === 'done' && run.signature === signature ? run : undefined);
   /** 실행할 수 없을 때 그 이유 */
-  const problem = $derived(
-    keptCount === 0 ? '남길 쪽이 하나도 없습니다.' : !changed ? '바꾼 내용이 없습니다.' : undefined,
-  );
+  const problem = $derived(keptCount === 0 ? t.noneKept : !changed ? t.unchanged : undefined);
 
   async function organize() {
     if (!pdf || problem || run.kind === 'working') return;
     const entitlement = await canUse('pdf/organize');
     if (!entitlement.allowed) {
-      run = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      run = { kind: 'failed', message: entitlement.reason ?? common.action.unavailable };
       return;
     }
 
@@ -58,10 +62,15 @@
       });
       if (pdf !== source) return;
       const base = source.name.replace(/\.pdf$/i, '');
-      run = { kind: 'done', name: `${base}_정리.pdf`, bytes: output, signature: startedWith };
+      run = {
+        kind: 'done',
+        name: `${base}_${t.suffix}.pdf`,
+        bytes: output,
+        signature: startedWith,
+      };
     } catch {
       if (pdf !== source) return;
-      run = { kind: 'failed', message: '정리하지 못했습니다. 파일이 손상되었을 수 있습니다.' };
+      run = { kind: 'failed', message: t.failed };
     }
   }
 
@@ -85,32 +94,32 @@
 
 <SinglePdfTool {onload}>
   {#snippet children({ doc, name })}
-    <ActionBar label="페이지 정리">
+    <ActionBar label={t.bar}>
       {#snippet text()}
         {#if run.kind === 'working'}
-          정리하는 중…
+          {t.working}
         {:else if result}
-          완료: {result.name} · {formatSize(result.bytes.length)}
+          {common.action.done(result.name, formatSize(result.bytes.length))}
         {:else if run.kind === 'failed'}
           <strong>{run.message}</strong>
         {:else if problem}
           {problem}
         {:else}
-          {keptCount}쪽짜리 PDF를 만듭니다.
+          {t.willMake(keptCount)}
         {/if}
       {/snippet}
       {#if result}
         <button
           type="button"
           class="primary"
-          onclick={() => downloadFile(result.bytes, result.name)}>다운로드</button
+          onclick={() => downloadFile(result.bytes, result.name)}>{common.action.download}</button
         >
       {:else}
         <button
           type="button"
           class="primary"
           disabled={problem !== undefined || run.kind === 'working'}
-          onclick={organize}>{run.kind === 'working' ? '정리하는 중…' : 'PDF 정리'}</button
+          onclick={organize}>{run.kind === 'working' ? t.working : t.run}</button
         >
       {/if}
     </ActionBar>
@@ -119,12 +128,13 @@
       <div class="summary">
         <span class="help" aria-live="polite">
           {#if changed}
-            {pageCount}쪽 중 {keptCount}쪽 남김{reordered ? ' · 순서 바뀜' : ''}
+            {t.summary(pageCount, keptCount, reordered)}
           {:else}
-            쪽을 끌거나 ◀ ▶로 순서를 바꾸고, 필요 없는 쪽은 "제외"하세요.
+            {t.hint}
           {/if}
         </span>
-        <button type="button" class="text" disabled={!changed} onclick={resetPages}>되돌리기</button
+        <button type="button" class="text" disabled={!changed} onclick={resetPages}
+          >{common.action.reset}</button
         >
       </div>
       <PageGrid {doc} bind:pages label={name} size={112} />
