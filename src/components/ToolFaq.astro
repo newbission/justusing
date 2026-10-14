@@ -8,8 +8,20 @@ interface Props {
 }
 
 const { items } = Astro.props;
+
+// 검색엔진이 질문과 답을 읽을 수 있게 하는 구조화 데이터 (schema.org FAQPage). 화면의 내용과 같아야 한다.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
 ---
 
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <section class="faq">
   <h2>자주 묻는 질문</h2>
   {items.map((item) => (
