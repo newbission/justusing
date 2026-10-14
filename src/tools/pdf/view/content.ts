@@ -57,7 +57,7 @@ export default defineContent({
       },
       {
         q: 'Will Korean, Chinese or Japanese text display correctly?',
-        a: 'Yes, in most cases. Font data for East Asian scripts is included, so most PDFs display correctly. If a PDF does not include its fonts, a similar font may be used instead.',
+        a: 'Yes, in most cases. Character mapping data for East Asian scripts is included, so most PDFs display correctly. If a PDF does not include its fonts, a similar font may be used instead.',
       },
       {
         q: 'Can I open large PDFs?',
