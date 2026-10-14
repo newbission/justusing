@@ -4,7 +4,7 @@
  *
  * 광고는 이 사이트의 운영비라 모든 방문자에게 불러온다 (쿠키 사용은 개인정보처리방침에 밝힌다).
  * 유럽처럼 동의가 필요한 지역은 Google의 동의 창이 맡는다 (AdSense의 "개인 정보 보호 및 메시지").
- * 자동 광고는 쓰지 않는다. 게시자 ID는 소유 확인 태그(google-adsense-account)에서 읽는다.
+ * 자동 광고는 쓰지 않는다. site.config의 ads.enabled가 꺼져 있으면 아무것도 불러오지 않는다.
  *
  * 광고 차단도 여기서 알아챈다. 알아채면 <html data-adblock>을 달고 document에 adblock 이벤트를 보낸다
  * (AdblockNotice가 듣는다).
@@ -14,6 +14,7 @@
  * <head> 안에 둬야 한다. CSP <meta>가 <head>에서 만들어져, 그 뒤에 허용한 주소는 들어가지 않는다.
  * 개발 서버에서는 불러오지 않는다.
  */
+import { siteConfig } from '../site.config';
 
 // 페이지 CSP는 우리 스크립트만 허용하므로 광고 스크립트가 쓰는 Google 주소를 따로 허용한다.
 // (adsbygoogle.js가 이어서 불러오는 스크립트들. 광고를 켠 뒤 콘솔의 CSP 오류로 다시 확인할 것)
@@ -25,7 +26,7 @@ const AD_SCRIPT_SOURCES = [
   // 유럽 방문자에게 뜨는 Google 동의 창
   'https://fundingchoicesmessages.google.com',
 ];
-if (!import.meta.env.DEV) {
+if (siteConfig.ads.enabled && !import.meta.env.DEV) {
   Astro.csp?.insertScriptResource("'self'");
   for (const source of AD_SCRIPT_SOURCES) Astro.csp?.insertScriptResource(source);
   // 광고 스크립트는 광고 칸에 style 속성으로 크기를 넣는다. 속성만 허용하고 <style>은 계속 해시로만 허용한다.
@@ -35,9 +36,9 @@ if (!import.meta.env.DEV) {
 ---
 
 <script>
-  const client = document.querySelector<HTMLMetaElement>(
-    'meta[name="google-adsense-account"]',
-  )?.content;
+  import { siteConfig } from '../site.config';
+
+  const { enabled, adsenseClient: client } = siteConfig.ads;
 
   function reportAdblock() {
     const root = document.documentElement;
@@ -46,7 +47,7 @@ if (!import.meta.env.DEV) {
     document.dispatchEvent(new CustomEvent('adblock'));
   }
 
-  if (client && !import.meta.env.DEV) {
+  if (enabled && client && !import.meta.env.DEV) {
     const script = document.createElement('script');
     script.async = true;
     script.crossOrigin = 'anonymous';
