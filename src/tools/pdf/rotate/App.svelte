@@ -3,6 +3,12 @@
   쪽마다 또는 전체를 90°씩 돌려 새 PDF로 받는다. 파일은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
+  import { pick } from '../../../frame/locale';
+  import { FRAME_MESSAGES } from '../../../frame/messages';
+  import { MESSAGES } from './messages';
+
+  const common = pick(FRAME_MESSAGES);
+  const t = pick(MESSAGES);
   import ActionBar from '../../../frame/ActionBar.svelte';
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
@@ -36,7 +42,7 @@
     if (!pdf || turnedCount === 0 || run.kind === 'working') return;
     const entitlement = await canUse('pdf/rotate');
     if (!entitlement.allowed) {
-      run = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      run = { kind: 'failed', message: entitlement.reason ?? common.action.unavailable };
       return;
     }
 
@@ -51,10 +57,15 @@
       });
       if (pdf !== source) return;
       const base = source.name.replace(/\.pdf$/i, '');
-      run = { kind: 'done', name: `${base}_회전.pdf`, bytes: output, signature: startedWith };
+      run = {
+        kind: 'done',
+        name: `${base}_${t.suffix}.pdf`,
+        bytes: output,
+        signature: startedWith,
+      };
     } catch {
       if (pdf !== source) return;
-      run = { kind: 'failed', message: '돌리지 못했습니다. 파일이 손상되었을 수 있습니다.' };
+      run = { kind: 'failed', message: t.failed };
     }
   }
 
@@ -81,45 +92,45 @@
 
 <SinglePdfTool {onload}>
   {#snippet children({ doc })}
-    <ActionBar label="회전">
+    <ActionBar label={t.bar}>
       {#snippet text()}
         {#if run.kind === 'working'}
-          돌리는 중…
+          {t.working}
         {:else if result}
-          완료: {result.name} · {formatSize(result.bytes.length)}
+          {common.action.done(result.name, formatSize(result.bytes.length))}
         {:else if run.kind === 'failed'}
           <strong>{run.message}</strong>
         {:else if turnedCount === 0}
-          돌린 쪽이 없습니다.
+          {t.nothing}
         {:else}
-          {turnedCount}쪽을 돌린 PDF를 만듭니다.
+          {t.willMake(turnedCount)}
         {/if}
       {/snippet}
       {#if result}
         <button
           type="button"
           class="primary"
-          onclick={() => downloadFile(result.bytes, result.name)}>다운로드</button
+          onclick={() => downloadFile(result.bytes, result.name)}>{common.action.download}</button
         >
       {:else}
         <button
           type="button"
           class="primary"
           disabled={turnedCount === 0 || run.kind === 'working'}
-          onclick={rotate}>{run.kind === 'working' ? '돌리는 중…' : 'PDF 회전'}</button
+          onclick={rotate}>{run.kind === 'working' ? t.working : t.run}</button
         >
       {/if}
     </ActionBar>
 
     <div class="body">
-      <div class="all" role="group" aria-label="모든 쪽">
+      <div class="all" role="group" aria-label={t.allGroup}>
         <span class="help" aria-live="polite">
-          {turnedCount > 0 ? `${turnedCount}쪽을 돌렸습니다.` : '돌릴 쪽의 ↺ ↻를 누르세요.'}
+          {turnedCount > 0 ? t.turned(turnedCount) : t.hint}
         </span>
-        <button type="button" class="text" onclick={() => rotateAll(-90)}>전체 ↺</button>
-        <button type="button" class="text" onclick={() => rotateAll(90)}>전체 ↻</button>
+        <button type="button" class="text" onclick={() => rotateAll(-90)}>{t.allLeft}</button>
+        <button type="button" class="text" onclick={() => rotateAll(90)}>{t.allRight}</button>
         <button type="button" class="text" disabled={turnedCount === 0} onclick={resetAll}
-          >되돌리기</button
+          >{common.action.reset}</button
         >
       </div>
       <RotateGrid {doc} bind:rotations />

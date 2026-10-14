@@ -12,6 +12,10 @@
 </script>
 
 <script lang="ts">
+  import { pick } from '../../../frame/locale';
+  import { MESSAGES } from './messages';
+
+  const t = pick(MESSAGES);
   import Thumbnail from '../../../lib/pdf/Thumbnail.svelte';
   import type { PDFDocumentProxy } from '../../../lib/pdf/pdfjs';
 
@@ -35,7 +39,7 @@
   }
 </script>
 
-<ol class="grid" aria-label="쪽">
+<ol class="grid" aria-label={t.grid}>
   {#each indices as index (index)}
     {@const angle = normalize(rotations[index] ?? 0)}
     <li class="card" class:turned={angle !== 0}>
@@ -52,12 +56,12 @@
         <button
           type="button"
           onclick={() => (rotations[index] = (rotations[index] ?? 0) - 90)}
-          aria-label="{index + 1}쪽 왼쪽으로 돌리기">↺</button
+          aria-label={t.left(index + 1)}>↺</button
         >
         <button
           type="button"
           onclick={() => (rotations[index] = (rotations[index] ?? 0) + 90)}
-          aria-label="{index + 1}쪽 오른쪽으로 돌리기">↻</button
+          aria-label={t.right(index + 1)}>↻</button
         >
       </div>
     </li>
