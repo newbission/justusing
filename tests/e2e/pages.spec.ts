@@ -2,7 +2,7 @@
  * 글 페이지(소개·개인정보처리방침·이용약관·문의) E2E.
  * 광고 심사가 요구하는 페이지라, 모든 페이지의 바닥글에서 갈 수 있고 사이트맵에 있어야 한다.
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test';
 
 const pages = [
   { name: '소개', path: '/about/' },
@@ -44,12 +44,4 @@ test('ads.txt와 소유 확인 태그가 같은 AdSense 게시자를 가리킨�
 
   const adsTxt = await (await request.get('/ads.txt')).text();
   expect(adsTxt.trim()).toBe(`google.com, ${client!.replace('ca-', '')}, DIRECT, f08c47fec0942fa0`);
-});
-
-test('광고 스크립트는 아직 어느 페이지에도 없다', async ({ page }) => {
-  // 광고는 쿠키 동의 배너와 함께 넣는다. 그 전에 스크립트가 들어가면 동의 없이 쿠키를 쓰게 된다.
-  for (const path of ['/', '/pdf/merge/', '/privacy/']) {
-    await page.goto(path);
-    await expect(page.locator('script[src*="googlesyndication"]')).toHaveCount(0);
-  }
 });

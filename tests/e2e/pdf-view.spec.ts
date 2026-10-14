@@ -6,7 +6,7 @@
  * - 도구 화면은 출처 없는 격리 frame이라 바깥 페이지와 서로 접근할 수 없다
  * - 도구 화면 안에서 외부로 연결하려 하면 CSP가 막는다
  */
-import { expect, test, type Page, type Request } from '@playwright/test';
+import { expect, test, type Page, type Request } from './test';
 import { fileURLToPath } from 'node:url';
 import { expectLocalOnly } from './local-only';
 

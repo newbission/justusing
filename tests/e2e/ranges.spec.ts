@@ -1,7 +1,7 @@
 /**
  * 나누기 범위 입력 해석 (브라우저 없이 도는 함수 테스트).
  */
-import { expect, test } from '@playwright/test';
+import { expect, test } from './test';
 import { parseRanges, rangeLabel } from '../../src/lib/pdf/ranges';
 
 test('범위·한 쪽·쉼표 구분을 해석한다', () => {

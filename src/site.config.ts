@@ -8,17 +8,21 @@ import type { AdSlotId } from './ads/slots';
 export type AdProvider = 'adsense' | 'adfit';
 
 interface AdsConfig {
-  /** 전체 광고 스위치. false면 배포 화면에 광고 칸이 아예 없다. */
+  /** 전체 광고 스위치. false면 광고 스크립트도, 광고 칸도, 광고 차단 안내도 없다. */
   enabled: boolean;
   /** Google AdSense 게시자 ID (ca-pub-...). 소유 확인 태그와 ads.txt에 쓴다. 공개되는 값이다. */
   adsenseClient: string;
+  /** 광고 차단 프로그램을 쓰는 방문자에게 꺼 달라는 안내 창을 띄울지 (enabled가 켜져 있을 때만) */
+  adblockNotice: boolean;
   /** 슬롯마다 어느 업체의 어느 광고 단위를 넣을지. 비워 둔 슬롯은 표시하지 않는다. */
   slots: Partial<Record<AdSlotId, { provider: AdProvider; unit: string }>>;
 }
 
 const ads: AdsConfig = {
-  enabled: false,
+  // 심사 중이라 광고 칸(slots)은 아직 비어 있다. 스크립트와 광고 차단 안내만 동작한다.
+  enabled: true,
   adsenseClient: 'ca-pub-9856578903331156',
+  adblockNotice: true,
   slots: {},
 };
 

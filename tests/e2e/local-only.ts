@@ -2,15 +2,19 @@
  * "파일이 기기를 떠나지 않는다"는 약속을 확인하는 검사. 도구마다 같은 기준으로 본다.
  *
  * - 도구 frame(파일을 다루는 곳)의 요청: 우리 사이트로 가는 GET뿐이고 본문이 없어야 한다.
- * - 바깥 페이지의 요청: 위와 같거나, 방문 통계 주소로만 갈 수 있다.
- *   통계 요청의 주소와 본문에는 파일 이름도 PDF 내용도 없어야 한다.
+ * - 바깥 페이지의 요청: 위와 같거나, 방문 통계·광고 주소로만 갈 수 있다.
+ *   그 요청의 주소와 본문에는 파일 이름도 PDF 내용도 없어야 한다.
  */
-import { expect, type Page, type Request } from '@playwright/test';
+import { expect, type Page, type Request } from './test';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-/** 바깥 페이지가 연결해도 되는 방문 통계 주소 (src/components/Analytics.astro) */
-const STATS_ORIGINS = ['https://static.cloudflareinsights.com', 'https://cloudflareinsights.com'];
+/** 바깥 페이지가 연결해도 되는 주소: 방문 통계(Analytics.astro)와 광고 스크립트(AdsScript.astro) */
+const OUTER_ORIGINS = [
+  'https://static.cloudflareinsights.com',
+  'https://cloudflareinsights.com',
+  'https://pagead2.googlesyndication.com',
+];
 
 /** PDF 파일의 첫머리. 그대로 실리거나(%PDF) base64로 실리면(JVBERi) 본문에 나타난다. */
 const PDF_MARKS = ['%PDF', 'JVBERi'];
@@ -28,7 +32,7 @@ export function expectLocalOnly(page: Page, requests: Request[], baseURL: string
     if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
 
     const fromOuterPage = request.frame() === page.mainFrame();
-    if (fromOuterPage && STATS_ORIGINS.includes(url.origin)) {
+    if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) {
       // 본문뿐 아니라 주소(경로·쿼리)에 실어 보내는 것도 막는다
       const sent = `${decodeURIComponent(url.href)}\n${request.postData() ?? ''}`;
       for (const text of [...fileNames, ...PDF_MARKS]) {
