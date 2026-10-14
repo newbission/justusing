@@ -7,7 +7,11 @@
  * 바깥 페이지가 원래 크기로 돌린다. 파일은 frame 밖으로 나가지 않는다.
  */
 
+import { pick } from './locale';
+import { FRAME_MESSAGES } from './messages';
+
 const FILES_EVENT = 'framefiles';
+const t = pick(FRAME_MESSAGES);
 
 /** 도구 화면이 놓인 파일을 받는다. 반환한 함수를 부르면 해제된다. */
 export function onFrameFiles(handler: (files: File[]) => void): () => void {
@@ -20,8 +24,14 @@ export function setupFrameDrop() {
   const overlay = document.createElement('div');
   overlay.className = 'frame-drop-overlay';
   overlay.hidden = true;
-  overlay.innerHTML =
-    '<p><strong>여기에 파일을 놓으세요</strong><span>파일은 이 기기를 떠나지 않습니다</span></p>';
+  // 문구는 우리가 정한 글자뿐이라 textContent로 넣는다
+  const text = document.createElement('p');
+  const title = document.createElement('strong');
+  title.textContent = t.drop.overlay;
+  const note = document.createElement('span');
+  note.textContent = t.drop.overlayNote;
+  text.append(title, note);
+  overlay.append(text);
   document.body.append(overlay);
 
   const notifyParent = (type: 'drag-request' | 'drag-ready' | 'drag-end') => {
