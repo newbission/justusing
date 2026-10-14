@@ -11,6 +11,8 @@ export const GET: APIRoute = ({ site }) => {
     ...liveTools.map((tool) => tool.href),
     '/about/',
     '/privacy/',
+    '/terms/',
+    '/contact/',
   ];
   const urls = paths.map((path) => `  <url><loc>${new URL(path, site)}</loc></url>`).join('\n');
 
