@@ -17,9 +17,10 @@
   --color-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
   --color-accent-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
 
-  /* 글꼴: 웹폰트를 받지 않고 시스템 폰트를 쓴다 */
+  /* 글꼴: 본문은 Pretendard(global.css에서 불러옴), 받기 전·못 받으면 시스템 폰트 */
   --font-sans:
-    system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    'Pretendard Variable', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic',
+    'Noto Sans KR', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* 크기 */
