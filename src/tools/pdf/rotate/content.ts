@@ -23,4 +23,26 @@ export default defineContent({
       },
     ],
   },
+  en: {
+    howTo: [
+      'Click "Choose PDF file" or drag the PDF you want to rotate onto the page.',
+      'Click ↺ (left) or ↻ (right) on a page to rotate it by 90°. To rotate every page at once, use "All ↺" or "All ↻" at the top.',
+      'Rotated pages are marked with a green border and their angle. Click "Reset" to go back to the original.',
+      'Click "Rotate PDF". When it is done, click "Download".',
+    ],
+    faq: [
+      {
+        q: 'Does rotating reduce quality?',
+        a: 'No. Pages are not redrawn. Only the orientation setting inside the PDF changes, so text and images keep their quality.',
+      },
+      {
+        q: 'My scanned document is sideways. Can I fix it all at once?',
+        a: 'Yes. Click "All ↻" (or "All ↺") to rotate every page in the same direction. If only some pages are sideways, rotate just those pages.',
+      },
+      {
+        q: 'Can I rotate password-protected PDFs?',
+        a: 'Yes. Enter the password when you open the file. The result has no password, so keep it somewhere safe. The password is only used on this device.',
+      },
+    ],
+  },
 });

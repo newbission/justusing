@@ -27,4 +27,30 @@ export default defineContent({
       },
     ],
   },
+  en: {
+    howTo: [
+      'Click "Choose PDF file" or drag the PDF you want to organize onto the page.',
+      'Drag pages or use the ◀ ▶ buttons to change the order. The number at the top left of each page is its position in the new PDF.',
+      'Click "Exclude" on pages you do not need. They are dimmed, and "Restore" puts them back. Click "Reset" to go back to the original.',
+      'Click "Organize PDF". When it is done, click "Download".',
+    ],
+    faq: [
+      {
+        q: 'Is my original file changed?',
+        a: 'No. The original stays as it is, and you download the result as a new PDF file.',
+      },
+      {
+        q: 'Does organizing reduce quality?',
+        a: 'No. Pages are not redrawn. The content of the original PDF is copied as is, so text and images keep their quality.',
+      },
+      {
+        q: 'I want to mix pages from several PDFs.',
+        a: 'Use the Merge PDF tool. Add several files, show the pages of each file, reorder or leave out pages, and merge them into one.',
+      },
+      {
+        q: 'Can I organize password-protected PDFs?',
+        a: 'Yes. Enter the password when you open the file. The result has no password, so keep it somewhere safe. The password is only used on this device.',
+      },
+    ],
+  },
 });
