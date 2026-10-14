@@ -1,0 +1,78 @@
+---
+/**
+ * 광고 스크립트(Google AdSense). 바깥 페이지(BaseLayout)의 <head>에만 넣는다.
+ *
+ * 광고는 이 사이트의 운영비라 모든 방문자에게 불러온다 (쿠키 사용은 개인정보처리방침에 밝힌다).
+ * 유럽처럼 동의가 필요한 지역은 Google의 동의 창이 맡는다 (AdSense의 "개인 정보 보호 및 메시지").
+ * 자동 광고는 쓰지 않는다. 게시자 ID는 소유 확인 태그(google-adsense-account)에서 읽는다.
+ *
+ * 광고 차단도 여기서 알아챈다. 알아채면 <html data-adblock>을 달고 document에 adblock 이벤트를 보낸다
+ * (AdblockNotice가 듣는다).
+ * - 스크립트를 받지 못함: 차단 프로그램이나 차단 DNS
+ * - 미끼 칸(광고처럼 보이는 빈 칸)이 숨겨짐: 스크립트는 흉내만 내고 화면에서 광고를 지우는 차단 프로그램
+ *
+ * <head> 안에 둬야 한다. CSP <meta>가 <head>에서 만들어져, 그 뒤에 허용한 주소는 들어가지 않는다.
+ * 개발 서버에서는 불러오지 않는다.
+ */
+
+// 페이지 CSP는 우리 스크립트만 허용하므로 광고 스크립트가 쓰는 Google 주소를 따로 허용한다.
+// (adsbygoogle.js가 이어서 불러오는 스크립트들. 광고를 켠 뒤 콘솔의 CSP 오류로 다시 확인할 것)
+const AD_SCRIPT_SOURCES = [
+  'https://*.googlesyndication.com',
+  'https://*.doubleclick.net',
+  'https://*.adtrafficquality.google',
+  'https://www.googletagservices.com',
+  // 유럽 방문자에게 뜨는 Google 동의 창
+  'https://fundingchoicesmessages.google.com',
+];
+if (!import.meta.env.DEV) {
+  Astro.csp?.insertScriptResource("'self'");
+  for (const source of AD_SCRIPT_SOURCES) Astro.csp?.insertScriptResource(source);
+  // 광고 스크립트는 광고 칸에 style 속성으로 크기를 넣는다. 속성만 허용하고 <style>은 계속 해시로만 허용한다.
+  // (Astro의 지시어 타입 목록에 style-src-attr가 없어 타입만 맞춘다. 출력에는 그대로 들어간다)
+  Astro.csp?.insertDirective("style-src-attr 'unsafe-inline'" as never);
+}
+---
+
+<script>
+  const client = document.querySelector<HTMLMetaElement>(
+    'meta[name="google-adsense-account"]',
+  )?.content;
+
+  function reportAdblock() {
+    const root = document.documentElement;
+    if ('adblock' in root.dataset) return;
+    root.dataset.adblock = '';
+    document.dispatchEvent(new CustomEvent('adblock'));
+  }
+
+  if (client && !import.meta.env.DEV) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${client}`;
+    script.addEventListener('error', reportAdblock);
+    document.head.append(script);
+
+    // 미끼 칸: 차단 프로그램이 흔히 숨기는 이름을 단 빈 칸. 숨겨지면 높이가 0이 된다.
+    const bait = document.createElement('div');
+    bait.className = 'ad-bait adsbox ad-banner ad-placement';
+    bait.setAttribute('aria-hidden', 'true');
+    document.body.append(bait);
+    setTimeout(() => {
+      if (bait.offsetHeight === 0) reportAdblock();
+      bait.remove();
+    }, 500);
+  }
+</script>
+
+<style is:global>
+  /* 광고 차단을 알아채는 미끼 칸. 화면 밖에 1px로 둔다 */
+  .ad-bait {
+    position: absolute;
+    top: 0;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+  }
+</style>
