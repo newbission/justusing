@@ -7,3 +7,8 @@
 export function requestShowTool() {
   if (parent !== window) parent.postMessage({ type: 'show-tool' }, '*');
 }
+
+/** 도구를 쓰는 순간임을 알린다 (src/frame/activity.ts). 내용은 아무것도 담지 않는다 */
+export function notifyActivity() {
+  if (parent !== window) parent.postMessage({ type: 'activity' }, '*');
+}

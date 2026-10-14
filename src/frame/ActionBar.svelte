@@ -18,7 +18,7 @@
   let { label, text, children }: Props = $props();
 </script>
 
-<div class="action" role="group" aria-label={label}>
+<div class="action" role="group" aria-label={label} data-action-bar>
   <p class="action-text" aria-live="polite">{@render text()}</p>
   {@render children()}
 </div>
