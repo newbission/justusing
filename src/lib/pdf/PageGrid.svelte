@@ -14,6 +14,10 @@
 </script>
 
 <script lang="ts">
+  import { pick } from '../../frame/locale';
+  import { FRAME_MESSAGES } from '../../frame/messages';
+
+  const t = pick(FRAME_MESSAGES);
   import { tick } from 'svelte';
   import { flip } from 'svelte/animate';
   import Thumbnail from './Thumbnail.svelte';
@@ -90,7 +94,7 @@
   }
 </script>
 
-<ol class="grid" bind:this={grid} aria-label="{label} 페이지 (결과 순서대로)">
+<ol class="grid" bind:this={grid} aria-label={t.pages.gridLabel(label)}>
   {#each pages as page, position (page.index)}
     <li
       class="card"
@@ -113,15 +117,15 @@
       }}
       data-page-index={page.index}
       animate:flip={{ duration: MOVE_MS }}
-      aria-label="원래 {page.index + 1}쪽{page.excluded
-        ? ', 제외됨'
-        : `, ${numbers[position]}번째`}"
+      aria-label="{t.pages.original(page.index + 1)}, {page.excluded
+        ? t.pages.excluded
+        : t.pages.position(numbers[position] ?? 0)}"
     >
       <div class="thumb" style:width="{size}px" style:height="{size}px">
         {#await load(page.index) then proxy}
           <Thumbnail page={proxy} {size} />
         {/await}
-        <span class="number" aria-hidden="true">{numbers[position] ?? '제외'}</span>
+        <span class="number" aria-hidden="true">{numbers[position] ?? t.pages.exclude}</span>
       </div>
       <div class="tools">
         <button
@@ -129,22 +133,22 @@
           data-page-move="-1"
           disabled={position === 0}
           onclick={() => move(page, -1)}
-          aria-label="원래 {page.index + 1}쪽 앞으로">◀</button
+          aria-label={t.pages.earlier(page.index + 1)}>◀</button
         >
         <button
           type="button"
           class="toggle"
           aria-pressed={page.excluded}
           onclick={() => (page.excluded = !page.excluded)}
-          aria-label="원래 {page.index + 1}쪽 {page.excluded ? '다시 넣기' : '제외'}"
-          >{page.excluded ? '복구' : '제외'}</button
+          aria-label={t.pages.toggle(page.index + 1, page.excluded)}
+          >{page.excluded ? t.pages.restore : t.pages.exclude}</button
         >
         <button
           type="button"
           data-page-move="1"
           disabled={position === pages.length - 1}
           onclick={() => move(page, 1)}
-          aria-label="원래 {page.index + 1}쪽 뒤로">▶</button
+          aria-label={t.pages.later(page.index + 1)}>▶</button
         >
       </div>
     </li>
