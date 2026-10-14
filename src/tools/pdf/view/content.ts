@@ -35,4 +35,38 @@ export default defineContent({
       },
     ],
   },
+  en: {
+    howTo: [
+      'Click "Choose PDF files" or drag PDF files onto the page. You can open several files at once.',
+      'Once a file opens, scroll down to flip through the pages. You can also use the ‹ › buttons at the top to move one page at a time.',
+      'Use − / + to zoom out and in. "Fit width" fits the page to the width of the screen again.',
+      'If you opened several files, pick the one to view from the list on the left (the drop-down at the top on phones). Use "Add files" to open more, or × to remove one from the list.',
+    ],
+    faq: [
+      {
+        q: 'Do I need to install anything or sign up?',
+        a: 'No. All you need is a modern browser such as Chrome, Edge, Safari or Firefox, on a computer or a phone.',
+      },
+      {
+        q: 'Can I view several PDFs at once?',
+        a: 'Yes. Choose or drop several files and they are added to a list. Click a file in the list to switch to it. For a password-protected PDF, you only enter the password once, even if you switch to another file and come back.',
+      },
+      {
+        q: 'Can I open password-protected PDFs?',
+        a: 'Yes. A password box appears when you open the file. The password is only used on this device and is never stored or sent anywhere.',
+      },
+      {
+        q: 'Will Korean, Chinese or Japanese text display correctly?',
+        a: 'Yes, in most cases. Character data for East Asian scripts is included, so most PDFs display correctly. If a PDF does not include its fonts, a similar font may be used instead.',
+      },
+      {
+        q: 'Can I open large PDFs?',
+        a: "Yes. Only the pages on screen are drawn, so documents with hundreds of pages open fine. The whole file is loaded into your device's memory, though, so very large files may be slow on phones with little memory.",
+      },
+      {
+        q: 'Can I edit or merge PDFs here?',
+        a: 'This tool is for viewing only. Use Merge PDF to combine several PDFs into one, Split PDF to split one PDF into several files, Rotate PDF to fix page orientation, and Organize PDF to reorder or delete pages.',
+      },
+    ],
+  },
 });

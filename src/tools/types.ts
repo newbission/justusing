@@ -5,6 +5,8 @@
  *   src/tools/pdf/merge/meta.ts → ID 'pdf/merge' → 주소 /pdf/merge/
  */
 
+import type { Locale } from '../i18n/locales';
+
 /** 화면·검색에 쓰이는 문구 (언어별) */
 export interface ToolText {
   /** 화면 제목·카드 이름 (예: 'PDF 합치기') */
@@ -18,8 +20,8 @@ export interface ToolText {
 export interface ToolMeta {
   /** live: 공개 / soon: 목록에만 '준비 중'으로 표시하고 페이지는 만들지 않음 */
   status: 'live' | 'soon';
-  /** 언어별 문구. 기본 언어(ko)는 필수, 나머지는 번역이 생기면 추가 */
-  text: { ko: ToolText };
+  /** 언어별 문구. 사이트의 모든 언어가 있어야 한다 (src/i18n/locales.ts) */
+  text: Record<Locale, ToolText>;
   /** 관련 도구 ID 목록 (예: ['pdf/split']) */
   related?: string[];
 }
@@ -36,10 +38,8 @@ export interface ToolContentText {
   faq: { q: string; a: string }[];
 }
 
-/** 각 도구 폴더의 content.ts가 내보낸다. 기본 언어(ko)는 필수. */
-export interface ToolContent {
-  ko: ToolContentText;
-}
+/** 각 도구 폴더의 content.ts가 내보낸다. 사이트의 모든 언어가 있어야 한다. */
+export type ToolContent = Record<Locale, ToolContentText>;
 
 export function defineContent(content: ToolContent): ToolContent {
   return content;

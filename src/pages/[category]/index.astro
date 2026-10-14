@@ -9,27 +9,30 @@ import Breadcrumb from '../../components/Breadcrumb.astro';
 import RailShell from '../../components/RailShell.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import { CATEGORIES, type CategoryId } from '../../tools/categories';
-import { toolsInCategory, visibleCategories } from '../../tools/registry';
+import { toolsInCategory } from '../../tools/registry';
+import { categoryPaths } from '../../tools/paths';
+import { localeOf, localizePath } from '../../i18n/locales';
+import { ui } from '../../i18n/ui';
 
-export const getStaticPaths = (() =>
-  visibleCategories.map((category) => ({
-    params: { category },
-    props: { category },
-  }))) satisfies GetStaticPaths;
+export const getStaticPaths = categoryPaths satisfies GetStaticPaths;
 
 interface Props {
   category: CategoryId;
 }
 
 const { category } = Astro.props;
-const text = CATEGORIES[category].text.ko;
-const title = `${text.name} 도구`;
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale);
+const text = CATEGORIES[category].text[locale];
+const title = t.category.title(text.name);
 ---
 
 <BaseLayout title={title} description={text.description}>
   <RailShell>
     <div class="category-page">
-      <Breadcrumb items={[{ name: '홈', href: '/' }, { name: text.name }]} />
+      <Breadcrumb
+        items={[{ name: t.nav.home, href: localizePath('/', locale) }, { name: text.name }]}
+      />
       <h1>{title}</h1>
       <p class="lead">{text.description}</p>
       <!-- 제목 아래 가로 배너 -->

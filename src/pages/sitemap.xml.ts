@@ -1,7 +1,8 @@
 /**
- * 검색엔진용 사이트맵. 레지스트리에서 자동으로 만든다.
+ * 검색엔진용 사이트맵. 레지스트리에서 자동으로 만든다. 모든 페이지를 모든 언어로 싣는다.
  */
 import type { APIRoute } from 'astro';
+import { LOCALES, localizePath } from '../i18n/locales';
 import { liveTools, visibleCategories } from '../tools/registry';
 
 export const GET: APIRoute = ({ site }) => {
@@ -14,7 +15,10 @@ export const GET: APIRoute = ({ site }) => {
     '/terms/',
     '/contact/',
   ];
-  const urls = paths.map((path) => `  <url><loc>${new URL(path, site)}</loc></url>`).join('\n');
+  const urls = paths
+    .flatMap((path) => LOCALES.map((locale) => localizePath(path, locale)))
+    .map((path) => `  <url><loc>${new URL(path, site)}</loc></url>`)
+    .join('\n');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

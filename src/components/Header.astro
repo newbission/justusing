@@ -3,30 +3,38 @@ import { siteConfig } from '../site.config';
 import { CATEGORIES } from '../tools/categories';
 import { visibleCategories } from '../tools/registry';
 import ThemeToggle from './ThemeToggle.astro';
+import LocaleSwitch from './LocaleSwitch.astro';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 
 const currentPath = Astro.url.pathname;
+const locale = localeOf(currentPath);
+const t = ui(locale);
 ---
 
 <header class="site-header">
   <div class="inner">
-    <a class="logo" href="/">
+    <a class="logo" href={localizePath('/', locale)}>
       {siteConfig.name}
     </a>
-    <nav class="nav" aria-label="도구 분류">
+    <nav class="nav" aria-label={t.nav.categories}>
       <ul>
         {visibleCategories.map((category) => {
-          const href = `/${category}/`;
+          const href = localizePath(`/${category}/`, locale);
           return (
             <li>
               <a href={href} aria-current={currentPath.startsWith(href) ? 'page' : undefined}>
-                {CATEGORIES[category].text.ko.name}
+                {CATEGORIES[category].text[locale].name}
               </a>
             </li>
           );
         })}
       </ul>
     </nav>
-    <ThemeToggle />
+    <div class="actions">
+      <LocaleSwitch />
+      <ThemeToggle />
+    </div>
   </div>
 </header>
 
@@ -48,6 +56,12 @@ const currentPath = Astro.url.pathname;
     font-size: 18px;
     letter-spacing: -0.01em;
     text-decoration: none;
+  }
+  .actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
   }
   .nav {
     flex: 1;

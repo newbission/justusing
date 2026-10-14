@@ -4,13 +4,12 @@
  * 각 도구 폴더의 Frame.astro를 그대로 그린다 (Frame.astro가 FrameLayout과 App을 쓴다).
  */
 import type { GetStaticPaths } from 'astro';
-import { liveTools, type Tool } from '../../../tools/registry';
+import { toolPaths } from '../../../tools/paths';
+import type { Tool } from '../../../tools/registry';
+import { localeOf } from '../../../i18n/locales';
+import { ui } from '../../../i18n/ui';
 
-export const getStaticPaths = (() =>
-  liveTools.map((tool) => {
-    const [category, slug] = tool.id.split('/');
-    return { params: { category, tool: slug }, props: { tool } };
-  })) satisfies GetStaticPaths;
+export const getStaticPaths = toolPaths satisfies GetStaticPaths;
 
 interface Props {
   tool: Tool;
@@ -21,8 +20,9 @@ const frames = import.meta.glob<{ default: any }>('../../../tools/*/*/Frame.astr
 });
 
 const { tool } = Astro.props;
+const locale = localeOf(Astro.url.pathname);
 const Frame = frames[`../../../tools/${tool.id}/Frame.astro`]?.default;
 if (!Frame) throw new Error(`도구 화면 파일이 없습니다: src/tools/${tool.id}/Frame.astro`);
 ---
 
-<Frame />
+<Frame title={ui(locale).tool.frameTitle(tool.text[locale].name)} />

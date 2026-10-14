@@ -3,6 +3,12 @@
   파일을 메모리에서 바로 열어 페이지를 세로로 이어 보여준다. 파일은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
+  import { pick } from '../../../frame/locale';
+  import { FRAME_MESSAGES } from '../../../frame/messages';
+  import { MESSAGES } from './messages';
+
+  const common = pick(FRAME_MESSAGES);
+  const t = pick(MESSAGES);
   import { onMount, untrack } from 'svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../../frame/drop';
@@ -110,7 +116,7 @@
         password = '';
         phase = 'password';
       } else {
-        errorMessage = 'PDF를 열 수 없습니다. 파일이 손상되었거나 PDF 파일이 아닐 수 있습니다.';
+        errorMessage = common.pdf.cannotOpen;
         phase = 'error';
       }
     }
@@ -195,8 +201,8 @@
 
 <div class="viewer">
   {#if files.length > 1}
-    <nav class="files" aria-label="올린 파일 목록">
-      <p class="files-title">파일 {files.length}개</p>
+    <nav class="files" aria-label={t.fileList}>
+      <p class="files-title">{t.fileCount(files.length)}</p>
       <ol>
         {#each files as file (file.id)}
           <li>
@@ -211,7 +217,7 @@
               type="button"
               class="remove"
               onclick={() => remove(file)}
-              aria-label="{file.name} 목록에서 빼기">×</button
+              aria-label={t.removeFile(file.name)}>×</button
             >
           </li>
         {/each}
@@ -222,7 +228,7 @@
     {#if files.length > 1}
       <!-- 좁은 화면에서는 왼쪽 목록 대신 고르기 상자로 파일을 바꾼다 -->
       <div class="file-select">
-        <label class="visually-hidden" for="file-select">볼 파일</label>
+        <label class="visually-hidden" for="file-select">{t.fileSelect}</label>
         <select
           id="file-select"
           value={current?.id}
@@ -239,12 +245,12 @@
           type="button"
           class="remove"
           onclick={() => current && remove(current)}
-          aria-label="보고 있는 파일을 목록에서 빼기">×</button
+          aria-label={t.removeCurrent}>×</button
         >
       </div>
     {/if}
     {#if phase === 'ready'}
-      <div class="toolbar" role="toolbar" aria-label="PDF 보기 도구">
+      <div class="toolbar" role="toolbar" aria-label={t.toolbar}>
         <span class="file-name" title={fileName}>{fileName}</span>
 
         <div class="group">
@@ -253,7 +259,7 @@
             class="page-nav"
             onclick={() => goTo(currentPage - 1)}
             disabled={currentPage <= 1}
-            aria-label="이전 페이지">‹</button
+            aria-label={t.previous}>‹</button
           >
           <span class="page-count" aria-live="polite">{currentPage} / {pages.length}</span>
           <button
@@ -261,19 +267,19 @@
             class="page-nav"
             onclick={() => goTo(currentPage + 1)}
             disabled={currentPage >= pages.length}
-            aria-label="다음 페이지">›</button
+            aria-label={t.next}>›</button
           >
         </div>
 
         <div class="group">
-          <button type="button" onclick={() => zoom(-1)} aria-label="축소">−</button>
+          <button type="button" onclick={() => zoom(-1)} aria-label={t.zoomOut}>−</button>
           <span class="zoom">{Math.round(scale * 100)}%</span>
-          <button type="button" onclick={() => zoom(1)} aria-label="확대">+</button>
+          <button type="button" onclick={() => zoom(1)} aria-label={t.zoomIn}>+</button>
           <button
             type="button"
             class="text"
             onclick={() => (fitWidth = true)}
-            aria-pressed={fitWidth}>폭 맞춤</button
+            aria-pressed={fitWidth}>{t.fitWidth}</button
           >
         </div>
 
@@ -281,7 +287,7 @@
           <button
             type="button"
             onclick={toggleFullscreen}
-            aria-label={fullscreen ? '전체 화면 끝내기' : '전체 화면'}
+            aria-label={fullscreen ? t.exitFullscreen : t.fullscreen}
             aria-pressed={fullscreen}
           >
             <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
@@ -295,7 +301,7 @@
         {/if}
         <!-- 보던 파일은 두고 목록에 더한다 (여러 개 고를 수 있음) -->
         <label class="add">
-          파일 추가
+          {t.addFiles}
           <input
             type="file"
             class="visually-hidden"
@@ -318,21 +324,21 @@
         onscroll={updateCurrentPage}
         tabindex="0"
         role="document"
-        aria-label="{fileName} 페이지 목록"
+        aria-label={t.pageList(fileName)}
       >
         {#each pages as page (page.pageNumber)}
           <PdfPage {page} {scale} />
         {/each}
       </div>
     {:else if phase === 'loading'}
-      <p class="status" role="status">PDF를 여는 중…</p>
+      <p class="status" role="status">{common.pdf.opening}</p>
     {:else if phase === 'password'}
       <!-- 격리 frame은 form 제출이 막혀 있어(sandbox에 allow-forms 없음) form 대신 직접 처리한다 -->
-      <div class="password" role="group" aria-label="암호가 걸린 PDF">
-        <p>암호가 걸린 PDF입니다. 암호를 입력하세요.</p>
-        <p class="hint">암호도 이 기기 안에서만 쓰이고 어디에도 전송되지 않습니다.</p>
+      <div class="password" role="group" aria-label={common.pdf.passwordGroup}>
+        <p>{common.pdf.passwordPrompt}</p>
+        <p class="hint">{common.pdf.passwordNote}</p>
         <label>
-          PDF 암호
+          {common.pdf.passwordLabel}
           <input
             type="password"
             bind:value={password}
@@ -343,13 +349,13 @@
           />
         </label>
         {#if wrongPassword}
-          <p class="error" role="alert">암호가 맞지 않습니다.</p>
+          <p class="error" role="alert">{common.pdf.wrongPassword}</p>
         {/if}
         <div class="actions">
           <button type="button" class="primary" disabled={!password} onclick={() => load(password)}
-            >열기</button
+            >{common.pdf.open}</button
           >
-          <button type="button" class="text" onclick={reset}>취소</button>
+          <button type="button" class="text" onclick={reset}>{common.pdf.cancel}</button>
         </div>
       </div>
     {:else}
@@ -359,8 +365,8 @@
       <div class="drop">
         <FileDrop
           accept="application/pdf,.pdf"
-          label="PDF 파일 선택"
-          hint="파일은 이 기기를 떠나지 않습니다"
+          label={common.pdf.chooseMany}
+          hint={common.pdf.stays}
           multiple
           onfiles={add}
         />

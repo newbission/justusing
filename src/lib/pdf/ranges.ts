@@ -5,33 +5,51 @@
  * - 범위: "1-3" 또는 "1~3", 끝까지 "5-", 처음부터 "-3"
  * - 쪽 번호는 1부터. 범위끼리 겹쳐도 된다 (각각 다른 파일이 된다)
  */
+import type { Locale } from '../../i18n/locales';
+
 export type RangeResult = { ok: true; ranges: number[][] } | { ok: false; message: string };
 
-export function parseRanges(text: string, pageCount: number): RangeResult {
+const MESSAGES = {
+  ko: {
+    empty: '나눌 범위를 입력하세요. 예: 1-3, 4-6, 7',
+    unknown: (part: string) => `"${part}"은(는) 알 수 없는 범위입니다. 예: 1-3, 4-6, 7`,
+    fromOne: '쪽 번호는 1부터 시작합니다.',
+    missing: (page: number, count: number) => `${page}쪽은 없습니다. 이 PDF는 ${count}쪽입니다.`,
+    reversed: (part: string) => `"${part}": 앞 번호가 뒤 번호보다 큽니다.`,
+  },
+  en: {
+    empty: 'Enter the ranges to split. Example: 1-3, 4-6, 7',
+    unknown: (part: string) => `"${part}" is not a valid range. Example: 1-3, 4-6, 7`,
+    fromOne: 'Page numbers start at 1.',
+    missing: (page: number, count: number) =>
+      `There is no page ${page}. This PDF has ${count} ${count === 1 ? 'page' : 'pages'}.`,
+    reversed: (part: string) => `"${part}": the first number is larger than the second.`,
+  },
+} satisfies Record<Locale, unknown>;
+
+export function parseRanges(text: string, pageCount: number, locale: Locale = 'ko'): RangeResult {
+  const t = MESSAGES[locale];
   const parts = text
     .split(/[,;\n]/)
     .map((part) => part.replace(/\s+/g, ''))
     .filter(Boolean);
-  if (parts.length === 0) return { ok: false, message: '나눌 범위를 입력하세요. 예: 1-3, 4-6, 7' };
+  if (parts.length === 0) return { ok: false, message: t.empty };
 
   const ranges: number[][] = [];
   for (const part of parts) {
     const match = /^(\d*)[-~](\d*)$/.exec(part) ?? /^(\d+)()$/.exec(part);
     if (!match || (match[1] === '' && match[2] === '')) {
-      return { ok: false, message: `"${part}"은(는) 알 수 없는 범위입니다. 예: 1-3, 4-6, 7` };
+      return { ok: false, message: t.unknown(part) };
     }
     const isRange = part.includes('-') || part.includes('~');
     const from = match[1] === '' ? 1 : Number(match[1]);
     const to = isRange ? (match[2] === '' ? pageCount : Number(match[2])) : from;
 
-    if (from < 1 || to < 1) return { ok: false, message: '쪽 번호는 1부터 시작합니다.' };
+    if (from < 1 || to < 1) return { ok: false, message: t.fromOne };
     if (from > pageCount || to > pageCount) {
-      return {
-        ok: false,
-        message: `${Math.max(from, to)}쪽은 없습니다. 이 PDF는 ${pageCount}쪽입니다.`,
-      };
+      return { ok: false, message: t.missing(Math.max(from, to), pageCount) };
     }
-    if (from > to) return { ok: false, message: `"${part}": 앞 번호가 뒤 번호보다 큽니다.` };
+    if (from > to) return { ok: false, message: t.reversed(part) };
 
     ranges.push(Array.from({ length: to - from + 1 }, (_, i) => from + i));
   }

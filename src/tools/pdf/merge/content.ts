@@ -28,4 +28,31 @@ export default defineContent({
       },
     ],
   },
+  en: {
+    howTo: [
+      'Click "Choose PDF files" or drag the PDF files you want to merge onto the page. You can choose several at once.',
+      'Check the order in the list. Drag a row or use the ↑ ↓ buttons to change the order, and remove a file you added by mistake with ×.',
+      'Click ▸ to the left of a file to show its pages. Drag pages or use ◀ ▶ to reorder them, and "Exclude" the pages you do not need.',
+      'To add more files, click "Add files" or drag them onto the page again.',
+      'Check the merged order with "Preview", then click "Merge PDF". When it is done, click "Download".',
+    ],
+    faq: [
+      {
+        q: 'How many files, and how large, can I merge?',
+        a: "There is no limit on the number of files. Everything is processed in your device's memory, though, so merging files of several hundred MB on a phone with little memory may be slow or fail. If that happens, try on a computer.",
+      },
+      {
+        q: 'Can I merge password-protected PDFs?',
+        a: 'Yes. Enter the password for that file in the list and it can be merged. The merged file has no password, so keep it somewhere safe if needed. The password is only used on this device.',
+      },
+      {
+        q: 'Does merging reduce quality?',
+        a: 'No. Pages are not redrawn. The content of the original PDFs is copied as is, so text and images keep their quality.',
+      },
+      {
+        q: 'Can I merge only some pages, or change the page order?',
+        a: 'Yes. Click ▸ to the left of a file to show its pages. You can reorder pages within the file and leave out the ones you do not need. Use "Restore" to put an excluded page back. Your original files are not changed.',
+      },
+    ],
+  },
 });

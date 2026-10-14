@@ -6,6 +6,7 @@
  * 그 아래 사용법·FAQ·관련 도구는 content.ts와 meta.ts에서 그린다.
  */
 import type { GetStaticPaths } from 'astro';
+import { toolPaths } from '../../tools/paths';
 import ToolLayout from '../../layouts/ToolLayout.astro';
 import ToolFrame from '../../components/ToolFrame.astro';
 import ToolHowTo from '../../components/ToolHowTo.astro';
@@ -13,31 +14,35 @@ import ToolFaq from '../../components/ToolFaq.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import { CATEGORIES } from '../../tools/categories';
 import { COMMON_FAQ } from '../../tools/common-faq';
-import { liveTools, toolsInCategory, type Tool } from '../../tools/registry';
+import { toolsInCategory, type Tool } from '../../tools/registry';
+import { localeOf, localizePath } from '../../i18n/locales';
+import { ui } from '../../i18n/ui';
 
-export const getStaticPaths = (() =>
-  liveTools.map((tool) => {
-    const [category, slug] = tool.id.split('/');
-    return { params: { category, tool: slug }, props: { tool } };
-  })) satisfies GetStaticPaths;
+export const getStaticPaths = toolPaths satisfies GetStaticPaths;
 
 interface Props {
   tool: Tool;
 }
 
 const { tool } = Astro.props;
-const text = tool.text.ko;
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale);
+const text = tool.text[locale];
 // live 도구는 레지스트리가 content.ts를 보장한다
-const content = tool.content!.ko;
+const content = tool.content![locale];
+const href = localizePath(tool.href, locale);
 const breadcrumb = [
-  { name: '홈', href: '/' },
-  { name: CATEGORIES[tool.category].text.ko.name, href: `/${tool.category}/` },
+  { name: t.nav.home, href: localizePath('/', locale) },
+  {
+    name: CATEGORIES[tool.category].text[locale].name,
+    href: localizePath(`/${tool.category}/`, locale),
+  },
   { name: text.name },
 ];
 // 브레드크럼에서 같은 분류의 다른 도구로 넘어가기 (준비 중인 도구는 링크 없이)
 const siblings = toolsInCategory(tool.category).map((other) => ({
-  name: other.text.ko.name,
-  href: other.status === 'live' ? other.href : undefined,
+  name: other.text[locale].name,
+  href: other.status === 'live' ? localizePath(other.href, locale) : undefined,
   current: other.id === tool.id,
 }));
 ---
@@ -49,8 +54,8 @@ const siblings = toolsInCategory(tool.category).map((other) => ({
   breadcrumb={breadcrumb}
   {siblings}
 >
-  <ToolFrame slot="tool" src={`${tool.href}frame/`} title={`${text.name} 도구 화면`} />
+  <ToolFrame slot="tool" src={`${href}frame/`} title={t.tool.frameTitle(text.name)} />
   <ToolHowTo slot="how-to" name={text.name} steps={content.howTo} />
-  <ToolFaq slot="faq" items={[...COMMON_FAQ.ko, ...content.faq]} />
+  <ToolFaq slot="faq" items={[...COMMON_FAQ[locale], ...content.faq]} />
   <RelatedTools slot="related" ids={tool.related ?? []} />
 </ToolLayout>

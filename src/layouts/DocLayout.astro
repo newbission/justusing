@@ -7,6 +7,8 @@ import BaseLayout from './BaseLayout.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 import RailShell from '../components/RailShell.astro';
 import AdSlot from '../components/AdSlot.astro';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 
 interface Props {
   title: string;
@@ -17,12 +19,15 @@ interface Props {
 }
 
 const { title, description, note } = Astro.props;
+const locale = localeOf(Astro.url.pathname);
 ---
 
 <BaseLayout title={title} description={description}>
   <RailShell>
     <div class="doc-page">
-      <Breadcrumb items={[{ name: '홈', href: '/' }, { name: title }]} />
+      <Breadcrumb
+        items={[{ name: ui(locale).nav.home, href: localizePath('/', locale) }, { name: title }]}
+      />
       <h1>{title}</h1>
       {note && <p class="note">{note}</p>}
       <!-- 제목 아래 가로 배너 -->

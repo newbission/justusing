@@ -7,16 +7,34 @@ import ToolGrid from '../components/ToolGrid.astro';
 import RailShell from '../components/RailShell.astro';
 import AdSlot from '../components/AdSlot.astro';
 import Promises from '../components/Promises.astro';
+import SafetyDiagram from '../components/SafetyDiagram.astro';
 import { siteConfig } from '../site.config';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 import { CATEGORIES } from '../tools/categories';
 import { toolsInCategory, visibleCategories } from '../tools/registry';
+
+const locale = localeOf(Astro.url.pathname);
+const text = siteConfig.text[locale];
+
+// 검색 결과에 사이트 이름이 제대로 나오게 하는 구조화 데이터 (schema.org WebSite)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteConfig.name,
+  url: new URL(localizePath('/', locale), Astro.site).href,
+  description: text.description,
+  inLanguage: locale,
+};
 ---
 
 <BaseLayout>
+  <!-- 틀 안에 둔다. 틀 밖에 두면 <html>보다 먼저 출력된다 -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <RailShell>
     <section class="hero">
-      <h1>{siteConfig.tagline}</h1>
-      <p class="lead">{siteConfig.description}</p>
+      <h1>{text.tagline}</h1>
+      <p class="lead">{text.description}</p>
     </section>
 
     <!-- 제목 아래 가로 배너 -->
@@ -29,10 +47,17 @@ import { toolsInCategory, visibleCategories } from '../tools/registry';
       <Promises />
     </section>
 
+    <!-- 약속을 그림으로: 왜 안전한지 한눈에 -->
+    <div class="safety-section">
+      <SafetyDiagram />
+    </div>
+
     {visibleCategories.map((category) => (
       <section class="category">
         <h2>
-          <a href={`/${category}/`}>{CATEGORIES[category].text.ko.name} 도구</a>
+          <a href={localizePath(`/${category}/`, locale)}>
+            {ui(locale).category.title(CATEGORIES[category].text[locale].name)}
+          </a>
         </h2>
         <ToolGrid tools={toolsInCategory(category)} headingLevel={3} />
       </section>
@@ -60,6 +85,9 @@ import { toolsInCategory, visibleCategories } from '../tools/registry';
     color: var(--color-muted);
   }
   .promises-section {
+    margin-bottom: 40px;
+  }
+  .safety-section {
     margin-bottom: 40px;
   }
   .category {

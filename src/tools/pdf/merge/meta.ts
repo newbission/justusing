@@ -9,6 +9,12 @@ export default defineTool({
       description:
         '여러 PDF 파일을 원하는 순서로 하나로 합칩니다. 파일은 서버로 전송되지 않습니다.',
     },
+    en: {
+      name: 'Merge PDF',
+      title: 'Merge PDF - Combine PDF files without uploading',
+      description:
+        'Combine several PDF files into one in the order you want. Your files are never sent to a server.',
+    },
   },
   related: ['pdf/split', 'pdf/organize'],
 });

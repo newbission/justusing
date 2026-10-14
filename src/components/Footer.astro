@@ -1,21 +1,25 @@
 ---
 import { siteConfig } from '../site.config';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 
 const year = new Date().getFullYear();
 
 /** 바닥글 링크. 글 페이지를 만들 때마다 여기에 더한다. */
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale).footer;
 const links = [
-  { name: '소개', href: '/about/' },
-  { name: '개인정보처리방침', href: '/privacy/' },
-  { name: '이용약관', href: '/terms/' },
-  { name: '문의', href: '/contact/' },
-];
+  { name: t.about, href: '/about/' },
+  { name: t.privacy, href: '/privacy/' },
+  { name: t.terms, href: '/terms/' },
+  { name: t.contact, href: '/contact/' },
+].map((link) => ({ ...link, href: localizePath(link.href, locale) }));
 ---
 
 <footer class="site-footer">
   <div class="inner">
-    <p>모든 파일은 브라우저 안에서만 처리되며 서버로 업로드되지 않습니다.</p>
-    <nav aria-label="사이트 정보">
+    <p>{t.localNote}</p>
+    <nav aria-label={t.siteInfo}>
       <ul>
         {links.map((link) => (
           <li>

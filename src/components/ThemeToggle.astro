@@ -2,9 +2,20 @@
 /**
  * 라이트/다크 전환 버튼. 고른 값은 localStorage에 저장되어 모든 페이지에 적용된다.
  */
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+const t = ui(localeOf(Astro.url.pathname)).theme;
 ---
 
-<button type="button" class="theme-toggle" data-theme-toggle aria-label="테마 전환">
+<button
+  type="button"
+  class="theme-toggle"
+  data-theme-toggle
+  aria-label={t.toggle}
+  data-label-light={t.toLight}
+  data-label-dark={t.toDark}
+>
   <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
     <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" fill="currentColor"></path>
   </svg>
@@ -34,7 +45,7 @@
   function updateLabel(button: HTMLButtonElement) {
     button.setAttribute(
       'aria-label',
-      currentTheme() === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환',
+      (currentTheme() === 'dark' ? button.dataset.labelLight : button.dataset.labelDark) ?? '',
     );
   }
 

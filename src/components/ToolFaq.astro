@@ -3,15 +3,30 @@
  * 도구 페이지의 '자주 묻는 질문' 섹션. 질문을 누르면 답이 펼쳐진다.
  * <details>를 써서 JavaScript 없이 동작하고 키보드로도 열고 닫을 수 있다.
  */
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
 interface Props {
   items: { q: string; a: string }[];
 }
 
 const { items } = Astro.props;
+
+// 검색엔진이 질문과 답을 읽을 수 있게 하는 구조화 데이터 (schema.org FAQPage). 화면의 내용과 같아야 한다.
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
 ---
 
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <section class="faq">
-  <h2>자주 묻는 질문</h2>
+  <h2>{ui(localeOf(Astro.url.pathname)).tool.faq}</h2>
   {items.map((item) => (
     <details>
       <summary>{item.q}</summary>

@@ -3,9 +3,16 @@
  * PDF 페이지 정리 도구 화면 (격리 frame 페이지 /pdf/organize/frame/).
  */
 import FrameLayout from '../../../frame/FrameLayout.astro';
+
+interface Props {
+  /** frame 문서 제목 (스크린리더가 읽는다). 언어에 맞춰 frame 페이지가 넘긴다 */
+  title: string;
+}
+
+const { title } = Astro.props;
 ---
 
-<FrameLayout title="PDF 페이지 정리 도구 화면">
+<FrameLayout {title}>
   <div id="app"></div>
 </FrameLayout>
 
