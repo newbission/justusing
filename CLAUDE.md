@@ -172,6 +172,14 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 - 처리 중에만 나오는 광고 화면이나 일부러 기다리게 하는 대기시간은 만들지 않는다.
   (광고 칸은 처리 중에도 원래 자리에 그대로 보인다.)
 
+### 로고
+
+- 모양은 `src/brand/logo.ts` 한 곳에만 둔다. 머리글(`Logo.astro`), `favicon.svg`, 내려받기 SVG(`/brand/`)가 여기서 그린다.
+- 심볼은 늘 같은 색(검정 네모·흰 j·밝은 초록 점), 글자 로고는 화면 테마를 따른다. 다크 화면에서는 네모에 선을 두른다.
+- 글자 로고는 Pretendard Bold를 도형으로 바꾼 것이고, j의 점만 초록이다.
+- PNG·ICO(favicon, 홈 화면 아이콘, og:image, `/brand/*.png`)는 로고를 바꿀 때
+  `PLAYWRIGHT_CHANNEL=chrome node scripts/make-brand-images.mjs`로 다시 만들어 커밋한다.
+
 ### 이용 권한
 
 - 기능 사용 가능 여부는 반드시 `src/lib/entitlement.ts`의 `canUse()`를 거친다.
@@ -300,7 +308,7 @@ Co-Authored-By: ...
   `AdSlot`이 광고 단위를 실제로 그리는 코드(`<ins class="adsbygoogle">`)는 그때 만든다
 - 광고를 켠 뒤 확인: 커서가 광고 iframe 위로 바로 들어와 그 위에 파일을 놓으면 광고 iframe이
   파일을 받을 수 있다 (우리 페이지는 끌기를 감지하지 못함). 광고 칸 위치·크기에서 이 경우를 검토할 것.
-- og:image (로고가 정해지면)
+- [x] 로고·favicon·og:image (2026-10-14)
 
 ### 정한 것
 
