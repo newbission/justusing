@@ -9,7 +9,8 @@ import AdSlot from '../components/AdSlot.astro';
 import Promises from '../components/Promises.astro';
 import SafetyDiagram from '../components/SafetyDiagram.astro';
 import { siteConfig } from '../site.config';
-import { localeOf } from '../i18n/locales';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 import { CATEGORIES } from '../tools/categories';
 import { toolsInCategory, visibleCategories } from '../tools/registry';
 
@@ -21,7 +22,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: siteConfig.name,
-  url: Astro.site?.href,
+  url: new URL(localizePath('/', locale), Astro.site).href,
   description: text.description,
   inLanguage: locale,
 };
@@ -54,7 +55,9 @@ const jsonLd = {
     {visibleCategories.map((category) => (
       <section class="category">
         <h2>
-          <a href={`/${category}/`}>{CATEGORIES[category].text.ko.name} 도구</a>
+          <a href={localizePath(`/${category}/`, locale)}>
+            {ui(locale).category.title(CATEGORIES[category].text[locale].name)}
+          </a>
         </h2>
         <ToolGrid tools={toolsInCategory(category)} headingLevel={3} />
       </section>
