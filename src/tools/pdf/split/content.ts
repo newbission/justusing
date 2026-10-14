@@ -27,4 +27,30 @@ export default defineContent({
       },
     ],
   },
+  en: {
+    howTo: [
+      'Click "Choose PDF file" or drag the PDF you want to split onto the page.',
+      'Choose how to split. "Split by range" makes one file for each comma-separated range such as 1-3, 4-6, 7. "Split every page" makes a separate file for each page. "Selected pages only" collects the pages you click into one file.',
+      'Check in the page grid which file each page goes to, then click "Split PDF".',
+      'When it is done, click "Download". If there are several results, you get a single ZIP file.',
+    ],
+    faq: [
+      {
+        q: 'How do I enter ranges?',
+        a: 'Each comma-separated range becomes one file. 1-3 means pages 1 to 3, 7 means page 7 only, 5- means page 5 to the end, and -3 means the first page to page 3. Ranges may overlap.',
+      },
+      {
+        q: 'How do I get the files if there are several?',
+        a: 'They are bundled into a single ZIP file. Unzip it to find PDFs named with their range, such as "name_1-3.pdf". If there is only one result, you get the PDF directly.',
+      },
+      {
+        q: 'Can I split password-protected PDFs?',
+        a: 'Yes. Enter the password when you open the file. The split files have no password, so keep them somewhere safe. The password is only used on this device.',
+      },
+      {
+        q: 'Does splitting reduce quality?',
+        a: 'No. Pages are not redrawn. The content of the original PDF is copied as is, so text and images keep their quality.',
+      },
+    ],
+  },
 });

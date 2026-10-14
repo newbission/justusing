@@ -38,10 +38,8 @@ export interface ToolContentText {
   faq: { q: string; a: string }[];
 }
 
-/** 각 도구 폴더의 content.ts가 내보낸다. 기본 언어(ko)는 필수. */
-export interface ToolContent {
-  ko: ToolContentText;
-}
+/** 각 도구 폴더의 content.ts가 내보낸다. 사이트의 모든 언어가 있어야 한다. */
+export type ToolContent = Record<Locale, ToolContentText>;
 
 export function defineContent(content: ToolContent): ToolContent {
   return content;
