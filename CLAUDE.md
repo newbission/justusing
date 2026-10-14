@@ -111,6 +111,18 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 도구 영역 → 로컬 처리 안내 → 사용법 → FAQ → 관련 도구 (`src/layouts/ToolLayout.astro`).
 검색 노출과 광고 심사를 위해 텍스트 내용이 충분해야 한다.
 
+### 글 페이지와 방문 통계
+
+- 글 페이지(소개 `/about/`, 개인정보처리방침 `/privacy/`, 이용약관 `/terms/`, 문의 `/contact/`)는
+  `src/layouts/DocLayout.astro`를 쓴다. 새 글 페이지는 바닥글(`Footer.astro`)과 사이트맵에 직접 더한다.
+- 문의 메일 주소는 `site.config.ts`의 `contactEmail`만 쓴다.
+- **통계·광고·쿠키를 더하거나 바꾸면 같은 PR에서 개인정보처리방침과 시행일을 고친다.**
+  방침에는 지금 실제로 하는 일만 적는다 (소개 페이지의 설명도 사실과 어긋나지 않게).
+- 방문 통계 스크립트는 `src/components/Analytics.astro`에서만 넣는다 (바깥 페이지 전용, 개발 서버에서는 꺼짐).
+  외부 스크립트 주소는 그 부품에서 페이지 CSP에 허용한다.
+- E2E의 로컬 처리 검사는 `tests/e2e/local-only.ts`가 기준이다. 도구 frame의 요청은 우리 사이트로만 가야 하고,
+  바깥 페이지는 거기 적힌 통계 주소로만 더 갈 수 있다. 통계·광고 업체를 더하면 이 목록을 고친다.
+
 ### 광고 슬롯 규칙
 
 - 위치는 6개뿐: `rail-left`, `rail-right`, `top-banner`, `below-tool`, `in-content`, `mobile-anchor` (`src/ads/slots.ts`).
@@ -227,14 +239,15 @@ Co-Authored-By: ...
 3. GitHub 저장소 Settings → Branches에 `main`·`dev` 보호 규칙:
    PR로만 병합, CI(`check`) 통과 필수
 
-### 광고 심사 신청 전에 할 일 (지금은 보류)
+### 광고 심사 신청 전에 할 일
 
-- 소개, 개인정보처리방침, 이용약관, 문의 페이지 + 바닥글 링크
-- 문의 메일: Cloudflare Email Routing으로 `contact@<도메인>` → 개인 메일 전달
+- [x] 소개, 개인정보처리방침, 이용약관, 문의 페이지 + 바닥글 링크 (2026-10-13)
+- [x] 문의 메일: Cloudflare Email Routing으로 `contact@<도메인>` → 개인 메일 전달 (2026-10-13)
+- [x] 검색 등록: Google Search Console, 네이버 서치어드바이저 + 사이트맵 제출 (2026-10-13)
+- [x] 쿠키 없는 Cloudflare Web Analytics (2026-10-13). 대시보드의 자동 삽입은 Workers 배포에서
+      들어오지 않아 "Enable with JS Snippet installation"으로 두고 코드에서 넣는다.
 - 방문 통계: GA4 + Microsoft Clarity. **도구 영역은 Clarity 녹화에서 반드시 마스킹**하고,
-  이벤트에는 파일 개수·크기 구간만 남긴다 (파일 이름·내용 금지).
-  쿠키 없는 Cloudflare Web Analytics도 함께 둔다 (동의와 상관없이 전체 방문 수).
-  시점: 첫 배포 직후, 쿠키 정책·개인정보처리방침과 함께.
+  이벤트에는 파일 개수·크기 구간만 남긴다 (파일 이름·내용 금지). 쿠키 동의 배너와 함께 넣는다.
 - 쿠키 동의 배너 (2026-10-11 결정): **전 세계 공통 배너 하나**. 지역별로 나누지 않는다.
   - 동의 전에는 분석·광고 스크립트를 불러오지 않는다. GA4는 동의 모드 '고급'(거부해도 추정치)
   - "모두 허용"·"필수만" 두 버튼을 같은 크기·같은 눈에 띔으로, 쿠키 정책 링크, 바닥글 "쿠키 설정"으로 다시 바꾸기

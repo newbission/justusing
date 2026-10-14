@@ -1,0 +1,96 @@
+---
+/**
+ * 글 페이지 틀 (소개·개인정보처리방침·이용약관·문의).
+ * 위치 표시 → 제목 → 가로 배너 → 본문 순서이고, 본문은 읽기 좋은 폭으로 좁힌다.
+ */
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumb from '../components/Breadcrumb.astro';
+import RailShell from '../components/RailShell.astro';
+import AdSlot from '../components/AdSlot.astro';
+
+interface Props {
+  title: string;
+  /** 검색 결과에 나오는 설명 */
+  description: string;
+  /** 제목 아래 작은 글씨 (예: 시행일) */
+  note?: string;
+}
+
+const { title, description, note } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <RailShell>
+    <div class="doc-page">
+      <Breadcrumb items={[{ name: '홈', href: '/' }, { name: title }]} />
+      <h1>{title}</h1>
+      {note && <p class="note">{note}</p>}
+      <!-- 제목 아래 가로 배너 -->
+      <div class="top-banner">
+        <AdSlot id="top-banner" />
+      </div>
+      <article class="doc">
+        <slot />
+      </article>
+    </div>
+  </RailShell>
+</BaseLayout>
+
+<style>
+  .doc-page {
+    padding-top: 24px;
+  }
+  h1 {
+    margin: 12px 0 24px;
+    font-size: 28px;
+    line-height: 1.3;
+  }
+  h1:has(+ .note) {
+    margin-bottom: 0;
+  }
+  .note {
+    margin: 8px 0 24px;
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+  /* 제목 아래 가로 배너. 광고 칸이 없으면 자리도 차지하지 않는다 */
+  .top-banner:not(:has(.ad-slot)) {
+    display: none;
+  }
+  .top-banner {
+    margin-bottom: 32px;
+  }
+
+  /* 한 줄이 너무 길면 읽기 어려워 본문 폭을 좁힌다 */
+  .doc {
+    max-width: 720px;
+  }
+  /* 본문은 페이지가 slot으로 넣으므로 :global로 꾸민다 */
+  .doc :global(h2) {
+    margin: 40px 0 12px;
+    font-size: 20px;
+    line-height: 1.4;
+  }
+  .doc :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .doc :global(h3) {
+    margin: 24px 0 8px;
+    font-size: 17px;
+    line-height: 1.4;
+  }
+  .doc :global(p) {
+    margin: 0 0 16px;
+  }
+  .doc :global(ul),
+  .doc :global(ol) {
+    margin: 0 0 16px;
+    padding-left: 20px;
+  }
+  .doc :global(li) {
+    margin-bottom: 6px;
+  }
+  .doc :global(a) {
+    color: var(--color-accent);
+  }
+</style>

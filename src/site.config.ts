@@ -39,3 +39,6 @@ export const siteConfig = {
 } as const;
 
 export const siteUrl = `https://${siteConfig.domain}`;
+
+/** 문의 메일 주소. Cloudflare Email Routing이 운영자 메일함으로 넘겨 준다. */
+export const contactEmail = `contact@${siteConfig.domain}`;
