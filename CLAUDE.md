@@ -139,8 +139,8 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   (AdSense 심사의 '가치 없는 콘텐츠' 거절 위험, 페이지 속도 저하).
   - `mobile-anchor`는 `BaseLayout`에 있어 모든 페이지에 자동으로 붙는다. 새 페이지 틀을 만들면 `RailShell`을 쓴다.
 - 슬롯 크기는 미리 고정한다. 광고가 떠도 레이아웃이 밀리면 안 된다 (CLS 0).
-- `site.config.ts`의 `ads.enabled` 하나로 전체를 켜고 끈다 (기본 꺼짐).
-  꺼져 있으면 개발 모드에서만 점선 칸을 보여주고, 배포 화면에는 아무것도 그리지 않는다.
+- `site.config.ts`의 `ads.enabled` 하나로 전체를 켜고 끈다 (광고 스크립트, 광고 칸, 광고 차단 안내).
+  꺼져 있거나 슬롯 설정이 없으면 개발 모드에서만 점선 칸을 보여주고, 배포 화면에는 칸을 그리지 않는다.
 - 슬롯마다 업체(adsense/adfit 등)를 설정으로 정한다. 특정 업체에 묶이지 않는다.
 - **다운로드·파일 선택·실행 버튼 근처에 광고 슬롯을 두지 않는다.**
   도구 영역과 below-tool 사이에는 로컬 처리 안내 + 48px 버퍼를 둔다.
@@ -260,6 +260,12 @@ Co-Authored-By: ...
       게시자 ID는 `site.config.ts`의 `ads.adsenseClient`. 광고 스크립트로 확인하지 않는다 (동의 없이 쿠키를 쓰게 됨).
 - [x] AdSense 스크립트 (2026-10-13): `AdsScript.astro`가 모든 바깥 페이지에서 불러온다. 바깥 페이지 CSP에
       Google 광고 주소와 `style-src-attr`를 허용한다. 자동 광고는 쓰지 않는다 (버튼 옆·전면 광고가 끼어듦).
+  - `ads.enabled`가 스크립트·광고 칸·광고 차단 안내를 모두 켜고 끈다. 심사 중에는 켜 두고 `ads.slots`만 비워 둔다
+  - **알려진 위험**: Google은 AdSense에 주소 허용 목록 방식의 CSP를 지원하지 않는다고 밝힌다 (주소가 바뀔 수 있음,
+    nonce + `strict-dynamic` 권장: support.google.com/adsense/answer/16283098). 정적 사이트라 nonce를 쓸 수 없어
+    지금은 허용 목록으로 두었고, 스크립트만 불러오는 지금 상태에서는 CSP 오류가 없다.
+    광고 칸이나 유럽 동의 창을 켤 때 실제 브라우저 콘솔로 확인하고, 막히면 해시 + `strict-dynamic`
+    (Astro `security.csp.scriptDirective.strictDynamic`)으로 바꾼다. 그때 우리 스크립트가 모든 브라우저에서 도는지 함께 확인
 - [x] 광고 차단 안내 창 (2026-10-13): `AdblockNotice.astro`, `ads.adblockNotice`로 켜고 끈다.
   - 알아채는 법(`AdsScript`): 광고 스크립트를 받지 못함, 또는 미끼 칸이 숨겨짐
   - 뜨는 때: 어느 페이지든 열 때, 도구를 쓸 때마다 (파일 고르기·놓기, 실행·다운로드 막대의 버튼).
