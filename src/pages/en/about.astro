@@ -1,0 +1,60 @@
+---
+/**
+ * 영어 소개 페이지 (/en/about/). 한국어 소개(src/pages/about.astro)와 같은 내용을 영어로 쓴다.
+ */
+import DocLayout from '../../layouts/DocLayout.astro';
+import { localizePath } from '../../i18n/locales';
+import { siteConfig } from '../../site.config';
+import { liveTools } from '../../tools/registry';
+---
+
+<DocLayout title="About" description={`What ${siteConfig.name} is and how it handles your files.`}>
+  <h2>What is {siteConfig.name}?</h2>
+  <p>
+    A collection of free tools that process files such as PDFs right inside your browser. There is
+    nothing to install, no sign-up, and your files are never uploaded to a server.
+  </p>
+
+  <h2>Why we made it</h2>
+  <p>
+    Even simple jobs like merging two PDFs or rotating a page usually mean uploading your file to
+    someone's server first. Uploading contracts or copies of ID documents to a server you know
+    nothing about is uncomfortable.
+  </p>
+  <p>
+    Modern browsers are fast enough to do this work on their own. So we built tools that finish the
+    job on your own device, without uploading anything.
+  </p>
+
+  <h2>How are files processed?</h2>
+  <ul>
+    <li>Files are processed only inside your browser and are never sent to any server.</li>
+    <li>
+      Every program the tools use is downloaded from this site. Nothing is loaded from other
+      companies' servers.
+    </li>
+    <li>
+      The tool area, where you choose and process files, runs in an isolated space your browser
+      keeps separate. Other scripts on the page cannot read your file content or file names, and
+      nothing inside the tool area can be sent out.
+    </li>
+    <li>You can check this yourself in the Network tab of your browser's developer tools.</li>
+  </ul>
+
+  <h2>Tools you can use now</h2>
+  <ul>
+    {liveTools.map((tool) => (
+      <li>
+        <a href={localizePath(tool.href, 'en')}>{tool.text.en.name}</a>
+        {`: ${tool.text.en.description}`}
+      </li>
+    ))}
+  </ul>
+  <p>More tools, such as image conversion, are on the way.</p>
+
+  <h2>Is it free?</h2>
+  <p>
+    Yes, every tool is free. The site is funded by ads. Ads are only placed outside the tool area,
+    so they cannot see your files.
+  </p>
+</DocLayout>
