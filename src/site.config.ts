@@ -10,12 +10,15 @@ export type AdProvider = 'adsense' | 'adfit';
 interface AdsConfig {
   /** 전체 광고 스위치. false면 배포 화면에 광고 칸이 아예 없다. */
   enabled: boolean;
+  /** Google AdSense 게시자 ID (ca-pub-...). 소유 확인 태그와 ads.txt에 쓴다. 공개되는 값이다. */
+  adsenseClient: string;
   /** 슬롯마다 어느 업체의 어느 광고 단위를 넣을지. 비워 둔 슬롯은 표시하지 않는다. */
   slots: Partial<Record<AdSlotId, { provider: AdProvider; unit: string }>>;
 }
 
 const ads: AdsConfig = {
   enabled: false,
+  adsenseClient: 'ca-pub-9856578903331156',
   slots: {},
 };
 
