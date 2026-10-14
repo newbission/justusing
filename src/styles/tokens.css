@@ -15,11 +15,14 @@
   --color-accent: light-dark(#2f6f55, #6fb394);
   /* 마우스를 올린 버튼 배경, 마우스를 올리거나 방금 옮긴 줄 배경 */
   --color-hover: color-mix(in srgb, var(--color-text) 8%, transparent);
+  /* 다크 화면에서 로고의 검정 네모가 바탕에 묻히지 않게 두르는 선 (src/brand/logo.ts의 MARK_DARK_LINE) */
+  --color-logo-line: light-dark(transparent, #3a3a3a);
   --color-accent-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
 
-  /* 글꼴: 웹폰트를 받지 않고 시스템 폰트를 쓴다 */
+  /* 글꼴: 본문은 Pretendard(global.css에서 불러옴), 받기 전·못 받으면 시스템 폰트 */
   --font-sans:
-    system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+    'Pretendard Variable', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic',
+    'Noto Sans KR', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* 크기 */

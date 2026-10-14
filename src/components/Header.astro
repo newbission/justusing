@@ -4,6 +4,7 @@ import { CATEGORIES } from '../tools/categories';
 import { visibleCategories } from '../tools/registry';
 import ThemeToggle from './ThemeToggle.astro';
 import LocaleSwitch from './LocaleSwitch.astro';
+import Logo from './Logo.astro';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 
@@ -14,8 +15,8 @@ const t = ui(locale);
 
 <header class="site-header">
   <div class="inner">
-    <a class="logo" href={localizePath('/', locale)}>
-      {siteConfig.name}
+    <a class="logo" href={localizePath('/', locale)} aria-label={siteConfig.name}>
+      <Logo />
     </a>
     <nav class="nav" aria-label={t.nav.categories}>
       <ul>
@@ -52,10 +53,7 @@ const t = ui(locale);
     padding: 0 var(--gutter);
   }
   .logo {
-    font-weight: 700;
-    font-size: 18px;
-    letter-spacing: -0.01em;
-    text-decoration: none;
+    flex: none;
   }
   .actions {
     display: flex;

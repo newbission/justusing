@@ -66,7 +66,8 @@ const alternates = LOCALES.map((other) => ({
     <!-- Google AdSense 소유 확인. 광고 스크립트를 불러오지 않고 태그만 둔다 -->
     <meta name="google-adsense-account" content={siteConfig.ads.adsenseClient} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!-- Open Graph: 메신저·SNS에 링크를 붙였을 때 보이는 미리보기 -->
     <meta property="og:type" content="website" />
@@ -75,7 +76,11 @@ const alternates = LOCALES.map((other) => ({
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={LOCALE_INFO[locale].ogLocale} />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content={new URL('/og.png', Astro.site).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={siteConfig.name} />
+    <meta name="twitter:card" content="summary_large_image" />
     <Analytics />
     <AdsScript />
   </head>
