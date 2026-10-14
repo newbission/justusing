@@ -2,6 +2,7 @@
  * 도구 카테고리. 카테고리 ID는 URL 첫 경로가 된다 (pdf → /pdf/).
  * 새 카테고리(예: image)는 여기에 추가한다. 순서가 곧 화면 노출 순서다.
  */
+import type { Locale } from '../i18n/locales';
 
 export interface CategoryText {
   name: string;
@@ -15,9 +16,13 @@ export const CATEGORIES = {
         name: 'PDF',
         description: 'PDF를 업로드 없이 보고, 합치고, 나누고, 편집하는 도구',
       },
+      en: {
+        name: 'PDF',
+        description: 'View, merge, split and edit PDFs without uploading them',
+      },
     },
   },
-} as const satisfies Record<string, { text: { ko: CategoryText } }>;
+} as const satisfies Record<string, { text: Record<Locale, CategoryText> }>;
 
 export type CategoryId = keyof typeof CATEGORIES;
 
