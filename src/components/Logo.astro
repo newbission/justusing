@@ -1,0 +1,53 @@
+---
+/**
+ * 머리글 로고: 심볼 + 글자. 모양은 src/brand/logo.ts에서 가져온다.
+ * 심볼은 늘 같은 색이고, 글자는 화면 테마를 따른다. 다크 화면에서는 검정 네모가 바탕에 묻히지 않게 선을 두른다.
+ */
+import { LOCKUP, MARK, MARK_COLORS, WORDMARK } from '../brand/logo';
+
+const { tile, transform, letter, letterWidth, dot } = MARK;
+---
+
+<svg class="logo-svg" viewBox={`0 0 ${LOCKUP.width} 100`} aria-hidden="true">
+  <rect
+    class="tile"
+    x={tile.x}
+    y={tile.y}
+    width={tile.size}
+    height={tile.size}
+    rx={tile.radius}
+    fill={MARK_COLORS.tile}
+  ></rect>
+  <g transform={transform}>
+    <path
+      d={letter}
+      fill="none"
+      stroke={MARK_COLORS.letter}
+      stroke-width={letterWidth}
+      stroke-linecap="round"
+    ></path>
+    <circle cx={dot.cx} cy={dot.cy} r={dot.r} fill={MARK_COLORS.dot}></circle>
+  </g>
+  <g transform={LOCKUP.wordmarkTransform}>
+    <path class="ink" d={WORDMARK.ink}></path>
+    <circle class="dot" cx={WORDMARK.dot.cx} cy={WORDMARK.dot.cy} r={WORDMARK.dot.r}></circle>
+  </g>
+</svg>
+
+<style>
+  .logo-svg {
+    display: block;
+    height: 28px;
+    width: auto;
+  }
+  .tile {
+    stroke: var(--color-logo-line);
+    stroke-width: 1.5;
+  }
+  .ink {
+    fill: var(--color-text);
+  }
+  .dot {
+    fill: var(--color-accent);
+  }
+</style>
