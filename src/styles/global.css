@@ -1,4 +1,10 @@
 @import './tokens.css';
+/*
+ * 본문 글꼴 Pretendard (OFL). 한글 글꼴은 무거워서 글자 범위(unicode-range)별로 나눈
+ * 파일을 쓴다. 브라우저가 화면에 나온 글자의 조각만 받는다. 빌드할 때 /_astro/로 같이
+ * 나가므로 CDN 없이 우리 사이트에서 내려준다 (격리 frame에서도 같은 파일).
+ */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 
 *,
 *::before,
