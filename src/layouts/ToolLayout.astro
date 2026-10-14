@@ -10,6 +10,7 @@ import BaseLayout from './BaseLayout.astro';
 import AdSlot from '../components/AdSlot.astro';
 import RailShell from '../components/RailShell.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
+import { siteConfig } from '../site.config';
 
 interface Props {
   /** 화면 제목 (h1) */
@@ -24,8 +25,25 @@ interface Props {
 }
 
 const { name, title, description, breadcrumb, siblings } = Astro.props;
+
+// 이 페이지가 무료 웹 도구임을 검색엔진에 알리는 구조화 데이터 (schema.org WebApplication)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name,
+  description,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Any',
+  browserRequirements: 'JavaScript가 켜진 최신 브라우저',
+  inLanguage: siteConfig.defaultLocale,
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+  provider: { '@type': 'Organization', name: siteConfig.name, url: Astro.site?.href },
+};
 ---
 
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <BaseLayout title={title} description={description}>
   <RailShell>
     <article class="tool-page">
