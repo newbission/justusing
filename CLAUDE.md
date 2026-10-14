@@ -83,7 +83,7 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 
 - 서브도메인이 아니라 경로로 나눈다: `/`(허브), `/pdf/`(목록), `/pdf/merge/`(도구).
 - 주소는 항상 끝 슬래시로 끝난다 (`trailingSlash: 'always'`).
-- 기본 언어는 한국어. 영어는 나중에 `/en/...`로 추가한다.
+- 기본 언어는 한국어(앞에 아무것도 없음), 영어는 `/en/...`. 아래 "다국어" 참고.
 
 ### 도구 레지스트리
 
@@ -110,6 +110,26 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 
 도구 영역 → 로컬 처리 안내 → 사용법 → FAQ → 관련 도구 (`src/layouts/ToolLayout.astro`).
 검색 노출과 광고 심사를 위해 텍스트 내용이 충분해야 한다.
+
+### 다국어 (2026-10-14, 한국어·영어)
+
+- 언어 목록과 주소 규칙은 `src/i18n/locales.ts`. 페이지 언어는 주소에서 정한다 (`localeOf(Astro.url.pathname)`).
+  부품이 언어를 넘겨받지 않고 스스로 주소에서 읽는다.
+- 문구 위치:
+  - 바깥 페이지 부품: `src/i18n/ui.ts` (`ui(locale)`)
+  - 사이트 설명·홈 제목: `site.config.ts`의 `text[locale]`
+  - 도구 이름·설명: 각 도구 `meta.ts`의 `text`, 사용법·FAQ: `content.ts`, 공통 FAQ: `common-faq.ts` — **모든 언어 필수**(빠지면 타입 오류)
+  - 도구 화면(격리 frame) 공통 부품: `src/frame/messages.ts`, 도구별: 도구 폴더의 `messages.ts`.
+    frame은 `<html lang>`으로 언어를 읽는다 (`src/frame/locale.ts`의 `pick()`)
+- 영어 라우트(`src/pages/en/`)는 한국어 페이지를 그대로 그리는 얇은 파일이다. 주소 목록은 `src/tools/paths.ts`를 같이 쓴다.
+  글 페이지(소개·방침·약관·문의)만 영어 글을 따로 쓴다. **방침·약관은 두 언어를 함께 고치고 시행일도 맞춘다**
+  (영어판에는 "다르면 한국어판이 기준"이라고 적혀 있다).
+- 새 바깥 페이지를 만들면 영어판도 만든다 (BaseLayout이 모든 페이지에 다른 언어판 hreflang을 단다).
+- 처음 방문: `LocaleRedirect`가 직접 고른 언어(`localStorage`의 `lang`, 머리글 `LocaleSwitch`가 저장) → 없으면
+  브라우저 첫 언어 → 지원하지 않으면 영어로 보낸다. **검색 로봇과 자동화 브라우저는 보내지 않는다**
+  (구글 로봇은 영어 브라우저라 보내면 한국어 페이지가 검색에서 빠진다). E2E는 자동화 브라우저라 이동이 꺼진다
+  (`tests/e2e/i18n.spec.ts`가 켜서 확인).
+- 버튼 이름을 바꾸면 그 도구의 사용법(`content.ts`)에 적힌 버튼 이름도 같은 언어로 맞춘다.
 
 ### 글 페이지와 방문 통계
 
@@ -174,8 +194,12 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 - 브랜치 이름: `<타입>/<짧은-설명>` (예: `feat/pdf-edit`, `fix/merge-password`)
 - 기능 → `dev` PR은 **Rebase merge**로만 병합한다. 작은 커밋이 그대로 남는다.
   (Squash는 PR 제목·본문이 커밋 메시지가 되어 커밋 단위 리뷰가 사라진다)
-- `dev` → `main` PR은 **병합 커밋**으로 넣는다 (`gh pr merge --merge --subject "<규칙에 맞는 제목>"`).
-  GitHub의 Rebase merge는 커밋을 새로 만들어 해시가 바뀌므로, `dev`와 `main`의 기록이 갈라진다.
+- `dev` → `main` PR은 **Squash merge**로 넣는다 (2026-10-14). 배포 한 번 = main 커밋 하나.
+  제목은 규칙대로 (`gh pr merge --squash --subject "<제목>" --body "<배포에 담긴 것 요약>"`).
+  작은 커밋은 dev에 그대로 남아 커밋 단위 리뷰는 dev에서 한다.
+  - **병합 직후 main을 dev에 되돌려 넣는다**: `main` → `dev` PR을 만들어 병합 커밋으로 넣는다
+    (`gh pr merge --merge --subject "chore: main 병합 반영 추가"`). 안 하면 다음 배포 때 같은 줄을 서로 다르게
+    고친 것으로 보여 충돌이 난다. 이 PR은 CI만 통과하면 되고 Codex 리뷰는 부르지 않는다.
 - PR 제목은 커밋 제목과 같은 형식이다 (`<타입>(<영역>): <제목>`, "~ 추가/수정/제거/변경"으로 끝냄).
   PR 본문은 `## 왜` → `## 바뀐 것` → `## 확인` (필요하면 `## 병합 뒤 할 일`) 순서로 쓴다.
 - 코드 리뷰는 Codex(ChatGPT Codex Connector)가 한다. 자동 리뷰는 꺼 두고, 기능 → `dev` PR을 만든 직후
