@@ -12,6 +12,7 @@ import RailShell from '../components/RailShell.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 import { siteConfig } from '../site.config';
 import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
 
 interface Props {
   /** 화면 제목 (h1) */
@@ -26,6 +27,8 @@ interface Props {
 }
 
 const { name, title, description, breadcrumb, siblings } = Astro.props;
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale).tool;
 
 // 이 페이지가 무료 웹 도구임을 검색엔진에 알리는 구조화 데이터 (schema.org WebApplication)
 const jsonLd = {
@@ -36,10 +39,10 @@ const jsonLd = {
   url: new URL(Astro.url.pathname, Astro.site).href,
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
-  browserRequirements: 'JavaScript가 켜진 최신 브라우저',
-  inLanguage: localeOf(Astro.url.pathname),
+  browserRequirements: t.browserRequirements,
+  inLanguage: locale,
   isAccessibleForFree: true,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: t.priceCurrency },
   provider: { '@type': 'Organization', name: siteConfig.name, url: Astro.site?.href },
 };
 ---
@@ -65,10 +68,7 @@ const jsonLd = {
         <slot name="tool" />
       </section>
 
-      <p class="local-note">
-        파일은 이 기기를 떠나지 않습니다. 모든 처리는 브라우저 안에서 이루어지며 서버로 업로드되지
-        않습니다.
-      </p>
+      <p class="local-note">{t.localNote}</p>
 
       <div class="below-tool">
         <AdSlot id="below-tool" />
