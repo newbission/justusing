@@ -190,7 +190,6 @@
           <input
             id="range-input"
             type="text"
-            inputmode="numeric"
             autocomplete="off"
             placeholder={t.rangePlaceholder}
             bind:value={rangeText}
