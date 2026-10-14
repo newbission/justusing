@@ -4,7 +4,7 @@
  * 받은 파일을 직접 열어 쪽 순서를 확인하고,
  * 정리하는 동안 파일이 기기를 떠나지 않는다는 약속을 확인한다.
  */
-import { expect, test, type Page, type Request } from '@playwright/test';
+import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
