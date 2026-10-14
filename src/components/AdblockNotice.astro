@@ -9,27 +9,28 @@
  * - 창 안에는 광고를 두지 않는다. 바깥 페이지에만 있고 도구 frame과는 무관하다.
  */
 import { siteConfig } from '../site.config';
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+const t = ui(localeOf(Astro.url.pathname)).adblock;
 ---
 
 {siteConfig.ads.enabled && siteConfig.ads.adblockNotice && (
   <dialog class="adblock" aria-labelledby="adblock-title" data-adblock-notice>
-    <button type="button" class="close" aria-label="닫기" data-adblock-close>
+    <button type="button" class="close" aria-label={t.close} data-adblock-close>
       <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
         <path d="M3 3l10 10M13 3L3 13" />
       </svg>
     </button>
-    <h2 id="adblock-title">광고 차단을 꺼 주세요</h2>
-    <p>
-      {siteConfig.name}은 광고 수익으로 무료로 운영됩니다. 이 사이트에서는 광고 차단 프로그램을 꺼
-      주세요.
-    </p>
-    <p class="muted">광고는 도구 화면 바깥에만 있어서 파일 내용을 볼 수 없습니다.</p>
+    <h2 id="adblock-title">{t.title}</h2>
+    <p>{t.body(siteConfig.name)}</p>
+    <p class="muted">{t.note}</p>
     <div class="actions">
       <button type="button" data-adblock-close>
-        닫기
+        {t.close}
       </button>
       <button type="button" class="primary" data-adblock-reload>
-        껐어요, 새로 고침
+        {t.reload}
       </button>
     </div>
   </dialog>
