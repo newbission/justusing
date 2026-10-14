@@ -3,6 +3,12 @@
   넣은 PDF들을 목록으로 보여주고, 정한 순서대로 하나로 합친다. 파일은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
+  import { pick } from '../../../frame/locale';
+  import { FRAME_MESSAGES } from '../../../frame/messages';
+  import { MESSAGES } from './messages';
+
+  const common = pick(FRAME_MESSAGES);
+  const t = pick(MESSAGES);
   import { onMount, tick } from 'svelte';
   import { flip } from 'svelte/animate';
   import ActionBar from '../../../frame/ActionBar.svelte';
@@ -58,10 +64,9 @@
 
   /** 합치기 버튼을 누를 수 없을 때 그 이유 (누를 수 있으면 undefined) */
   const blocker = $derived.by(() => {
-    if (items.some((item) => item.status === 'loading')) return '파일을 읽는 중입니다…';
-    if (items.some((item) => item.status === 'password'))
-      return '암호를 입력하거나 그 파일을 빼 주세요.';
-    if (readyItems.length < 2) return '합칠 PDF를 2개 이상 넣어 주세요.';
+    if (items.some((item) => item.status === 'loading')) return t.reading;
+    if (items.some((item) => item.status === 'password')) return t.needPassword;
+    if (readyItems.length < 2) return t.needTwo;
     return undefined;
   });
 
@@ -93,7 +98,7 @@
     if (blocker || phase.kind === 'working') return;
     const entitlement = await canUse('pdf/merge');
     if (!entitlement.allowed) {
-      phase = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      phase = { kind: 'failed', message: entitlement.reason ?? common.action.unavailable };
       return;
     }
 
@@ -108,11 +113,11 @@
         ),
       });
       const base = sources[0]!.name.replace(/\.pdf$/i, '');
-      phase = { kind: 'done', bytes, fileName: `${base}_합침.pdf`, signature: startedWith };
+      phase = { kind: 'done', bytes, fileName: `${base}_${t.suffix}.pdf`, signature: startedWith };
     } catch {
       phase = {
         kind: 'failed',
-        message: '합치지 못했습니다. 손상된 파일이 있다면 빼고 다시 해 보세요.',
+        message: t.failed,
       };
     }
   }
@@ -240,17 +245,17 @@
     <div class="drop">
       <FileDrop
         accept="application/pdf,.pdf"
-        label="PDF 파일 선택"
+        label={common.pdf.chooseMany}
         multiple
-        hint="여러 파일을 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다"
+        hint={t.hint}
         onfiles={add}
       />
     </div>
   {:else}
     <div class="summary">
-      <span aria-live="polite">파일 {items.length}개 · 총 {totalPages}쪽</span>
+      <span aria-live="polite">{t.summary(items.length, totalPages)}</span>
       <label class="add">
-        파일 추가
+        {t.addFiles}
         <input
           type="file"
           class="visually-hidden"
@@ -265,41 +270,42 @@
     </div>
 
     <!-- 모바일 하단 고정 광고와 멀도록 목록 위에 둔다 -->
-    <ActionBar label="합치기">
+    <ActionBar label={t.bar}>
       {#snippet text()}
         {#if phase.kind === 'working'}
-          합치는 중… 파일이 크면 시간이 걸릴 수 있습니다.
+          {t.working}
         {:else if result}
-          완료: {result.fileName} · {formatSize(result.bytes.length)}
+          {common.action.done(result.fileName, formatSize(result.bytes.length))}
         {:else if phase.kind === 'failed'}
           <strong>{phase.message}</strong>
         {:else}
-          {blocker ?? '위에서부터 목록 순서대로 합칩니다.'}
+          {blocker ?? t.ready}
         {/if}
       {/snippet}
       <button
         type="button"
         class="secondary"
         disabled={blocker !== undefined || phase.kind === 'working'}
-        onclick={openPreview}>미리보기</button
+        onclick={openPreview}>{t.preview}</button
       >
       {#if result}
         <button
           type="button"
           class="primary"
-          onclick={() => downloadFile(result.bytes, result.fileName)}>다운로드</button
+          onclick={() => downloadFile(result.bytes, result.fileName)}
+          >{common.action.download}</button
         >
       {:else}
         <button
           type="button"
           class="primary"
           disabled={blocker !== undefined || phase.kind === 'working'}
-          onclick={merge}>{phase.kind === 'working' ? '합치는 중…' : 'PDF 합치기'}</button
+          onclick={merge}>{phase.kind === 'working' ? t.workingShort : t.run}</button
         >
       {/if}
     </ActionBar>
 
-    <ol class="list" aria-label="합칠 파일 목록 (위에서부터 순서대로 합칩니다)">
+    <ol class="list" aria-label={t.list}>
       {#each items as item, index (item.id)}
         <li class="item" data-item={item.id} animate:flip={{ duration: MOVE_MS }}>
           <!-- 줄 머리만 끌린다 (펼친 페이지 격자는 따로 끌기를 처리한다) -->
@@ -327,8 +333,7 @@
               aria-controls="pages-{item.id}"
               disabled={item.status !== 'ready'}
               onclick={() => (item.expanded = !item.expanded)}
-              aria-label="{item.name} 페이지 {item.expanded ? '접기' : '펼치기'}"
-              >{item.expanded ? '▾' : '▸'}</button
+              aria-label={t.toggle(item.name, item.expanded)}>{item.expanded ? '▾' : '▸'}</button
             >
             <div class="thumb">
               {#if item.firstPage}
@@ -339,7 +344,7 @@
               <span class="name" title={item.name}>{item.name}</span>
               <span class="meta">
                 {#if item.status === 'loading'}
-                  읽는 중…
+                  {t.itemReading}
                 {:else if item.status === 'password'}
                   <!-- 격리 frame은 form 제출이 막혀 있어 Enter 키와 버튼으로 직접 처리한다 -->
                   <span class="password">
@@ -347,8 +352,8 @@
                       type="password"
                       bind:value={item.passwordInput}
                       autocomplete="off"
-                      placeholder={item.wrongPassword ? '암호가 맞지 않습니다' : '암호 입력'}
-                      aria-label="{item.name} 암호"
+                      placeholder={item.wrongPassword ? t.wrongPassword : t.enterPassword}
+                      aria-label={t.passwordFor(item.name)}
                       aria-invalid={item.wrongPassword}
                       onkeydown={(event) => {
                         if (event.key === 'Enter' && item.passwordInput)
@@ -358,16 +363,14 @@
                     <button
                       type="button"
                       disabled={!item.passwordInput}
-                      onclick={() => load(item, item.passwordInput)}>열기</button
+                      onclick={() => load(item, item.passwordInput)}>{t.open}</button
                     >
                   </span>
                 {:else if item.status === 'error'}
-                  <strong>열 수 없는 파일입니다. 빼고 합칩니다.</strong>
+                  <strong>{t.broken}</strong>
                 {:else}
                   {@const count = included(item).length}
-                  {count === item.pageCount
-                    ? `${count}쪽`
-                    : `${item.pageCount}쪽 중 ${count}쪽 넣음`}
+                  {count === item.pageCount ? t.pages(count) : t.pagesKept(item.pageCount, count)}
                   · {formatSize(item.bytes.length)}
                 {/if}
               </span>
@@ -380,7 +383,7 @@
                 data-move="-1"
                 onclick={() => move(item, -1)}
                 disabled={index === 0}
-                aria-label="{item.name} 위로">↑</button
+                aria-label={t.up(item.name)}>↑</button
               >
               <button
                 type="button"
@@ -388,14 +391,14 @@
                 data-move="1"
                 onclick={() => move(item, 1)}
                 disabled={index === items.length - 1}
-                aria-label="{item.name} 아래로">↓</button
+                aria-label={t.down(item.name)}>↓</button
               >
             {/if}
             <button
               type="button"
               class="icon"
               onclick={() => remove(item)}
-              aria-label="{item.name} 빼기">×</button
+              aria-label={t.remove(item.name)}>×</button
             >
           </div>
           {#if item.expanded && item.opened}
