@@ -1,7 +1,7 @@
 /**
  * 파일 끌어다 놓기 E2E. 파일이 바깥 페이지가 아니라 격리 frame 안으로만 들어가는지 확인한다.
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
