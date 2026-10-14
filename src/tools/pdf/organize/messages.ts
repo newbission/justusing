@@ -19,11 +19,11 @@ const ko = {
 const en: typeof ko = {
   bar: 'Organize pages',
   suffix: 'organized',
-  noneKept: 'There are no pages left to keep.',
+  noneKept: 'All pages are excluded. Keep at least one page.',
   unchanged: 'Nothing has been changed.',
   failed: 'Could not organize. The file may be damaged.',
   working: 'Organizing…',
-  willMake: (count: number) => `Makes a ${count}-page PDF.`,
+  willMake: (count: number) => `Creates a ${count}-page PDF.`,
   run: 'Organize PDF',
   summary: (total: number, kept: number, reordered: boolean) =>
     `Keeping ${kept} of ${total} ${total === 1 ? 'page' : 'pages'}${reordered ? ' · reordered' : ''}`,
