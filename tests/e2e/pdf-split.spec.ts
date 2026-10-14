@@ -9,6 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { unzipSync } from 'fflate';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -92,7 +93,7 @@ test('고른 페이지만 뽑으면 PDF 하나를 바로 받고, 암호 PDF도 �
   expect(new TextDecoder('latin1').decode(bytes).includes('/Encrypt')).toBe(false);
 });
 
-test('나누는 동안의 모든 요청은 우리 사이트로만 가고 본문이 없다', async ({ page, baseURL }) => {
+test('나누는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
   const requests: Request[] = [];
   page.on('request', (request) => requests.push(request));
 
@@ -106,12 +107,5 @@ test('나누는 동안의 모든 요청은 우리 사이트로만 가고 본문�
   await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
   await page.waitForLoadState('networkidle');
 
-  const origin = new URL(baseURL!).origin;
-  for (const request of requests) {
-    const url = new URL(request.url());
-    if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
-    expect(url.origin, request.url()).toBe(origin);
-    expect(request.method(), request.url()).toBe('GET');
-    expect(request.postData(), request.url()).toBeNull();
-  }
+  expectLocalOnly(page, requests, baseURL!);
 });

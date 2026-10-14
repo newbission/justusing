@@ -9,6 +9,7 @@ import DropGuard from '../components/DropGuard.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import MobileAnchor from '../components/MobileAnchor.astro';
+import Analytics from '../components/Analytics.astro';
 
 interface Props {
   /** 페이지 제목. 없으면 사이트명만 쓴다 (홈). */
@@ -45,6 +46,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content="ko_KR" />
     <meta name="twitter:card" content="summary" />
+    <Analytics />
   </head>
   <body>
     <Header />

@@ -8,6 +8,7 @@ import { expect, test, type Page, type Request } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -83,7 +84,7 @@ test('파일이 하나뿐이면 합칠 수 없다', async ({ page }) => {
   await expect(frame.getByRole('button', { name: 'PDF 합치기' })).toBeDisabled();
 });
 
-test('합치는 동안의 모든 요청은 우리 사이트로만 가고 본문이 없다', async ({ page, baseURL }) => {
+test('합치는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
   const requests: Request[] = [];
   page.on('request', (request) => requests.push(request));
 
@@ -97,14 +98,7 @@ test('합치는 동안의 모든 요청은 우리 사이트로만 가고 본문�
   await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
   await page.waitForLoadState('networkidle');
 
-  const origin = new URL(baseURL!).origin;
-  for (const request of requests) {
-    const url = new URL(request.url());
-    if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
-    expect(url.origin, request.url()).toBe(origin);
-    expect(request.method(), request.url()).toBe('GET');
-    expect(request.postData(), request.url()).toBeNull();
-  }
+  expectLocalOnly(page, requests, baseURL!);
 });
 
 test('줄을 끌어서 순서를 바꾼다', async ({ page }) => {

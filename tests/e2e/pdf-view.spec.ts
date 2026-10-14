@@ -8,6 +8,7 @@
  */
 import { expect, test, type Page, type Request } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -40,7 +41,7 @@ test('PDF를 열면 페이지가 그려지고 이동·확대가 된다', async (
   await expect(frame.locator('.zoom')).not.toHaveText(zoomBefore ?? '');
 });
 
-test('파일을 연 뒤의 모든 요청은 우리 사이트로만 가고 본문이 없다', async ({ page, baseURL }) => {
+test('파일을 연 뒤의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
   const requests: Request[] = [];
   page.on('request', (request) => requests.push(request));
 
@@ -50,14 +51,7 @@ test('파일을 연 뒤의 모든 요청은 우리 사이트로만 가고 본문
   await expect(frame.getByText('1 / 1')).toBeVisible();
   await page.waitForLoadState('networkidle');
 
-  const origin = new URL(baseURL!).origin;
-  for (const request of requests) {
-    const url = new URL(request.url());
-    if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
-    expect(url.origin, request.url()).toBe(origin);
-    expect(request.method(), request.url()).toBe('GET');
-    expect(request.postData(), request.url()).toBeNull();
-  }
+  expectLocalOnly(page, requests, baseURL!);
 });
 
 test('도구 화면은 출처 없는 격리 frame이다', async ({ page }) => {
@@ -217,4 +211,11 @@ test('좁은 화면에서는 고르기 상자로 파일을 바꾼다', async ({ 
 
   await frame.getByLabel('볼 파일').selectOption({ label: '2. korean.pdf' });
   await expect(frame.getByText('1 / 1')).toBeVisible();
+});
+
+test('방문 통계 스크립트는 바깥 페이지에만 있고 도구 frame에는 없다', async ({ page }) => {
+  const frame = await openViewer(page);
+  const stats = 'script[src*="cloudflareinsights"]';
+  await expect(page.locator(stats)).toHaveCount(1);
+  await expect(frame.locator(stats)).toHaveCount(0);
 });
