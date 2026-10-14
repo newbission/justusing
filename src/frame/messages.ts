@@ -26,6 +26,12 @@ const ko = {
     cancel: '취소',
     cannotOpen: 'PDF를 열 수 없습니다. 파일이 손상되었거나 PDF 파일이 아닐 수 있습니다.',
   },
+  action: {
+    download: '다운로드',
+    unavailable: '지금은 사용할 수 없습니다.',
+    done: (name: string, size: string) => `완료: ${name} · ${size}`,
+    reset: '되돌리기',
+  },
   pages: {
     gridLabel: (name: string) => `${name} 페이지 (결과 순서대로)`,
     original: (page: number) => `원래 ${page}쪽`,
@@ -66,6 +72,12 @@ const en: FrameMessages = {
     open: 'Open',
     cancel: 'Cancel',
     cannotOpen: 'Could not open the PDF. The file may be damaged or may not be a PDF.',
+  },
+  action: {
+    download: 'Download',
+    unavailable: 'This is not available right now.',
+    done: (name: string, size: string) => `Done: ${name} · ${size}`,
+    reset: 'Reset',
   },
   pages: {
     gridLabel: (name: string) => `Pages of ${name} (in result order)`,
