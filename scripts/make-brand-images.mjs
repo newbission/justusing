@@ -5,15 +5,20 @@
  */
 import { writeFile } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
-import { markShapes, markSvg, MARK_COLORS } from '../src/brand/logo.ts';
+import { lockupSvg, LOCKUP, markShapes, markSvg, MARK_COLORS } from '../src/brand/logo.ts';
 
 /** 앱 아이콘용: 둥근 모서리 없이 네모 전체를 채운다 (iOS가 모서리를 직접 깎는다) */
 const fullBleedMark = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="6 6 88 88"><rect x="0" y="0" width="100" height="100" fill="${MARK_COLORS.tile}"/>${markShapes()}</svg>`;
+
+/** 링크 미리보기 (og:image, 1200×630): 다크 바탕 가운데에 심볼 + 글자. 글자 없는 그림이라 언어마다 따로 두지 않는다 */
+const OG_HEIGHT = 150;
+const ogImage = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630"><rect width="1200" height="630" fill="#151515"/><svg x="${(1200 - (LOCKUP.width * OG_HEIGHT) / 100) / 2}" y="${(630 - OG_HEIGHT) / 2}" height="${OG_HEIGHT}" width="${(LOCKUP.width * OG_HEIGHT) / 100}" viewBox="0 0 ${LOCKUP.width} 100">${lockupSvg('dark').replace(/^<svg[^>]*>|<\/svg>\n$/g, '')}</svg></svg>`;
 
 /** [파일, SVG, 너비, 높이] */
 const targets = [
   ['public/favicon-32.png', markSvg(), 32, 32],
   ['public/apple-touch-icon.png', fullBleedMark, 180, 180],
+  ['public/og.png', ogImage, 1200, 630],
 ];
 
 // 로컬 크롬으로 돌리려면 PLAYWRIGHT_CHANNEL=chrome (E2E와 같다)
