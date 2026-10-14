@@ -4,13 +4,10 @@
  * 각 도구 폴더의 Frame.astro를 그대로 그린다 (Frame.astro가 FrameLayout과 App을 쓴다).
  */
 import type { GetStaticPaths } from 'astro';
-import { liveTools, type Tool } from '../../../tools/registry';
+import { toolPaths } from '../../../tools/paths';
+import type { Tool } from '../../../tools/registry';
 
-export const getStaticPaths = (() =>
-  liveTools.map((tool) => {
-    const [category, slug] = tool.id.split('/');
-    return { params: { category, tool: slug }, props: { tool } };
-  })) satisfies GetStaticPaths;
+export const getStaticPaths = toolPaths satisfies GetStaticPaths;
 
 interface Props {
   tool: Tool;

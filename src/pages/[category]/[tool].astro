@@ -6,6 +6,7 @@
  * 그 아래 사용법·FAQ·관련 도구는 content.ts와 meta.ts에서 그린다.
  */
 import type { GetStaticPaths } from 'astro';
+import { toolPaths } from '../../tools/paths';
 import ToolLayout from '../../layouts/ToolLayout.astro';
 import ToolFrame from '../../components/ToolFrame.astro';
 import ToolHowTo from '../../components/ToolHowTo.astro';
@@ -13,15 +14,11 @@ import ToolFaq from '../../components/ToolFaq.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import { CATEGORIES } from '../../tools/categories';
 import { COMMON_FAQ } from '../../tools/common-faq';
-import { liveTools, toolsInCategory, type Tool } from '../../tools/registry';
+import { toolsInCategory, type Tool } from '../../tools/registry';
 import { localeOf, localizePath } from '../../i18n/locales';
 import { ui } from '../../i18n/ui';
 
-export const getStaticPaths = (() =>
-  liveTools.map((tool) => {
-    const [category, slug] = tool.id.split('/');
-    return { params: { category, tool: slug }, props: { tool } };
-  })) satisfies GetStaticPaths;
+export const getStaticPaths = toolPaths satisfies GetStaticPaths;
 
 interface Props {
   tool: Tool;
