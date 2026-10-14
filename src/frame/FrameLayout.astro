@@ -10,7 +10,7 @@
  * blob URL로 띄운 워커도 이 CSP를 그대로 따른다.
  */
 import '../styles/global.css';
-import { siteConfig } from '../site.config';
+import { localeOf } from '../i18n/locales';
 
 interface Props {
   /** frame 문서 제목 (스크린리더가 iframe 안에서 읽는다) */
@@ -38,7 +38,7 @@ if (csp) {
 ---
 
 <!doctype html>
-<html lang={siteConfig.defaultLocale}>
+<html lang={localeOf(Astro.url.pathname)}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

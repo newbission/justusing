@@ -11,6 +11,7 @@ import AdSlot from '../components/AdSlot.astro';
 import RailShell from '../components/RailShell.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
 import { siteConfig } from '../site.config';
+import { localeOf } from '../i18n/locales';
 
 interface Props {
   /** 화면 제목 (h1) */
@@ -36,7 +37,7 @@ const jsonLd = {
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Any',
   browserRequirements: 'JavaScript가 켜진 최신 브라우저',
-  inLanguage: siteConfig.defaultLocale,
+  inLanguage: localeOf(Astro.url.pathname),
   isAccessibleForFree: true,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'KRW' },
   provider: { '@type': 'Organization', name: siteConfig.name, url: Astro.site?.href },
