@@ -53,7 +53,7 @@ type FrameMessages = typeof ko;
 
 const en: FrameMessages = {
   drop: {
-    title: 'Drag files here, or',
+    title: 'Drag and drop here, or',
     overlay: 'Drop your files here',
     overlayNote: 'Your files never leave this device',
   },
@@ -62,7 +62,7 @@ const en: FrameMessages = {
     chooseMany: 'Choose PDF files',
     stays: 'Your files never leave this device',
     pages: (count: number) => `${count} ${count === 1 ? 'page' : 'pages'}`,
-    otherFile: 'Another file',
+    otherFile: 'Change file',
     opening: 'Opening the PDF…',
     passwordGroup: 'Password-protected PDF',
     passwordPrompt: 'This PDF is password-protected. Enter the password.',

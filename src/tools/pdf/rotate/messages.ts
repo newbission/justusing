@@ -27,7 +27,7 @@ const en: typeof ko = {
   working: 'Rotating…',
   nothing: 'No pages have been rotated.',
   willMake: (count: number) =>
-    `Makes a PDF with ${count} rotated ${count === 1 ? 'page' : 'pages'}.`,
+    `Creates a PDF with ${count} rotated ${count === 1 ? 'page' : 'pages'}.`,
   run: 'Rotate PDF',
   allGroup: 'All pages',
   turned: (count: number) => `${count} ${count === 1 ? 'page' : 'pages'} rotated.`,
