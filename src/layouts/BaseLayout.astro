@@ -4,7 +4,14 @@
  */
 import '../styles/global.css';
 import { siteConfig } from '../site.config';
-import { localeOf } from '../i18n/locales';
+import {
+  DEFAULT_LOCALE,
+  LOCALE_INFO,
+  LOCALES,
+  localeOf,
+  localizePath,
+  withoutLocale,
+} from '../i18n/locales';
 import ThemeInit from '../components/ThemeInit.astro';
 import DropGuard from '../components/DropGuard.astro';
 import Header from '../components/Header.astro';
@@ -25,6 +32,12 @@ const locale = localeOf(Astro.url.pathname);
 const { title, description = siteConfig.text[locale].description } = Astro.props;
 const fullTitle = title ? `${title} - ${siteConfig.name}` : siteConfig.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// 같은 페이지의 다른 언어판. 모든 바깥 페이지는 모든 언어로 있다
+const path = withoutLocale(Astro.url.pathname);
+const alternates = LOCALES.map((other) => ({
+  locale: other,
+  href: new URL(localizePath(path, other), Astro.site).href,
+}));
 ---
 
 <!doctype html>
@@ -37,6 +50,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    <!-- 검색엔진에 같은 페이지의 다른 언어판을 알린다 -->
+    {alternates.map((alt) => (
+      <link rel="alternate" hreflang={alt.locale} href={alt.href} />
+    ))}
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={new URL(localizePath(path, DEFAULT_LOCALE), Astro.site).href}
+    />
     <!-- 네이버 서치어드바이저 소유 확인 -->
     <meta name="naver-site-verification" content={siteConfig.verification.naver} />
     <!-- Google AdSense 소유 확인. 광고 스크립트를 불러오지 않고 태그만 둔다 -->
@@ -50,7 +72,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:locale" content={LOCALE_INFO[locale].ogLocale} />
     <meta name="twitter:card" content="summary" />
     <Analytics />
     <AdsScript />
