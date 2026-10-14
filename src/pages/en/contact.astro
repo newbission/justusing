@@ -1,0 +1,38 @@
+---
+/**
+ * 영어 문의 페이지 (/en/contact/). 한국어 문의(src/pages/contact.astro)와 같은 내용을 영어로 쓴다.
+ */
+import DocLayout from '../../layouts/DocLayout.astro';
+import { contactEmail, siteConfig } from '../../site.config';
+---
+
+<DocLayout
+  title="Contact"
+  description={`How to report a problem or send feedback to ${siteConfig.name}.`}
+>
+  <h2>Send us an email</h2>
+  <p>
+    <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+  </p>
+  <p>
+    Bug reports, tool suggestions and any other feedback are welcome. We will reply as soon as we
+    can.
+  </p>
+
+  <h2>When reporting a problem</h2>
+  <p>Including the following helps us fix it faster.</p>
+  <ul>
+    <li>Which tool it happened in (for example, Merge PDF)</li>
+    <li>What you did and what happened</li>
+    <li>Your device and browser (for example, Safari on iPhone, Chrome on Windows)</li>
+  </ul>
+  <p>
+    Please do not attach files containing personal or sensitive information. If we need a file, we
+    will ask for a sample with the content removed.
+  </p>
+
+  <h2>What happens to your email</h2>
+  <p>
+    We only use it to reply to you. See the <a href="/en/privacy/">Privacy Policy</a> for details.
+  </p>
+</DocLayout>
