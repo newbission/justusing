@@ -4,6 +4,10 @@
   끌어다 놓기는 frame 전체에서 처리한다 (src/frame/drop.ts, 도구는 onFrameFiles로 받음).
 -->
 <script lang="ts">
+  import { pick } from './locale';
+  import { FRAME_MESSAGES } from './messages';
+
+  const t = pick(FRAME_MESSAGES);
   interface Props {
     /** input accept 값 (예: 'application/pdf,.pdf') */
     accept: string;
@@ -17,14 +21,14 @@
 
   let { accept, label, multiple = false, hint, onfiles }: Props = $props();
 
-  function pick(list: FileList | null | undefined) {
+  function choose(list: FileList | null | undefined) {
     const files = [...(list ?? [])];
     if (files.length > 0) onfiles(multiple ? files : files.slice(0, 1));
   }
 </script>
 
 <div class="drop">
-  <p class="title">파일을 여기로 끌어다 놓거나</p>
+  <p class="title">{t.drop.title}</p>
   <label class="button">
     {label}
     <input
@@ -33,7 +37,7 @@
       {accept}
       {multiple}
       onchange={(event) => {
-        pick(event.currentTarget.files);
+        choose(event.currentTarget.files);
         // 같은 파일을 다시 골라도 change가 일어나도록 비운다
         event.currentTarget.value = '';
       }}
