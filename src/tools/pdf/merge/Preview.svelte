@@ -15,6 +15,10 @@
 </script>
 
 <script lang="ts">
+  import { pick } from '../../../frame/locale';
+  import { MESSAGES } from './messages';
+
+  const t = pick(MESSAGES);
   import { onMount } from 'svelte';
   import PdfPage from '../../../lib/pdf/PdfPage.svelte';
 
@@ -48,20 +52,20 @@
   class="preview"
   role="dialog"
   aria-modal="true"
-  aria-label="합친 결과 미리보기"
+  aria-label={t.previewLabel}
   tabindex="-1"
   onkeydown={(event) => {
     if (event.key === 'Escape') onclose();
   }}
 >
   <div class="bar">
-    <p>미리보기 · 총 {pages.length}쪽 <span>합치면 이 순서가 됩니다</span></p>
-    <button type="button" bind:this={closeButton} onclick={onclose}>닫기</button>
+    <p>{t.previewTitle(pages.length)} <span>{t.previewNote}</span></p>
+    <button type="button" bind:this={closeButton} onclick={onclose}>{t.close}</button>
   </div>
   <ol class="pages" bind:clientWidth={width}>
     {#each pages as page, position (position)}
       <li>
-        <span class="caption">{position + 1}쪽 · {page.fileName} {page.index + 1}쪽</span>
+        <span class="caption">{t.caption(position + 1, page.fileName, page.index + 1)}</span>
         {#if width > 0}
           {#await page.doc.getPage(page.index + 1) then proxy}
             <PdfPage page={proxy} scale={fitScale(proxy.getViewport({ scale: 1 }).width)} />
