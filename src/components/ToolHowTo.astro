@@ -2,16 +2,20 @@
 /**
  * 도구 페이지의 '사용법' 섹션. 단계를 번호 목록으로 보여준다.
  */
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
 interface Props {
   name: string;
   steps: string[];
 }
 
 const { name, steps } = Astro.props;
+const t = ui(localeOf(Astro.url.pathname)).tool;
 ---
 
 <section class="how-to">
-  <h2>{name} 사용법</h2>
+  <h2>{t.howTo(name)}</h2>
   <ol>
     {steps.map((step) => (
       <li>{step}</li>
