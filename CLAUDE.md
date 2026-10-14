@@ -175,8 +175,10 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 ### 로고
 
 - 모양은 `src/brand/logo.ts` 한 곳에만 둔다. 머리글(`Logo.astro`), `favicon.svg`, 내려받기 SVG(`/brand/`)가 여기서 그린다.
-- 심볼은 늘 같은 색(검정 네모·흰 j·밝은 초록 점), 글자 로고는 화면 테마를 따른다. 다크 화면에서는 네모에 선을 두른다.
-- 글자 로고는 Pretendard Bold를 도형으로 바꾼 것이고, j의 점만 초록이다.
+- 심볼은 늘 같은 색(검정 네모·흰 j/u·밝은 초록 점), 글자 로고는 화면 테마를 따른다. 다크 화면에서는 네모에 선을 두른다.
+- 글자 로고는 Pretendard Bold로 쓴 `justus.ing`을 도형으로 바꾼 것이고, 마침표만 초록이다.
+- **점핏(Jumpit)과 겹치지 않게 한다** (2026-10-14): 점핏은 검정 네모 + 기울인 흰 j + 머리 위 초록 점이다.
+  초록 점을 j 머리 위에 두지 않는다 (심볼은 u 그릇 안, 글자는 마침표).
 - PNG·ICO(favicon, 홈 화면 아이콘, og:image, `/brand/*.png`)는 로고를 바꿀 때
   `PLAYWRIGHT_CHANNEL=chrome node scripts/make-brand-images.mjs`로 다시 만들어 커밋한다.
 
