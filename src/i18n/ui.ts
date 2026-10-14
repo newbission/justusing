@@ -156,7 +156,7 @@ const en: Ui = {
       },
       {
         title: 'Nothing to install',
-        text: 'No software and no sign-up. Start right away in your browser.',
+        text: 'No installation or sign-up required. Start right away in your browser.',
       },
       {
         title: 'Free',
