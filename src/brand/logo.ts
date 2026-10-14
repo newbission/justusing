@@ -2,7 +2,8 @@
  * 로고의 유일한 출처. 머리글(Logo.astro), favicon·내려받기 파일(src/pages/brand/), PNG(scripts/make-brand-images.mjs)이
  * 모두 이 값으로 그린다.
  *
- * - 심볼: 둥근 검정 네모 안에 30° 기울인 흰 j. 꼬리를 말아 올려 u처럼도 보인다. j의 점은 초록.
+ * - 심볼: 둥근 검정 네모 안에 15° 기울인 흰 j. 꼬리를 말아 올려 u처럼도 보인다 (j인지 u인지 헷갈리는 것이 핵심).
+ *   초록 점은 j 머리 위가 아니라 u 그릇 안에 둔다. 머리 위에 두면 점핏(Jumpit) 로고와 같아진다.
  * - 글자: Pretendard Bold로 쓴 "justusing"을 도형으로 바꾼 것. j의 점만 따로 떼어 초록으로 칠한다.
  */
 
@@ -21,11 +22,13 @@ export const MARK_DARK_LINE = '#3a3a3a';
 /** 심볼 (viewBox 0 0 100 100) */
 export const MARK = {
   tile: { x: 6, y: 6, size: 88, radius: 24 },
-  /** j 글자를 그리는 좌표계: 가운데로 옮겨 30° 기울인다 */
-  transform: 'translate(50 50) rotate(30) scale(0.95) translate(-2 5)',
-  letter: 'M12 -15 V11 A12 12 0 0 1 -12 11 V-5',
+  /** j 글자를 그리는 좌표계: 가운데로 옮겨 15° 기울이고, 네모의 약 70%를 채우게 키운다 */
+  transform: 'translate(50 50) rotate(15) scale(1.2) translate(0 -0.5)',
+  /** 줄기는 길게(j), 꼬리는 그보다 낮게 말아 올린다(u) */
+  letter: 'M12 -22 V11 A12 12 0 0 1 -12 11 V-2',
   letterWidth: 9,
-  dot: { cx: 12, cy: -29, r: 6.5 },
+  /** u 그릇 안 */
+  dot: { cx: 0, cy: 6, r: 5 },
 } as const;
 
 /** 글자 로고 (Pretendard Bold, 2048 단위). 기준선이 y=0 */
