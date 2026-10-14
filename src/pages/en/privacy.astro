@@ -1,0 +1,138 @@
+---
+/**
+ * 영어 개인정보처리방침 (/en/privacy/). 한국어 방침(src/pages/privacy.astro)과 같은 내용이다.
+ * 한국어판을 고치면 이 페이지와 시행일도 함께 고친다.
+ */
+import DocLayout from '../../layouts/DocLayout.astro';
+import { contactEmail, siteConfig } from '../../site.config';
+
+/** 한국어판과 같은 날로 둔다 */
+const effectiveDate = 'October 14, 2026';
+---
+
+<DocLayout
+  title="Privacy Policy"
+  description={`What information ${siteConfig.name} collects and how it is handled. Your files are never collected.`}
+  note={`Effective: ${effectiveDate}`}
+>
+  <h2>At a glance</h2>
+  <ul>
+    <li>We do not collect the files you use in the tools. Your files never leave your device.</li>
+    <li>There is no sign-up, so we never ask for your name, phone number or similar details.</li>
+    <li>Cookies are used only for ads.</li>
+    <li>We only collect visit statistics and cannot tell who visited.</li>
+  </ul>
+
+  <h2>Your files</h2>
+  <p>
+    Files you use in the tools are processed only inside your browser on your device. File content
+    and file names are never sent anywhere, including to this site's servers, and we cannot see
+    them. When you close the page, any file data left in the browser is gone too.
+  </p>
+
+  <h2>Information we collect</h2>
+  <h3>Visit statistics</h3>
+  <p>
+    We use Cloudflare Web Analytics to see how much each page is used. It does not use cookies and
+    does not identify or track individual visitors. It collects:
+  </p>
+  <ul>
+    <li>The address of the page you visited and how you arrived there</li>
+    <li>Your browser and operating system type, and the country you visited from</li>
+    <li>How long the page took to load</li>
+  </ul>
+  <p>
+    These statistics run only outside the tool area. The tool area is an isolated space, so the
+    statistics cannot read your file content or file names.
+  </p>
+
+  <h3>Access logs</h3>
+  <p>
+    This site is served through Cloudflare's servers. Cloudflare processes access logs such as IP
+    addresses to deliver the site and to block attacks. We do not use these logs to identify
+    visitors.
+  </p>
+
+  <h3>Emails you send us</h3>
+  <p>
+    If you email us, we receive your email address and the content of your message. We use them only
+    to reply, keep them for one year after we finish replying, and then delete them. If you ask us
+    to delete them sooner, we will do so right away.
+  </p>
+
+  <h2>Ads and cookies</h2>
+  <p>
+    This site is funded by Google AdSense ads. When you open a page, Google's ad program is loaded,
+    and Google and its partners may use cookies to show ads based on your visits to this and other
+    sites.
+  </p>
+  <ul>
+    <li>
+      You can turn off personalized ads in{' '}
+      <a href="https://adssettings.google.com/" rel="noopener">
+        Google Ad Settings
+      </a>
+      .
+    </li>
+    <li>
+      See{' '}
+      <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">
+        how Google uses information
+      </a>{' '}
+      from sites that use its services.
+    </li>
+    <li>You can delete or block stored cookies in your browser settings.</li>
+    <li>
+      In regions where consent is required, such as Europe, you can choose whether to allow cookies
+      in Google's consent message.
+    </li>
+  </ul>
+  <p>
+    Ads only appear outside the tool area. The tool area is an isolated space, so ads cannot read
+    your file content or file names.
+  </p>
+  <p>
+    If an ad blocker is on, a message asks you to turn it off. We only check on your device whether
+    the ads could be loaded, and the result is never sent anywhere.
+  </p>
+
+  <h2>What we store in your browser</h2>
+  <p>
+    The only things this site stores itself are your light or dark theme choice and the language you
+    picked. These values are never sent to a server.
+  </p>
+
+  <h2>Other companies that process information</h2>
+  <p>We never sell or hand over information. We use the following services to run the site.</p>
+  <ul>
+    <li>Cloudflare (USA): serving the site, visit statistics, forwarding contact emails</li>
+    <li>Google (USA): storing contact emails (Gmail), ads (AdSense)</li>
+  </ul>
+  <p>Their servers are located abroad, so this information may be processed outside Korea.</p>
+
+  <h2>Your requests</h2>
+  <p>
+    You can ask to see or delete the emails you sent us. Contact us at the address below and we will
+    take care of it. Visit statistics cannot be linked to any person, so we cannot find or delete
+    them for you.
+  </p>
+
+  <h2>Changes</h2>
+  <p>
+    If the way we handle information changes, for example by adding an analytics tool or ads, we
+    will update this page and its effective date before the change.
+  </p>
+
+  <h2>Language</h2>
+  <p>
+    This English version is a translation. If it differs from the
+    <a href="/privacy/">Korean version</a>, the Korean version prevails.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    The {siteConfig.name} team
+    <br />
+    <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+  </p>
+</DocLayout>
