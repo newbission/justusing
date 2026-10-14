@@ -14,11 +14,11 @@ export const CATEGORIES = {
     text: {
       ko: {
         name: 'PDF',
-        description: 'PDF를 업로드 없이 보고, 합치고, 나누고, 편집하는 도구',
+        description: 'PDF를 업로드 없이 보고, 합치고, 나누고, 회전·정리하는 도구',
       },
       en: {
         name: 'PDF',
-        description: 'View, merge, split and edit PDFs without uploading them',
+        description: 'View, merge, split, rotate and organize PDFs without uploading them',
       },
     },
   },
