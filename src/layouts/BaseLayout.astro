@@ -4,6 +4,7 @@
  */
 import '../styles/global.css';
 import { siteConfig } from '../site.config';
+import { localeOf } from '../i18n/locales';
 import ThemeInit from '../components/ThemeInit.astro';
 import DropGuard from '../components/DropGuard.astro';
 import Header from '../components/Header.astro';
@@ -20,13 +21,14 @@ interface Props {
   description?: string;
 }
 
-const { title, description = siteConfig.description } = Astro.props;
+const locale = localeOf(Astro.url.pathname);
+const { title, description = siteConfig.text[locale].description } = Astro.props;
 const fullTitle = title ? `${title} - ${siteConfig.name}` : siteConfig.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang={siteConfig.defaultLocale}>
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
