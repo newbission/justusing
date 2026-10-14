@@ -62,7 +62,7 @@ const en: typeof ko = {
   open: 'Open',
   broken: 'This file cannot be opened. It will be left out.',
   pages: (count: number) => `${count} ${count === 1 ? 'page' : 'pages'}`,
-  pagesKept: (total: number, kept: number) => `${kept} of ${total} pages included`,
+  pagesKept: (total: number, kept: number) => `Pages included: ${kept} of ${total}`,
   up: (name: string) => `Move ${name} up`,
   down: (name: string) => `Move ${name} down`,
   remove: (name: string) => `Remove ${name}`,
