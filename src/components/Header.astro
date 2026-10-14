@@ -3,6 +3,7 @@ import { siteConfig } from '../site.config';
 import { CATEGORIES } from '../tools/categories';
 import { visibleCategories } from '../tools/registry';
 import ThemeToggle from './ThemeToggle.astro';
+import LocaleSwitch from './LocaleSwitch.astro';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 
@@ -30,7 +31,10 @@ const t = ui(locale);
         })}
       </ul>
     </nav>
-    <ThemeToggle />
+    <div class="actions">
+      <LocaleSwitch />
+      <ThemeToggle />
+    </div>
   </div>
 </header>
 
@@ -52,6 +56,12 @@ const t = ui(locale);
     font-size: 18px;
     letter-spacing: -0.01em;
     text-decoration: none;
+  }
+  .actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
   }
   .nav {
     flex: 1;
