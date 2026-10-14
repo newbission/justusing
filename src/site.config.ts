@@ -29,10 +29,17 @@ const ads: AdsConfig = {
 export const siteConfig = {
   name: 'justusing',
   domain: 'justus.ing',
-  description: '파일을 업로드하지 않고 브라우저 안에서 바로 처리하는 무료 도구 모음',
-  /** 홈 화면 큰 제목 */
-  tagline: '업로드 없이, 브라우저에서 바로 쓰는 파일 도구',
-  defaultLocale: 'ko',
+  /** 언어별 사이트 설명(검색 결과·홈)과 홈 화면 큰 제목. 언어 목록은 src/i18n/locales.ts */
+  text: {
+    ko: {
+      description: '파일을 업로드하지 않고 브라우저 안에서 바로 처리하는 무료 도구 모음',
+      tagline: '업로드 없이, 브라우저에서 바로 쓰는 파일 도구',
+    },
+    en: {
+      description: 'Free file tools that work right in your browser, without uploading your files',
+      tagline: 'File tools that run in your browser, no uploads',
+    },
+  },
   /** 검색엔진 소유 확인 값. 각 검색엔진의 관리 도구가 준 값을 넣는다 (공개되어도 되는 값). */
   verification: {
     naver: '37f0ce40d90c9d229800904890a112583730cd65',
