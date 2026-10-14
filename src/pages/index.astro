@@ -22,8 +22,9 @@ const jsonLd = {
 };
 ---
 
-<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 <BaseLayout>
+  <!-- 틀 안에 둔다. 틀 밖에 두면 <html>보다 먼저 출력된다 -->
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <RailShell>
     <section class="hero">
       <h1>{siteConfig.tagline}</h1>
