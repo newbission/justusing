@@ -3,6 +3,12 @@
   PDF 하나를 범위별·한 장씩·고른 페이지만으로 나눈다. 파일은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
+  import { frameLocale, pick } from '../../../frame/locale';
+  import { FRAME_MESSAGES } from '../../../frame/messages';
+  import { MESSAGES } from './messages';
+
+  const common = pick(FRAME_MESSAGES);
+  const t = pick(MESSAGES);
   import ActionBar from '../../../frame/ActionBar.svelte';
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
@@ -17,16 +23,14 @@
 
   type Mode = 'range' | 'each' | 'select';
   /** short: 좁은 화면에서 쓰는 짧은 이름 (긴 이름은 두 줄로 깨진다) */
-  const MODES: { id: Mode; label: string; short: string }[] = [
-    { id: 'range', label: '범위로 나누기', short: '범위' },
-    { id: 'each', label: '한 장씩 나누기', short: '한 장씩' },
-    { id: 'select', label: '고른 페이지만', short: '고른 쪽' },
-  ];
+  const MODES: { id: Mode; label: string; short: string }[] = (
+    ['range', 'each', 'select'] as const
+  ).map((id) => ({ id, ...t.modes[id] }));
   let mode: Mode = $state('range');
 
   /** 범위 입력 (예: 1-3, 4-6, 7) */
   let rangeText = $state('');
-  const rangeResult = $derived(parseRanges(rangeText, pageCount));
+  const rangeResult = $derived(parseRanges(rangeText, pageCount, frameLocale));
 
   /** '고른 페이지만'에서 쪽마다 선택 여부 (index 0 = 1쪽) */
   let selected: boolean[] = $state([]);
@@ -41,7 +45,7 @@
   /** 나눌 수 없을 때 그 이유 */
   const problem = $derived.by(() => {
     if (mode === 'range' && !rangeResult.ok) return rangeResult.message;
-    if (mode === 'select' && selectedPages.length === 0) return '뽑을 페이지를 눌러 고르세요.';
+    if (mode === 'select' && selectedPages.length === 0) return t.pickPages;
     return undefined;
   });
 
@@ -59,7 +63,7 @@
   /** 결과 파일 이름. 한 장씩이면 정렬되도록 앞에 0을 채운다 (01, 02 … 10) */
   function outputName(name: string, pages: number[]) {
     const base = name.replace(/\.pdf$/i, '');
-    if (mode === 'select') return `${base}_발췌.pdf`;
+    if (mode === 'select') return `${base}_${t.selectedSuffix}.pdf`;
     if (mode === 'each')
       return `${base}_${String(pages[0]).padStart(String(pageCount).length, '0')}.pdf`;
     return `${base}_${rangeLabel(pages)}.pdf`;
@@ -69,7 +73,7 @@
     if (!outputs || !pdf || run.kind === 'working') return;
     const entitlement = await canUse('pdf/split');
     if (!entitlement.allowed) {
-      run = { kind: 'failed', message: entitlement.reason ?? '지금은 사용할 수 없습니다.' };
+      run = { kind: 'failed', message: entitlement.reason ?? common.action.unavailable };
       return;
     }
 
@@ -99,14 +103,14 @@
           ? { kind: 'done', ...named[0]!, type: 'application/pdf', signature: startedWith }
           : {
               kind: 'done',
-              name: `${base}_나눔.zip`,
+              name: `${base}_${t.zipSuffix}.zip`,
               bytes: makeZip(named),
               type: 'application/zip',
               signature: startedWith,
             };
     } catch {
       if (pdf !== source) return;
-      run = { kind: 'failed', message: '나누지 못했습니다. 파일이 손상되었을 수 있습니다.' };
+      run = { kind: 'failed', message: t.failed };
     }
   }
 
@@ -123,7 +127,7 @@
   /** 쪽마다 어느 결과 파일로 가는지 ('파일 1', 겹치면 '파일 1·2') */
   function noteFor(index: number) {
     const files = (outputs ?? []).flatMap((pages, i) => (pages.includes(index + 1) ? [i + 1] : []));
-    return files.length > 0 ? `파일 ${files.join('·')}` : undefined;
+    return files.length > 0 ? t.fileNote(files.join('·')) : undefined;
   }
 
   function onload(loaded: LoadedPdf) {
@@ -136,40 +140,41 @@
 
 <SinglePdfTool {onload}>
   {#snippet children({ doc })}
-    <ActionBar label="나누기">
+    <ActionBar label={t.bar}>
       {#snippet text()}
         {#if run.kind === 'working'}
-          나누는 중… {run.done}/{run.total}
+          {t.working(run.done, run.total)}
         {:else if result}
-          완료: {result.name} · {formatSize(result.bytes.length)}
+          {common.action.done(result.name, formatSize(result.bytes.length))}
         {:else if run.kind === 'failed'}
           <strong>{run.message}</strong>
         {:else if problem || !outputs}
           {problem ?? ''}
         {:else if outputs.length === 1}
-          파일 1개({outputs[0]!.length}쪽)로 만듭니다.
+          {t.oneFile(outputs[0]!.length)}
         {:else}
-          파일 {outputs.length}개로 나눕니다. ZIP 하나로 받습니다.
+          {t.manyFiles(outputs.length)}
         {/if}
       {/snippet}
       {#if result}
         <button
           type="button"
           class="primary"
-          onclick={() => downloadFile(result.bytes, result.name, result.type)}>다운로드</button
+          onclick={() => downloadFile(result.bytes, result.name, result.type)}
+          >{common.action.download}</button
         >
       {:else}
         <button
           type="button"
           class="primary"
           disabled={!outputs || run.kind === 'working'}
-          onclick={split}>{run.kind === 'working' ? '나누는 중…' : 'PDF 나누기'}</button
+          onclick={split}>{run.kind === 'working' ? t.workingShort : t.run}</button
         >
       {/if}
     </ActionBar>
 
     <div class="body">
-      <div class="modes" role="radiogroup" aria-label="나누는 방법">
+      <div class="modes" role="radiogroup" aria-label={t.modeGroup}>
         {#each MODES as option (option.id)}
           <label class:checked={mode === option.id}>
             <input type="radio" name="mode" value={option.id} bind:group={mode} />
@@ -181,34 +186,34 @@
 
       {#if mode === 'range'}
         <div class="range">
-          <label for="range-input">나눌 범위</label>
+          <label for="range-input">{t.rangeLabel}</label>
           <input
             id="range-input"
             type="text"
             inputmode="numeric"
             autocomplete="off"
-            placeholder="예: 1-3, 4-6, 7"
+            placeholder={t.rangePlaceholder}
             bind:value={rangeText}
             aria-describedby="range-help"
             aria-invalid={rangeText.trim() !== '' && problem !== undefined}
           />
           <p id="range-help" class="help">
-            쉼표로 구분한 범위마다 파일 하나가 됩니다. 1-3은 1~3쪽, 5-는 5쪽부터 끝까지입니다.
+            {t.rangeHelp}
           </p>
           {#if rangeText.trim() && problem}
             <p class="error" role="alert">{problem}</p>
           {/if}
         </div>
       {:else if mode === 'each'}
-        <p class="help mode-help">모든 쪽을 한 장씩, {pageCount}개 파일로 나눕니다.</p>
+        <p class="help mode-help">{t.eachHelp(pageCount)}</p>
       {:else}
         <div class="select-bar">
           <p class="help" aria-live="polite">
-            뽑을 페이지를 누르세요. 고른 페이지가 파일 하나로 나옵니다. ({selectedPages.length}쪽
-            고름)
+            {t.selectHelp(selectedPages.length)}
           </p>
-          <button type="button" class="text" onclick={() => selectAll(true)}>전체 선택</button>
-          <button type="button" class="text" onclick={() => selectAll(false)}>선택 해제</button>
+          <button type="button" class="text" onclick={() => selectAll(true)}>{t.selectAll}</button>
+          <button type="button" class="text" onclick={() => selectAll(false)}>{t.selectNone}</button
+          >
         </div>
       {/if}
 
