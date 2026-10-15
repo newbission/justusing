@@ -3,7 +3,7 @@
  * 허브: 전체 도구 목록. 카테고리와 도구는 레지스트리에서 자동으로 채운다.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ToolGrid from '../components/ToolGrid.astro';
+import ToolSections from '../components/ToolSections.astro';
 import RailShell from '../components/RailShell.astro';
 import AdSlot from '../components/AdSlot.astro';
 import Promises from '../components/Promises.astro';
@@ -12,7 +12,7 @@ import { siteConfig } from '../site.config';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 import { CATEGORIES } from '../tools/categories';
-import { toolsInCategory, visibleCategories } from '../tools/registry';
+import { visibleCategories } from '../tools/registry';
 
 const locale = localeOf(Astro.url.pathname);
 const text = siteConfig.text[locale];
@@ -59,7 +59,7 @@ const jsonLd = {
             {ui(locale).category.title(CATEGORIES[category].text[locale].name)}
           </a>
         </h2>
-        <ToolGrid tools={toolsInCategory(category)} headingLevel={3} />
+        <ToolSections {category} headingLevel={3} />
       </section>
     ))}
 

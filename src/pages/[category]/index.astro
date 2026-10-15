@@ -4,12 +4,11 @@
  */
 import type { GetStaticPaths } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ToolGrid from '../../components/ToolGrid.astro';
+import ToolSections from '../../components/ToolSections.astro';
 import Breadcrumb from '../../components/Breadcrumb.astro';
 import RailShell from '../../components/RailShell.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import { CATEGORIES, type CategoryId } from '../../tools/categories';
-import { toolsInCategory } from '../../tools/registry';
 import { categoryPaths } from '../../tools/paths';
 import { localeOf, localizePath } from '../../i18n/locales';
 import { ui } from '../../i18n/ui';
@@ -39,7 +38,7 @@ const title = t.category.title(text.name);
       <div class="top-banner">
         <AdSlot id="top-banner" />
       </div>
-      <ToolGrid tools={toolsInCategory(category)} headingLevel={2} />
+      <ToolSections {category} headingLevel={2} />
 
       <!-- 도구 목록 아래 본문 광고 (홈과 같은 이유로 목록 아래, 48px 띄움) -->
       <div class="in-content">
