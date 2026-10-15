@@ -265,13 +265,15 @@ Co-Authored-By: ...
   - [x] 6-2 이미지를 PDF로 (`/pdf/from-image/`): 이미지 한 장이 한 쪽, A4·Letter·이미지에 맞춤, 여백.
         JPG·PNG는 원본 그대로 넣고, EXIF 방향이 붙은 휴대폰 사진과 그 밖의 형식만 다시 저장한다
         (`src/lib/image/prepare.ts`, 워커 `src/lib/pdf/images-to-pdf.worker.ts`)
-- [ ] 7단계: 가벼운 PDF 도구 (2026-10-14) — 서버·큰 라이브러리·한글 글꼴 없이 되는 것은 모두 만든다
+- [x] 7단계: 가벼운 PDF 도구 (2026-10-14) — 서버·큰 라이브러리·한글 글꼴 없이 되는 것은 모두 만든다
   - 공통: `src/lib/pdf/modify.ts`(+워커)가 PDF 하나를 고친다. 쪽 위 자리는 화면 기준 비율로 넘기고
     워커가 쪽 회전·CropBox를 계산한다. 새 도구 화면은 `src/frame/controls.css`의 공통 모양을 쓴다
   - [x] 암호 해제 (`/pdf/unlock/`), 암호 걸기 (`/pdf/protect/`, AES-256), 쪽 번호 (`/pdf/page-numbers/`),
         글자 추출 (`/pdf/extract-text/`)
-  - [ ] PDF에 이미지 넣기, 서명 넣기 (같은 배치 화면을 쓴다)
-  - [ ] 자르기 (여백 잘라내기)
+  - [x] 이미지 넣기 (`/pdf/add-image/`), 서명 넣기 (`/pdf/sign/`): 같은 화면(`StampTool`, 배치 `PlacementEditor`)을
+        쓰고 찍을 이미지를 고르는 부분만 다르다. 서명은 그리기 칸(`SignaturePad`) 또는 이미지 올리기
+  - [x] 자르기 (`/pdf/crop/`): 보이는 영역(CropBox)만 줄인다. 잘린 내용은 파일에 남는다고 화면·FAQ에 밝힌다
+  - 쪽을 크게 그리고 위에 겹쳐 조작하는 화면은 `src/lib/pdf/PageSheet.svelte` 위에 만든다
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)
