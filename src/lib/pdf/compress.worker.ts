@@ -81,7 +81,29 @@ function maskRefs(doc: PDFDocument): Set<PDFRef> {
 }
 
 /** 이 객체가 줄일 수 있는 사진이면 꺼낸다 */
-function sourceImage(object: PDFObject): SourceImage | undefined {
+/**
+ * 쪽·Form 리소스가 장치 색을 다른 색공간으로 바꿔 쓰는지 (DefaultGray·DefaultRGB).
+ * 그러면 회색 사진을 DeviceRGB로 바꿀 때 적용되는 색 변환이 달라진다.
+ */
+function hasDefaultColorSpaces(doc: PDFDocument): boolean {
+  for (const [, object] of doc.context.enumerateIndirectObjects()) {
+    const dicts =
+      object instanceof PDFDict ? [object] : object instanceof PDFStream ? [object.dict] : [];
+    for (const dict of dicts) {
+      const resources = dict.lookup(name('Resources'));
+      const spaces =
+        resources instanceof PDFDict ? resources.lookup(name('ColorSpace')) : undefined;
+      if (
+        spaces instanceof PDFDict &&
+        (spaces.has(name('DefaultGray')) || spaces.has(name('DefaultRGB')))
+      )
+        return true;
+    }
+  }
+  return false;
+}
+
+function sourceImage(object: PDFObject, grayAllowed: boolean): SourceImage | undefined {
   if (!(object instanceof PDFRawStream)) return undefined;
   const { dict, contents } = object;
   if (dict.lookup(name('Subtype')) !== name('Image')) return undefined;
@@ -96,7 +118,8 @@ function sourceImage(object: PDFObject): SourceImage | undefined {
   if (!colors) return undefined;
   // 다시 저장한 JPG는 늘 3색이다. 3색 색공간(보정·ICC 포함)은 화소 값을 그대로 두고 색공간도 그대로
   // 두면 같은 색이 되지만, 회색은 DeviceRGB로 바꿔야 해서 보정·ICC가 없는 DeviceGray만 다룬다
-  if (colors === 1 && dict.lookup(name('ColorSpace')) !== name('DeviceGray')) return undefined;
+  if (colors === 1 && (!grayAllowed || dict.lookup(name('ColorSpace')) !== name('DeviceGray')))
+    return undefined;
   const filter = singleFilter(dict);
   if (filter === 'DCTDecode') {
     // 색 변환 설정(ColorTransform)이 붙은 JPG는 브라우저가 다른 색으로 읽을 수 있다
@@ -197,11 +220,12 @@ addEventListener('message', async (event: MessageEvent<PdfRequest>) => {
       // 쓰지 않는 옛 사진까지 줄이느라 시간·메모리를 쓰지 않게 먼저 지운다
       removeUnused(doc);
       const masks = maskRefs(doc);
+      const grayAllowed = !hasDefaultColorSpaces(doc);
       const refs: PDFRef[] = [];
       const images: SourceImage[] = [];
       for (const [ref, object] of doc.context.enumerateIndirectObjects()) {
         if (masks.has(ref)) continue;
-        const image = sourceImage(object);
+        const image = sourceImage(object, grayAllowed);
         if (!image) continue;
         refs.push(ref);
         images.push(image);
