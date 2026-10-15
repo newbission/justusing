@@ -6,9 +6,11 @@ import { expect, test } from './test';
 test('PDF 목록은 묶음별 소제목 아래 도구를 보여준다', async ({ page }) => {
   await page.goto('/pdf/');
   await expect(page.getByRole('heading', { level: 2 })).toHaveText([
-    '보기·편집',
+    '보기·추출',
     '페이지 정리',
+    '편집',
     '변환',
+    '보안',
   ]);
   const convert = page.locator('section', {
     has: page.getByRole('heading', { level: 2, name: '변환' }),
@@ -27,8 +29,10 @@ test('홈에서도 묶음별로 나누고, 영어판은 영어 소제목을 쓴�
   await expect(page.getByRole('heading', { level: 3, name: '페이지 정리' })).toBeVisible();
   await page.goto('/en/pdf/');
   await expect(page.getByRole('heading', { level: 2 })).toHaveText([
-    'View & edit',
+    'View & extract',
     'Organize pages',
+    'Edit',
     'Convert',
+    'Security',
   ]);
 });
