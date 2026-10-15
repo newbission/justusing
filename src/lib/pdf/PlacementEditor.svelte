@@ -9,6 +9,7 @@
   import { pick } from '../../frame/locale';
   import { FRAME_MESSAGES } from '../../frame/messages';
   import type { StampPlace } from './modify';
+  import PageSheet from './PageSheet.svelte';
   import type { PDFDocumentProxy } from './pdfjs';
 
   const t = pick(FRAME_MESSAGES).place;
@@ -24,13 +25,9 @@
 
   let { doc, image, pageIndex = $bindable(), place = $bindable() }: Props = $props();
 
-  /** 쪽을 그릴 최대 폭(px). 넓은 화면에서도 한눈에 보이게 */
-  const MAX_WIDTH = 520;
   /** 이미지 최소 폭 (쪽 폭 대비) */
   const MIN_WIDTH = 0.03;
 
-  let boxWidth = $state(0);
-  let canvas: HTMLCanvasElement;
   /** 그린 쪽의 화면 크기(px) */
   let view = $state({ width: 0, height: 0 });
 
@@ -38,34 +35,6 @@
   const height = $derived(
     view.height === 0 ? 0 : (place.width * view.width * image.height) / image.width / view.height,
   );
-
-  $effect(() => {
-    const width = Math.min(boxWidth, MAX_WIDTH);
-    if (width <= 0) return;
-    let cancelled = false;
-    let task: ReturnType<Awaited<ReturnType<PDFDocumentProxy['getPage']>>['render']> | undefined;
-    doc.getPage(pageIndex + 1).then((page) => {
-      if (cancelled) return;
-      const base = page.getViewport({ scale: 1 });
-      const viewport = page.getViewport({ scale: width / base.width });
-      const ratio = window.devicePixelRatio || 1;
-      canvas.width = Math.floor(viewport.width * ratio);
-      canvas.height = Math.floor(viewport.height * ratio);
-      view = { width: viewport.width, height: viewport.height };
-      task = page.render({
-        canvas,
-        viewport,
-        transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0],
-      });
-      task.promise.catch(() => {
-        // 쪽을 바꿔 이전 그리기가 취소된 경우. 다음 그리기가 이어서 한다.
-      });
-    });
-    return () => {
-      cancelled = true;
-      task?.cancel();
-    };
-  });
 
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), Math.max(min, max));
@@ -128,83 +97,38 @@
   });
 </script>
 
-<div class="editor" bind:clientWidth={boxWidth}>
-  <div class="nav">
-    <button
-      type="button"
-      class="btn"
-      disabled={pageIndex === 0}
-      onclick={() => (pageIndex -= 1)}
-      aria-label={t.previous}>‹</button
-    >
-    <span aria-live="polite">{t.page(pageIndex + 1, doc.numPages)}</span>
-    <button
-      type="button"
-      class="btn"
-      disabled={pageIndex === doc.numPages - 1}
-      onclick={() => (pageIndex += 1)}
-      aria-label={t.next}>›</button
-    >
-  </div>
-
-  <p class="help">{t.help}</p>
-
-  <div class="sheet" style:width="{view.width}px" style:height="{view.height}px">
-    <canvas bind:this={canvas} style:width="{view.width}px" style:height="{view.height}px"></canvas>
-    {#if view.width > 0}
-      <button
-        type="button"
-        class="stamp"
-        style:left="{place.x * 100}%"
-        style:top="{place.y * 100}%"
-        style:width="{place.width * 100}%"
-        style:height="{height * 100}%"
-        aria-label={t.stamp}
-        onpointerdown={(event) => startDrag(event, 'move')}
-        onpointermove={moveDrag}
-        onpointerup={endDrag}
-        onpointercancel={endDrag}
-        onkeydown={onKey}
-      >
-        <img src={image.url} alt="" draggable="false" />
-      </button>
-      <button
-        type="button"
-        class="handle"
-        style:left="{(place.x + place.width) * 100}%"
-        style:top="{(place.y + height) * 100}%"
-        aria-label={t.resize}
-        onpointerdown={(event) => startDrag(event, 'resize')}
-        onpointermove={moveDrag}
-        onpointerup={endDrag}
-        onpointercancel={endDrag}
-        onkeydown={onKey}
-      ></button>
-    {/if}
-  </div>
-</div>
+<PageSheet {doc} bind:pageIndex bind:view help={t.help}>
+  <button
+    type="button"
+    class="stamp"
+    style:left="{place.x * 100}%"
+    style:top="{place.y * 100}%"
+    style:width="{place.width * 100}%"
+    style:height="{height * 100}%"
+    aria-label={t.stamp}
+    onpointerdown={(event) => startDrag(event, 'move')}
+    onpointermove={moveDrag}
+    onpointerup={endDrag}
+    onpointercancel={endDrag}
+    onkeydown={onKey}
+  >
+    <img src={image.url} alt="" draggable="false" />
+  </button>
+  <button
+    type="button"
+    class="handle"
+    style:left="{(place.x + place.width) * 100}%"
+    style:top="{(place.y + height) * 100}%"
+    aria-label={t.resize}
+    onpointerdown={(event) => startDrag(event, 'resize')}
+    onpointermove={moveDrag}
+    onpointerup={endDrag}
+    onpointercancel={endDrag}
+    onkeydown={onKey}
+  ></button>
+</PageSheet>
 
 <style>
-  .editor {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-  .nav {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-  }
-  .sheet {
-    position: relative;
-    box-shadow: var(--shadow-page);
-  }
-  canvas {
-    display: block;
-    background: #fff;
-  }
   .stamp {
     position: absolute;
     padding: 0;
@@ -238,11 +162,5 @@
   .handle:focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
-  }
-  .help {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 13px;
-    text-align: center;
   }
 </style>
