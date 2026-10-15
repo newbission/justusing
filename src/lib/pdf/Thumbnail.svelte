@@ -71,6 +71,6 @@
   }
   canvas {
     background: #fff;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+    box-shadow: var(--shadow-page);
   }
 </style>
