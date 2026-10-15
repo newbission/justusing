@@ -2,6 +2,8 @@ import { defineTool } from '../../types';
 
 export default defineTool({
   status: 'live',
+  section: 'pages',
+  icon: ['M12 4v7', 'M12 11 4 20', 'M12 11l8 9', 'M4 15v5h5', 'M20 15v5h-5'],
   text: {
     ko: {
       name: 'PDF 나누기',
