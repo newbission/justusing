@@ -145,15 +145,36 @@ export async function compressPdf(
   onProgress: (done: number, total: number) => void,
   signal?: AbortSignal,
 ): Promise<Uint8Array> {
-  const worker = await (pdfWorker ??= createWorker(pdfWorkerUrl));
+  const starting = (pdfWorker ??= createWorker(pdfWorkerUrl));
+  const worker = await starting;
   const id = nextId++;
 
-  const scanned = await ask<PdfResponse>(worker, {
+  /**
+   * PDF 워커에 묻는다. 워커 안의 pdf-lib 처리(열기·저장)는 중간에 멈출 수 없어서, 그만두면 워커를
+   * 통째로 끝낸다. 다음 압축은 새 워커로 한다.
+   */
+  function askPdf(message: PdfRequest, transfer: Transferable[] = []) {
+    signal?.throwIfAborted();
+    return new Promise<PdfResponse>((resolve, reject) => {
+      const onAbort = () => {
+        worker.terminate();
+        if (pdfWorker === starting) pdfWorker = undefined;
+        reject(signal!.reason);
+      };
+      signal?.addEventListener('abort', onAbort, { once: true });
+      ask<PdfResponse>(worker, message, transfer).then((response) => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve(response);
+      });
+    });
+  }
+
+  const scanned = await askPdf({
     id,
     kind: 'scan',
     bytes: source.bytes,
     password: source.password,
-  } satisfies PdfRequest);
+  });
   if (scanned.kind === 'error') throw new Error(scanned.message);
   if (scanned.kind !== 'images') throw new Error('unexpected response');
 
@@ -165,9 +186,8 @@ export async function compressPdf(
     worker.postMessage({ id, kind: 'drop' } satisfies PdfRequest);
     throw error;
   }
-  const finished = await ask<PdfResponse>(
-    worker,
-    { id, kind: 'finish', replacements } satisfies PdfRequest,
+  const finished = await askPdf(
+    { id, kind: 'finish', replacements },
     replacements.map((r) => r.bytes.buffer),
   );
   if (finished.kind === 'error') throw new Error(finished.message);
