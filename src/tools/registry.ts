@@ -22,6 +22,7 @@ const TOOL_IDS: readonly string[] = [
   'pdf/split',
   'pdf/rotate',
   'pdf/organize',
+  'pdf/crop',
   'pdf/to-image',
   'pdf/from-image',
   'pdf/page-numbers',
