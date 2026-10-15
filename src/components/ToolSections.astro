@@ -1,0 +1,44 @@
+---
+/**
+ * 카테고리의 도구를 묶음(categories.ts의 sections)별 소제목과 카드 목록으로 보여준다.
+ * 카테고리 페이지는 소제목 h2·카드 h3, 홈은 카테고리 제목(h2) 아래라 소제목 h3·카드 h4.
+ */
+import type { CategoryId } from '../tools/categories';
+import { sectionsInCategory } from '../tools/registry';
+import { localeOf } from '../i18n/locales';
+import ToolGrid from './ToolGrid.astro';
+
+interface Props {
+  category: CategoryId;
+  /** 소제목의 제목 수준. 카드는 그 아래 수준 */
+  headingLevel?: 2 | 3;
+}
+
+const { category, headingLevel = 2 } = Astro.props;
+const locale = localeOf(Astro.url.pathname);
+const Heading = `h${headingLevel}` as const;
+const cardLevel = (headingLevel + 1) as 3 | 4;
+---
+
+<div class="sections">
+  {sectionsInCategory(category).map((section) => (
+    <section class="section">
+      <Heading class="section-title">{section.text[locale]}</Heading>
+      <ToolGrid tools={section.tools} headingLevel={cardLevel} />
+    </section>
+  ))}
+</div>
+
+<style>
+  .sections {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .section-title {
+    margin: 0 0 12px;
+    color: var(--color-muted);
+    font-size: 15px;
+    font-weight: 600;
+  }
+</style>
