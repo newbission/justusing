@@ -265,7 +265,13 @@ Co-Authored-By: ...
   - [x] 6-2 이미지를 PDF로 (`/pdf/from-image/`): 이미지 한 장이 한 쪽, A4·Letter·이미지에 맞춤, 여백.
         JPG·PNG는 원본 그대로 넣고, EXIF 방향이 붙은 휴대폰 사진과 그 밖의 형식만 다시 저장한다
         (`src/lib/image/prepare.ts`, 워커 `src/lib/pdf/images-to-pdf.worker.ts`)
-  - [ ] 6-3 PDF에 이미지 넣기: 쪽 위 원하는 자리에 이미지를 놓는다 (편집보다 가볍게, 글꼴 없이)
+- [ ] 7단계: 가벼운 PDF 도구 (2026-10-14) — 서버·큰 라이브러리·한글 글꼴 없이 되는 것은 모두 만든다
+  - 공통: `src/lib/pdf/modify.ts`(+워커)가 PDF 하나를 고친다. 쪽 위 자리는 화면 기준 비율로 넘기고
+    워커가 쪽 회전·CropBox를 계산한다. 새 도구 화면은 `src/frame/controls.css`의 공통 모양을 쓴다
+  - [x] 암호 해제 (`/pdf/unlock/`), 암호 걸기 (`/pdf/protect/`, AES-256), 쪽 번호 (`/pdf/page-numbers/`),
+        글자 추출 (`/pdf/extract-text/`)
+  - [ ] PDF에 이미지 넣기, 서명 넣기 (같은 배치 화면을 쓴다)
+  - [ ] 자르기 (여백 잘라내기)
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)
