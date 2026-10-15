@@ -14,6 +14,7 @@ const ko = {
     switchTool: '다른 도구로 이동',
     soon: '준비 중',
     language: '언어',
+    guides: '가이드',
   },
   theme: {
     toggle: '테마 전환',
@@ -38,6 +39,19 @@ const ko = {
     noscript: '이 도구는 JavaScript가 켜져 있어야 동작합니다.',
     browserRequirements: 'JavaScript가 켜진 최신 브라우저',
     priceCurrency: 'KRW',
+  },
+  guide: {
+    indexTitle: '가이드',
+    indexDescription:
+      'PDF와 이미지를 다루는 방법을 단계별로 설명합니다. 설치·업로드 없이 브라우저에서 바로 따라 할 수 있습니다.',
+    published: (date: string) => `${date} 작성`,
+    updated: (date: string) => `${date} 고침`,
+    tryTool: '이 글의 도구',
+    ctaTitle: '바로 해 보기',
+    ctaText: '설치·가입 없이 브라우저에서 바로 씁니다. 파일은 이 기기를 떠나지 않습니다.',
+    openTool: (name: string) => `${name} 열기`,
+    more: '다른 가이드',
+    forTool: '관련 가이드',
   },
   category: {
     title: (name: string) => `${name} 도구`,
@@ -106,6 +120,7 @@ const en: Ui = {
     switchTool: 'Switch to another tool',
     soon: 'Coming soon',
     language: 'Language',
+    guides: 'Guides',
   },
   theme: {
     toggle: 'Toggle theme',
@@ -130,6 +145,20 @@ const en: Ui = {
     noscript: 'This tool needs JavaScript to be turned on.',
     browserRequirements: 'A modern browser with JavaScript enabled',
     priceCurrency: 'USD',
+  },
+  guide: {
+    indexTitle: 'Guides',
+    indexDescription:
+      'Step-by-step guides for working with PDFs and images. Follow along right in your browser, with nothing to install or upload.',
+    published: (date: string) => `Published ${date}`,
+    updated: (date: string) => `Updated ${date}`,
+    tryTool: 'Tool for this guide',
+    ctaTitle: 'Try it now',
+    ctaText:
+      'Works right in your browser, with no install or sign-up. Your files never leave this device.',
+    openTool: (name: string) => `Open ${name}`,
+    more: 'More guides',
+    forTool: 'Guides',
   },
   category: {
     title: (name: string) => `${name} tools`,
