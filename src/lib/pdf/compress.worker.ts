@@ -111,7 +111,14 @@ function sourceImage(object: PDFObject): SourceImage | undefined {
   const predictor = numberOf(parmsDict, 'Predictor') ?? 1;
   // TIFF 예측(2)은 거의 쓰이지 않아 다루지 않는다
   if (predictor !== 1 && predictor < 10) return undefined;
-  if (predictor >= 10 && (numberOf(parmsDict, 'Colors') ?? 1) !== colors) return undefined;
+  // 예측의 한 줄 길이는 Colors·Columns로 정해진다. 사진 크기와 같을 때만 다룬다
+  if (
+    predictor >= 10 &&
+    ((numberOf(parmsDict, 'Colors') ?? 1) !== colors ||
+      (numberOf(parmsDict, 'Columns') ?? 1) !== width ||
+      (numberOf(parmsDict, 'BitsPerComponent') ?? 8) !== 8)
+  )
+    return undefined;
   return {
     kind: 'pixels',
     bytes: contents.slice(),
