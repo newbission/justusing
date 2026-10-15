@@ -4,13 +4,16 @@
  */
 import workerUrl from './images-to-pdf.worker.ts?worker&url';
 import { createWorker } from '../worker';
-import type { EmbeddableImage } from '../image/prepare';
 
 /** 쪽 크기. fit은 이미지 크기 그대로 (96 DPI로 보고 pt로 바꾼다) */
 export type PageSize = 'a4' | 'letter' | 'fit';
 
 export interface ImagesToPdfJob {
-  images: EmbeddableImage[];
+  /**
+   * 넣을 이미지 파일, 쪽 순서대로. 워커가 직접 읽고 필요하면 바로 세운다.
+   * File은 내용을 복사하지 않고 넘어가서 사진이 많아도 메모리가 두 배로 들지 않는다.
+   */
+  images: Blob[];
   size: PageSize;
   /** 쪽 가장자리 여백 (pt) */
   margin: number;

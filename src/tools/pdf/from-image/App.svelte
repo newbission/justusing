@@ -18,7 +18,7 @@
   import { requestShowTool } from '../../../frame/parent';
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
-  import { readImageInfo, toEmbeddable } from '../../../lib/image/prepare';
+  import { readImageInfo } from '../../../lib/image/prepare';
   import { imagesToPdf, type PageSize } from '../../../lib/pdf/images-to-pdf';
 
   /** 받는 이미지 형식. 브라우저가 읽을 수 있으면 그 밖의 형식도 받는다 (읽지 못하면 '열 수 없음') */
@@ -87,14 +87,11 @@
     const options = { size, margin: MARGIN_PT[margin] };
     phase = { kind: 'working', done: 0, total: sources.length };
     try {
-      const images = [];
-      // 이미지를 넣을 수 있는 형식으로 바꾸는 단계도 진행 표시에 센다 (사진이 많으면 오래 걸린다)
-      for (const item of sources) {
-        images.push(await toEmbeddable(item.file, new Uint8Array(await item.file.arrayBuffer())));
-        phase = { kind: 'working', done: images.length, total: sources.length };
-      }
-      // 쪽에 넣는 단계(워커)는 빨리 끝나서 따로 세지 않는다
-      const bytes = await imagesToPdf({ images, ...options });
+      // 사진을 바로 세우고 다시 저장하는 일까지 워커가 한다 (화면이 멈추지 않게)
+      const bytes = await imagesToPdf(
+        { images: sources.map((item) => item.file), ...options },
+        (done, total) => (phase = { kind: 'working', done, total }),
+      );
       const base = sources[0]!.name.replace(/\.[^.]+$/, '');
       phase = { kind: 'done', bytes, fileName: `${base}.pdf`, signature: startedWith };
     } catch {
