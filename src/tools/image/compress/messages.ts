@@ -63,7 +63,7 @@ const en: typeof ko = {
     same: { label: 'Same format', short: 'Same' },
     webp: { label: 'Convert to WebP (smaller)', short: 'WebP' },
   },
-  note: 'Width and height stay the same. To make the image smaller in pixels too, use "Resize image".',
+  note: 'Width and height stay the same. To make the image smaller in pixels too, use "Resize Image".',
   reading: 'Reading images…',
   needOne: 'Add the images you want to compress.',
   ready: (count: number) => `Compress ${count} ${count === 1 ? 'image' : 'images'}.`,

@@ -12,7 +12,7 @@ export default defineTool({
         '이미지의 가로·세로 크기를 비율(%)이나 픽셀로 바꿉니다. 여러 장을 한 번에 같은 크기로 맞추고 ZIP으로 받을 수 있습니다. 이미지는 서버에 올라가지 않습니다.',
     },
     en: {
-      name: 'Resize image',
+      name: 'Resize Image',
       title: 'Resize images - Change image width and height in your browser',
       description:
         'Change the width and height of images by percentage or in pixels. Resize many at once and download them as a ZIP. Your images are never uploaded.',
