@@ -44,7 +44,7 @@ In a scanned document the text is part of the photo, so **More** can blur small 
 
 - **Keep only the pages you need**: if you only need to submit a few pages, use [Split PDF](/en/pdf/split/) to pull them out.
 - **Send it in parts**: if the limit is per email, split the PDF into two or three files and send them separately.
-- **Shrink the photos first**: if you made the PDF from photos, shrink them with [Compress image](/en/image/compress/) and then rebuild the PDF with [Image to PDF](/en/pdf/from-image/).
+- **Shrink the photos first**: if you made the PDF from photos, shrink them with [Compress Image](/en/image/compress/) and then rebuild the PDF with [Image to PDF](/en/pdf/from-image/).
 
 ## What changes when I compress?
 
