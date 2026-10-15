@@ -68,7 +68,7 @@
 <style>
   .page {
     flex: none;
-    background: #fff;
+    background: var(--color-paper);
     box-shadow: 0 1px 4px rgb(0 0 0 / 0.15);
   }
   canvas {
