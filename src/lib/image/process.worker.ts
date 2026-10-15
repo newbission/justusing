@@ -3,6 +3,8 @@
  * 이미지를 바로 세워 읽고, 크기를 바꾸고, 원하는 형식으로 다시 저장한다. 파일은 메모리에서만 다룬다.
  * 다시 그려 저장하므로 EXIF(촬영 위치·기기 정보 등)는 결과에 남지 않는다.
  */
+// UPNG.js가 워커에서 찾는 전역을 먼저 마련한다 (순서를 바꾸면 안 된다)
+import './upng-globals';
 import UPNG from 'upng-js';
 import type { ProcessRequest, ProcessResponse } from './process';
 
