@@ -55,7 +55,10 @@ function unpredict(data: Uint8Array, width: number, height: number, colors: numb
 /** 사진을 그릴 수 있는 모양으로 연다 */
 async function open(image: SourceImage): Promise<ImageBitmap | ImageData> {
   if (image.kind === 'jpeg') {
-    return createImageBitmap(new Blob([image.bytes as BlobPart], { type: 'image/jpeg' }));
+    // 화소 값을 그대로 읽는다. 색공간은 PDF가 정하므로 JPG 안의 ICC로 바꾸지 않는다
+    return createImageBitmap(new Blob([image.bytes as BlobPart], { type: 'image/jpeg' }), {
+      colorSpaceConversion: 'none',
+    });
   }
   const { width, height, colors } = image;
   let data = image.deflated ? await inflate(image.bytes) : image.bytes;

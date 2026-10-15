@@ -91,6 +91,9 @@ function sourceImage(object: PDFObject): SourceImage | undefined {
   if (dict.has(name('Decode')) || dict.lookup(name('Mask')) instanceof PDFArray) return undefined;
   const colors = colorCount(dict);
   if (!colors) return undefined;
+  // 다시 저장한 JPG는 늘 3색이다. 3색 색공간(보정·ICC 포함)은 화소 값을 그대로 두고 색공간도 그대로
+  // 두면 같은 색이 되지만, 회색은 DeviceRGB로 바꿔야 해서 보정·ICC가 없는 DeviceGray만 다룬다
+  if (colors === 1 && dict.lookup(name('ColorSpace')) !== name('DeviceGray')) return undefined;
   const filter = singleFilter(dict);
   if (filter === 'DCTDecode') {
     // 색 변환 설정(ColorTransform)이 붙은 JPG는 브라우저가 다른 색으로 읽을 수 있다
@@ -207,12 +210,12 @@ addEventListener('message', async (event: MessageEvent<PdfRequest>) => {
       const ref = refs[index]!;
       const old = doc.context.lookup(ref);
       if (!(old instanceof PDFRawStream)) continue;
-      // 크기·형식만 바꾸고 투명도(SMask)·색 맞춤 같은 나머지 설정은 그대로 둔다
+      // 크기·형식만 바꾸고 색공간·투명도(SMask) 같은 나머지 설정은 그대로 둔다 (회색은 RGB로)
       const dict = old.dict.clone(doc.context);
       for (const key of ['Filter', 'DecodeParms', 'Length']) dict.delete(name(key));
       dict.set(name('Width'), PDFNumber.of(width));
       dict.set(name('Height'), PDFNumber.of(height));
-      dict.set(name('ColorSpace'), name('DeviceRGB'));
+      if (colorCount(dict) === 1) dict.set(name('ColorSpace'), name('DeviceRGB'));
       dict.set(name('BitsPerComponent'), PDFNumber.of(8));
       dict.set(name('Filter'), name('DCTDecode'));
       doc.context.assign(ref, PDFRawStream.of(dict, bytes));
