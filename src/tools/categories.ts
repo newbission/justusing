@@ -47,6 +47,7 @@ export const CATEGORIES = {
     },
     sections: {
       optimize: { ko: '용량·크기', en: 'Size' },
+      convert: { ko: '변환', en: 'Convert' },
     },
   },
 } as const satisfies Record<
