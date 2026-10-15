@@ -14,6 +14,8 @@
   let pdf: LoadedPdf | undefined = $state.raw();
   let image: StampImage | undefined = $state.raw();
   let cannotOpen = $state(false);
+  /** 마지막으로 고른 이미지 번호. 앞서 고른 이미지가 늦게 끝나도 덮어쓰지 않게 */
+  let latest = 0;
 
   function onload(loaded: LoadedPdf) {
     pdf = loaded;
@@ -22,13 +24,15 @@
   async function choose(file: File | undefined) {
     if (!file) return;
     cannotOpen = false;
+    const request = ++latest;
     try {
       // 휴대폰 사진은 바로 세우고, JPG·PNG가 아니면 PNG로 바꾼다 (이미지를 PDF로와 같은 준비, 워커에서)
       const embed = await embedImage(file);
+      if (request !== latest) return;
       if (image) URL.revokeObjectURL(image.url);
       image = { url: URL.createObjectURL(file), embed };
     } catch {
-      cannotOpen = true;
+      if (request === latest) cannotOpen = true;
     }
   }
 </script>
