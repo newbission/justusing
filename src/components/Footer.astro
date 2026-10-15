@@ -9,6 +9,7 @@ const year = new Date().getFullYear();
 const locale = localeOf(Astro.url.pathname);
 const t = ui(locale).footer;
 const links = [
+  { name: ui(locale).nav.guides, href: '/guide/' },
   { name: t.about, href: '/about/' },
   { name: t.privacy, href: '/privacy/' },
   { name: t.terms, href: '/terms/' },
