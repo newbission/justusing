@@ -1,5 +1,5 @@
 /**
- * PDF 이미지 넣기·서명 넣기 E2E. 빌드 결과에서 돌린다 (playwright.config.ts 참고).
+ * PDF 이미지 넣기·서명 넣기·자르기 E2E. 빌드 결과에서 돌린다 (playwright.config.ts 참고).
  *
  * 받은 PDF를 pdf.js로 열어 이미지가 화면에 보이는 쪽 기준으로 고른 자리에 들어갔는지
  * (쪽을 돌린 PDF 포함) 확인하고, 처리하는 동안 파일이 기기를 떠나지 않는다는 약속을 확인한다.
@@ -164,6 +164,61 @@ test('서명 넣기: 그린 서명을 투명 배경 PNG로 넣는다', async ({ 
   expectNear(places[0]![0]!.width, 0.25, '폭');
   // 투명 배경: PNG의 알파가 SMask로 들어간다
   expect(new TextDecoder('latin1').decode(bytes)).toContain('/SMask');
+});
+
+/** 쪽마다 화면에 보이는 크기 (pt, 소수점 한 자리) */
+async function viewSizes(bytes: Uint8Array) {
+  const task = getDocument({ data: bytes });
+  const doc = await task.promise;
+  const sizes: [number, number][] = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const { width, height } = (await doc.getPage(i)).getViewport({ scale: 1 });
+    sizes.push([Math.round(width * 10) / 10, Math.round(height * 10) / 10]);
+  }
+  await task.destroy();
+  return sizes;
+}
+
+test('자르기: 키보드로 모서리를 옮긴 영역만 이 쪽에서 남긴다', async ({ page }) => {
+  const frame = await openTool(page, 'crop', 'three-pages.pdf');
+  // 처음 영역 (가장자리 5%씩 안쪽)에서 왼쪽 위를 오른쪽 0.1·아래 0.05, 오른쪽 아래를 왼쪽 0.05
+  const nw = frame.getByRole('button', { name: '왼쪽 위 모서리', exact: false });
+  await nw.press('Shift+ArrowRight');
+  await nw.press('Shift+ArrowRight');
+  await nw.press('Shift+ArrowDown');
+  await frame
+    .getByRole('button', { name: '오른쪽 아래 모서리', exact: false })
+    .press('Shift+ArrowLeft');
+  await frame.getByRole('button', { name: 'PDF 자르기' }).click();
+
+  const { name, bytes } = await download(page, frame);
+  expect(name).toBe('three-pages_자름.pdf');
+  // A4 595×842에서 가로 0.15~0.9, 세로 0.1~0.95
+  expect(await viewSizes(bytes)).toEqual([
+    [446.3, 715.7],
+    [595, 842],
+    [595, 842],
+  ]);
+});
+
+test('자르기: 모든 쪽을 고르면 돌린 쪽도 화면 기준 같은 영역을 남긴다', async ({ page }) => {
+  const doc = await PDFDocument.load(await readFile(fixture('three-pages.pdf')));
+  doc.addPage([595, 842]);
+  doc.getPages().forEach((p, i) => p.setRotation(degrees(i * 90)));
+  const frame = await openTool(page, 'crop', Buffer.from(await doc.save()));
+  await frame.getByText('모든 쪽', { exact: true }).click();
+  await frame
+    .getByRole('button', { name: '오른쪽 아래 모서리', exact: false })
+    .press('Shift+ArrowUp');
+  await frame.getByRole('button', { name: 'PDF 자르기' }).click();
+
+  // 남는 영역: 가로 0.05~0.95(0.9), 세로 0.05~0.9(0.85). 돌린 쪽은 화면 기준 가로·세로
+  const sizes = await viewSizes((await download(page, frame)).bytes);
+  sizes.forEach(([width, height], i) => {
+    const view = i % 2 === 0 ? [595, 842] : [842, 595];
+    expect(Math.abs(width - view[0]! * 0.9), `${i + 1}쪽 가로`).toBeLessThan(0.2);
+    expect(Math.abs(height - view[1]! * 0.85), `${i + 1}쪽 세로`).toBeLessThan(0.2);
+  });
 });
 
 test('처리하는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
