@@ -17,20 +17,20 @@ export const CATEGORIES = {
     text: {
       ko: {
         name: 'PDF',
-        description:
-          'PDF를 업로드 없이 보고, 합치고, 나누고, 회전·정리하고, 이미지와 서로 바꾸는 도구',
+        description: 'PDF를 업로드 없이 보고, 합치고, 나누고, 고치고, 변환하는 도구',
       },
       en: {
         name: 'PDF',
-        description:
-          'View, merge, split, rotate and organize PDFs, and convert between PDFs and images, without uploading them',
+        description: 'View, merge, split, edit and convert PDFs without uploading them',
       },
     },
     /** 순서가 곧 화면 순서다. 도구는 meta.ts의 section으로 들어간다 */
     sections: {
-      view: { ko: '보기·편집', en: 'View & edit' },
+      view: { ko: '보기·추출', en: 'View & extract' },
       pages: { ko: '페이지 정리', en: 'Organize pages' },
+      edit: { ko: '편집', en: 'Edit' },
       convert: { ko: '변환', en: 'Convert' },
+      security: { ko: '보안', en: 'Security' },
     },
   },
 } as const satisfies Record<
