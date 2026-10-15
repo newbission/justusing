@@ -37,7 +37,12 @@
   const result = $derived(run.kind === 'done' && run.level === level ? run : undefined);
   const noGain = $derived(run.kind === 'no-gain' && run.level === level);
 
+  /** 진행 중인 압축. 다른 파일을 열면 그만둔다 (안 그러면 쓰지 않을 결과로 워커가 계속 바쁘다) */
+  let controller: AbortController | undefined;
+
   function onload(loaded: LoadedPdf) {
+    controller?.abort();
+    controller = undefined;
     pdf = loaded;
     run = { kind: 'idle' };
   }
@@ -52,10 +57,16 @@
     const source = pdf;
     const chosen = level;
     run = { kind: 'working', done: 0 };
+    controller = new AbortController();
     try {
-      const bytes = await compressPdf(source, chosen, (done, total) => {
-        if (pdf === source) run = { kind: 'working', done, total };
-      });
+      const bytes = await compressPdf(
+        source,
+        chosen,
+        (done, total) => {
+          if (pdf === source) run = { kind: 'working', done, total };
+        },
+        controller.signal,
+      );
       if (pdf !== source) return;
       run =
         bytes.length < source.bytes.length
