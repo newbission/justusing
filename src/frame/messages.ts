@@ -55,6 +55,13 @@ const ko = {
     resize: '이미지 크기 조절. 끌거나 + - 키로 바꿉니다',
     help: '이미지를 끌어 옮기고, 오른쪽 아래 동그라미를 끌어 크기를 바꾸세요.',
   },
+  /** 서명 그리기 칸 (src/lib/pdf/SignaturePad.svelte) */
+  signature: {
+    pad: '서명 그리는 칸. 마우스나 손가락으로 그립니다',
+    placeholder: '여기에 서명하세요',
+    clear: '지우기',
+    done: '서명 완료',
+  },
 };
 
 type FrameMessages = typeof ko;
@@ -109,6 +116,12 @@ const en: FrameMessages = {
     stamp: 'Image to place. Drag it or use the arrow keys to move it, and + or - to resize it',
     resize: 'Resize the image. Drag it or use + or -',
     help: 'Drag the image to move it, and drag the circle at its lower right to resize it.',
+  },
+  signature: {
+    pad: 'Signature area. Draw with a mouse or your finger',
+    placeholder: 'Sign here',
+    clear: 'Clear',
+    done: 'Done',
   },
 };
 
