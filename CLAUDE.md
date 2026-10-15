@@ -91,7 +91,9 @@ python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 �
 새 도구 추가 방법:
 
 1. `src/tools/<카테고리>/<이름>/` 폴더를 만든다.
-   - `meta.ts`: `defineTool({ status, text: { ko: { name, title, description } }, related })`
+   - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, title, description } }, related })`
+     - `section`: 카테고리 안의 묶음 (`categories.ts`의 `sections` 키). 목록 페이지·홈이 묶음별 소제목으로 나눠 보여준다
+     - `icon`: 목록 카드 아이콘. 24×24 칸에 선으로 그린 SVG path의 `d` 값들. 다른 도구와 한눈에 구분되게 그린다
    - `content.ts`: `defineContent({ ko: { howTo: [...], faq: [{ q, a }] } })` — live 도구는 필수
      (업로드 여부·광고 안전성 같은 모든 도구 공통 질문은 `src/tools/common-faq.ts`에 있고 자동으로 붙는다)
    - `Frame.astro`: 격리 frame 페이지. `FrameLayout` 안에 `App.svelte`를 `mount`한다 (`pdf/view` 참고)
@@ -101,7 +103,7 @@ python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 �
 
 도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
 frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동으로 만든다.
-새 카테고리는 `src/tools/categories.ts`에 추가한다. PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
+새 카테고리·묶음은 `src/tools/categories.ts`에 추가한다 (묶음 순서가 곧 화면 순서). PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
 결과 PDF는 `src/lib/pdf/assemble.ts`의 `assemblePdf()`로 만든다(페이지 고르기·순서·회전, 워커에서 pdf-lib).
 썸네일은 `src/lib/pdf/Thumbnail.svelte`, 다운로드는 `src/frame/download.ts`, 바깥 스크롤 요청은 `src/frame/parent.ts`.
 PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고르기·암호·파일 이름 막대) 안에 화면을 그리고,
