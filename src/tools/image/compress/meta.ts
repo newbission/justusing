@@ -18,5 +18,5 @@ export default defineTool({
         'Make JPG, PNG and WebP images smaller. Compress many at once and download them as a ZIP. Your images are never uploaded; everything happens in your browser.',
     },
   },
-  related: ['pdf/compress', 'pdf/from-image'],
+  related: ['image/resize', 'pdf/compress'],
 });
