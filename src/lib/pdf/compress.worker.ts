@@ -194,6 +194,8 @@ addEventListener('message', async (event: MessageEvent<PdfRequest>) => {
     if (request.kind === 'scan') {
       // 암호 PDF는 받은 암호로 풀어서 연다. 결과에는 암호가 없다 (암호 해제 도구와 같음)
       const doc = await PDFDocument.load(request.bytes, { password: request.password ?? '' });
+      // 쓰지 않는 옛 사진까지 줄이느라 시간·메모리를 쓰지 않게 먼저 지운다
+      removeUnused(doc);
       const masks = maskRefs(doc);
       const refs: PDFRef[] = [];
       const images: SourceImage[] = [];
@@ -230,7 +232,6 @@ addEventListener('message', async (event: MessageEvent<PdfRequest>) => {
       dict.set(name('Filter'), name('DCTDecode'));
       doc.context.assign(ref, PDFRawStream.of(dict, bytes));
     }
-    removeUnused(doc);
     await deflateRaw(doc);
     const out = await doc.save({ useObjectStreams: true });
     send({ id, kind: 'done', bytes: out }, [out.buffer]);
