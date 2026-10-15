@@ -201,6 +201,8 @@ async function deflateRaw(doc: PDFDocument) {
     if (packed.length >= object.contents.length) continue;
     const dict = object.dict.clone(doc.context);
     dict.set(name('Filter'), name('FlateDecode'));
+    // 필터가 없어 무시되던 예측 설정이 새 Flate에 붙어 쓰이지 않게 지운다
+    dict.delete(name('DecodeParms'));
     doc.context.assign(ref, PDFRawStream.of(dict, packed));
   }
 }
