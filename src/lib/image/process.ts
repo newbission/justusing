@@ -86,8 +86,15 @@ async function run(task: Task) {
   await new Promise<void>((done) => {
     const finish = () => {
       worker.removeEventListener('message', listener);
+      worker.removeEventListener('error', onError);
       task.signal?.removeEventListener('abort', onAbort);
       done();
+    };
+    // 워커가 죽으면(메모리 부족 등) 답이 오지 않으므로 이 일을 실패로 끝내고 워커를 버린다
+    const onError = () => {
+      finish();
+      worker.terminate();
+      task.resolve({ id: task.request.id, kind: 'error', reason: 'encode' });
     };
     const listener = (event: MessageEvent<ProcessResponse>) => {
       if (event.data.id !== task.request.id) return;
@@ -102,6 +109,7 @@ async function run(task: Task) {
       task.reject(task.signal!.reason);
     };
     worker.addEventListener('message', listener);
+    worker.addEventListener('error', onError);
     task.signal?.addEventListener('abort', onAbort, { once: true });
     if (task.signal?.aborted) onAbort();
     else worker.postMessage(task.request);
