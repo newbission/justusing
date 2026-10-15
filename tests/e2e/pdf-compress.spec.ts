@@ -97,3 +97,16 @@ test('줄일 사진이 없으면 받을 파일 없이 알려 준다', async ({ p
   await expect(frame.getByRole('button', { name: '압축하기' })).toBeDisabled();
   await expect(frame.getByRole('button', { name: '다운로드' })).toHaveCount(0);
 });
+
+test('압축 중에 다른 파일로 바꾸면 이전 압축을 그만두고 새 파일을 압축한다', async ({ page }) => {
+  const frame = await openTool(page, 'photos.pdf');
+  await frame.getByRole('button', { name: '압축하기' }).click();
+  await frame.getByRole('button', { name: '다른 파일' }).click();
+  await frame.locator('input[type=file]').setInputFiles(fixture('photos.pdf'));
+  await frame.getByRole('button', { name: '압축하기' }).click();
+  await expect(frame.getByText('% 줄어듦', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const bytes = new Uint8Array(await readFile(await (await event).path()));
+  expect(await pages(bytes)).toHaveLength(2);
+});
