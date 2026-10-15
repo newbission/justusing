@@ -92,7 +92,11 @@ function sourceImage(object: PDFObject): SourceImage | undefined {
   const colors = colorCount(dict);
   if (!colors) return undefined;
   const filter = singleFilter(dict);
-  if (filter === 'DCTDecode') return { kind: 'jpeg', bytes: contents.slice() };
+  if (filter === 'DCTDecode') {
+    // 색 변환 설정(ColorTransform)이 붙은 JPG는 브라우저가 다른 색으로 읽을 수 있다
+    if (dict.has(name('DecodeParms'))) return undefined;
+    return { kind: 'jpeg', bytes: contents.slice() };
+  }
   if (filter !== 'FlateDecode' && filter !== '') return undefined;
   if (numberOf(dict, 'BitsPerComponent') !== 8) return undefined;
   const width = numberOf(dict, 'Width');
