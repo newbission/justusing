@@ -83,6 +83,8 @@
 
     const sources = readyItems;
     const startedWith = signature;
+    // 처리하는 동안 고른 값을 바꿔도 처음 값으로 끝까지 만든다
+    const options = { size, margin: MARGIN_PT[margin] };
     phase = { kind: 'working', done: 0, total: sources.length };
     try {
       const images = [];
@@ -92,7 +94,7 @@
         phase = { kind: 'working', done: images.length, total: sources.length };
       }
       // 쪽에 넣는 단계(워커)는 빨리 끝나서 따로 세지 않는다
-      const bytes = await imagesToPdf({ images, size, margin: MARGIN_PT[margin] });
+      const bytes = await imagesToPdf({ images, ...options });
       const base = sources[0]!.name.replace(/\.[^.]+$/, '');
       phase = { kind: 'done', bytes, fileName: `${base}.pdf`, signature: startedWith };
     } catch {
