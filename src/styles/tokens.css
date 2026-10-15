@@ -18,6 +18,8 @@
   /* 다크 화면에서 로고의 검정 네모가 바탕에 묻히지 않게 두르는 선 (src/brand/logo.ts의 MARK_DARK_LINE) */
   --color-logo-line: light-dark(transparent, #3a3a3a);
   --color-accent-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  /* 자를 때 버릴 부분을 덮는 어두운 막 (두 테마 같은 색) */
+  --color-scrim: rgb(0 0 0 / 0.45);
   /* 종이처럼 보이게 쪽·이미지 썸네일 아래에 까는 그림자 */
   --shadow-page: 0 1px 3px rgb(0 0 0 / 0.2);
 
