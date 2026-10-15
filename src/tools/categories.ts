@@ -1,6 +1,6 @@
 /**
  * 도구 카테고리. 카테고리 ID는 URL 첫 경로가 된다 (pdf → /pdf/).
- * 새 카테고리(예: image)는 여기에 추가한다. 순서가 곧 화면 노출 순서다.
+ * 새 카테고리는 여기에 추가한다. 순서가 곧 화면 노출 순서다.
  */
 import type { Locale } from '../i18n/locales';
 
@@ -32,6 +32,21 @@ export const CATEGORIES = {
       convert: { ko: '변환', en: 'Convert' },
       optimize: { ko: '최적화', en: 'Optimize' },
       security: { ko: '보안', en: 'Security' },
+    },
+  },
+  image: {
+    text: {
+      ko: {
+        name: '이미지',
+        description: '이미지를 업로드 없이 줄이고, 크기를 바꾸고, 변환하는 도구',
+      },
+      en: {
+        name: 'Image',
+        description: 'Compress, resize and convert images without uploading them',
+      },
+    },
+    sections: {
+      optimize: { ko: '용량·크기', en: 'Size' },
     },
   },
 } as const satisfies Record<
