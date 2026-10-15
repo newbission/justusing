@@ -89,6 +89,9 @@ function sourceImage(object: PDFObject): SourceImage | undefined {
   // 글자 모양 가림(ImageMask), 색 뒤집기(Decode), 색으로 투명 처리(Mask 배열)는 다시 저장하면 달라진다
   if (dict.lookup(name('ImageMask'))?.toString() === 'true') return undefined;
   if (dict.has(name('Decode')) || dict.lookup(name('Mask')) instanceof PDFArray) return undefined;
+  // 미리 섞은 색(Matte)을 쓰는 투명도는 사진과 크기가 같아야 하고 색도 맞물려 있어 건드리지 않는다
+  const softMask = dict.lookup(name('SMask'));
+  if (softMask instanceof PDFStream && softMask.dict.has(name('Matte'))) return undefined;
   const colors = colorCount(dict);
   if (!colors) return undefined;
   // 다시 저장한 JPG는 늘 3색이다. 3색 색공간(보정·ICC 포함)은 화소 값을 그대로 두고 색공간도 그대로
