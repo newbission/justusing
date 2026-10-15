@@ -22,6 +22,13 @@ export interface ToolMeta {
   status: 'live' | 'soon';
   /** 언어별 문구. 사이트의 모든 언어가 있어야 한다 (src/i18n/locales.ts) */
   text: Record<Locale, ToolText>;
+  /** 카테고리 안의 묶음 (src/tools/categories.ts의 sections 키, 예: 'convert') */
+  section: string;
+  /**
+   * 목록 카드의 아이콘. 24×24 칸에 선으로 그린 SVG path의 d 값들 (채우지 않고 선만 그린다).
+   * 색은 카드가 정한다. 도구끼리 한눈에 구분되게 그린다.
+   */
+  icon: string[];
   /** 관련 도구 ID 목록 (예: ['pdf/split']) */
   related?: string[];
 }

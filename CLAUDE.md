@@ -23,6 +23,7 @@ npm run format        # 포맷 정리
 npm run format:check  # 포맷 검사 (CI에서 실행)
 npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
+python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
 ```
 
 개발 서버에서 `/_dev/layout/` 주소로 도구 페이지 틀과 광고 슬롯 위치를 볼 수 있다 (배포에는 없음).
@@ -90,7 +91,9 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 새 도구 추가 방법:
 
 1. `src/tools/<카테고리>/<이름>/` 폴더를 만든다.
-   - `meta.ts`: `defineTool({ status, text: { ko: { name, title, description } }, related })`
+   - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, title, description } }, related })`
+     - `section`: 카테고리 안의 묶음 (`categories.ts`의 `sections` 키). 목록 페이지·홈이 묶음별 소제목으로 나눠 보여준다
+     - `icon`: 목록 카드 아이콘. 24×24 칸에 선으로 그린 SVG path의 `d` 값들. 다른 도구와 한눈에 구분되게 그린다
    - `content.ts`: `defineContent({ ko: { howTo: [...], faq: [{ q, a }] } })` — live 도구는 필수
      (업로드 여부·광고 안전성 같은 모든 도구 공통 질문은 `src/tools/common-faq.ts`에 있고 자동으로 붙는다)
    - `Frame.astro`: 격리 frame 페이지. `FrameLayout` 안에 `App.svelte`를 `mount`한다 (`pdf/view` 참고)
@@ -100,7 +103,7 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 
 도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
 frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동으로 만든다.
-새 카테고리는 `src/tools/categories.ts`에 추가한다. PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
+새 카테고리·묶음은 `src/tools/categories.ts`에 추가한다 (묶음 순서가 곧 화면 순서). PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
 결과 PDF는 `src/lib/pdf/assemble.ts`의 `assemblePdf()`로 만든다(페이지 고르기·순서·회전, 워커에서 pdf-lib).
 썸네일은 `src/lib/pdf/Thumbnail.svelte`, 다운로드는 `src/frame/download.ts`, 바깥 스크롤 요청은 `src/frame/parent.ts`.
 PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고르기·암호·파일 이름 막대) 안에 화면을 그리고,
@@ -254,8 +257,35 @@ Co-Authored-By: ...
   - [x] 5-1 나누기 (`/pdf/split/`): 범위 지정 / 한 장씩 / 고른 페이지만. 여러 파일은 ZIP 하나로 받기 (`src/lib/zip.ts`)
   - [x] 5-2 회전 (`/pdf/rotate/`): 썸네일에서 페이지별·전체 90° 회전
   - [x] 5-3 정리 (`/pdf/organize/`): 썸네일 끌어서 순서 바꾸기, 페이지 삭제
-  - 5-4 편집 (`/pdf/edit/`): MVP에서 뺀다 (2026-10-11). 첫 배포 뒤 방문 데이터를 보고 만든다.
-    텍스트·이미지·서명. 한글 글꼴을 직접 호스팅해 PDF에 넣어야 해서 가장 크다. 그때까지 `soon`으로 둔다.
+  - 5-4 편집 (`/pdf/edit/`): MVP에서 뺐다 (2026-10-11). 8단계에서 글꼴 기반 위에 만든다. 그때까지 `soon`
+- [ ] 6단계: 변환 도구 (2026-10-14) — 검색이 많은 'pdf 변환'용. 도구마다 멈추고 확인
+  - [x] 6-1 PDF를 이미지로 (`/pdf/to-image/`): 전체 추출 / 선택 추출, JPG·PNG, 150·300 DPI.
+        쪽을 canvas에 그린다 (`src/lib/pdf/render-image.ts`, 브라우저 canvas 크기 한계 안으로 줄임)
+  - [x] 6-2 이미지를 PDF로 (`/pdf/from-image/`): 이미지 한 장이 한 쪽, A4·Letter·이미지에 맞춤, 여백.
+        JPG·PNG는 원본 그대로 넣고, EXIF 방향이 붙은 휴대폰 사진과 그 밖의 형식만 다시 저장한다
+        (`src/lib/image/prepare.ts`, 워커 `src/lib/pdf/images-to-pdf.worker.ts`)
+- [x] 7단계: 가벼운 PDF 도구 (2026-10-14) — 서버·큰 라이브러리·한글 글꼴 없이 되는 것은 모두 만든다
+  - 공통: `src/lib/pdf/modify.ts`(+워커)가 PDF 하나를 고친다. 쪽 위 자리는 화면 기준 비율로 넘기고
+    워커가 쪽 회전·CropBox를 계산한다. 새 도구 화면은 `src/frame/controls.css`의 공통 모양을 쓴다
+  - [x] 암호 해제 (`/pdf/unlock/`), 암호 걸기 (`/pdf/protect/`, AES-256), 쪽 번호 (`/pdf/page-numbers/`),
+        글자 추출 (`/pdf/extract-text/`)
+  - [x] 이미지 넣기 (`/pdf/add-image/`), 서명 넣기 (`/pdf/sign/`): 같은 화면(`StampTool`, 배치 `PlacementEditor`)을
+        쓰고 찍을 이미지를 고르는 부분만 다르다. 서명은 그리기 칸(`SignaturePad`) 또는 이미지 올리기
+  - [x] 자르기 (`/pdf/crop/`): 보이는 영역(CropBox)만 줄인다. 잘린 내용은 파일에 남는다고 화면·FAQ에 밝힌다
+  - 쪽을 크게 그리고 위에 겹쳐 조작하는 화면은 `src/lib/pdf/PageSheet.svelte` 위에 만든다
+- [ ] 8단계: 무거운 PDF 도구 (2026-10-14) — **서버 없이 되면 오래 걸리거나 데이터가 커도 만든다** (사용자 결정).
+      도구마다 멈추고 확인
+  - 오래 걸리는 처리는 기기의 CPU 수(`navigator.hardwareConcurrency`)에 맞춰 워커 여러 개로 나눈다
+  - 큰 데이터(한글 글꼴, OCR 엔진·언어 데이터)는 그 도구에서만 받고, **받기 전에 크기를 화면에 밝힌다**
+  - 다음 방문에 다시 받지 않게 한다. 격리 frame은 출처가 없어 IndexedDB·Cache API·localStorage를 못 쓴다.
+    우리 사이트 파일의 브라우저 캐시를 쓴다 (`public/_headers`)
+  - [x] 압축 (`/pdf/compress/`): 글자는 그대로 두고 PDF 안의 사진만 다시 저장한다 (`src/lib/pdf/compress.ts`).
+        사진 워커 여러 개가 나눠 줄인다. 브라우저가 확실히 다루는 사진(JPG, 8비트 회색·RGB)만 바꾼다
+  - [ ] 글꼴 기반(한글 글꼴 직접 호스팅 + 내 글꼴 올리기) → 글자 워터마크, 머리말·꼬리말, 편집
+  - [ ] OCR (스캔본 글자 인식): 데이터 크기를 밝히고 캐시
+  - [ ] PDF 안의 사진 원본 뽑기, 양식(입력 칸) 채우기
+  - 하지 않음: PDF 비교 (2026-10-14 사용자 결정). 서버가 필요한 것: 오피스(워드·엑셀·PPT)→PDF,
+    파일 공유·여러 사람 서명, 인증서 전자서명
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)

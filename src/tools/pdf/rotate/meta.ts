@@ -2,6 +2,8 @@ import { defineTool } from '../../types';
 
 export default defineTool({
   status: 'live',
+  section: 'pages',
+  icon: ['M20 12a8 8 0 1 1-8-8c2.2 0 4.3.9 5.9 2.4L20 8.5', 'M20 3.5v5h-5'],
   text: {
     ko: {
       name: 'PDF 회전',

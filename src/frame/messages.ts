@@ -46,6 +46,33 @@ const ko = {
     pageShort: (n: number) => `${n}쪽`,
     selectGrid: '페이지',
   },
+  /** 쪽 위에 이미지 놓기 (src/lib/pdf/PlacementEditor.svelte) */
+  place: {
+    previous: '이전 쪽',
+    next: '다음 쪽',
+    page: (n: number, total: number) => `${n} / ${total}쪽`,
+    stamp: '놓을 이미지. 끌거나 화살표 키로 옮기고, + - 키로 크기를 바꿉니다',
+    resize: '이미지 크기 조절. 끌거나 + - 키로 바꿉니다',
+    help: '이미지를 끌어 옮기고, 오른쪽 아래 동그라미를 끌어 크기를 바꾸세요.',
+  },
+  /** 자를 영역 고르기 (src/lib/pdf/CropEditor.svelte) */
+  crop: {
+    area: '남길 영역. 끌거나 화살표 키로 옮깁니다',
+    corners: {
+      nw: '왼쪽 위 모서리. 끌거나 화살표 키로 옮깁니다',
+      ne: '오른쪽 위 모서리. 끌거나 화살표 키로 옮깁니다',
+      sw: '왼쪽 아래 모서리. 끌거나 화살표 키로 옮깁니다',
+      se: '오른쪽 아래 모서리. 끌거나 화살표 키로 옮깁니다',
+    },
+    help: '밝은 부분만 남습니다. 모서리 동그라미를 끌어 크기를, 가운데를 끌어 자리를 정하세요.',
+  },
+  /** 서명 그리기 칸 (src/lib/pdf/SignaturePad.svelte) */
+  signature: {
+    pad: '서명 그리는 칸. 마우스나 손가락으로 그립니다',
+    placeholder: '여기에 서명하세요',
+    clear: '지우기',
+    done: '서명 완료',
+  },
 };
 
 type FrameMessages = typeof ko;
@@ -92,6 +119,30 @@ const en: FrameMessages = {
     page: (n: number) => `Page ${n}`,
     pageShort: (n: number) => `Page ${n}`,
     selectGrid: 'Pages',
+  },
+  place: {
+    previous: 'Previous page',
+    next: 'Next page',
+    page: (n: number, total: number) => `Page ${n} of ${total}`,
+    stamp: 'Image to place. Drag it or use the arrow keys to move it, and + or - to resize it',
+    resize: 'Resize the image. Drag it or use + or -',
+    help: 'Drag the image to move it, and drag the circle at its lower right to resize it.',
+  },
+  crop: {
+    area: 'Area to keep. Drag it or use the arrow keys to move it',
+    corners: {
+      nw: 'Top left corner. Drag it or use the arrow keys to move it',
+      ne: 'Top right corner. Drag it or use the arrow keys to move it',
+      sw: 'Bottom left corner. Drag it or use the arrow keys to move it',
+      se: 'Bottom right corner. Drag it or use the arrow keys to move it',
+    },
+    help: 'Only the bright area is kept. Drag the corner circles to resize it and the middle to move it.',
+  },
+  signature: {
+    pad: 'Signature area. Draw with a mouse or your finger',
+    placeholder: 'Sign here',
+    clear: 'Clear',
+    done: 'Done',
   },
 };
 

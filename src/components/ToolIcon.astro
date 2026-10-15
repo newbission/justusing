@@ -1,0 +1,29 @@
+---
+/**
+ * 도구 아이콘. 각 도구 meta.ts의 icon(선으로 그린 path들)을 그린다. 꾸밈이라 화면 읽기에서 뺀다.
+ */
+interface Props {
+  paths: string[];
+  /** 한 변 길이(px) */
+  size?: number;
+}
+
+const { paths, size = 24 } = Astro.props;
+---
+
+<svg class="tool-icon" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+  {paths.map((d) => (
+    <path d={d} />
+  ))}
+</svg>
+
+<style>
+  .tool-icon {
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>

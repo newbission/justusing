@@ -10,17 +10,27 @@
  *   2. 아래 TOOL_IDS에 '<카테고리>/<이름>' 한 줄을 넣는다.
  * 허브·카테고리 목록·사이트맵·메뉴·관련 도구가 이 목록에서 자동으로 만들어진다.
  */
-import { CATEGORIES, isCategoryId, type CategoryId } from './categories';
+import { CATEGORIES, isCategoryId, type CategoryId, type SectionText } from './categories';
 import type { ToolContent, ToolMeta } from './types';
 
 /** 노출 순서대로, 한 줄에 하나 (포맷터가 한 줄로 합치지 않게 prettier-ignore) */
 // prettier-ignore
 const TOOL_IDS: readonly string[] = [
   'pdf/view',
+  'pdf/extract-text',
   'pdf/merge',
   'pdf/split',
   'pdf/rotate',
   'pdf/organize',
+  'pdf/crop',
+  'pdf/to-image',
+  'pdf/from-image',
+  'pdf/compress',
+  'pdf/page-numbers',
+  'pdf/add-image',
+  'pdf/sign',
+  'pdf/unlock',
+  'pdf/protect',
   'pdf/edit',
 ];
 
@@ -51,6 +61,10 @@ function loadTool(id: string): Tool {
     throw new Error(`공개(live) 도구에는 사용법·FAQ가 필요합니다: src/tools/${id}/content.ts`);
   }
 
+  if (!(meta.section in CATEGORIES[category].sections)) {
+    throw new Error(`${id}의 section이 ${category} 카테고리에 없습니다: ${meta.section}`);
+  }
+
   return { ...meta, id, category, href: `/${id}/`, content };
 }
 
@@ -71,6 +85,24 @@ export function getTool(id: string): Tool | undefined {
 
 export function toolsInCategory(category: CategoryId): Tool[] {
   return tools.filter((tool) => tool.category === category);
+}
+
+export interface ToolSection {
+  id: string;
+  text: SectionText;
+  tools: Tool[];
+}
+
+/** 카테고리의 도구를 묶음별로 (categories.ts의 sections 순서, 도구가 없는 묶음은 뺀다) */
+export function sectionsInCategory(category: CategoryId): ToolSection[] {
+  const sections: Record<string, SectionText> = CATEGORIES[category].sections;
+  return Object.entries(sections)
+    .map(([id, text]) => ({
+      id,
+      text,
+      tools: toolsInCategory(category).filter((tool) => tool.section === id),
+    }))
+    .filter((section) => section.tools.length > 0);
 }
 
 /** 실제 페이지가 있는 도구 */

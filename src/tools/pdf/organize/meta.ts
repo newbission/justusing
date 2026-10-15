@@ -2,6 +2,8 @@ import { defineTool } from '../../types';
 
 export default defineTool({
   status: 'live',
+  section: 'pages',
+  icon: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M14 14h6v6h-6z'],
   text: {
     ko: {
       name: 'PDF 페이지 정리',

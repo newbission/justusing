@@ -31,11 +31,13 @@
   interface Props {
     /** 새 PDF를 열었을 때. 도구는 여기서 화면 상태를 처음으로 되돌린다 */
     onload: (pdf: LoadedPdf) => void;
+    /** 연 PDF를 닫을 때 ("다른 파일", 새 파일 열기). 도구는 진행 중인 처리를 그만둔다 */
+    onclose?: () => void;
     /** 연 PDF로 그리는 도구 화면 */
     children: Snippet<[LoadedPdf]>;
   }
 
-  let { onload, children }: Props = $props();
+  let { onload, onclose, children }: Props = $props();
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
@@ -76,6 +78,7 @@
   }
 
   async function close() {
+    onclose?.();
     await opened?.close();
     opened = undefined;
     loaded = undefined;
