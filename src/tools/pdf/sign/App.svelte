@@ -15,12 +15,15 @@
   let pdf: LoadedPdf | undefined = $state.raw();
   let signature: StampImage | undefined = $state.raw();
   let cannotOpen = $state(false);
+  /** 마지막으로 고른(또는 그린) 서명 번호. 앞서 고른 이미지가 늦게 끝나도 덮어쓰지 않게 */
+  let latest = 0;
 
   function onload(loaded: LoadedPdf) {
     pdf = loaded;
   }
 
   function use(next: StampImage | undefined) {
+    latest += 1;
     if (signature) URL.revokeObjectURL(signature.url);
     signature = next;
   }
@@ -28,11 +31,13 @@
   async function upload(file: File | undefined) {
     if (!file) return;
     cannotOpen = false;
+    const request = ++latest;
     try {
       const embed = await embedImage(file);
+      if (request !== latest) return;
       use({ url: URL.createObjectURL(file), embed });
     } catch {
-      cannotOpen = true;
+      if (request === latest) cannotOpen = true;
     }
   }
 </script>
