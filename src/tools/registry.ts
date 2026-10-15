@@ -22,6 +22,7 @@ const TOOL_IDS: readonly string[] = [
   'pdf/rotate',
   'pdf/organize',
   'pdf/to-image',
+  'pdf/from-image',
   'pdf/edit',
 ];
 

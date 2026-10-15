@@ -16,5 +16,5 @@ export default defineTool({
         'Turn PDF pages into JPG or PNG images. Extract every page or only the ones you pick, in the quality you choose. Everything happens inside your browser.',
     },
   },
-  related: ['pdf/split', 'pdf/view'],
+  related: ['pdf/from-image', 'pdf/split'],
 });
