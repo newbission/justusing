@@ -11,6 +11,7 @@
  */
 import '../styles/global.css';
 import { localeOf } from '../i18n/locales';
+import { siteConfig, siteUrl } from '../site.config';
 
 interface Props {
   /** frame 문서 제목 (스크린리더가 iframe 안에서 읽는다) */
@@ -19,17 +20,31 @@ interface Props {
 
 const { title } = Astro.props;
 
+/**
+ * 우리 사이트 주소. Safari(WebKit)는 출처 없는 sandbox 문서에서 'self'를 우리 사이트로 보지 않아
+ * 'self'만 적으면 워커·스타일·글꼴·CMap을 받지 못한다 (크롬은 받는다). 그래서 주소를 함께 적는다.
+ * www 주소로 들어와도 frame은 같은 주소에서 파일을 받으므로 둘 다 적는다.
+ */
+const self = `'self' ${siteUrl} https://www.${siteConfig.domain}`;
+
 const csp = Astro.csp;
 if (csp) {
   csp.insertDirective("default-src 'none'");
-  csp.insertDirective("connect-src 'self'");
+  csp.insertDirective(`connect-src ${self}`);
   csp.insertDirective('worker-src blob:');
-  csp.insertDirective("img-src 'self' blob: data:");
-  csp.insertDirective("font-src 'self' data:");
+  csp.insertDirective(`img-src ${self} blob: data:`);
+  csp.insertDirective(`font-src ${self} data:`);
   csp.insertDirective("form-action 'none'");
   csp.insertDirective("base-uri 'none'");
   // pdf.js 등이 이미지 디코딩에 WebAssembly를 쓴다 (eval 자체는 계속 금지)
   csp.insertScriptResource("'self'");
+  csp.insertScriptResource(siteUrl);
+  csp.insertScriptResource(`https://www.${siteConfig.domain}`);
+  // 스타일 파일(/_astro/*.css)도 같은 이유로 주소를 적는다. 하나라도 넣으면 Astro의 기본값('self')이
+  // 빠지고 <style> 해시도 함께 빠지므로 'self'를 먼저 직접 넣는다 (빠지면 PDF 보기 화면이 깨진다)
+  csp.insertStyleResource("'self'");
+  csp.insertStyleResource(siteUrl);
+  csp.insertStyleResource(`https://www.${siteConfig.domain}`);
   csp.insertScriptResource("'wasm-unsafe-eval'");
 } else if (!import.meta.env.DEV) {
   // 개발 서버에는 CSP 기능이 없다. 배포 빌드에서 CSP 없이 frame이 나가는 일은 막는다.
