@@ -5,7 +5,7 @@
 <script lang="ts">
   import { pick } from '../../../frame/locale';
   import { MESSAGES } from './messages';
-  import { toEmbeddable } from '../../../lib/image/prepare';
+  import { embedImage } from '../../../lib/image/embed';
   import SignaturePad from '../../../lib/pdf/SignaturePad.svelte';
   import SinglePdfTool, { type LoadedPdf } from '../../../lib/pdf/SinglePdfTool.svelte';
   import StampTool, { type StampImage } from '../../../lib/pdf/StampTool.svelte';
@@ -29,7 +29,8 @@
     if (!file) return;
     cannotOpen = false;
     try {
-      use({ url: URL.createObjectURL(file), embed: await toEmbeddable(file) });
+      const embed = await embedImage(file);
+      use({ url: URL.createObjectURL(file), embed });
     } catch {
       cannotOpen = true;
     }

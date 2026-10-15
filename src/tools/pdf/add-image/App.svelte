@@ -5,7 +5,7 @@
 <script lang="ts">
   import { pick } from '../../../frame/locale';
   import { MESSAGES } from './messages';
-  import { toEmbeddable } from '../../../lib/image/prepare';
+  import { embedImage } from '../../../lib/image/embed';
   import SinglePdfTool, { type LoadedPdf } from '../../../lib/pdf/SinglePdfTool.svelte';
   import StampTool, { type StampImage } from '../../../lib/pdf/StampTool.svelte';
 
@@ -23,8 +23,8 @@
     if (!file) return;
     cannotOpen = false;
     try {
-      // 휴대폰 사진은 바로 세우고, JPG·PNG가 아니면 PNG로 바꾼다 (이미지를 PDF로와 같은 준비)
-      const embed = await toEmbeddable(file);
+      // 휴대폰 사진은 바로 세우고, JPG·PNG가 아니면 PNG로 바꾼다 (이미지를 PDF로와 같은 준비, 워커에서)
+      const embed = await embedImage(file);
       if (image) URL.revokeObjectURL(image.url);
       image = { url: URL.createObjectURL(file), embed };
     } catch {
