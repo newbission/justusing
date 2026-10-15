@@ -11,6 +11,14 @@ import { ui } from '../i18n/ui';
 const currentPath = Astro.url.pathname;
 const locale = localeOf(currentPath);
 const t = ui(locale);
+// 도구 분류들, 그리고 맨 뒤에 가이드
+const links = [
+  ...visibleCategories.map((category) => ({
+    href: localizePath(`/${category}/`, locale),
+    name: CATEGORIES[category].text[locale].name,
+  })),
+  { href: localizePath('/guide/', locale), name: t.nav.guides },
+];
 ---
 
 <header class="site-header">
@@ -20,16 +28,13 @@ const t = ui(locale);
     </a>
     <nav class="nav" aria-label={t.nav.categories}>
       <ul>
-        {visibleCategories.map((category) => {
-          const href = localizePath(`/${category}/`, locale);
-          return (
-            <li>
-              <a href={href} aria-current={currentPath.startsWith(href) ? 'page' : undefined}>
-                {CATEGORIES[category].text[locale].name}
-              </a>
-            </li>
-          );
-        })}
+        {links.map(({ href, name }) => (
+          <li>
+            <a href={href} aria-current={currentPath.startsWith(href) ? 'page' : undefined}>
+              {name}
+            </a>
+          </li>
+        ))}
       </ul>
     </nav>
     <div class="actions">
@@ -65,12 +70,18 @@ const t = ui(locale);
     flex: 1;
     min-width: 0;
   }
+  /* 메뉴가 넘치면 옆으로 밀어 본다 (좁은 화면에서 언어 버튼과 겹치지 않게) */
+  .nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
   .nav ul {
     display: flex;
     gap: 16px;
     margin: 0;
     padding: 0;
     list-style: none;
+    white-space: nowrap;
   }
   .nav a {
     color: var(--color-muted);
@@ -80,5 +91,16 @@ const t = ui(locale);
   .nav a:hover,
   .nav a[aria-current='page'] {
     color: var(--color-text);
+  }
+  @media (max-width: 480px) {
+    .inner {
+      gap: 14px;
+    }
+    .nav ul {
+      gap: 12px;
+    }
+    .nav a {
+      font-size: 14px;
+    }
   }
 </style>
