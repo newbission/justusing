@@ -16,6 +16,16 @@ export interface PageRect {
   height: number;
 }
 
+/**
+ * 이미지를 놓을 자리. 화면에 보이는 쪽 기준 비율(0~1), 왼쪽 위가 (0, 0).
+ * 높이는 이미지 비율로 정해진다 (크기가 다른 쪽에 넣어도 이미지가 늘어나지 않게).
+ */
+export interface StampPlace {
+  x: number;
+  y: number;
+  width: number;
+}
+
 export type NumberPosition = 'bottom-center' | 'bottom-right' | 'top-right';
 export type NumberFormat = 'plain' | 'of-total' | 'dashes';
 
@@ -30,7 +40,7 @@ export type ModifyJob =
   | {
       kind: 'stamp-image';
       image: { kind: 'jpg' | 'png'; bytes: Uint8Array };
-      rect: PageRect;
+      place: StampPlace;
       pages: number[];
     }
   /** 고른 쪽들의 보이는 영역을 rect로 줄인다 (pages는 0부터) */
