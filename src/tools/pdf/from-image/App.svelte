@@ -122,6 +122,8 @@
   async function load(item: Item) {
     try {
       const info = await readImageInfo(item.file);
+      // 읽는 동안 목록에서 뺐으면 썸네일 주소를 만들지 않는다 (해제할 곳이 없어 메모리에 남는다)
+      if (!items.some((other) => other.id === item.id)) return;
       item.width = info.width;
       item.height = info.height;
       item.thumb = URL.createObjectURL(item.file);
