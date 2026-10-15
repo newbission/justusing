@@ -134,7 +134,8 @@ function sourceImage(object: PDFObject, grayAllowed: boolean): SourceImage | und
   let parms = dict.lookup(name('DecodeParms'));
   if (parms instanceof PDFArray) parms = parms.lookup(0);
   const parmsDict = parms instanceof PDFDict ? parms : undefined;
-  const predictor = numberOf(parmsDict, 'Predictor') ?? 1;
+  // 예측 설정은 Flate가 있을 때만 쓰인다 (필터 없는 스트림에 남은 DecodeParms는 무시된다)
+  const predictor = filter === 'FlateDecode' ? (numberOf(parmsDict, 'Predictor') ?? 1) : 1;
   // TIFF 예측(2)은 거의 쓰이지 않아 다루지 않는다
   if (predictor !== 1 && predictor < 10) return undefined;
   // 예측의 한 줄 길이는 Colors·Columns로 정해진다. 사진 크기와 같을 때만 다룬다
