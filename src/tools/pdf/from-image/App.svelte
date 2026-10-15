@@ -67,8 +67,13 @@
     | { kind: 'failed'; message: string };
   let phase = $state<Phase>({ kind: 'idle' });
 
-  /** 만들 내용(이미지 순서·쪽 크기·여백). 만든 뒤 바뀌면 결과는 더 이상 맞지 않는다. */
-  const signature = $derived(`${size}:${margin}:${readyItems.map((item) => item.id).join(',')}`);
+  /**
+   * 만들 내용(이미지 순서·쪽 크기·여백). 만든 뒤 바뀌면 결과는 더 이상 맞지 않는다.
+   * 읽는 중인 이미지도 넣는다: 이미지를 더하자마자 이전 결과의 다운로드가 사라져야 한다.
+   */
+  const signature = $derived(
+    `${size}:${margin}:${items.map((item) => `${item.id}-${item.status}`).join(',')}`,
+  );
   const result = $derived(
     phase.kind === 'done' && phase.signature === signature ? phase : undefined,
   );
