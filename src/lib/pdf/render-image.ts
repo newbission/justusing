@@ -19,6 +19,8 @@ export const IMAGE_TYPES: Record<ImageFormat, string> = {
  * 넘으면 빈 이미지가 나온다. A4 300 DPI(약 870만)는 그대로 그려진다.
  */
 const MAX_PIXELS = 16_000_000;
+/** canvas 한 변의 최대 화소. 면적과 따로 한계가 있다 (아주 길쭉한 쪽). Safari가 가장 작다 */
+const MAX_SIDE = 16_384;
 
 /** JPG 화질 (0~1). 글자가 번지지 않을 만큼 높게 둔다 */
 const JPEG_QUALITY = 0.92;
@@ -61,10 +63,13 @@ export async function renderPageImage(
   format: ImageFormat,
 ): Promise<Uint8Array> {
   let viewport = page.getViewport({ scale: dpi / 72 });
-  const pixels = viewport.width * viewport.height;
-  if (pixels > MAX_PIXELS) {
-    viewport = page.getViewport({ scale: (dpi / 72) * Math.sqrt(MAX_PIXELS / pixels) });
-  }
+  const shrink = Math.min(
+    1,
+    Math.sqrt(MAX_PIXELS / (viewport.width * viewport.height)),
+    MAX_SIDE / viewport.width,
+    MAX_SIDE / viewport.height,
+  );
+  if (shrink < 1) viewport = page.getViewport({ scale: (dpi / 72) * shrink });
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.floor(viewport.width);
