@@ -2,6 +2,8 @@ import { defineTool } from '../../types';
 
 export default defineTool({
   status: 'live',
+  section: 'convert',
+  icon: ['M6 3h8l4 4v14H6z', 'M14 3v4h4', 'M8.5 17l2.5-2.5 1.5 1.5 1.5-1.5 1.5 1.5'],
   text: {
     ko: {
       name: '이미지를 PDF로',

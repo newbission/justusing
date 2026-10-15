@@ -9,6 +9,9 @@ export interface CategoryText {
   description: string;
 }
 
+/** 카테고리 안의 도구 묶음. 목록 페이지에서 소제목으로 나눠 보여준다 */
+export type SectionText = Record<Locale, string>;
+
 export const CATEGORIES = {
   pdf: {
     text: {
@@ -23,8 +26,17 @@ export const CATEGORIES = {
           'View, merge, split, rotate and organize PDFs, and convert between PDFs and images, without uploading them',
       },
     },
+    /** 순서가 곧 화면 순서다. 도구는 meta.ts의 section으로 들어간다 */
+    sections: {
+      view: { ko: '보기·편집', en: 'View & edit' },
+      pages: { ko: '페이지 정리', en: 'Organize pages' },
+      convert: { ko: '변환', en: 'Convert' },
+    },
   },
-} as const satisfies Record<string, { text: Record<Locale, CategoryText> }>;
+} as const satisfies Record<
+  string,
+  { text: Record<Locale, CategoryText>; sections: Record<string, SectionText> }
+>;
 
 export type CategoryId = keyof typeof CATEGORIES;
 
