@@ -1,7 +1,8 @@
 ---
 /**
- * 글 페이지 틀 (소개·개인정보처리방침·이용약관·문의).
+ * 글 페이지 틀 (소개·개인정보처리방침·이용약관·문의·가이드).
  * 위치 표시 → 제목 → 가로 배너 → 본문 순서이고, 본문은 읽기 좋은 폭으로 좁힌다.
+ * 본문 뒤에 붙일 것(가이드의 도구 버튼·다른 글 등)은 after 칸에 넣는다.
  */
 import BaseLayout from './BaseLayout.astro';
 import Breadcrumb from '../components/Breadcrumb.astro';
@@ -16,18 +17,22 @@ interface Props {
   description: string;
   /** 제목 아래 작은 글씨 (예: 시행일) */
   note?: string;
+  /** 현재 위치. 없으면 홈 › 제목 */
+  breadcrumb?: { name: string; href?: string }[];
 }
 
 const { title, description, note } = Astro.props;
 const locale = localeOf(Astro.url.pathname);
+const breadcrumb = Astro.props.breadcrumb ?? [
+  { name: ui(locale).nav.home, href: localizePath('/', locale) },
+  { name: title },
+];
 ---
 
 <BaseLayout title={title} description={description}>
   <RailShell>
     <div class="doc-page">
-      <Breadcrumb
-        items={[{ name: ui(locale).nav.home, href: localizePath('/', locale) }, { name: title }]}
-      />
+      <Breadcrumb items={breadcrumb} />
       <h1>{title}</h1>
       {note && <p class="note">{note}</p>}
       <!-- 제목 아래 가로 배너 -->
@@ -37,6 +42,7 @@ const locale = localeOf(Astro.url.pathname);
       <article class="doc">
         <slot />
       </article>
+      <slot name="after" />
     </div>
   </RailShell>
 </BaseLayout>
@@ -97,5 +103,25 @@ const locale = localeOf(Astro.url.pathname);
   }
   .doc :global(a) {
     color: var(--color-accent);
+  }
+  /* 가이드의 비교 표. 좁은 화면에서는 표만 옆으로 밀어 본다 */
+  .doc :global(table) {
+    display: block;
+    max-width: 100%;
+    margin: 0 0 16px;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+  .doc :global(th),
+  .doc :global(td) {
+    padding: 8px 12px;
+    border: 1px solid var(--color-line);
+    text-align: left;
+    vertical-align: top;
+  }
+  .doc :global(th) {
+    background: var(--color-surface);
+    white-space: nowrap;
   }
 </style>
