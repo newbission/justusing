@@ -44,7 +44,9 @@
     if (view.height === 0) return next;
     // 이미지 높이 / 너비 (쪽 비율 기준). 세로로 긴 이미지는 높이가 먼저 쪽에 닿는다
     const tall = (view.width * image.height) / image.width / view.height;
-    const width = clamp(next.width, MIN_WIDTH, Math.min(1, 1 / tall));
+    // 아주 긴 이미지는 최소 폭보다 쪽 안에 들어가는 것을 먼저 지킨다
+    const max = Math.min(1, 1 / tall);
+    const width = Math.min(clamp(next.width, MIN_WIDTH, max), max);
     return { width, x: clamp(next.x, 0, 1 - width), y: clamp(next.y, 0, 1 - width * tall) };
   }
 
