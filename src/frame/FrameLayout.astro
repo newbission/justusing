@@ -40,7 +40,9 @@ if (csp) {
   csp.insertScriptResource("'self'");
   csp.insertScriptResource(siteUrl);
   csp.insertScriptResource(`https://www.${siteConfig.domain}`);
-  // 스타일 파일(/_astro/*.css)도 같은 이유로 주소를 적는다 (Astro가 'self'와 해시를 넣는다)
+  // 스타일 파일(/_astro/*.css)도 같은 이유로 주소를 적는다. 하나라도 넣으면 Astro의 기본값('self')이
+  // 빠지고 <style> 해시도 함께 빠지므로 'self'를 먼저 직접 넣는다 (빠지면 PDF 보기 화면이 깨진다)
+  csp.insertStyleResource("'self'");
   csp.insertStyleResource(siteUrl);
   csp.insertStyleResource(`https://www.${siteConfig.domain}`);
   csp.insertScriptResource("'wasm-unsafe-eval'");
