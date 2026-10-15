@@ -43,6 +43,9 @@ export function guidesIn(locale: Locale): Guide[] {
 /** 모든 가이드 주소 이름 */
 export const guideSlugs: string[] = [...new Set(all.map(slugOf))];
 
+/** 가이드 글 페이지들 (한국어·영어 라우트가 같이 쓴다) */
+export const guidePaths = () => guideSlugs.map((slug) => ({ params: { slug }, props: { slug } }));
+
 /** 이 도구를 안내하는 가이드들 (도구 페이지 아래에 단다) */
 export function guidesForTool(toolId: string, locale: Locale): Guide[] {
   return guidesIn(locale).filter((guide) => guide.data.tool === toolId);

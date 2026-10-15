@@ -8,19 +8,22 @@ import { render } from 'astro:content';
 import DocLayout from '../../layouts/DocLayout.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import ToolIcon from '../../components/ToolIcon.astro';
-import { guideSlugs, guidesIn, slugOf } from '../../guides';
+import { guidePaths, guidesIn, slugOf } from '../../guides';
 import { localeOf, localizePath } from '../../i18n/locales';
 import { ui } from '../../i18n/ui';
 import { siteConfig } from '../../site.config';
 import { getTool } from '../../tools/registry';
 
-export const getStaticPaths = (() =>
-  guideSlugs.map((slug) => ({ params: { slug } }))) satisfies GetStaticPaths;
+export const getStaticPaths = guidePaths satisfies GetStaticPaths;
+
+interface Props {
+  slug: string;
+}
 
 const locale = localeOf(Astro.url.pathname);
 const t = ui(locale);
 const guides = guidesIn(locale);
-const guide = guides.find((entry) => slugOf(entry) === Astro.params.slug)!;
+const guide = guides.find((entry) => slugOf(entry) === Astro.props.slug)!;
 const { Content } = await render(guide);
 const tool = getTool(guide.data.tool)!;
 const toolName = tool.text[locale].name;

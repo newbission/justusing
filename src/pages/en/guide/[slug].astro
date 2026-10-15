@@ -4,10 +4,9 @@
  */
 import type { GetStaticPaths } from 'astro';
 import GuidePage from '../../guide/[slug].astro';
-import { guideSlugs } from '../../../guides';
+import { guidePaths } from '../../../guides';
 
-export const getStaticPaths = (() =>
-  guideSlugs.map((slug) => ({ params: { slug } }))) satisfies GetStaticPaths;
+export const getStaticPaths = guidePaths satisfies GetStaticPaths;
 ---
 
-<GuidePage />
+<GuidePage {...Astro.props} />
