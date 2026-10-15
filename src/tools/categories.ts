@@ -30,6 +30,7 @@ export const CATEGORIES = {
       pages: { ko: '페이지 정리', en: 'Organize pages' },
       edit: { ko: '편집', en: 'Edit' },
       convert: { ko: '변환', en: 'Convert' },
+      optimize: { ko: '최적화', en: 'Optimize' },
       security: { ko: '보안', en: 'Security' },
     },
   },
