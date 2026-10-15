@@ -26,9 +26,11 @@
     meta: Snippet<[BatchItem]>;
     /** 줄 오른쪽 빼기 버튼 앞의 버튼 (한 장 받기 등) */
     actions?: Snippet<[BatchItem]>;
+    /** 이미지를 뺐을 때. 도구가 그 이미지의 결과를 버린다 (안 그러면 메모리에 남는다) */
+    onremove: (item: BatchItem) => void;
   }
 
-  let { batch, busy, bar, options, meta, actions }: Props = $props();
+  let { batch, busy, bar, options, meta, actions, onremove }: Props = $props();
   const t = pick(FRAME_MESSAGES).images;
 
   function add(files: File[]) {
@@ -99,7 +101,10 @@
             type="button"
             class="btn icon"
             disabled={busy}
-            onclick={() => batch.remove(item)}
+            onclick={() => {
+              batch.remove(item);
+              onremove(item);
+            }}
             aria-label={t.remove(item.name)}>×</button
           >
         </li>
