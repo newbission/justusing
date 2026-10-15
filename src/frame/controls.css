@@ -33,6 +33,16 @@
   opacity: 0.4;
   cursor: default;
 }
+/* 파일 고르기 label을 버튼처럼 (안의 input은 숨김) */
+label.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+label.btn:has(input:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
 .btn.primary {
   min-width: 120px;
   height: 40px;
