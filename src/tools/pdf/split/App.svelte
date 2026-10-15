@@ -98,16 +98,18 @@
         bytes: file,
       }));
       const base = source.name.replace(/\.pdf$/i, '');
-      run =
-        named.length === 1
-          ? { kind: 'done', ...named[0]!, type: 'application/pdf', signature: startedWith }
-          : {
-              kind: 'done',
-              name: `${base}_${t.zipSuffix}.zip`,
-              bytes: makeZip(named),
-              type: 'application/zip',
-              signature: startedWith,
-            };
+      const zip = named.length === 1 ? undefined : await makeZip(named);
+      // ZIP을 묶는 동안 다른 파일을 열었으면 버린다
+      if (pdf !== source) return;
+      run = zip
+        ? {
+            kind: 'done',
+            name: `${base}_${t.zipSuffix}.zip`,
+            bytes: zip,
+            type: 'application/zip',
+            signature: startedWith,
+          }
+        : { kind: 'done', ...named[0]!, type: 'application/pdf', signature: startedWith };
     } catch {
       if (pdf !== source) return;
       run = { kind: 'failed', message: t.failed };
