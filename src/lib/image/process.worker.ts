@@ -48,8 +48,9 @@ async function encode(
   options: ProcessRequest['options'],
 ): Promise<Uint8Array> {
   const { width, height } = canvas;
-  if (options.type === 'image/png') {
-    // 브라우저의 PNG 저장은 색을 줄이지 못해 UPNG로 저장한다 (색 수 0이면 무손실)
+  if (options.type === 'image/png' && options.pngColors > 0) {
+    // 브라우저의 PNG 저장은 색을 줄이지 못해 UPNG로 저장한다.
+    // 색을 줄이지 않을 때는 브라우저가 더 빨라서 아래에서 브라우저로 저장한다
     const pixels = canvas.getContext('2d')!.getImageData(0, 0, width, height).data;
     return new Uint8Array(UPNG.encode([pixels.buffer], width, height, options.pngColors));
   }
