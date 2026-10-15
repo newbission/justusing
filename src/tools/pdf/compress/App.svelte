@@ -45,6 +45,7 @@
     controller?.abort();
     controller = undefined;
     pdf = undefined;
+    run = { kind: 'idle' };
   }
 
   function onload(loaded: LoadedPdf) {
