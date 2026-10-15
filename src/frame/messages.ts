@@ -46,6 +46,15 @@ const ko = {
     pageShort: (n: number) => `${n}쪽`,
     selectGrid: '페이지',
   },
+  /** 쪽 위에 이미지 놓기 (src/lib/pdf/PlacementEditor.svelte) */
+  place: {
+    previous: '이전 쪽',
+    next: '다음 쪽',
+    page: (n: number, total: number) => `${n} / ${total}쪽`,
+    stamp: '놓을 이미지. 끌거나 화살표 키로 옮기고, + - 키로 크기를 바꿉니다',
+    resize: '이미지 크기 조절. 끌거나 + - 키로 바꿉니다',
+    help: '이미지를 끌어 옮기고, 오른쪽 아래 동그라미를 끌어 크기를 바꾸세요.',
+  },
 };
 
 type FrameMessages = typeof ko;
@@ -92,6 +101,14 @@ const en: FrameMessages = {
     page: (n: number) => `Page ${n}`,
     pageShort: (n: number) => `Page ${n}`,
     selectGrid: 'Pages',
+  },
+  place: {
+    previous: 'Previous page',
+    next: 'Next page',
+    page: (n: number, total: number) => `Page ${n} of ${total}`,
+    stamp: 'Image to place. Drag it or use the arrow keys to move it, and + or - to resize it',
+    resize: 'Resize the image. Drag it or use + or -',
+    help: 'Drag the image to move it, and drag the circle at its lower right to resize it.',
   },
 };
 
