@@ -25,6 +25,8 @@ const TOOL_IDS: readonly string[] = [
   'pdf/to-image',
   'pdf/from-image',
   'pdf/page-numbers',
+  'pdf/add-image',
+  'pdf/sign',
   'pdf/unlock',
   'pdf/protect',
   'pdf/edit',
