@@ -116,5 +116,22 @@ with open(path('photos.pdf'), 'wb') as f:
         ('<< >>', zlib.compress(bytes(random.Random(3).getrandbits(8) for _ in range(40_000)))),
     ]))
 
-for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf']:
+# 이미지 압축용: 화질 높게 저장한 사진(JPG)과 화면 캡처 같은 PNG(색 변화가 부드럽고 투명한 곳이 있음)
+photo(1200, 900, 2).save(path('photo.jpg'), 'JPEG', quality=95)
+# 이미 낮은 화질로 저장해 더 줄일 수 없는 사진
+photo(400, 300, 3).save(path('small.jpg'), 'JPEG', quality=40)
+screen = Image.new('RGBA', (800, 600), (0, 0, 0, 0))
+screen_pixels = screen.load()
+for y in range(600):
+    for x in range(800):
+        if y >= 40:
+            screen_pixels[x, y] = (120 + x // 7, 100 + y // 5, 160 + (x + y) // 20, 255)
+for top in range(80, 560, 60):
+    for y in range(top, top + 36):
+        for x in range(40, 760):
+            screen_pixels[x, y] = (40 + top // 4, 120, 200 - top // 4, 255)
+screen.save(path('screen.png'))
+
+for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
+             'screen.png', 'small.jpg']:
     print(name, os.path.getsize(path(name)), 'bytes')
