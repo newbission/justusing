@@ -1,0 +1,12 @@
+---
+/**
+ * 영어 가이드 글 (/en/guide/compress-pdf/). 한국어 가이드 글 페이지가 주소의 언어로 글을 고른다.
+ */
+import type { GetStaticPaths } from 'astro';
+import GuidePage from '../../guide/[slug].astro';
+import { guidePaths } from '../../../guides';
+
+export const getStaticPaths = guidePaths satisfies GetStaticPaths;
+---
+
+<GuidePage {...Astro.props} />

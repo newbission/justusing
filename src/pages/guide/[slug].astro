@@ -1,0 +1,185 @@
+---
+/**
+ * 가이드 글 페이지 (/guide/compress-pdf/). 글은 src/content/guides/<언어>/<주소>.md.
+ * 제목 아래와 글 끝에 이 글이 안내하는 도구로 가는 버튼을 단다. 글 끝 버튼과 광고 칸은 띄운다.
+ */
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import DocLayout from '../../layouts/DocLayout.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import ToolIcon from '../../components/ToolIcon.astro';
+import { guidePaths, guidesIn, slugOf } from '../../guides';
+import { localeOf, localizePath } from '../../i18n/locales';
+import { ui } from '../../i18n/ui';
+import { siteConfig } from '../../site.config';
+import { getTool } from '../../tools/registry';
+
+export const getStaticPaths = guidePaths satisfies GetStaticPaths;
+
+interface Props {
+  slug: string;
+}
+
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale);
+const guides = guidesIn(locale);
+const guide = guides.find((entry) => slugOf(entry) === Astro.props.slug)!;
+const { Content } = await render(guide);
+const tool = getTool(guide.data.tool)!;
+const toolName = tool.text[locale].name;
+const toolHref = localizePath(tool.href, locale);
+
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'Asia/Seoul' }).format(date);
+const note = guide.data.updated
+  ? t.guide.updated(formatDate(guide.data.updated))
+  : t.guide.published(formatDate(guide.data.published));
+const others = guides.filter((entry) => entry !== guide);
+
+// 검색 결과에 글 정보(날짜 등)가 나오게 하는 구조화 데이터 (schema.org Article)
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: guide.data.title,
+  description: guide.data.description,
+  datePublished: guide.data.published.toISOString(),
+  dateModified: (guide.data.updated ?? guide.data.published).toISOString(),
+  inLanguage: locale,
+  url: new URL(Astro.url.pathname, Astro.site).href,
+  author: { '@type': 'Organization', name: siteConfig.name, url: Astro.site?.href },
+  publisher: { '@type': 'Organization', name: siteConfig.name, url: Astro.site?.href },
+};
+---
+
+<DocLayout
+  title={guide.data.title}
+  description={guide.data.description}
+  {note}
+  breadcrumb={[
+    { name: t.nav.home, href: localizePath('/', locale) },
+    { name: t.guide.indexTitle, href: localizePath('/guide/', locale) },
+    { name: guide.data.title },
+  ]}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <p class="tool-link">
+    {t.guide.tryTool}: <a href={toolHref}>{toolName}</a>
+  </p>
+
+  <Content />
+
+  <Fragment slot="after">
+    <aside class="cta" aria-label={t.guide.ctaTitle}>
+      <span class="cta-icon">
+        <ToolIcon paths={tool.icon} />
+      </span>
+      <div class="cta-text">
+        <strong>{t.guide.ctaTitle}</strong>
+        <span>{t.guide.ctaText}</span>
+      </div>
+      <a class="cta-button" href={toolHref}>
+        {t.guide.openTool(toolName)}
+      </a>
+    </aside>
+
+    <!-- 도구로 가는 버튼과 붙지 않게 충분히 띄운다 -->
+    <div class="in-content">
+      <AdSlot id="in-content" />
+    </div>
+
+    {others.length > 0 && (
+      <section class="more">
+        <h2>{t.guide.more}</h2>
+        <ul>
+          {others.map((entry) => (
+            <li>
+              <a href={localizePath(`/guide/${slugOf(entry)}/`, locale)}>{entry.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+  </Fragment>
+</DocLayout>
+
+<style>
+  .tool-link {
+    padding: 12px 16px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    font-size: 15px;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    max-width: 720px;
+    margin-top: 40px;
+    padding: 20px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+  .cta-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+  .cta-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 200px;
+  }
+  .cta-text span {
+    color: var(--color-muted);
+    font-size: 14px;
+  }
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 20px;
+    border-radius: var(--radius);
+    background: var(--color-text);
+    color: var(--color-bg);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.12s;
+  }
+  .cta-button:hover {
+    background: var(--color-accent);
+  }
+  .in-content {
+    margin: 48px 0;
+  }
+  .in-content:not(:has(.ad-slot)) {
+    margin: 0;
+  }
+  .more {
+    max-width: 720px;
+    margin-top: 40px;
+  }
+  .more h2 {
+    margin: 0 0 12px;
+    font-size: 20px;
+  }
+  .more ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .more li {
+    margin-bottom: 8px;
+  }
+  .more a {
+    color: var(--color-accent);
+  }
+</style>
