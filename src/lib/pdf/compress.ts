@@ -57,7 +57,9 @@ export interface Replacement {
 
 export type PdfRequest =
   | { id: number; kind: 'scan'; bytes: Uint8Array; password?: string }
-  | { id: number; kind: 'finish'; replacements: Replacement[] };
+  | { id: number; kind: 'finish'; replacements: Replacement[] }
+  /** 사진을 줄이다 실패했을 때 열어 둔 문서를 놓는다 (답 없음) */
+  | { id: number; kind: 'drop' };
 
 export type PdfResponse =
   | { id: number; kind: 'images'; images: SourceImage[] }
@@ -148,7 +150,13 @@ export async function compressPdf(
   if (scanned.kind === 'error') throw new Error(scanned.message);
   if (scanned.kind !== 'images') throw new Error('unexpected response');
 
-  const replacements = await shrinkImages(scanned.images, level, onProgress);
+  let replacements: Replacement[];
+  try {
+    replacements = await shrinkImages(scanned.images, level, onProgress);
+  } catch (error) {
+    worker.postMessage({ id, kind: 'drop' } satisfies PdfRequest);
+    throw error;
+  }
   const finished = await ask<PdfResponse>(
     worker,
     { id, kind: 'finish', replacements } satisfies PdfRequest,

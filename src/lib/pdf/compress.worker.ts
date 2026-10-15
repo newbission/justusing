@@ -170,6 +170,10 @@ addEventListener('message', async (event: MessageEvent<PdfRequest>) => {
   const send = (response: PdfResponse, transfer: Transferable[] = []) =>
     postMessage(response, { transfer });
   try {
+    if (request.kind === 'drop') {
+      open.delete(id);
+      return;
+    }
     if (request.kind === 'scan') {
       // 암호 PDF는 받은 암호로 풀어서 연다. 결과에는 암호가 없다 (암호 해제 도구와 같음)
       const doc = await PDFDocument.load(request.bytes, { password: request.password ?? '' });
