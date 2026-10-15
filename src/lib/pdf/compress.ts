@@ -97,6 +97,7 @@ async function shrinkImages(
   images: SourceImage[],
   level: CompressLevel,
   onProgress: (done: number, total: number) => void,
+  signal?: AbortSignal,
 ): Promise<Replacement[]> {
   const workers = await (imageWorkers ??= Promise.all(
     Array.from({ length: poolSize() }, () => createWorker(imageWorkerUrl)),
@@ -108,7 +109,8 @@ async function shrinkImages(
   onProgress(0, images.length);
 
   async function run(worker: Worker) {
-    while (next < images.length) {
+    // 그만두면 지금 줄이는 사진까지만 하고 새 사진은 보내지 않는다
+    while (next < images.length && !signal?.aborted) {
       const index = next++;
       const image = images[index]!;
       const response = await ask<ImageResponse>(
@@ -129,14 +131,19 @@ async function shrinkImages(
   }
 
   await Promise.all(workers.map(run));
+  signal?.throwIfAborted();
   return replacements;
 }
 
-/** 원본 바이트는 복사해서 보내므로 그대로 남는다 (다른 단계로 다시 줄일 수 있게). */
+/**
+ * 원본 바이트는 복사해서 보내므로 그대로 남는다 (다른 단계로 다시 줄일 수 있게).
+ * signal로 그만두면(다른 파일을 열 때) 남은 사진은 줄이지 않고 AbortError로 끝난다.
+ */
 export async function compressPdf(
   source: { bytes: Uint8Array; password?: string },
   level: CompressLevel,
   onProgress: (done: number, total: number) => void,
+  signal?: AbortSignal,
 ): Promise<Uint8Array> {
   const worker = await (pdfWorker ??= createWorker(pdfWorkerUrl));
   const id = nextId++;
@@ -152,7 +159,8 @@ export async function compressPdf(
 
   let replacements: Replacement[];
   try {
-    replacements = await shrinkImages(scanned.images, level, onProgress);
+    signal?.throwIfAborted();
+    replacements = await shrinkImages(scanned.images, level, onProgress, signal);
   } catch (error) {
     worker.postMessage({ id, kind: 'drop' } satisfies PdfRequest);
     throw error;
