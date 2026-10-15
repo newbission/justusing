@@ -3,6 +3,7 @@
  * 무거운 처리라 화면이 멈추지 않도록 워커에서 돈다. 파일은 메모리에서만 다룬다.
  */
 import { PDFDocument, PageSizes } from '@cantoo/pdf-lib';
+import { toEmbeddable } from '../image/prepare';
 import type { ImagesToPdfRequest, ImagesToPdfResponse, PageSize } from './images-to-pdf';
 
 /** 이미지 화소를 pt로 (96 DPI 화면 크기 기준) */
@@ -19,7 +20,8 @@ addEventListener('message', async (event: MessageEvent<ImagesToPdfRequest>) => {
     postMessage(response, { transfer });
   try {
     const out = await PDFDocument.create();
-    for (const [i, image] of job.images.entries()) {
+    for (const [i, file] of job.images.entries()) {
+      const image = await toEmbeddable(file);
       const embedded =
         image.kind === 'jpg' ? await out.embedJpg(image.bytes) : await out.embedPng(image.bytes);
       const landscape = image.width > image.height;

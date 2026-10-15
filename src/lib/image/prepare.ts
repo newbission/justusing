@@ -5,6 +5,9 @@
  * PDF(pdf-lib)는 JPG·PNG만 그대로 넣을 수 있다. 그 밖의 형식(WebP 등)은 브라우저가 읽어
  * PNG로 바꾼다. 휴대폰 사진은 JPG 안에 '돌려서 보라'는 표시(EXIF 방향)만 있고 화소는 누워 있어,
  * 그대로 넣으면 PDF에서 옆으로 눕는다. 그런 사진은 바로 세운 뒤 JPG로 다시 만든다.
+ *
+ * 다시 만드는 일은 화면이 멈추지 않도록 워커에서 한다(images-to-pdf.worker.ts가 toEmbeddable을 부른다).
+ * 그래서 화면 canvas 대신 OffscreenCanvas를 쓴다.
  */
 
 export interface ImageInfo {
@@ -73,9 +76,7 @@ export async function readImageInfo(file: Blob): Promise<ImageInfo> {
 
 async function redraw(file: Blob, type: 'image/jpeg' | 'image/png'): Promise<EmbeddableImage> {
   const bitmap = await decode(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
   try {
     const context = canvas.getContext('2d')!;
     if (type === 'image/jpeg') {
@@ -84,10 +85,7 @@ async function redraw(file: Blob, type: 'image/jpeg' | 'image/png'): Promise<Emb
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
     context.drawImage(bitmap, 0, 0);
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, type, JPEG_QUALITY),
-    );
-    if (!blob) throw new Error('canvas.toBlob failed');
+    const blob = await canvas.convertToBlob({ type, quality: JPEG_QUALITY });
     return {
       kind: type === 'image/jpeg' ? 'jpg' : 'png',
       bytes: new Uint8Array(await blob.arrayBuffer()),
@@ -96,13 +94,15 @@ async function redraw(file: Blob, type: 'image/jpeg' | 'image/png'): Promise<Emb
     };
   } finally {
     bitmap.close();
+    // 큰 canvas의 메모리를 바로 돌려준다
     canvas.width = 0;
     canvas.height = 0;
   }
 }
 
 /** PDF에 넣을 바이트로 만든다. 바꿀 필요가 없으면 원본 바이트를 그대로 쓴다 (화질 그대로). */
-export async function toEmbeddable(file: Blob, bytes: Uint8Array): Promise<EmbeddableImage> {
+export async function toEmbeddable(file: Blob): Promise<EmbeddableImage> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
   if (isJpeg(bytes)) {
     if (jpegOrientation(bytes) === 1) return { kind: 'jpg', bytes, ...(await readImageInfo(file)) };
     return redraw(file, 'image/jpeg');
