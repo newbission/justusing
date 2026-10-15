@@ -73,6 +73,18 @@ const ko = {
     clear: '지우기',
     done: '서명 완료',
   },
+  /** 여러 이미지 목록 (src/lib/image/ImageBatchTool.svelte) */
+  images: {
+    choose: '이미지 파일 선택',
+    hint: 'JPG·PNG·WebP 이미지를 여러 장 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다',
+    summary: (count: number, size: string) => `이미지 ${count}장 · ${size}`,
+    add: '이미지 추가',
+    list: '이미지 목록',
+    reading: '읽는 중…',
+    broken: '열 수 없는 이미지입니다. 빼고 처리합니다.',
+    download: (name: string) => `${name} 받기`,
+    remove: (name: string) => `${name} 빼기`,
+  },
 };
 
 type FrameMessages = typeof ko;
@@ -143,6 +155,18 @@ const en: FrameMessages = {
     placeholder: 'Sign here',
     clear: 'Clear',
     done: 'Done',
+  },
+  images: {
+    choose: 'Choose image files',
+    hint: 'You can pick several JPG, PNG or WebP images at once · Your files never leave this device',
+    summary: (count: number, size: string) =>
+      `${count} ${count === 1 ? 'image' : 'images'} · ${size}`,
+    add: 'Add images',
+    list: 'Images',
+    reading: 'Reading…',
+    broken: 'This image cannot be opened. It will be left out.',
+    download: (name: string) => `Download ${name}`,
+    remove: (name: string) => `Remove ${name}`,
   },
 };
 
