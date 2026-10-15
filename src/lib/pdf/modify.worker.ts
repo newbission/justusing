@@ -100,10 +100,17 @@ async function apply(doc: PDFDocument, job: ModifyJob): Promise<void> {
         const page = pages[index];
         if (!page) continue;
         const view = viewSize(page);
-        const width = job.place.width * view.width;
+        // 비율이 다른 쪽(모든 쪽에 넣을 때)에서도 쪽 밖으로 나가지 않게 쪽마다 줄이고 안으로 민다
+        const fit = Math.min(
+          1,
+          view.height / ((job.place.width * view.width * image.height) / image.width),
+        );
+        const width = job.place.width * view.width * fit;
         const height = (width * image.height) / image.width;
+        const x = Math.min(job.place.x * view.width, view.width - width);
+        const y = Math.min(job.place.y * view.height, view.height - height);
         // 이미지의 왼쪽 아래(화면 기준)를 기준점으로, 쪽 회전만큼 돌려 화면에서 바로 보이게 한다
-        const at = toPdfPoint(page, job.place.x * view.width, job.place.y * view.height + height);
+        const at = toPdfPoint(page, x, y + height);
         page.drawImage(image, {
           ...at,
           width,
