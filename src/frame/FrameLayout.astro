@@ -22,7 +22,7 @@ const { title } = Astro.props;
 
 /**
  * 우리 사이트 주소. Safari(WebKit)는 출처 없는 sandbox 문서에서 'self'를 우리 사이트로 보지 않아
- * 'self'만 적으면 워커·글꼴·CMap을 받지 못한다 (크롬은 받는다). 그래서 주소를 함께 적는다.
+ * 'self'만 적으면 워커·스타일·글꼴·CMap을 받지 못한다 (크롬은 받는다). 그래서 주소를 함께 적는다.
  * www 주소로 들어와도 frame은 같은 주소에서 파일을 받으므로 둘 다 적는다.
  */
 const self = `'self' ${siteUrl} https://www.${siteConfig.domain}`;
@@ -40,6 +40,9 @@ if (csp) {
   csp.insertScriptResource("'self'");
   csp.insertScriptResource(siteUrl);
   csp.insertScriptResource(`https://www.${siteConfig.domain}`);
+  // 스타일 파일(/_astro/*.css)도 같은 이유로 주소를 적는다 (Astro가 'self'와 해시를 넣는다)
+  csp.insertStyleResource(siteUrl);
+  csp.insertStyleResource(`https://www.${siteConfig.domain}`);
   csp.insertScriptResource("'wasm-unsafe-eval'");
 } else if (!import.meta.env.DEV) {
   // 개발 서버에는 CSP 기능이 없다. 배포 빌드에서 CSP 없이 frame이 나가는 일은 막는다.
