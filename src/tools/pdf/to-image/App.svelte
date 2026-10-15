@@ -58,8 +58,8 @@
   const result = $derived(run.kind === 'done' && run.signature === signature ? run : undefined);
 
   /** 쪽 이미지 이름. 정렬되도록 앞에 0을 채운다 (01, 02 … 10) */
-  function imageName(base: string, page: number) {
-    return `${base}_${String(page).padStart(String(pageCount).length, '0')}.${format}`;
+  function imageName(base: string, page: number, extension: ImageFormat) {
+    return `${base}_${String(page).padStart(String(pageCount).length, '0')}.${extension}`;
   }
 
   async function convert() {
@@ -73,7 +73,9 @@
     const plan = pages;
     const startedWith = signature;
     const dpi = DPI[quality];
-    const type = IMAGE_TYPES[format];
+    // 처리하는 동안 고른 값을 바꿔도 처음 값으로 끝까지 만든다
+    const chosen = format;
+    const type = IMAGE_TYPES[chosen];
     /** 처리하는 동안 다른 파일을 열면 이 결과는 버린다 */
     const source = pdf;
     const base = source.name.replace(/\.pdf$/i, '');
@@ -82,9 +84,9 @@
       const images: { name: string; bytes: Uint8Array }[] = [];
       for (const number of plan) {
         const page = await source.doc.getPage(number);
-        const bytes = await renderPageImage(page, dpi, format);
+        const bytes = await renderPageImage(page, dpi, chosen);
         if (pdf !== source) return;
-        images.push({ name: imageName(base, number), bytes });
+        images.push({ name: imageName(base, number, chosen), bytes });
         run = { kind: 'working', done: images.length, total: plan.length };
       }
       run =
