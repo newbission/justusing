@@ -99,13 +99,15 @@ async function apply(doc: PDFDocument, job: ModifyJob): Promise<void> {
       for (const index of job.pages) {
         const page = pages[index];
         if (!page) continue;
-        const rect = scaleRect(page, job.rect);
+        const view = viewSize(page);
+        const width = job.place.width * view.width;
+        const height = (width * image.height) / image.width;
         // 이미지의 왼쪽 아래(화면 기준)를 기준점으로, 쪽 회전만큼 돌려 화면에서 바로 보이게 한다
-        const at = toPdfPoint(page, rect.x, rect.y + rect.height);
+        const at = toPdfPoint(page, job.place.x * view.width, job.place.y * view.height + height);
         page.drawImage(image, {
           ...at,
-          width: rect.width,
-          height: rect.height,
+          width,
+          height,
           rotate: degrees(normalizedRotation(page)),
         });
       }
