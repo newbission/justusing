@@ -119,6 +119,6 @@
   }
   canvas {
     display: block;
-    background: #fff;
+    background: var(--color-paper);
   }
 </style>

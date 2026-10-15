@@ -148,7 +148,7 @@
     border: 1px dashed var(--color-muted);
     border-radius: var(--radius);
     /* 서명 칸은 종이처럼 늘 흰 바탕 (잉크 색이 어두워서) */
-    background: #fff;
+    background: var(--color-paper);
     cursor: crosshair;
     touch-action: none;
   }

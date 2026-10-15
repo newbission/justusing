@@ -70,7 +70,7 @@
     justify-content: center;
   }
   canvas {
-    background: #fff;
+    background: var(--color-paper);
     box-shadow: var(--shadow-page);
   }
 </style>
