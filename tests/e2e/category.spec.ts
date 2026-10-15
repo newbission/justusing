@@ -10,6 +10,7 @@ test('PDF 목록은 묶음별 소제목 아래 도구를 보여준다', async ({
     '페이지 정리',
     '편집',
     '변환',
+    '최적화',
     '보안',
   ]);
   const convert = page.locator('section', {
@@ -33,6 +34,7 @@ test('홈에서도 묶음별로 나누고, 영어판은 영어 소제목을 쓴�
     'Organize pages',
     'Edit',
     'Convert',
+    'Optimize',
     'Security',
   ]);
 });
