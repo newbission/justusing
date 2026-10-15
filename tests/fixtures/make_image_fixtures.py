@@ -132,6 +132,11 @@ for top in range(80, 560, 60):
             screen_pixels[x, y] = (40 + top // 4, 120, 200 - top // 4, 255)
 screen.save(path('screen.png'))
 
+# 형식 변환용: 두 장면짜리 움직이는 GIF와 BMP
+frames = [Image.new('RGB', (120, 80), color) for color in [(220, 40, 40), (40, 40, 220)]]
+frames[0].save(path('moving.gif'), save_all=True, append_images=frames[1:], duration=200, loop=0)
+Image.new('RGB', (160, 90), (40, 180, 90)).save(path('green.bmp'))
+
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
-             'screen.png', 'small.jpg']:
+             'screen.png', 'small.jpg', 'moving.gif', 'green.bmp']:
     print(name, os.path.getsize(path(name)), 'bytes')
