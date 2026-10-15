@@ -37,12 +37,17 @@
   const result = $derived(run.kind === 'done' && run.level === level ? run : undefined);
   const noGain = $derived(run.kind === 'no-gain' && run.level === level);
 
-  /** 진행 중인 압축. 다른 파일을 열면 그만둔다 (안 그러면 쓰지 않을 결과로 워커가 계속 바쁘다) */
+  /** 진행 중인 압축. 연 PDF를 닫으면 그만둔다 (안 그러면 쓰지 않을 결과로 워커가 계속 바쁘다) */
   let controller: AbortController | undefined;
 
-  function onload(loaded: LoadedPdf) {
+  /** 연 PDF를 닫으면 진행 중인 압축을 그만두고 결과도 버린다 */
+  function onclose() {
     controller?.abort();
     controller = undefined;
+    pdf = undefined;
+  }
+
+  function onload(loaded: LoadedPdf) {
     pdf = loaded;
     run = { kind: 'idle' };
   }
@@ -88,7 +93,7 @@
   }
 </script>
 
-<SinglePdfTool {onload}>
+<SinglePdfTool {onload} {onclose}>
   {#snippet children({ doc, bytes })}
     <ActionBar label={t.bar}>
       {#snippet text()}
