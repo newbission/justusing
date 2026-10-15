@@ -5,10 +5,6 @@ export type Level = 'light' | 'balanced' | 'strong';
 export type Format = 'same' | 'webp';
 
 const ko = {
-  choose: '이미지 파일 선택',
-  hint: 'JPG·PNG·WebP 이미지를 여러 장 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다',
-  summary: (count: number, size: string) => `이미지 ${count}장 · ${size}`,
-  addFiles: '이미지 추가',
   bar: '압축',
   levelGroup: '줄이는 정도',
   levels: {
@@ -39,26 +35,17 @@ const ko = {
   failed: '줄이지 못한 이미지가 있습니다. 목록에서 확인하세요.',
   downloadAll: (count: number) => `모두 받기 (ZIP, ${count}장)`,
   zipName: '이미지_압축.zip',
-  list: '줄일 이미지 목록',
-  itemReading: '읽는 중…',
   itemWorking: '줄이는 중…',
   itemDone: (before: string, after: string, percent: number) =>
     `${before} → ${after} (${percent}% 줄어듦)`,
   itemKept: (size: string) => `${size} · 이미 작아서 원본 그대로`,
   broken: '열 수 없는 이미지입니다. 빼고 줄입니다.',
   noWebp: '이 브라우저는 WebP로 저장하지 못합니다. "원래 형식 그대로"로 해 보세요.',
-  download: (name: string) => `${name} 받기`,
-  remove: (name: string) => `${name} 빼기`,
   /** 결과 파일 이름 뒤에 붙는 말 */
   suffix: '압축',
 };
 
 const en: typeof ko = {
-  choose: 'Choose image files',
-  hint: 'You can pick several JPG, PNG or WebP images at once · Your files never leave this device',
-  summary: (count: number, size: string) =>
-    `${count} ${count === 1 ? 'image' : 'images'} · ${size}`,
-  addFiles: 'Add images',
   bar: 'Compress',
   levelGroup: 'How much to shrink',
   levels: {
@@ -89,16 +76,12 @@ const en: typeof ko = {
   failed: 'Some images could not be compressed. Check the list.',
   downloadAll: (count: number) => `Download all (ZIP, ${count})`,
   zipName: 'compressed-images.zip',
-  list: 'Images to compress',
-  itemReading: 'Reading…',
   itemWorking: 'Compressing…',
   itemDone: (before: string, after: string, percent: number) =>
     `${before} → ${after} (${percent}% smaller)`,
   itemKept: (size: string) => `${size} · already compact, kept as is`,
   broken: 'This image cannot be opened. It will be left out.',
   noWebp: 'This browser cannot save WebP. Try "Same format".',
-  download: (name: string) => `Download ${name}`,
-  remove: (name: string) => `Remove ${name}`,
   suffix: 'compressed',
 };
 
