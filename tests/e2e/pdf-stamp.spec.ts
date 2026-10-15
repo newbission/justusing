@@ -142,6 +142,31 @@ test('이미지 넣기: 모든 쪽을 고르면 돌린 쪽에도 화면 기준 �
   });
 });
 
+test('이미지 넣기: 크게 키워도 이미지가 어느 쪽에서도 쪽 밖으로 나가지 않는다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.load(await readFile(fixture('three-pages.pdf')));
+  doc.getPage(1).setRotation(degrees(90));
+  const frame = await openTool(page, 'add-image', Buffer.from(await doc.save()));
+  await frame.getByText('이미지 선택').locator('input').setInputFiles(fixture('tall.jpg'));
+  // 가로로 놓인 2쪽에서 세로 이미지를 한껏 키운다
+  await frame.getByRole('button', { name: '다음 쪽' }).click();
+  const stamp = frame.getByRole('button', { name: '놓을 이미지', exact: false });
+  for (let i = 0; i < 20; i++) await stamp.press('Shift+=');
+  await frame.getByText('모든 쪽', { exact: true }).click();
+  await frame.getByRole('button', { name: '이미지 넣기' }).click();
+
+  const places = await imagePlaces((await download(page, frame)).bytes);
+  places.forEach(([placed], i) => {
+    expect(placed!.x, `${i + 1}쪽 왼쪽`).toBeGreaterThanOrEqual(-0.001);
+    expect(placed!.y, `${i + 1}쪽 위`).toBeGreaterThanOrEqual(-0.001);
+    expect(placed!.x + placed!.width, `${i + 1}쪽 오른쪽`).toBeLessThanOrEqual(1.001);
+    expect(placed!.y + placed!.height, `${i + 1}쪽 아래`).toBeLessThanOrEqual(1.001);
+  });
+  // 가로 쪽에서는 높이가 쪽에 꽉 찬다
+  expect(places[1]![0]!.height).toBeGreaterThan(0.99);
+});
+
 test('서명 넣기: 그린 서명을 투명 배경 PNG로 넣는다', async ({ page }) => {
   const frame = await openTool(page, 'sign', 'three-pages.pdf');
   await expect(frame.getByRole('button', { name: '서명 완료' })).toBeDisabled();

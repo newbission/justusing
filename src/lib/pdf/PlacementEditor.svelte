@@ -41,10 +41,11 @@
 
   /** 자리를 쪽 안으로 맞춘다 */
   function fit(next: StampPlace): StampPlace {
-    const width = clamp(next.width, MIN_WIDTH, 1);
-    const h =
-      view.height === 0 ? 0 : (width * view.width * image.height) / image.width / view.height;
-    return { width, x: clamp(next.x, 0, 1 - width), y: clamp(next.y, 0, 1 - h) };
+    if (view.height === 0) return next;
+    // 이미지 높이 / 너비 (쪽 비율 기준). 세로로 긴 이미지는 높이가 먼저 쪽에 닿는다
+    const tall = (view.width * image.height) / image.width / view.height;
+    const width = clamp(next.width, MIN_WIDTH, Math.min(1, 1 / tall));
+    return { width, x: clamp(next.x, 0, 1 - width), y: clamp(next.y, 0, 1 - width * tall) };
   }
 
   // 끌기: 시작할 때의 포인터 위치와 자리
