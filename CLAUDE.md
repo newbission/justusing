@@ -23,6 +23,7 @@ npm run format        # 포맷 정리
 npm run format:check  # 포맷 검사 (CI에서 실행)
 npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
+python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
 ```
 
 개발 서버에서 `/_dev/layout/` 주소로 도구 페이지 틀과 광고 슬롯 위치를 볼 수 있다 (배포에는 없음).
@@ -256,6 +257,13 @@ Co-Authored-By: ...
   - [x] 5-3 정리 (`/pdf/organize/`): 썸네일 끌어서 순서 바꾸기, 페이지 삭제
   - 5-4 편집 (`/pdf/edit/`): MVP에서 뺀다 (2026-10-11). 첫 배포 뒤 방문 데이터를 보고 만든다.
     텍스트·이미지·서명. 한글 글꼴을 직접 호스팅해 PDF에 넣어야 해서 가장 크다. 그때까지 `soon`으로 둔다.
+- [ ] 6단계: 변환 도구 (2026-10-14) — 검색이 많은 'pdf 변환'용. 도구마다 멈추고 확인
+  - [x] 6-1 PDF를 이미지로 (`/pdf/to-image/`): 전체 추출 / 선택 추출, JPG·PNG, 150·300 DPI.
+        쪽을 canvas에 그린다 (`src/lib/pdf/render-image.ts`, 브라우저 canvas 크기 한계 안으로 줄임)
+  - [x] 6-2 이미지를 PDF로 (`/pdf/from-image/`): 이미지 한 장이 한 쪽, A4·Letter·이미지에 맞춤, 여백.
+        JPG·PNG는 원본 그대로 넣고, EXIF 방향이 붙은 휴대폰 사진과 그 밖의 형식만 다시 저장한다
+        (`src/lib/image/prepare.ts`, 워커 `src/lib/pdf/images-to-pdf.worker.ts`)
+  - [ ] 6-3 PDF에 이미지 넣기: 쪽 위 원하는 자리에 이미지를 놓는다 (편집보다 가볍게, 글꼴 없이)
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)
