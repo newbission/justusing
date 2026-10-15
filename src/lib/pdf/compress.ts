@@ -99,9 +99,10 @@ async function shrinkImages(
   onProgress: (done: number, total: number) => void,
   signal?: AbortSignal,
 ): Promise<Replacement[]> {
-  const workers = await (imageWorkers ??= Promise.all(
+  const starting = (imageWorkers ??= Promise.all(
     Array.from({ length: poolSize() }, () => createWorker(imageWorkerUrl)),
   ));
+  const workers = await starting;
   const { quality, maxSide } = LEVELS[level];
   const replacements: Replacement[] = [];
   let next = 0;
@@ -109,7 +110,6 @@ async function shrinkImages(
   onProgress(0, images.length);
 
   async function run(worker: Worker) {
-    // 그만두면 지금 줄이는 사진까지만 하고 새 사진은 보내지 않는다
     while (next < images.length && !signal?.aborted) {
       const index = next++;
       const image = images[index]!;
@@ -130,8 +130,20 @@ async function shrinkImages(
     }
   }
 
-  await Promise.all(workers.map(run));
   signal?.throwIfAborted();
+  await new Promise<void>((resolve, reject) => {
+    // 그만두면 이미 보낸 사진도 바로 멈추게 워커들을 끝낸다. 다음 압축은 새 워커들로 한다
+    const onAbort = () => {
+      for (const worker of workers) worker.terminate();
+      if (imageWorkers === starting) imageWorkers = undefined;
+      reject(signal!.reason);
+    };
+    signal?.addEventListener('abort', onAbort, { once: true });
+    Promise.all(workers.map(run)).then(() => {
+      signal?.removeEventListener('abort', onAbort);
+      resolve();
+    });
+  });
   return replacements;
 }
 
