@@ -1,15 +1,17 @@
 ---
 /**
  * 도구 카드. live 도구는 페이지 링크, soon 도구는 '준비 중' 표시만 하고 누를 수 없다.
+ * 왼쪽 아이콘으로 도구끼리 한눈에 구분된다.
  */
 import type { Tool } from '../tools/registry';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
+import ToolIcon from './ToolIcon.astro';
 
 interface Props {
   tool: Tool;
   /** 카드 제목의 제목 수준. 페이지 구조에 맞춰 h2/h3를 고른다. */
-  headingLevel?: 2 | 3;
+  headingLevel?: 2 | 3 | 4;
 }
 
 const { tool, headingLevel = 3 } = Astro.props;
@@ -21,22 +23,34 @@ const live = tool.status === 'live';
 
 {live ? (
   <a class="card" href={localizePath(tool.href, locale)}>
-    <Heading class="name">{text.name}</Heading>
-    <p class="desc">{text.description}</p>
+    <span class="icon">
+      <ToolIcon paths={tool.icon} />
+    </span>
+    <div class="body">
+      <Heading class="name">{text.name}</Heading>
+      <p class="desc">{text.description}</p>
+    </div>
   </a>
 ) : (
   <div class="card soon">
-    <Heading class="name">
-      {text.name}
-      <span class="badge">{ui(locale).nav.soon}</span>
-    </Heading>
-    <p class="desc">{text.description}</p>
+    <span class="icon">
+      <ToolIcon paths={tool.icon} />
+    </span>
+    <div class="body">
+      <Heading class="name">
+        {text.name}
+        <span class="badge">{ui(locale).nav.soon}</span>
+      </Heading>
+      <p class="desc">{text.description}</p>
+    </div>
   </div>
 )}
 
 <style>
   .card {
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
     height: 100%;
     padding: 20px;
     border: 1px solid var(--color-line);
@@ -46,6 +60,23 @@ const live = tool.status === 'live';
   }
   a.card:hover {
     border-color: var(--color-text);
+  }
+  .icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+  .soon .icon {
+    background: var(--color-hover);
+    color: var(--color-muted);
+  }
+  .body {
+    min-width: 0;
   }
   .name {
     display: flex;
