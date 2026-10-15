@@ -34,6 +34,7 @@ const TOOL_IDS: readonly string[] = [
   'pdf/edit',
   'image/compress',
   'image/resize',
+  'image/convert',
 ];
 
 export interface Tool extends ToolMeta {

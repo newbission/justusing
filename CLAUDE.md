@@ -72,6 +72,9 @@ python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 �
 - `scrollIntoView`는 바깥 페이지까지 스크롤하므로 스크롤 영역의 `scrollTop`을 직접 바꾼다.
 - 파일 끌어다 놓기는 도구가 직접 처리하지 않는다. frame 전체가 받아서(`src/frame/drop.ts`)
   도구는 `onFrameFiles(files => ...)`로 받기만 한다. 첫 화면 버튼은 `FileDrop`.
+- frame CSP에서 우리 파일을 허용할 때 `'self'`만 쓰지 않는다. **Safari(WebKit)는 출처 없는 sandbox 문서에서 `'self'`를
+  우리 사이트로 보지 않아** 워커·스타일·글꼴이 모두 막힌다(2026-10-15에 발견, 크롬 E2E로는 보이지 않음).
+  `FrameLayout`이 사이트 주소를 함께 적는다. Astro `insert*Resource`는 기본값을 대신하므로 `'self'`도 직접 넣는다
 - 외부 리소스가 필요하면 우리 사이트에 복사해 둔다 (예: pdf.js CMap → `public/vendor/pdfjs/`,
   `scripts/copy-pdfjs-assets.mjs`가 dev/build 전에 복사).
 
@@ -305,7 +308,9 @@ Co-Authored-By: ...
     PNG 색 줄이기는 UPNG.js (`upng-globals.ts`가 워커에서 zlib을 마련한다)
   - [x] 압축 (`/image/compress/`): JPG·WebP는 화질, PNG는 색 수로 줄인다. 원본보다 크면 원본 그대로
   - [x] 크기 조절 (`/image/resize/`): 비율(%) 또는 가로·세로 픽셀(비율 유지·정확히)
-  - [ ] 형식 변환(HEIC 포함), 배경 제거(누끼, 모델 데이터 크기를 밝히고 캐시), 자르기·회전 등
+  - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF, Safari의 HEIC)를 JPG·PNG·WebP로
+  - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기), 배경 제거(누끼, 모델 데이터 크기를
+        밝히고 캐시), 자르기·회전 등
   - [x] 가이드 글 (`/guide/`, 2026-10-15): 검색 유입과 광고 심사용. 첫 6편 (PDF 압축·합치기·이미지로·서명,
         이미지 압축·크기 조절). 도구를 만들 때마다 그 도구의 가이드를 함께 쓴다
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)

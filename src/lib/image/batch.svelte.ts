@@ -9,7 +9,7 @@ export interface BatchItem {
   id: number;
   name: string;
   file: File;
-  /** 원래 형식. JPG·PNG·WebP가 아니면 없다 (열 수 없음으로 표시) */
+  /** 원래 형식. JPG·PNG·WebP가 아니면 없다 (anyFormat이 아니면 열 수 없음으로 표시) */
   type?: OutputType;
   status: 'loading' | 'ready' | 'error';
   /** 바로 세운 뒤의 가로·세로 화소 */
@@ -21,6 +21,9 @@ export interface BatchItem {
 
 /** 받는 형식. 브라우저가 확실히 다시 저장할 수 있는 것만 받는다 */
 export const BATCH_ACCEPT = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';
+/** 형식 변환처럼 브라우저가 읽을 수 있으면 무엇이든 받을 때 (HEIC는 Safari만 읽는다) */
+const ANY_ACCEPT = 'image/*,.heic,.heif,.avif';
+const ANY_IMAGE = /\.(jpe?g|png|webp|gif|bmp|avif|heic|heif|tiff?|ico)$/i;
 
 /** 결과 파일 확장자 */
 export const EXTENSIONS: Record<OutputType, string> = {
@@ -41,25 +44,37 @@ export class ImageBatch {
   readonly ready = $derived(this.items.filter((item) => item.status === 'ready'));
   readonly loading = $derived(this.items.some((item) => item.status === 'loading'));
   readonly totalSize = $derived(this.items.reduce((sum, item) => sum + item.file.size, 0));
+  /** 파일 고르기 창에 넘길 형식 */
+  readonly accept: string;
+  readonly #anyFormat: boolean;
   #nextId = 0;
+
+  /** anyFormat: JPG·PNG·WebP가 아니어도 브라우저가 읽을 수 있으면 받는다 (형식 변환) */
+  constructor({ anyFormat = false } = {}) {
+    this.#anyFormat = anyFormat;
+    this.accept = anyFormat ? ANY_ACCEPT : BATCH_ACCEPT;
+  }
 
   /** 이미지 파일만 더한다. 더한 것이 있으면 true */
   add(files: File[]): boolean {
     const images = files.filter(
-      (file) => file.type.startsWith('image/') || /\.(jpe?g|png|webp)$/i.test(file.name),
+      (file) =>
+        file.type.startsWith('image/') ||
+        (this.#anyFormat ? ANY_IMAGE : /\.(jpe?g|png|webp)$/i).test(file.name),
     );
     for (const file of images) {
       const type = typeOf(file);
+      const readable = type !== undefined || this.#anyFormat;
       this.items.push({
         id: this.#nextId++,
         name: file.name,
         file,
         type,
-        status: type ? 'loading' : 'error',
+        status: readable ? 'loading' : 'error',
         width: 0,
         height: 0,
       });
-      if (type) this.#load(this.items.at(-1)!);
+      if (readable) this.#load(this.items.at(-1)!);
     }
     return images.length > 0;
   }

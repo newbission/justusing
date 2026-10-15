@@ -12,7 +12,7 @@
   import { onFrameFiles } from '../../frame/drop';
   import { requestShowTool } from '../../frame/parent';
   import { formatSize } from '../../frame/format';
-  import { BATCH_ACCEPT, type BatchItem, type ImageBatch } from './batch.svelte';
+  import type { BatchItem, ImageBatch } from './batch.svelte';
 
   interface Props {
     batch: ImageBatch;
@@ -26,11 +26,15 @@
     meta: Snippet<[BatchItem]>;
     /** 줄 오른쪽 빼기 버튼 앞의 버튼 (한 장 받기 등) */
     actions?: Snippet<[BatchItem]>;
+    /** 파일 고르기 버튼 아래 안내. 없으면 JPG·PNG·WebP 안내 */
+    hint?: string;
+    /** 읽지 못한 이미지 줄의 안내. 없으면 '열 수 없는 이미지' */
+    broken?: string;
     /** 이미지를 뺐을 때. 도구가 그 이미지의 결과를 버린다 (안 그러면 메모리에 남는다) */
     onremove: (item: BatchItem) => void;
   }
 
-  let { batch, busy, bar, options, meta, actions, onremove }: Props = $props();
+  let { batch, busy, bar, options, meta, actions, hint, broken, onremove }: Props = $props();
   const t = pick(FRAME_MESSAGES).images;
 
   function add(files: File[]) {
@@ -48,7 +52,13 @@
 <div class="tool">
   {#if batch.items.length === 0}
     <div class="drop">
-      <FileDrop accept={BATCH_ACCEPT} label={t.choose} multiple hint={t.hint} onfiles={add} />
+      <FileDrop
+        accept={batch.accept}
+        label={t.choose}
+        multiple
+        hint={hint ?? t.hint}
+        onfiles={add}
+      />
     </div>
   {:else}
     <div class="summary">
@@ -58,7 +68,7 @@
         <input
           type="file"
           class="visually-hidden"
-          accept={BATCH_ACCEPT}
+          accept={batch.accept}
           multiple
           disabled={busy}
           onchange={(event) => {
@@ -90,7 +100,7 @@
               {#if item.status === 'loading'}
                 {t.reading}
               {:else if item.status === 'error'}
-                <strong>{t.broken}</strong>
+                <strong>{broken ?? t.broken}</strong>
               {:else}
                 {@render meta(item)}
               {/if}
