@@ -1,0 +1,98 @@
+---
+/**
+ * 가이드 목록 (/guide/). 글마다 제목·설명과 안내하는 도구 아이콘을 카드로 보여준다.
+ */
+import DocLayout from '../../layouts/DocLayout.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import ToolIcon from '../../components/ToolIcon.astro';
+import { guidesIn, slugOf } from '../../guides';
+import { localeOf, localizePath } from '../../i18n/locales';
+import { ui } from '../../i18n/ui';
+import { getTool } from '../../tools/registry';
+
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale).guide;
+const guides = guidesIn(locale);
+---
+
+<DocLayout title={t.indexTitle} description={t.indexDescription}>
+  <p>{t.indexDescription}</p>
+  <ul class="guides">
+    {guides.map((guide) => (
+      <li>
+        <a class="card" href={localizePath(`/guide/${slugOf(guide)}/`, locale)}>
+          <span class="icon">
+            <ToolIcon paths={getTool(guide.data.tool)!.icon} />
+          </span>
+          <span class="body">
+            <strong>{guide.data.title}</strong>
+            <span>{guide.data.description}</span>
+          </span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <Fragment slot="after">
+    <div class="in-content">
+      <AdSlot id="in-content" />
+    </div>
+  </Fragment>
+</DocLayout>
+
+<style>
+  .guides {
+    display: grid;
+    gap: 12px;
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .guides li {
+    margin: 0;
+  }
+  .card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 20px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+    transition: border-color 0.12s;
+  }
+  .card:hover {
+    border-color: var(--color-muted);
+  }
+  .icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .body strong {
+    font-size: 17px;
+  }
+  .body span {
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .in-content {
+    margin: 48px 0;
+  }
+  .in-content:not(:has(.ad-slot)) {
+    margin: 0;
+  }
+</style>
