@@ -2,7 +2,7 @@ import { defineTool } from '../../types';
 
 export default defineTool({
   status: 'soon',
-  section: 'view',
+  section: 'edit',
   icon: ['M4 20h4L19 9l-4-4L4 16v4Z', 'M13.5 6.5l4 4'],
   text: {
     ko: {

@@ -17,12 +17,16 @@ import type { ToolContent, ToolMeta } from './types';
 // prettier-ignore
 const TOOL_IDS: readonly string[] = [
   'pdf/view',
+  'pdf/extract-text',
   'pdf/merge',
   'pdf/split',
   'pdf/rotate',
   'pdf/organize',
   'pdf/to-image',
   'pdf/from-image',
+  'pdf/page-numbers',
+  'pdf/unlock',
+  'pdf/protect',
   'pdf/edit',
 ];
 
