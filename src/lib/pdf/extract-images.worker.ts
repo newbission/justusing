@@ -594,12 +594,56 @@ function jpxColorMatches(bytes: Uint8Array, device: 'gray' | 'rgb' | 'cmyk'): bo
   // 방법 1(정해진 색공간 번호)만 비교한다. 2(ICC 등)는 PDF와 다르게 보일 수 있다
   if (bytes[colr] !== 1) return false;
   const space = view.getUint32(colr + 3);
-  // 16 sRGB, 18 sYCC(보기 프로그램이 RGB로 바꿈), 17 회색, 12 CMYK
-  return device === 'rgb'
-    ? space === 16 || space === 18
-    : device === 'gray'
-      ? space === 17
-      : space === 12;
+  // 16 sRGB, 17 회색, 12 CMYK. 18 sYCC는 PDF가 표본을 RGB로 바로 읽지만 보기 프로그램은 sYCC에서 바꿔 색이 다르다
+  return device === 'rgb' ? space === 16 : device === 'gray' ? space === 17 : space === 12;
+}
+
+/**
+ * JPEG 2000 파일 안 투명 채널을 PDF(/SMaskInData)와 내려받은 파일을 보는 프로그램이 같게 다루는지.
+ * PDF: 0(없음)이면 투명 채널을 버리고, 1이면 그대로, 2면 색이 배경과 미리 합쳐진 것으로 본다.
+ * 보기 프로그램은 파일 안 채널 정의(cdef 상자)대로 본다 (1 그대로, 2 미리 합침). 정의가 없는데 채널이
+ * 색 수보다 많으면 어떻게 볼지 알 수 없어 false
+ */
+function jpxAlphaMatches(
+  bytes: Uint8Array,
+  smaskInData: number,
+  device: 'gray' | 'rgb' | 'cmyk' | undefined,
+): boolean {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const expected = device && { gray: 1, rgb: 3, cmyk: 4 }[device];
+  const plainCount = (count: number) =>
+    expected === undefined ? [1, 3, 4].includes(count) : count === expected;
+  let alpha: 0 | 1 | 2;
+  if (bytes[0] === 0xff && bytes[1] === 0x4f) {
+    // 상자 없는 코드 스트림: 채널 정의가 없다. SIZ의 성분 수(Csiz)만 본다
+    if (bytes[2] !== 0xff || bytes[3] !== 0x51 || bytes.length < 42) return false;
+    if (!plainCount(view.getUint16(40))) return false;
+    alpha = 0;
+  } else {
+    const header = findBox(bytes, 0, bytes.length, 'jp2h');
+    const ihdr = header && findBox(bytes, header.content, header.end, 'ihdr');
+    if (!header || !ihdr || ihdr.content + 10 > ihdr.end) return false;
+    const channels = view.getUint16(ihdr.content + 8);
+    const cdef = findBox(bytes, header.content, header.end, 'cdef');
+    if (!cdef) {
+      if (!plainCount(channels)) return false;
+      alpha = 0;
+    } else {
+      const count = view.getUint16(cdef.content);
+      if (cdef.content + 2 + count * 6 > cdef.end) return false;
+      const types = Array.from({ length: count }, (_, i) =>
+        view.getUint16(cdef.content + 2 + i * 6 + 2),
+      );
+      // 0 색, 1 투명, 2 미리 합친 투명. 그 밖(정하지 않음 등)은 보기 프로그램마다 다르다
+      if (types.some((type) => type > 2)) return false;
+      const opacity = types.filter((type) => type !== 0);
+      if (opacity.length > 1) return false;
+      const colors = types.filter((type) => type === 0).length;
+      if (expected !== undefined && colors !== expected) return false;
+      alpha = (opacity[0] ?? 0) as 0 | 1 | 2;
+    }
+  }
+  return alpha === smaskInData;
 }
 
 /**
@@ -659,6 +703,9 @@ async function extract(
     if (!space || space.icc) return undefined;
     // PDF가 장치 색공간을 정했으면 파일 안 색 정보가 그것과 같을 때만 원본을 낸다
     if (space.device && !jpxColorMatches(stream.contents, space.device)) return undefined;
+    // 파일 안 투명 채널도 PDF에서와 같게 보일 때만 원본을 낸다
+    const smaskInData = numberOf(dict, 'SMaskInData') ?? 0;
+    if (!jpxAlphaMatches(stream.contents, smaskInData, space.device)) return undefined;
     return { ext: jpxKind(stream.contents), bytes: stream.contents.slice(), width, height };
   }
   const decoded = await decodePixels(stream, resources);

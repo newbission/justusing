@@ -1178,3 +1178,68 @@ test('길이를 8바이트로 적은 JPEG 2000 머리 상자 안의 색 정보�
   await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
   await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
+
+/** PDF를 넣고 frame을 돌려준다 */
+async function openPdf(page: Page, name: string, doc: PDFDocument) {
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name,
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  return frame;
+}
+
+/** 쪽 하나에 사진들을 차례로 그린다 */
+function drawAll(doc: PDFDocument, refs: ReturnType<PDFDocument['context']['register']>[]) {
+  const added = doc.addPage([600, 800]);
+  for (const ref of refs) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+}
+
+test('파일 안 투명 채널과 색(sYCC)이 PDF에서 보는 것과 다른 JPEG 2000은 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const jpx = (bytes: Uint8Array, extra: Record<string, unknown> = {}) =>
+    context.register(
+      context.stream(bytes, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        Filter: 'JPXDecode',
+        ColorSpace: 'DeviceRGB',
+        ...extra,
+      }),
+    );
+  // RGB + 투명(그대로) 채널
+  const straight: [number, number, number][] = [
+    [0, 0, 1],
+    [1, 0, 2],
+    [2, 0, 3],
+    [3, 1, 0],
+  ];
+  const premultiplied: [number, number, number][] = [...straight.slice(0, 3), [3, 2, 0]];
+  drawAll(doc, [
+    // 같게 보인다: PDF도 파일 안 투명을 그대로 쓴다
+    jpx(jp2Bytes({ channels: 4, cdef: straight }), { SMaskInData: 1 }),
+    // PDF는 투명 채널을 버리는데 파일을 보는 프로그램은 쓴다
+    jpx(jp2Bytes({ channels: 4, cdef: straight })),
+    // PDF는 미리 합친 것으로 보는데 파일은 그대로라고 적혀 있다
+    jpx(jp2Bytes({ channels: 4, cdef: straight }), { SMaskInData: 2 }),
+    // 채널 정의 없이 채널이 하나 더 있다
+    jpx(jp2Bytes({ channels: 4 })),
+    // 미리 합친 투명끼리는 같다
+    jpx(jp2Bytes({ channels: 4, cdef: premultiplied }), { SMaskInData: 2 }),
+    // sYCC: PDF는 표본을 RGB로 읽지만 파일을 보는 프로그램은 sYCC에서 바꾼다
+    jpx(jp2Bytes({ space: 18 })),
+  ]);
+  const frame = await openPdf(page, 'jpx-alpha.pdf', doc);
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('4개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
