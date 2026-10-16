@@ -48,7 +48,14 @@ function filters(dict: PDFDict): string[] {
 /** 색 읽는 법: 한 화소의 성분 수, 색 목록이면 그 목록, ICC 색공간이면 그 프로필 */
 type Colors =
   | { components: 1 | 3; icc?: Uint8Array }
-  | { components: 1; palette: Uint8Array; paletteColors: 1 | 3; icc?: Uint8Array };
+  | {
+      components: 1;
+      palette: Uint8Array;
+      paletteColors: 1 | 3;
+      /** 색 목록의 마지막 번호 (이보다 큰 값은 마지막 색으로 본다) */
+      hival: number;
+      icc?: Uint8Array;
+    };
 
 /** 장치 색공간 이름 → 자원 목록에 그 대신 쓰라고 정한 기본 색공간(/DefaultRGB 등) */
 function defaultSpace(device: string, resources: PDFDict | undefined): PDFObject | undefined {
@@ -123,8 +130,15 @@ function colorsOf(dict: PDFDict, resources: PDFDict | undefined): Colors | undef
     if (table instanceof PDFString) palette = table.asBytes();
     else if (table instanceof PDFHexString) palette = table.asBytes();
     else if (table instanceof PDFRawStream) palette = decodePDFRawStream(table).decode();
-    if (!palette) return undefined;
-    return { components: 1, palette, paletteColors: base.n, icc: base.icc };
+    const hival = space.lookup(2);
+    if (!palette || !(hival instanceof PDFNumber)) return undefined;
+    return {
+      components: 1,
+      palette,
+      paletteColors: base.n,
+      hival: Math.max(0, Math.floor(hival.asNumber())),
+      icc: base.icc,
+    };
   }
   const base = baseSpace(space, dict, resources);
   return base ? { components: base.n, icc: base.icc } : undefined;
@@ -265,7 +279,8 @@ async function decodePixels(
         const p = colors.palette;
         const n = colors.paletteColors;
         const index = sample(data, offset, x, bits);
-        const i = index * n;
+        // 색 목록보다 큰 값은 마지막 색으로 (규격: hival로 자른다)
+        const i = Math.min(index, colors.hival) * n;
         rgba[out] = p[i] ?? 0;
         rgba[out + 1] = p[n === 3 ? i + 1 : i] ?? 0;
         rgba[out + 2] = p[n === 3 ? i + 2 : i] ?? 0;
