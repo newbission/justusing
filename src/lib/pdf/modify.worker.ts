@@ -6,7 +6,6 @@ import {
   PDFDict,
   PDFDocument,
   PDFName,
-  PDFRef,
   PDFStream,
   StandardFonts,
   degrees,
@@ -23,6 +22,7 @@ import type {
 } from './modify';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { normalizedRotation, scaleRect, toPdfPoint, viewSize } from './page-geometry';
+import { removeUnused } from './remove-unused';
 import { addTextLayers } from './text-layer';
 
 const NUMBER_SIZE = 11;
@@ -132,35 +132,30 @@ async function nUp(
  */
 function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
   const { context } = doc;
-  /**
-   * 항목을 뺀다. 값이 따로 된 객체면 그 객체도 지운다
-   * (pdf-lib는 아무도 가리키지 않는 객체도 저장하므로 참조만 끊으면 예전 값이 파일에 남는다)
-   */
-  const drop = (holder: PDFDict, key: PDFName) => {
-    const value = holder.get(key);
-    holder.delete(key);
-    if (value instanceof PDFRef) context.delete(value);
-  };
-  drop(doc.catalog, PDFName.of('Metadata'));
+  const metadata = PDFName.of('Metadata');
+  doc.catalog.delete(metadata);
   const dict = context.lookup(context.trailerInfo.Info);
   if (clear) {
-    if (dict instanceof PDFDict) for (const key of dict.keys()) drop(dict, key);
+    if (dict instanceof PDFDict) for (const key of dict.keys()) dict.delete(key);
     // 쪽·그림·글꼴 등에 붙은 XMP에도 작성자·회사 이름이 들어 있을 수 있다
-    for (const [, object] of [...context.enumerateIndirectObjects()]) {
+    for (const [, object] of context.enumerateIndirectObjects()) {
       const holder = object instanceof PDFStream ? object.dict : object;
-      if (holder instanceof PDFDict) drop(holder, PDFName.of('Metadata'));
+      if (holder instanceof PDFDict) holder.delete(metadata);
     }
-    return;
+  } else {
+    const set = (key: string, value: string, apply: (text: string) => void) => {
+      if (value.trim()) apply(value.trim());
+      else if (dict instanceof PDFDict) dict.delete(PDFName.of(key));
+    };
+    set('Title', info.title, (text) => doc.setTitle(text));
+    set('Author', info.author, (text) => doc.setAuthor(text));
+    set('Subject', info.subject, (text) => doc.setSubject(text));
+    set('Keywords', info.keywords, (text) => doc.setKeywords([text]));
+    doc.setModificationDate(new Date());
   }
-  const set = (key: string, value: string, apply: (text: string) => void) => {
-    if (value.trim()) apply(value.trim());
-    else if (dict instanceof PDFDict) drop(dict, PDFName.of(key));
-  };
-  set('Title', info.title, (text) => doc.setTitle(text));
-  set('Author', info.author, (text) => doc.setAuthor(text));
-  set('Subject', info.subject, (text) => doc.setSubject(text));
-  set('Keywords', info.keywords, (text) => doc.setKeywords([text]));
-  doc.setModificationDate(new Date());
+  // pdf-lib는 아무도 가리키지 않는 객체도 저장하므로, 참조를 끊은 XMP·정보 값과 고친 기록에 남은
+  // 옛 XMP까지 닿지 않는 객체를 모두 지운다 (다른 곳이 같이 쓰는 객체는 닿으므로 남는다)
+  removeUnused(doc);
 }
 
 async function apply(doc: PDFDocument, job: ModifyJob): Promise<void> {
