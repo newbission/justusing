@@ -7,7 +7,7 @@
  * 옮기는 쪽에서도 다른 쪽(가린 쪽)을 가리키는 것을 끊는다:
  * - 주석은 보이는 모양만 쪽에 그려 넣고 뺀다 (링크·메모가 가린 쪽을 가리킬 수 있다)
  * - 쪽끼리 같이 쓰는 자원 목록에서 이 쪽이 쓰지 않는 것(가린 쪽의 그림·글꼴 등)을 뺀다
- * - 기사 흐름(/B), 쪽 동작(/AA), 앱 데이터(/PieceInfo)를 뺀다
+ * - 기사 흐름(/B), 쪽 동작(/AA), 앱 데이터(/PieceInfo), 쪽 첨부 파일(/AF) 등을 뺀다
  * 책갈피·문서 정보·양식처럼 문서 전체에 딸린 것은 옮기지 않는다.
  */
 import {
@@ -25,8 +25,11 @@ import { userUnit, viewSize } from './page-geometry';
 
 /** 쪽 자원 중 내용에서 이름으로 부르는 것들 */
 const NAMED = ['XObject', 'Font', 'ExtGState', 'Pattern', 'Shading', 'ColorSpace', 'Properties'];
-/** 다른 쪽이나 문서 전체를 가리킬 수 있어 빼는 쪽 항목 */
-const DROP = ['B', 'AA', 'PieceInfo', 'Thumb', 'Metadata'];
+/**
+ * 다른 쪽이나 문서 전체를 가리킬 수 있어 빼는 쪽 항목: 기사 흐름, 쪽 동작, 앱 데이터, 미리보기 그림,
+ * 쪽 정보, 쪽에 딸린 첨부 파일(PDF 2.0), 문서 부분(PDF 2.0), 분판 정보(다른 쪽을 가리킨다)
+ */
+const DROP = ['B', 'AA', 'PieceInfo', 'Thumb', 'Metadata', 'AF', 'DPart', 'SeparationInfo'];
 
 function streamText(stream: PDFStream): string {
   const bytes =
