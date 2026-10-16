@@ -27,6 +27,8 @@ import { userUnit, viewSize } from './page-geometry';
 
 /** 쪽 자원 중 내용에서 이름으로 부르는 것들 */
 const NAMED = ['XObject', 'Font', 'ExtGState', 'Pattern', 'Shading', 'ColorSpace', 'Properties'];
+/** 장치 색공간 대신 저절로 쓰이는 기본 색공간 */
+const DEFAULT_SPACES = ['DefaultGray', 'DefaultRGB', 'DefaultCMYK'];
 /**
  * 다른 쪽이나 문서 전체를 가리킬 수 있어 빼는 쪽 항목: 기사 흐름, 쪽 동작, 앱 데이터, 미리보기 그림,
  * 쪽 정보, 쪽에 딸린 첨부 파일(PDF 2.0), 문서 부분(PDF 2.0), 분판 정보(다른 쪽을 가리킨다)
@@ -79,7 +81,9 @@ function pruneResources(
     const used = usage.resources.get(kind) ?? new Set<string>();
     const kept = context.obj({});
     for (const [name, item] of entry.entries()) {
-      if (!used.has(name.decodeText())) continue;
+      // 기본 색공간(/DefaultRGB 등)은 이름으로 부르지 않고 g·rg·k와 장치 색 그림에 저절로 쓰인다
+      const implicit = kind === 'ColorSpace' && DEFAULT_SPACES.includes(name.decodeText());
+      if (!implicit && !used.has(name.decodeText())) continue;
       kept.set(name, item);
       pruneNested(context.lookup(item), pruning);
     }
