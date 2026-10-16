@@ -107,6 +107,14 @@ function pulls() {
   }));
 }
 
+/**
+ * 커밋·PR 제목, 리뷰 지적처럼 그대로 옮기는 글이 Markdown 문법으로 바뀌지 않게 한다 (__proto__ → 굵은 글씨 등).
+ * 줄 가운데에 들어가므로 줄 첫머리에서만 뜻이 있는 글자(#, +, 1.)는 두고, 줄 안에서 모양을 바꾸는 글자만 막는다
+ */
+function plain(text) {
+  return text.replace(/[\\`*_[\]<>|~]/g, '\\$&');
+}
+
 /** PR의 리뷰 지적(Codex)과 처리 답글 */
 function findings(number) {
   const query = `{repository(owner:"newbission",name:"justusing"){pullRequest(number:${number}){reviewThreads(first:100){nodes{isResolved comments(first:2){nodes{body createdAt author{login}}}}}}}}`;
@@ -162,7 +170,7 @@ function render(spec, allCommits, allPulls) {
         : pr.state === 'OPEN'
           ? '진행 중'
           : '닫힘';
-    lines.push(`- #${pr.number} ${pr.title} (${state})`);
+    lines.push(`- #${pr.number} ${plain(pr.title)} (${state})`);
   }
   lines.push('');
 
@@ -172,7 +180,8 @@ function render(spec, allCommits, allPulls) {
     const group = mine.filter((commit) => commit.type === type);
     if (group.length === 0) continue;
     lines.push(`<details><summary>${TYPE_TITLE[type]} ${group.length}개</summary>`, '');
-    for (const commit of group) lines.push(`- ${commit.date} \`${commit.hash}\` ${commit.title}`);
+    for (const commit of group)
+      lines.push(`- ${commit.date} \`${commit.hash}\` ${plain(commit.title)}`);
     lines.push('', '</details>', '');
   }
 
@@ -182,9 +191,8 @@ function render(spec, allCommits, allPulls) {
     lines.push(`### 리뷰 지적 — #${pr.number} (${list.length}개)`, '');
     lines.push('| 날짜 | 등급 | 지적 | 처리 |', '| --- | --- | --- | --- |');
     for (const item of list) {
-      const answer =
-        item.answer.replace(/\|/g, '\\|').slice(0, 160) || (item.resolved ? '해결' : '남음');
-      const title = item.title.replace(/\|/g, '\\|');
+      const answer = plain(item.answer.slice(0, 160)) || (item.resolved ? '해결' : '남음');
+      const title = plain(item.title);
       lines.push(`| ${item.date} | ${item.priority} | ${title} | ${answer} |`);
     }
     lines.push('');
