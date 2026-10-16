@@ -2,25 +2,9 @@
  * 글자 인식으로 만든 투명 글자층을 원래 쪽 위에 겹친다 (modify.worker.ts에서 쓴다).
  * 쪽 모습은 그대로 두고, 보이지 않는 글자만 더해 글자를 고르고 찾고 복사할 수 있게 한다.
  */
-import {
-  PDFContentStream,
-  PDFDocument,
-  degrees,
-  popGraphicsState,
-  pushGraphicsState,
-  type PDFPage,
-} from '@cantoo/pdf-lib';
+import { PDFDocument, degrees } from '@cantoo/pdf-lib';
+import { isolateContent } from './page-content';
 import { normalizedRotation, toPdfPoint, viewSize } from './page-geometry';
-
-/** 원래 쪽 내용이 그래픽 상태를 되돌리지 않고 끝나도 겹친 글자층이 어긋나지 않게 q…Q로 감싼다 */
-function isolateContent(page: PDFPage) {
-  page.node.normalize();
-  if (!page.node.Contents()) return;
-  const context = page.doc.context;
-  const start = context.register(PDFContentStream.of(context.obj({}), [pushGraphicsState()]));
-  const end = context.register(PDFContentStream.of(context.obj({}), [popGraphicsState()]));
-  page.node.wrapContentStreams(start, end);
-}
 
 /**
  * layers[i]: i번째 쪽에 겹칠 글자층 PDF(쪽 하나), 없으면 그 쪽은 그대로.
