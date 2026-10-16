@@ -120,6 +120,20 @@ function inlineImageEnd(text: string, start: number, dict: Map<string, string>):
       ? k + 2
       : undefined;
   };
+  // 글자로 적은 그림(ASCII85·ASCIIHex)은 끝 표시(~>·>)가 있어 그 뒤의 EI가 끝이다.
+  // 이 바이트는 글자라 안의 EI를 그림 바이트처럼 가려낼 수 없다
+  const filter = dict.get('F') ?? dict.get('Filter');
+  const marker =
+    filter === 'A85' || filter === 'ASCII85Decode'
+      ? '~>'
+      : filter === 'AHx' || filter === 'ASCIIHexDecode'
+        ? '>'
+        : undefined;
+  if (marker) {
+    const at = text.indexOf(marker, start);
+    const end = at === -1 ? undefined : endsAt(at + marker.length);
+    if (end !== undefined) return end;
+  }
   let length = number('L', 'Length');
   if (length === undefined && !dict.has('F') && !dict.has('Filter')) {
     const mask = dict.get('IM') === 'true' || dict.get('ImageMask') === 'true';
