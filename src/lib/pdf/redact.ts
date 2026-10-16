@@ -109,7 +109,8 @@ function folded(str: string): { text: string; from: number[]; to: number[] } {
   const to: number[] = [];
   for (let i = 0; i < str.length;) {
     const char = String.fromCodePoint(str.codePointAt(i)!);
-    const lower = char.toLocaleLowerCase();
+    // 브라우저 언어(터키어의 I → ı 등)에 따라 달라지지 않게 언어와 무관한 소문자로 바꾼다
+    const lower = char.toLowerCase();
     text += lower;
     for (let k = 0; k < lower.length; k++) {
       from.push(i);
