@@ -1158,3 +1158,116 @@ test('자원 목록 없는 투명 마스크 묶음 그림이 쓰는 그림을 �
   const { bytes } = await download(page, frame);
   expect(await imageWidths(bytes)).toContain(9);
 });
+
+test('남긴 그림의 마스크 그림에 붙은 XMP도 옮기지 않고, 색공간 정의가 부르는 색공간은 남긴다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const mask = context.register(
+    context.flateStream(new Uint8Array(81).fill(255), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 9,
+      Height: 9,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+      Metadata: context.register(
+        context.stream('<x:xmpmeta>MASK-XMP-SECRET</x:xmpmeta>', {
+          Type: 'Metadata',
+          Subtype: 'XML',
+        }),
+      ),
+    }),
+  );
+  const picture = context.register(
+    context.flateStream(new Uint8Array(81).fill(0), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 9,
+      Height: 9,
+      ColorSpace: 'CS1',
+      BitsPerComponent: 8,
+      SMask: mask,
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      XObject: { Pic: picture },
+      ColorSpace: {
+        CS1: ['Indexed', 'CS2', 0, PDFHexString.of('FF0000')],
+        CS2: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }],
+      },
+    }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('q 50 0 0 50 10 10 cm /Pic Do Q')),
+  );
+  const frame = await openRedact(page, {
+    name: 'mask-xmp.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('MASK-XMP-SECRET');
+  const result = await PDFDocument.load(bytes);
+  const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
+  expect(spaces.has(PDFName.of('CS2'))).toBe(true);
+});
+
+test('가린 쪽은 인쇄할 때 보이는 주석만 그림에 넣는다', async ({ page }) => {
+  // 화면에서만 보이는(인쇄 플래그 없음) 검은 네모 주석이 왼쪽 아래 구석에 있다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const added = source.addPage([200, 200]);
+  const appearance = context.register(
+    context.stream('0 0 0 rg 0 0 50 50 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 50, 50],
+    }),
+  );
+  added.node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Square',
+        Rect: [10, 10, 60, 60],
+        F: 0,
+        AP: { N: appearance },
+      }),
+    ]),
+  );
+  const frame = await openRedact(page, {
+    name: 'screen-only.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const jpg = [...(await PDFDocument.load(bytes)).context.enumerateIndirectObjects()]
+    .map(([, object]) => object)
+    .find(
+      (object): object is PDFRawStream =>
+        object instanceof PDFRawStream &&
+        object.dict.get(PDFName.of('Filter')) === PDFName.of('DCTDecode'),
+    )!;
+  const shade = await page.evaluate(async (base64) => {
+    const data = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+    const bitmap = await createImageBitmap(new Blob([data], { type: 'image/jpeg' }));
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    // 주석 가운데 (35, 35) → 위에서부터 165/200
+    const x = Math.round((bitmap.width * 35) / 200);
+    const y = Math.round((bitmap.height * 165) / 200);
+    return context.getImageData(x, y, 1, 1).data[0];
+  }, Buffer.from(jpg.contents).toString('base64'));
+  // 흰 종이 그대로 (화면 전용 주석은 그리지 않는다)
+  expect(shade).toBeGreaterThan(200);
+});
