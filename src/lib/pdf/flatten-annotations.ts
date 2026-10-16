@@ -234,14 +234,17 @@ export function flattenAnnotations(page: PDFPage): boolean {
   for (const entry of annots.asArray()) {
     const annot = context.lookup(entry);
     if (!(annot instanceof PDFDict)) continue;
-    // 메모 창과 링크는 종이에 보이는 것이 없다 (링크 테두리는 보기 프로그램도 보통 그리지 않는다)
+    // 메모 창은 종이에 보이는 것이 없다
     const subtype = annot.get(PDFName.of('Subtype'));
-    if (subtype === PDFName.of('Popup') || subtype === PDFName.of('Link')) continue;
+    if (subtype === PDFName.of('Popup')) continue;
     // 종이에 찍을 결과라 인쇄할 때 나오는 주석만 넣는다 (화면 전용 버튼·메모는 빼고, 인쇄 전용은 넣는다)
     if (!printable(annot)) continue;
     const rect = numbers(context.lookup(annot.get(PDFName.of('Rect'))), 4);
     const normal = normalAppearance(annot);
     if (normal === 'empty') continue;
+    // 모양이 저장되지 않은 링크는 보이는 것이 없다 (링크 테두리는 보기 프로그램도 보통 그리지 않는다).
+    // 모양이 있는 링크는 다른 주석처럼 그린다
+    if (normal === undefined && subtype === PDFName.of('Link')) continue;
     const appearance = normal ?? (rect && markupAppearance(annot, rect));
     // 인쇄되는데 모양을 만들 수 없는 주석은 조용히 빼지 않고 알린다
     if (!rect || !appearance) throw new Error(UNRENDERED_ANNOTATION);
