@@ -1460,3 +1460,35 @@ test('배열 색공간 안 프로필의 XMP는 빼고, 별색 이름과 같은 �
   expect(spaces.has(PDFName.of('CS2'))).toBe(true);
   expect(spaces.has(PDFName.of('PatientName'))).toBe(false);
 });
+
+test('남긴 그림 스트림의 바깥 파일 연결(/F)은 뺀다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const embedded = context.register(context.stream('STREAM-FILE-SECRET', { Type: 'EmbeddedFile' }));
+  const picture = context.register(
+    context.flateStream(new Uint8Array(81).fill(9), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 9,
+      Height: 9,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+      F: { Type: 'Filespec', F: PDFHexString.fromText('pixels.bin'), EF: { F: embedded } },
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ XObject: { Pic: picture } }));
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('q 50 0 0 50 10 10 cm /Pic Do Q')),
+  );
+  const frame = await openRedact(page, {
+    name: 'stream-file.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('STREAM-FILE-SECRET');
+});
