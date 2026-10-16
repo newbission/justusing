@@ -5,7 +5,8 @@
  * - JPG(DCT)는 파일 안의 바이트 그대로 (화질 손실 없음). 투명도가 붙어 있으면 PNG로 합친다
  * - JPEG 2000(JPX)은 그대로 .jp2
  * - 그 밖에 흔한 형식(Flate, 8비트 이하 회색·RGB·색 목록, 투명도)은 화소를 풀어 PNG로
- * - 흑백 팩스(CCITT·JBIG2), CMYK 화소, 16비트 등은 꺼내지 못한 것으로 센다
+ * - 흑백 팩스(CCITT·JBIG2), CMYK 화소, 16비트, 보정 색공간은 꺼내지 못한 것으로 센다
+ * - ICC RGB 색공간이면 PNG에 그 프로필을 넣는다
  */
 import {
   PDFArray,
@@ -43,26 +44,35 @@ function filters(dict: PDFDict): string[] {
   return [];
 }
 
-/** 색 읽는 법: 한 화소의 성분 수와, 색 목록이면 RGB 목록 */
-type Colors = { components: 1 | 3 } | { components: 1; palette: Uint8Array; paletteColors: 1 | 3 };
+/** 색 읽는 법: 한 화소의 성분 수, 색 목록이면 그 목록, ICC 색공간이면 그 프로필 */
+type Colors =
+  | { components: 1 | 3; icc?: Uint8Array }
+  | { components: 1; palette: Uint8Array; paletteColors: 1 | 3; icc?: Uint8Array };
 
-function baseComponents(space: unknown, dict: PDFDict): 1 | 3 | undefined {
+/**
+ * 기본 색공간의 성분 수 (회색 1, RGB 3)와 ICC 프로필. 보정 색공간(CalRGB·CalGray)처럼
+ * 색을 바꿔야 하는데 바꿀 수 없는 것은 undefined (꺼내지 못한 것으로 센다)
+ */
+function baseSpace(space: unknown, dict: PDFDict): { n: 1 | 3; icc?: Uint8Array } | undefined {
   const lookup = dict.context.lookup.bind(dict.context);
   const resolved = lookup(space as PDFRef);
   if (resolved instanceof PDFName) {
     const value = resolved.decodeText();
-    if (value === 'DeviceGray' || value === 'CalGray' || value === 'G') return 1;
-    if (value === 'DeviceRGB' || value === 'CalRGB' || value === 'RGB') return 3;
+    if (value === 'DeviceGray' || value === 'G') return { n: 1 };
+    if (value === 'DeviceRGB' || value === 'RGB') return { n: 3 };
     return undefined;
   }
   if (resolved instanceof PDFArray && resolved.size() >= 1) {
     const kind = resolved.lookup(0);
-    if (!(kind instanceof PDFName)) return undefined;
-    if (kind.decodeText() === 'ICCBased') {
-      const n = numberOf((resolved.lookup(1) as PDFStream | undefined)?.dict, 'N');
-      return n === 1 ? 1 : n === 3 ? 3 : undefined;
-    }
-    return baseComponents(kind, dict);
+    if (kind !== name('ICCBased')) return undefined;
+    const profile = resolved.lookup(1);
+    if (!(profile instanceof PDFRawStream)) return undefined;
+    const n = numberOf(profile.dict, 'N');
+    // RGB 프로필은 PNG에 같이 넣어 보기 프로그램이 색을 맞추게 한다.
+    // 회색 프로필은 거의 감마 2.2 회색(sGray)이라 회색 그대로 쓴다 (RGB PNG에는 회색 프로필을 넣을 수 없다)
+    if (n === 3) return { n: 3, icc: decodePDFRawStream(profile).decode() };
+    if (n === 1) return { n: 1 };
+    return undefined;
   }
   return undefined;
 }
@@ -70,7 +80,7 @@ function baseComponents(space: unknown, dict: PDFDict): 1 | 3 | undefined {
 function colorsOf(dict: PDFDict): Colors | undefined {
   const space = dict.lookup(name('ColorSpace'));
   if (space instanceof PDFArray && space.lookup(0) === name('Indexed')) {
-    const base = baseComponents(space.get(1), dict);
+    const base = baseSpace(space.get(1), dict);
     // [/Indexed 기본색공간 최댓값 색목록]
     const table = space.lookup(3);
     if (!base) return undefined;
@@ -79,10 +89,10 @@ function colorsOf(dict: PDFDict): Colors | undefined {
     else if (table instanceof PDFHexString) palette = table.asBytes();
     else if (table instanceof PDFRawStream) palette = decodePDFRawStream(table).decode();
     if (!palette) return undefined;
-    return { components: 1, palette, paletteColors: base };
+    return { components: 1, palette, paletteColors: base.n, icc: base.icc };
   }
-  const components = baseComponents(space, dict);
-  return components ? { components } : undefined;
+  const base = baseSpace(space, dict);
+  return base ? { components: base.n, icc: base.icc } : undefined;
 }
 
 /** 스트림의 화소 바이트 (Flate·예측을 풀어서). 다른 필터면 undefined */
@@ -129,8 +139,10 @@ async function alphaOf(dict: PDFDict, width: number, height: number) {
   return rawPixels(mask, width, height, 1, 8);
 }
 
-/** 화소를 풀어 RGBA로. 다룰 수 없는 형식이면 undefined */
-async function decodePixels(stream: PDFRawStream): Promise<ImageData | undefined> {
+/** 화소를 풀어 RGBA로 (ICC 색공간이면 그 프로필과 함께). 다룰 수 없는 형식이면 undefined */
+async function decodePixels(
+  stream: PDFRawStream,
+): Promise<{ pixels: ImageData; icc?: Uint8Array } | undefined> {
   const { dict } = stream;
   const width = numberOf(dict, 'Width');
   const height = numberOf(dict, 'Height');
@@ -141,6 +153,22 @@ async function decodePixels(stream: PDFRawStream): Promise<ImageData | undefined
   const indexed = 'palette' in colors;
   // 색 목록은 1·2·4·8비트, 회색·RGB는 8비트만
   if (indexed ? ![1, 2, 4, 8].includes(bits) : bits !== 8) return undefined;
+  // 색으로 투명 처리(/Mask 배열: 성분마다 [최소 최대])는 알파로 바꾼다. 그림으로 가리는 /Mask는 다루지 않는다
+  const maskValue = dict.lookup(name('Mask'));
+  let colorKey: number[] | undefined;
+  if (maskValue instanceof PDFArray) {
+    colorKey = maskValue.asArray().map((item) => {
+      const value = dict.context.lookup(item);
+      return value instanceof PDFNumber ? value.asNumber() : NaN;
+    });
+    if (colorKey.length !== colors.components * 2 || !colorKey.every(Number.isFinite)) {
+      return undefined;
+    }
+  } else if (maskValue !== undefined) {
+    return undefined;
+  }
+  const keyed = (...components: number[]) =>
+    !!colorKey && components.every((c, i) => c >= colorKey[i * 2]! && c <= colorKey[i * 2 + 1]!);
   const bytesPerRow = Math.ceil((width * colors.components * bits) / 8);
   const data = await rawPixels(stream, width, height, colors.components, bits);
   if (!data) return undefined;
@@ -150,24 +178,65 @@ async function decodePixels(stream: PDFRawStream): Promise<ImageData | undefined
     const offset = y * bytesPerRow;
     for (let x = 0; x < width; x++) {
       const out = (y * width + x) * 4;
+      let transparent: boolean;
       if (indexed) {
         const p = colors.palette;
         const n = colors.paletteColors;
-        const i = sample(data, offset, x, bits) * n;
+        const index = sample(data, offset, x, bits);
+        const i = index * n;
         rgba[out] = p[i] ?? 0;
         rgba[out + 1] = p[n === 3 ? i + 1 : i] ?? 0;
         rgba[out + 2] = p[n === 3 ? i + 2 : i] ?? 0;
+        transparent = keyed(index);
       } else if (colors.components === 3) {
         rgba[out] = data[offset + x * 3]!;
         rgba[out + 1] = data[offset + x * 3 + 1]!;
         rgba[out + 2] = data[offset + x * 3 + 2]!;
+        transparent = keyed(rgba[out]!, rgba[out + 1]!, rgba[out + 2]!);
       } else {
         rgba[out] = rgba[out + 1] = rgba[out + 2] = data[offset + x]!;
+        transparent = keyed(rgba[out]!);
       }
-      rgba[out + 3] = alpha ? alpha[y * width + x]! : 255;
+      rgba[out + 3] = transparent ? 0 : alpha ? alpha[y * width + x]! : 255;
     }
   }
-  return new ImageData(rgba, width, height);
+  return { pixels: new ImageData(rgba, width, height), icc: colors.icc };
+}
+
+const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+
+function crc32(bytes: Uint8Array): number {
+  let c = 0xffffffff;
+  for (const byte of bytes) c = CRC_TABLE[(c ^ byte) & 0xff]! ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+/** PNG에 ICC 프로필(iCCP)을 넣는다. 머리(IHDR) 바로 뒤에 둔다 */
+async function withIcc(png: Uint8Array, icc: Uint8Array): Promise<Uint8Array> {
+  const compressed = new Uint8Array(
+    await new Response(
+      new Blob([icc as BlobPart]).stream().pipeThrough(new CompressionStream('deflate')),
+    ).arrayBuffer(),
+  );
+  // 이름 "ICC" + 0 + 압축 방식 0 + zlib 프로필
+  const data = new Uint8Array([...new TextEncoder().encode('ICC'), 0, 0, ...compressed]);
+  const typed = new Uint8Array([...new TextEncoder().encode('iCCP'), ...data]);
+  const chunk = new Uint8Array(12 + data.length);
+  const view = new DataView(chunk.buffer);
+  view.setUint32(0, data.length);
+  chunk.set(typed, 4);
+  view.setUint32(8 + data.length, crc32(typed));
+  // PNG 서명 8바이트 + IHDR(길이 4 + 종류 4 + 내용 13 + CRC 4)
+  const ihdrEnd = 8 + 25;
+  const out = new Uint8Array(png.length + chunk.length);
+  out.set(png.subarray(0, ihdrEnd));
+  out.set(chunk, ihdrEnd);
+  out.set(png.subarray(ihdrEnd), ihdrEnd + chunk.length);
+  return out;
 }
 
 async function png(image: ImageData | ImageBitmap): Promise<Uint8Array> {
@@ -213,9 +282,15 @@ async function extract(
   if (list.length === 1 && last === 'JPXDecode') {
     return { ext: 'jp2', bytes: stream.contents.slice(), width, height };
   }
-  const pixels = await decodePixels(stream);
-  if (!pixels) return undefined;
-  return { ext: 'png', bytes: await png(pixels), width, height };
+  const decoded = await decodePixels(stream);
+  if (!decoded) return undefined;
+  const bytes = await png(decoded.pixels);
+  return {
+    ext: 'png',
+    bytes: decoded.icc ? await withIcc(bytes, decoded.icc) : bytes,
+    width,
+    height,
+  };
 }
 
 /** 쪽마다 그 쪽(과 쪽 안의 묶음 그림)이 쓰는 사진. 같은 사진은 처음 나온 쪽에만 */
