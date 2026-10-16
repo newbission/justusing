@@ -44,6 +44,9 @@ export async function redactPdf(
   return modifyPdf(source, { kind: 'redact', pages });
 }
 
+/** 오른쪽에서 왼쪽으로 쓰는 글자 (히브리어·아랍어·시리아어·타나어 등과 그 표시형) */
+const RTL = /[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]|\ud802[\udc00-\udfff]|\ud83a/;
+
 /** 글자 아래로 내려가는 부분(g, y 등)까지 덮도록 글자 높이의 이만큼 아래부터 가린다 */
 const DESCENT = 0.3;
 
@@ -142,6 +145,7 @@ export async function findText(doc: PDFDocumentProxy, term: string): Promise<Red
       const top = [c! / up, d! / up];
       const height = item.height || up;
       const family = content.styles[item.fontName]?.fontFamily ?? 'sans-serif';
+      const rtl = item.dir === 'rtl' || RTL.test(item.str);
       let prefix: Float64Array | undefined;
       for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + 1)) {
         // 찾은 조각에서만, 조각마다 한 번 잰다
@@ -149,7 +153,11 @@ export async function findText(doc: PDFDocumentProxy, term: string): Promise<Red
         // 원문 위치로 옮겨 잰다 (찾은 첫 자리를 만든 글자의 시작부터 마지막 자리를 만든 글자의 끝까지)
         const start = from[at]!;
         const end = to[at + needle.length - 1]!;
-        const [s0, s1] = matchSpan(prefix, start, end - start, item.width, height);
+        // 오른쪽에서 왼쪽으로 쓰는 글자(히브리어·아랍어 등)가 섞이면 글자 순서와 놓인 자리가 달라
+        // 찾은 말의 자리를 알 수 없으므로 조각 전체를 가린다
+        const [s0, s1] = rtl
+          ? [0, item.width]
+          : matchSpan(prefix, start, end - start, item.width, height);
         const corners = [s0, s1].flatMap((s) =>
           [-height * DESCENT, height].map((t) =>
             viewport.convertToViewportPoint(
