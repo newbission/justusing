@@ -6,7 +6,7 @@ import { PDFDocument, degrees, rgb, type PDFFont } from '@cantoo/pdf-lib';
 import fontkit from '@cantoo/fontkit';
 import type { TextJob, TextRequest, TextResponse } from './text-pdf';
 import { placements } from './watermark-layout';
-import { fillTemplate, linePosition } from './header-footer-layout';
+import { fillTemplate, fitSize, linePosition } from './header-footer-layout';
 import { normalizedRotation, toPdfPoint, viewSize } from './page-geometry';
 
 /** 글꼴에 없는 글자 (빈칸 제외). PDF에 빈 네모로 찍히므로 넣기 전에 알린다 */
@@ -73,11 +73,12 @@ function drawHeaderFooter(
     ] as const) {
       const text = fillTemplate(line.text, index + 1, pages.length, job.date).trim();
       if (!text) continue;
-      const width = font.widthOfTextAtSize(text, job.size);
-      const at = linePosition(view, width, job.size, line.align, edge);
+      const size = fitSize(font.widthOfTextAtSize(text, job.size), job.size, view.width);
+      const width = font.widthOfTextAtSize(text, size);
+      const at = linePosition(view, width, size, line.align, edge);
       page.drawText(text, {
         ...toPdfPoint(page, at.x, at.y),
-        size: job.size,
+        size,
         font,
         color,
         // 회전한 쪽에서도 화면에 바로 보이게 같은 만큼 돌린다

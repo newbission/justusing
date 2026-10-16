@@ -5,7 +5,7 @@
 import { runTextJob } from './text-pdf';
 
 export { MissingGlyphsError } from './text-pdf';
-export { EDGE_MARGIN, fillTemplate, linePosition } from './header-footer-layout';
+export { EDGE_MARGIN, fillTemplate, fitSize, linePosition } from './header-footer-layout';
 
 export type Align = 'left' | 'center' | 'right';
 
