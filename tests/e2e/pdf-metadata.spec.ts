@@ -17,9 +17,20 @@ async function infoPdf() {
   doc.setAuthor('Kim Secret');
   doc.setCreator('Secret Office 2026');
   doc.setProducer('Secret PDF Maker');
-  doc.setCreationDate(new Date(2026, 0, 2, 3, 4));
+  // 세계 표준시 03:04:05 (서울 12:04)
+  infoOf(doc).set(PDFName.of('CreationDate'), PDFString.of('D:20260102030405Z'));
   // 워드 등이 더하는 사용자 정의 항목
   infoOf(doc).set(PDFName.of('Company'), PDFString.of('Secret Corp'));
+  // 쪽에 붙은 XMP
+  doc.getPage(0).node.set(
+    PDFName.of('Metadata'),
+    doc.context.register(
+      doc.context.stream('<x:xmpmeta><dc:creator>Page XMP Lee</dc:creator></x:xmpmeta>', {
+        Type: 'Metadata',
+        Subtype: 'XML',
+      }),
+    ),
+  );
   // 따로 된 객체로 들어 있는 XMP (참조만 끊으면 파일에 남는다)
   doc.catalog.set(
     PDFName.of('Metadata'),
@@ -90,4 +101,14 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(infoOf(doc).get(PDFName.of('Company'))).toBeUndefined();
   expect(doc.catalog.get(PDFName.of('Metadata'))).toBeUndefined();
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('XMP Secret Kim');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Page XMP Lee');
+});
+
+test.describe('서울 시간대에서', () => {
+  test.use({ timezoneId: 'Asia/Seoul' });
+
+  test('시간대가 적힌 날짜를 이 기기의 시각으로 보여 준다', async ({ page }) => {
+    const frame = await openTool(page);
+    await expect(frame.getByText('오후 12:04', { exact: false })).toBeVisible();
+  });
 });
