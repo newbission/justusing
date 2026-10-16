@@ -119,8 +119,8 @@ function formsIn(resources: PDFDict): FormLookup {
     if (form.dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) return undefined;
     const own = context.lookup(form.dict.get(PDFName.of('Resources')));
     return own instanceof PDFDict
-      ? { text: streamText(form), own: true, forms: formsIn(own) }
-      : { text: streamText(form), own: false };
+      ? { key: form, text: streamText(form), own: true, forms: formsIn(own) }
+      : { key: form, text: streamText(form), own: false };
   };
 }
 
