@@ -234,7 +234,9 @@ export function flattenAnnotations(page: PDFPage): boolean {
   for (const entry of annots.asArray()) {
     const annot = context.lookup(entry);
     if (!(annot instanceof PDFDict)) continue;
-    if (annot.get(PDFName.of('Subtype')) === PDFName.of('Popup')) continue;
+    // 메모 창과 링크는 종이에 보이는 것이 없다 (링크 테두리는 보기 프로그램도 보통 그리지 않는다)
+    const subtype = annot.get(PDFName.of('Subtype'));
+    if (subtype === PDFName.of('Popup') || subtype === PDFName.of('Link')) continue;
     // 종이에 찍을 결과라 인쇄할 때 나오는 주석만 넣는다 (화면 전용 버튼·메모는 빼고, 인쇄 전용은 넣는다)
     if (!printable(annot)) continue;
     const rect = numbers(context.lookup(annot.get(PDFName.of('Rect'))), 4);
