@@ -31,6 +31,13 @@ async function infoPdf() {
       }),
     ),
   );
+  // 고친 기록에서 참조를 잃은 옛 XMP
+  doc.context.register(
+    doc.context.stream('<x:xmpmeta><dc:creator>Orphan XMP Park</dc:creator></x:xmpmeta>', {
+      Type: 'Metadata',
+      Subtype: 'XML',
+    }),
+  );
   // 따로 된 객체로 들어 있는 XMP (참조만 끊으면 파일에 남는다)
   doc.catalog.set(
     PDFName.of('Metadata'),
@@ -102,6 +109,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(doc.catalog.get(PDFName.of('Metadata'))).toBeUndefined();
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('XMP Secret Kim');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Page XMP Lee');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Orphan XMP Park');
 });
 
 test.describe('서울 시간대에서', () => {
@@ -141,4 +149,29 @@ test('Info에 없고 XMP에만 있는 제목·작성자도 읽어 칸에 채운�
   const { doc: saved } = await download(page, frame);
   expect(saved.getTitle()).toBe('XMP Title');
   expect(saved.getAuthor()).toBe('Lee XMP');
+});
+
+test('제목만 바꿀 때 쪽과 같이 쓰는 XMP 객체는 지우지 않는다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  doc.addPage([200, 200]);
+  doc.setTitle('Old title');
+  const shared = doc.context.register(
+    doc.context.stream('<x:xmpmeta/>', { Type: 'Metadata', Subtype: 'XML' }),
+  );
+  doc.catalog.set(PDFName.of('Metadata'), shared);
+  doc.getPage(0).node.set(PDFName.of('Metadata'), shared);
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'shared.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save({ updateFieldAppearances: false })),
+  });
+  await frame.getByLabel('제목').fill('New title');
+  const { doc: saved } = await download(page, frame);
+  expect(saved.getTitle()).toBe('New title');
+  expect(saved.catalog.get(PDFName.of('Metadata'))).toBeUndefined();
+  // 쪽이 가리키는 XMP는 그대로 남아 있다
+  const pageXmp = saved.getPage(0).node.get(PDFName.of('Metadata'));
+  expect(saved.context.lookup(pageXmp)).toBeDefined();
 });
