@@ -3,7 +3,7 @@
  *
  * 쪽(과 쪽 안의 묶음 그림)이 쓰는 사진을 찾아, 같은 사진은 한 번만 꺼낸다.
  * - JPG(DCT)는 파일 안의 바이트 그대로 (화질 손실 없음). 투명도가 붙어 있으면 PNG로 합친다
- * - JPEG 2000(JPX)은 그대로 .jp2
+ * - JPEG 2000(JPX)은 그대로 .jp2·.jpx·.j2k (파일 형식에 따라)
  * - 그 밖에 흔한 형식(Flate, 8비트 이하 회색·RGB·색 목록, 투명도)은 화소를 풀어 PNG로
  * - 흑백 팩스(CCITT·JBIG2), CMYK 화소, 16비트, 보정 색공간, 쪽 내용에 바로 써 넣은 그림은 꺼내지 못한 것으로 센다
  * - ICC RGB 색공간이면 PNG에 그 프로필을 넣는다
@@ -425,6 +425,16 @@ function plainDecode(dict: PDFDict): boolean {
   });
 }
 
+/**
+ * JPEG 2000 바이트의 형식: JP2 상자 파일이면 형식 상자(ftyp)의 이름에 따라 jp2·jpx,
+ * 상자 없는 코드 스트림이면 j2k
+ */
+function jpxKind(bytes: Uint8Array): 'jp2' | 'jpx' | 'j2k' {
+  if (bytes[0] === 0xff && bytes[1] === 0x4f) return 'j2k';
+  const brand = String.fromCharCode(...bytes.subarray(20, 24));
+  return brand === 'jpx ' ? 'jpx' : 'jp2';
+}
+
 /** 사진 하나를 꺼낸다. 다룰 수 없으면 undefined */
 async function extract(
   stream: PDFRawStream,
@@ -469,7 +479,7 @@ async function extract(
     // (보기 프로그램은 파일 안 색공간 대신 PDF 사전의 색공간으로 그린다)
     const space = jpegSpace(dict, resources);
     if (!space || space.icc) return undefined;
-    return { ext: 'jp2', bytes: stream.contents.slice(), width, height };
+    return { ext: jpxKind(stream.contents), bytes: stream.contents.slice(), width, height };
   }
   const decoded = await decodePixels(stream, resources);
   if (!decoded) return undefined;
