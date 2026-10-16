@@ -20,6 +20,16 @@ async function infoPdf() {
   doc.setCreationDate(new Date(2026, 0, 2, 3, 4));
   // 워드 등이 더하는 사용자 정의 항목
   infoOf(doc).set(PDFName.of('Company'), PDFString.of('Secret Corp'));
+  // 따로 된 객체로 들어 있는 XMP (참조만 끊으면 파일에 남는다)
+  doc.catalog.set(
+    PDFName.of('Metadata'),
+    doc.context.register(
+      doc.context.stream('<x:xmpmeta><dc:creator>XMP Secret Kim</dc:creator></x:xmpmeta>', {
+        Type: 'Metadata',
+        Subtype: 'XML',
+      }),
+    ),
+  );
   return Buffer.from(await doc.save({ updateFieldAppearances: false }));
 }
 
@@ -40,11 +50,11 @@ async function download(page: Page, frame: ReturnType<Page['frameLocator']>) {
   const event = page.waitForEvent('download');
   await frame.getByRole('button', { name: '다운로드' }).click();
   const file = await event;
+  const bytes = new Uint8Array(await readFile(await file.path()));
   return {
     name: file.suggestedFilename(),
-    doc: await PDFDocument.load(new Uint8Array(await readFile(await file.path())), {
-      updateMetadata: false,
-    }),
+    bytes,
+    doc: await PDFDocument.load(bytes, { updateMetadata: false }),
   };
 }
 
@@ -71,7 +81,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   const frame = await openTool(page);
   await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
   await expect(frame.getByLabel('제목')).toBeDisabled();
-  const { doc } = await download(page, frame);
+  const { doc, bytes } = await download(page, frame);
   expect(doc.getTitle()).toBeUndefined();
   expect(doc.getAuthor()).toBeUndefined();
   expect(doc.getCreator()).toBeUndefined();
@@ -79,4 +89,5 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(doc.getCreationDate()).toBeUndefined();
   expect(infoOf(doc).get(PDFName.of('Company'))).toBeUndefined();
   expect(doc.catalog.get(PDFName.of('Metadata'))).toBeUndefined();
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('XMP Secret Kim');
 });
