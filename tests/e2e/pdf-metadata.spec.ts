@@ -112,3 +112,33 @@ test.describe('서울 시간대에서', () => {
     await expect(frame.getByText('오후 12:04', { exact: false })).toBeVisible();
   });
 });
+
+test('Info에 없고 XMP에만 있는 제목·작성자도 읽어 칸에 채운다', async ({ page }) => {
+  const doc = await PDFDocument.create({ updateMetadata: false });
+  doc.addPage([200, 200]);
+  const xmp = `<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dc:title><rdf:Alt><rdf:li xml:lang="x-default">XMP Title</rdf:li></rdf:Alt></dc:title>
+<dc:creator><rdf:Seq><rdf:li>Lee XMP</rdf:li></rdf:Seq></dc:creator>
+</rdf:Description></rdf:RDF></x:xmpmeta>
+<?xpacket end="w"?>`;
+  doc.catalog.set(
+    PDFName.of('Metadata'),
+    doc.context.register(doc.context.stream(xmp, { Type: 'Metadata', Subtype: 'XML' })),
+  );
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'xmp.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByLabel('제목')).toHaveValue('XMP Title');
+  await expect(frame.getByLabel('작성자')).toHaveValue('Lee XMP');
+  // 다른 칸만 고쳐 저장해도 XMP에 있던 제목·작성자가 Info로 옮겨진다
+  await frame.getByLabel('주제').fill('report');
+  const { doc: saved } = await download(page, frame);
+  expect(saved.getTitle()).toBe('XMP Title');
+  expect(saved.getAuthor()).toBe('Lee XMP');
+});
