@@ -364,3 +364,41 @@ test('예측 행 크기가 사진과 다르거나 Matte로 미리 섞인 투명�
   await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
   await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
+
+test('그리지 않고 자원 목록에만 있는 사진은 꺼내지 않고, Decode로 바꿔 보이는 JPG는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const jpg = await doc.embedJpg(await readFile(fixture('photo.jpg')));
+  const added = doc.addPage([600, 800]);
+  added.drawImage(jpg, { x: 20, y: 400, width: 300, height: 225 });
+  await jpg.embed();
+  // 뒤집어 보이는 JPG (색 성분마다 [1 0])
+  const jpgDict = (context.lookup(jpg.ref) as PDFRawStream).dict;
+  jpgDict.set(PDFName.of('Decode'), context.obj([1, 0, 1, 0, 1, 0]));
+  // 자원 목록에만 넣고 그리지 않는 사진
+  added.node.newXObject(
+    'Unused',
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(200), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+      }),
+    ),
+  );
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'unused.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
