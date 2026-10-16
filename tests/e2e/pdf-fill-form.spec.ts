@@ -359,3 +359,32 @@ test('읽기 전용 선택 상자와 목록도 모양을 다시 만들 때 보�
   expect(text).toContain('대한민국');
   expect(text).not.toContain('KR');
 });
+
+test('한글 암호는 글꼴 없이 가려 저장하고, 암호 칸은 PDF 칸 크기에 맞춘다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 200]);
+  const pin = doc.getForm().createTextField('pin');
+  pin.enablePassword();
+  pin.addToPage(added, { x: 20, y: 100, width: 60, height: 16 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'pin.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  const input = frame.getByLabel('pin');
+  const [inputBox, fieldBox] = await Promise.all([
+    input.boundingBox(),
+    frame.locator('.field-box').first().boundingBox(),
+  ]);
+  expect(inputBox!.width).toBeLessThanOrEqual(fieldBox!.width + 0.5);
+  expect(inputBox!.height).toBeLessThanOrEqual(fieldBox!.height + 0.5);
+  await input.fill('비밀번호1');
+  await expect(frame.getByRole('button', { name: '기본 고딕 받기' })).toHaveCount(0);
+  await frame.getByLabel('칸을 글자로 굳히기', { exact: false }).check();
+  const { bytes } = await download(page, frame);
+  const saved = await getDocument({ data: bytes.slice() }).promise;
+  const content = await (await saved.getPage(1)).getTextContent();
+  expect(content.items.map((item) => ('str' in item ? item.str : '')).join('')).toContain('*****');
+});
