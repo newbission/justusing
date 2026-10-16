@@ -182,12 +182,40 @@ function formsIn(resources: PDFDict): FormLookup {
 function usedThroughNames(resources: PDFDict, used: ResourceUse) {
   const context = resources.context;
   const spaces = used.get('ColorSpace') ?? new Set<string>();
-  /** 색공간 값 안의 이름을 모두 모은다 ([/Indexed /CS1 255 …], [/Separation /Gold /CS2 …] 등) */
+  /**
+   * 색공간 값이 다른 색공간을 부르는 자리의 이름만 모은다 (별색 이름 /Gold 같은 것은 자원이 아니다):
+   * [/Indexed 기본 …], [/Separation 이름 대체 …], [/DeviceN 이름들 대체 … 속성], [/Pattern 바탕],
+   * [/ICCBased 프로필(/Alternate)]
+   */
   const namesIn = (value: unknown, depth = 0) => {
     const resolved = context.lookup(value as PDFObject);
-    if (resolved instanceof PDFName) spaces.add(resolved.decodeText());
-    else if (resolved instanceof PDFArray && depth < 8) {
-      for (const item of resolved.asArray()) namesIn(item, depth + 1);
+    if (resolved instanceof PDFName) {
+      spaces.add(resolved.decodeText());
+      return;
+    }
+    if (!(resolved instanceof PDFArray) || depth > 8) return;
+    const kind = resolved.lookup(0);
+    const at = (index: number) => namesIn(resolved.get(index), depth + 1);
+    if (kind === PDFName.of('Indexed') || kind === PDFName.of('I')) at(1);
+    else if (kind === PDFName.of('Pattern')) at(1);
+    else if (kind === PDFName.of('Separation')) at(2);
+    else if (kind === PDFName.of('DeviceN')) {
+      at(2);
+      // 속성 사전의 /Colorants(별색들)와 /Process /ColorSpace
+      const attributes = resolved.lookup(4);
+      if (attributes instanceof PDFDict) {
+        const colorants = context.lookup(attributes.get(PDFName.of('Colorants')));
+        if (colorants instanceof PDFDict) {
+          for (const item of colorants.values()) namesIn(item, depth + 1);
+        }
+        const process = context.lookup(attributes.get(PDFName.of('Process')));
+        if (process instanceof PDFDict) namesIn(process.get(PDFName.of('ColorSpace')), depth + 1);
+      }
+    } else if (kind === PDFName.of('ICCBased')) {
+      const profile = resolved.lookup(1);
+      if (profile instanceof PDFStream) {
+        namesIn(profile.dict.get(PDFName.of('Alternate')), depth + 1);
+      }
     }
   };
   const addSpace = (dict: unknown) => {
