@@ -1309,3 +1309,70 @@ test('글꼴이 바뀌어 조각이 나뉜 말도 같은 줄이면 이어서 찾
   expect(box.left).toBeLessThanOrEqual(start);
   expect(box.left + box.width).toBeGreaterThanOrEqual(end);
 });
+
+test('ASCII85 그림 바이트 속 EI 뒤를 읽지 않고, 남긴 묶음 그림의 다른 PDF 연결은 뺀다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const resources = context.register(context.obj({ XObject: { Secret: secretImage(context) } }));
+  const embedded = context.register(
+    context.stream('REFERENCED-PDF-SECRET', { Type: 'EmbeddedFile' }),
+  );
+  const reference = context.register(
+    context.stream('0 0 1 rg 0 0 10 10 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 10, 10],
+      Ref: {
+        F: { Type: 'Filespec', F: PDFHexString.fromText('other.pdf'), EF: { F: embedded } },
+        Page: 0,
+      },
+    }),
+  );
+  const shared = context.register(
+    context.obj({ XObject: { Secret: secretImage(context), Fm: reference } }),
+  );
+  const first = source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  first.node.set(PDFName.of('Resources'), resources);
+  first.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('q 50 0 0 50 10 10 cm /Secret Do Q')),
+  );
+  second.node.set(PDFName.of('Resources'), shared);
+  // ASCII85 그림 바이트(글자) 안에 " EI /Secret Do "가 있다. 진짜 끝은 ~> 뒤
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream(
+        'q 10 0 0 10 10 10 cm BI /W 2 /H 1 /CS /G /BPC 8 /F /A85 ID 8 EI /Secret Do ~> EI Q /Fm Do',
+      ),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'a85.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).not.toContain(7);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('REFERENCED-PDF-SECRET');
+});
+
+test('큰 도면 쪽은 좌표 단위(UserUnit)를 그대로 옮긴다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const added = source.addPage([10000, 5000]);
+  added.node.set(PDFName.of('UserUnit'), PDFNumber.of(3));
+  added.drawRectangle({ x: 100, y: 100, width: 1000, height: 1000 });
+  const frame = await openRedact(page, {
+    name: 'drawing.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = (await PDFDocument.load(bytes)).getPage(0);
+  expect(result.getSize()).toEqual({ width: 10000, height: 5000 });
+  expect((result.node.get(PDFName.of('UserUnit')) as PDFNumber).asNumber()).toBe(3);
+});
