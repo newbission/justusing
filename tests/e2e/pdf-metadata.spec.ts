@@ -368,10 +368,15 @@ test('서명된 PDF는 서명이 깨진다고 알리고, 모두 지우기는 서
     'Cert Holder Park',
     '5369676E65722043657274205061726B',
     'Signer Secret Kim',
+    'Seed Reason Lee',
+    'DSS Cert Choi',
+    'Legal Note Jung',
   ]) {
     expect(text).not.toContain(secret);
   }
-  expect(doc.catalog.get(PDFName.of('Perms'))).toBeUndefined();
+  for (const key of ['Perms', 'DSS', 'Legal']) {
+    expect(doc.catalog.get(PDFName.of(key))).toBeUndefined();
+  }
 });
 
 test('모두 지우기는 레이어를 만든 프로그램·대상 사람과 문서 부분 정보도 지운다', async ({
