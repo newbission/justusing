@@ -11,6 +11,8 @@ import { unzipSync } from 'fflate';
 import {
   PDFDocument,
   PDFHexString,
+  PDFName,
+  PDFRawStream,
   drawObject,
   popGraphicsState,
   pushGraphicsState,
@@ -181,4 +183,66 @@ test('ICC 사진은 프로필을 넣고, 색 키 투명은 알파로, 바로 써
   expect(first!.includes(Buffer.from('iCCP'))).toBe(true);
   // 투명이 있으므로 RGBA(색 종류 6)로 저장된다
   expect(second![25]).toBe(6);
+});
+
+test('1비트·뒤집은 투명도와 JPG 색 키 투명을 살리고, 글자열 속 BI는 세지 않는다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  // 1비트 투명도(/Decode [1 0]: 1이 투명)
+  const mask = context.register(
+    context.flateStream(new Uint8Array((64 / 8) * 64).fill(0b10101010), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 1,
+      Decode: [1, 0],
+    }),
+  );
+  const masked = context.register(
+    context.flateStream(new Uint8Array(64 * 64 * 3).fill(100), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceRGB',
+      BitsPerComponent: 8,
+      SMask: mask,
+    }),
+  );
+  // 검은 화소를 투명으로 하는 JPG
+  const jpg = await doc.embedJpg(await readFile(fixture('photo.jpg')));
+  const added = doc.addPage([300, 300]);
+  added.drawImage(jpg, { x: 0, y: 0, width: 100, height: 75 });
+  await jpg.embed();
+  (context.lookup(jpg.ref) as PDFRawStream).dict.set(
+    PDFName.of('Mask'),
+    context.obj([0, 30, 0, 30, 0, 30]),
+  );
+  const name = added.node.newXObject('Image', masked);
+  added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  // 글자로 쓴 "BI … ID"는 그림이 아니다
+  added.node.addContentStream(
+    context.register(context.stream('BT /F1 12 Tf (BI /W 100 /H 100 ID) Tj ET')),
+  );
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'alpha.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('특수한 형식', { exact: false })).toHaveCount(0);
+  // JPG도 투명이 있어 PNG로 나온다
+  await expect(frame.getByText('1쪽 · 1200×900 · PNG', { exact: false })).toBeVisible();
+
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '모두 받기 (ZIP)' }).click();
+  const entries = unzipSync(new Uint8Array(await readFile(await (await event).path())));
+  for (const bytes of Object.values(entries)) expect(bytes[25]).toBe(6);
 });
