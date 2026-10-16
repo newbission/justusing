@@ -935,6 +935,21 @@ function hiddenLayers(doc: PDFDocument): (oc: unknown) => boolean {
     const type = dict.get(name('Type'));
     if (type === name('OCG')) return groupHidden(dict);
     if (type !== name('OCMD')) return false;
+    // 보이기 식(/VE)이 있으면 /OCGs·/P보다 먼저 쓴다: [/And …], [/Or …], [/Not 하나], 안은 층이나 다시 식
+    const expression = dict.lookup(name('VE'));
+    if (expression instanceof PDFArray) {
+      const shown = (value: unknown, depth: number): boolean => {
+        const item = context.lookup(value as PDFObject);
+        if (item instanceof PDFDict) return !groupHidden(item);
+        if (!(item instanceof PDFArray) || depth > 32) return true;
+        const operator = item.lookup(0);
+        const operands = item.asArray().slice(1);
+        if (operator === name('Not')) return !shown(operands[0], depth + 1);
+        if (operator === name('Or')) return operands.some((operand) => shown(operand, depth + 1));
+        return operands.every((operand) => shown(operand, depth + 1));
+      };
+      return !shown(expression, 0);
+    }
     const members = dict.lookup(name('OCGs'));
     const groups =
       members instanceof PDFArray
