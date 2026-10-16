@@ -1,0 +1,133 @@
+[
+  {
+    "id": "pretendard",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/pretendard-400.woff2",
+        "bytes": 667108,
+        "sha256": "d792514faa0388921c0d678582279e7a5b12ebd1bd7feebd094308a578617e36",
+        "hangul": 11172
+      },
+      {
+        "weight": 700,
+        "path": "/data/fonts/pretendard-700.woff2",
+        "bytes": 693436,
+        "sha256": "5dc8be2eec39874b792bbcbce73a6c1938c971ebb5ca5077dabc3b61b6014b35",
+        "hangul": 11172
+      }
+    ]
+  },
+  {
+    "id": "noto-sans-kr",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/noto-sans-kr-400.woff2",
+        "bytes": 674112,
+        "sha256": "a2ae651fa7e9183b8c603a8d70f01eee0c3cd9295d27dd1f7752ac46477c6031",
+        "hangul": 11172
+      },
+      {
+        "weight": 700,
+        "path": "/data/fonts/noto-sans-kr-700.woff2",
+        "bytes": 692500,
+        "sha256": "95c187f5d688a19fc8864439279d6e8634588e146b51069a370bc5f0215da922",
+        "hangul": 11172
+      }
+    ]
+  },
+  {
+    "id": "noto-serif-kr",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/noto-serif-kr-400.woff2",
+        "bytes": 1190468,
+        "sha256": "f8829759b9c15a0bb67dfd427bd2d64ad0539d2bf9e9edf1a41100bd56c0f474",
+        "hangul": 11172
+      },
+      {
+        "weight": 700,
+        "path": "/data/fonts/noto-serif-kr-700.woff2",
+        "bytes": 1239144,
+        "sha256": "ee3623898d330c164d90eb8de1a78d9ae39e4fcf3fe869d02c82085165515df5",
+        "hangul": 11172
+      }
+    ]
+  },
+  {
+    "id": "nanum-gothic",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/nanum-gothic-400.woff2",
+        "bytes": 295060,
+        "sha256": "a24e094eecc93211a732c5a8484a7a6f3bce4f53f54642f525e7906a4a844d8f",
+        "hangul": 11172
+      },
+      {
+        "weight": 700,
+        "path": "/data/fonts/nanum-gothic-700.woff2",
+        "bytes": 355564,
+        "sha256": "0fc112f4bef34516c04297cda58e44e25642749fb60f976965302d3236ad50dd",
+        "hangul": 11172
+      }
+    ]
+  },
+  {
+    "id": "nanum-myeongjo",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/nanum-myeongjo-400.woff2",
+        "bytes": 407580,
+        "sha256": "b0ee000b0cc232853a396469a855cebe4bebbfc37ef3785c122e8a21fc1ee191",
+        "hangul": 11172
+      },
+      {
+        "weight": 700,
+        "path": "/data/fonts/nanum-myeongjo-700.woff2",
+        "bytes": 459348,
+        "sha256": "f88272fd75db9aa7870f52c1789f4aefe96ccf880042cea0f16d47f427d05d14",
+        "hangul": 11172
+      }
+    ]
+  },
+  {
+    "id": "nanum-pen",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/nanum-pen-400.woff2",
+        "bytes": 595640,
+        "sha256": "e6fdf5fc6f7e5f58afc9c0d0b6626c3f3e30d6b514700147fac5fcdfa35effb4",
+        "hangul": 11172
+      }
+    ]
+  },
+  {
+    "id": "gowun-dodum",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/gowun-dodum-400.woff2",
+        "bytes": 595396,
+        "sha256": "6fd0f3db82f29e2bd2ad77d4daef90785081dec65ab1d945b85ac57ac9a98003",
+        "hangul": 11172
+      }
+    ]
+  },
+  {
+    "id": "black-han-sans",
+    "files": [
+      {
+        "weight": 400,
+        "path": "/data/fonts/black-han-sans-400.woff2",
+        "bytes": 108148,
+        "sha256": "691d137c35018a20ab17739c3153908a7110d5d0bf69abd93bf624ff5ffb1431",
+        "hangul": 2581
+      }
+    ]
+  }
+]

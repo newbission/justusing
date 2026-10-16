@@ -85,6 +85,29 @@ const ko = {
     download: (name: string) => `${name} 받기`,
     remove: (name: string) => `${name} 빼기`,
   },
+  /** 글꼴 고르기 (src/lib/fonts/FontPicker.svelte) */
+  fonts: {
+    group: '글꼴',
+    note: '글꼴은 처음 한 번 받으면 이 브라우저에 보관되어 다음부터 바로 씁니다. 다른 브라우저·기기, 시크릿 창에서는 다시 받아야 하고, 브라우저 데이터를 지우면 사라집니다.',
+    weights: (bold: boolean): string => (bold ? '보통·굵게' : '보통'),
+    download: (name: string) => `${name} 받기`,
+    downloadShort: '받기',
+    downloading: (percent: number) => `받는 중 ${percent}%`,
+    ready: '받음',
+    removed: '전에 받은 글꼴이 브라우저에서 지워졌습니다. 다시 받아 주세요.',
+    failed: '글꼴을 받지 못했습니다. 인터넷 연결을 확인하고 다시 받아 주세요.',
+    lowSpace: '브라우저 저장 공간이 부족해 보관하지 못할 수 있습니다.',
+    partial: (count: number) =>
+      `한글 ${count.toLocaleString()}자만 있어 드문 글자는 표시되지 않습니다.`,
+    preview: (name: string) => `${name} 미리보기`,
+    upload: '내 글꼴 올리기',
+    mineEmpty: '내 글꼴',
+    source: (name: string) => `원본 글꼴: ${name} (자주 쓰는 글자만 담아 이름을 바꿨습니다)`,
+    uploadNote: 'TTF·OTF·WOFF 글꼴. 올린 글꼴은 이 페이지에서만 쓰고 보관하지 않습니다.',
+    uploadFailed: '글꼴 파일을 읽지 못했습니다.',
+    mine: (name: string) => `내 글꼴: ${name}`,
+    choose: (name: string) => `${name} 고르기`,
+  },
 };
 
 type FrameMessages = typeof ko;
@@ -167,6 +190,30 @@ const en: FrameMessages = {
     broken: 'This image cannot be opened. It will be left out.',
     download: (name: string) => `Download ${name}`,
     remove: (name: string) => `Remove ${name}`,
+  },
+  fonts: {
+    group: 'Font',
+    note: 'A font is downloaded once and kept in this browser, so it is ready next time. Other browsers, devices and private windows need to download it again, and clearing browser data removes it.',
+    weights: (bold: boolean) => (bold ? 'Regular, Bold' : 'Regular'),
+    download: (name: string) => `Download ${name}`,
+    downloadShort: 'Download',
+    downloading: (percent: number) => `Downloading ${percent}%`,
+    ready: 'Ready',
+    removed:
+      'A font you downloaded before was removed from this browser. Please download it again.',
+    failed: 'Could not download the font. Check your connection and try again.',
+    lowSpace: 'Your browser may not have enough storage space to keep it.',
+    partial: (count: number) =>
+      `Contains only ${count.toLocaleString()} Korean syllables, so rare ones will not show.`,
+    preview: (name: string) => `${name} preview`,
+    upload: 'Upload my font',
+    mineEmpty: 'My font',
+    source: (name: string) => `Based on ${name} (trimmed to common characters and renamed)`,
+    uploadNote:
+      'TTF, OTF or WOFF fonts. An uploaded font is only used on this page and is not kept.',
+    uploadFailed: 'Could not read the font file.',
+    mine: (name: string) => `My font: ${name}`,
+    choose: (name: string) => `Choose ${name}`,
   },
 };
 

@@ -22,6 +22,7 @@
  *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height }
  *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
  *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤)
+ *   글꼴 같은 도구 데이터 요청은 src/lib/data-store.ts가 받는다 (우리 사이트 공개 파일만, 사용자 파일 없음)
  */
 interface Props {
   /** frame 페이지 주소 (예: /pdf/view/frame/) */
@@ -51,11 +52,14 @@ import { ui } from '../i18n/ui';
 </noscript>
 
 <script>
+  import { serveData } from '../lib/data-store';
+
   // 저장된 테마를 주소(#theme=)로 넘겨 처음부터 같은 테마로 그리고,
   // 테마를 바꾸면 메시지로 알린다. frame은 출처가 없어 대상 출처를 '*'로 보낸다(테마 값만 담김).
   for (const frame of document.querySelectorAll<HTMLIFrameElement>('[data-tool-frame]')) {
     const theme = document.documentElement.dataset.theme;
     frame.src = frame.dataset.src + (theme ? `#theme=${theme}` : '');
+    serveData(frame);
 
     document.addEventListener('themechange', (event) => {
       const detail = (event as CustomEvent<string>).detail;
