@@ -2,49 +2,9 @@
  * PDF 고치기 워커 (modify.ts가 부른다). 무거운 처리라 화면이 멈추지 않도록 워커에서 돈다.
  * 파일은 메모리에서만 다룬다.
  */
-import { PDFDocument, StandardFonts, degrees, rgb, type PDFPage } from '@cantoo/pdf-lib';
-import type { ModifyJob, ModifyRequest, ModifyResponse, PageRect } from './modify';
-
-/**
- * 화면에 보이는 쪽(회전·CropBox 적용) 위의 점을 PDF 좌표로 바꾼다.
- * 화면 좌표는 왼쪽 위가 (0, 0)이고 단위는 pt. PDF 좌표는 왼쪽 아래가 원점이다.
- */
-function toPdfPoint(page: PDFPage, dx: number, dy: number): { x: number; y: number } {
-  const box = page.getCropBox();
-  switch (normalizedRotation(page)) {
-    case 90:
-      return { x: box.x + dy, y: box.y + dx };
-    case 180:
-      return { x: box.x + box.width - dx, y: box.y + dy };
-    case 270:
-      return { x: box.x + box.width - dy, y: box.y + box.height - dx };
-    default:
-      return { x: box.x + dx, y: box.y + box.height - dy };
-  }
-}
-
-function normalizedRotation(page: PDFPage): number {
-  return (((page.getRotation().angle % 360) + 360) % 360) as number;
-}
-
-/** 화면에 보이는 쪽의 가로·세로 (pt) */
-function viewSize(page: PDFPage): { width: number; height: number } {
-  const box = page.getCropBox();
-  return normalizedRotation(page) % 180 === 0
-    ? { width: box.width, height: box.height }
-    : { width: box.height, height: box.width };
-}
-
-/** 비율 사각형을 화면 pt로 */
-function scaleRect(page: PDFPage, rect: PageRect) {
-  const view = viewSize(page);
-  return {
-    x: rect.x * view.width,
-    y: rect.y * view.height,
-    width: rect.width * view.width,
-    height: rect.height * view.height,
-  };
-}
+import { PDFDocument, StandardFonts, degrees, rgb } from '@cantoo/pdf-lib';
+import type { ModifyJob, ModifyRequest, ModifyResponse } from './modify';
+import { normalizedRotation, scaleRect, toPdfPoint, viewSize } from './page-geometry';
 
 const NUMBER_SIZE = 11;
 /** 쪽 번호와 쪽 가장자리 사이 (pt, 약 10mm) */
