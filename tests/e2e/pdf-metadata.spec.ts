@@ -33,6 +33,7 @@ async function infoPdf() {
         Rect: [10, 10, 30, 30],
         T: PDFString.of('Annot Author Yoon'),
         NM: PDFString.of('NM-Unique-Yoon'),
+        Subj: PDFString.of('Subject Case Hong'),
         M: PDFString.of('D:20240101000000Z'),
         CreationDate: PDFString.of('D:20240102000000Z'),
       }),
@@ -200,6 +201,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(text).not.toContain('Annot Author Yoon');
   for (const secret of [
     'NM-Unique-Yoon',
+    'Subject Case Hong',
     'Thread Secret Title',
     'Signer Secret Kim',
     'Secret Reason',
