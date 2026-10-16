@@ -1711,3 +1711,46 @@ test('볼 때 저절로 적용되는 규칙(/AS)이 끄는 층도 결과에서 �
     Shown: true,
   });
 });
+
+test('미리보기도 인쇄할 때 보이는 주석으로 그려, 저장될 인쇄 전용 주석을 보고 가릴 수 있다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const first = source.addPage([200, 200]);
+  // 인쇄(4) + 화면에서 숨김(32): 화면에는 안 보이지만 인쇄하면 보인다
+  const look = context.register(
+    context.stream('0 0 0 rg 0 0 100 100 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 100, 100],
+    }),
+  );
+  first.node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Square',
+        Rect: [0, 0, 100, 100],
+        F: 36,
+        AP: { N: look },
+      }),
+    ]),
+  );
+  const frame = await openRedact(page, {
+    name: 'print-only.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  // 쪽 왼쪽 아래 4분의 1이 검게 그려진다
+  await expect
+    .poll(() =>
+      frame.locator('.page-sheet canvas').evaluate((canvas: HTMLCanvasElement) => {
+        const [red] = canvas
+          .getContext('2d')!
+          .getImageData(canvas.width * 0.25, canvas.height * 0.75, 1, 1).data;
+        return red;
+      }),
+    )
+    .toBeLessThan(50);
+});
