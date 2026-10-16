@@ -99,6 +99,9 @@ function matchSpan(
   return [Math.max(0, start - margin(start)), Math.min(width, end + margin(end))];
 }
 
+/** 글자 묶음 단위로 나누기 (언어와 무관) */
+const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+
 /**
  * 글자마다 소문자로 바꾸고, 바꾼 글의 각 자리(UTF-16)가 원문의 어디서 왔는지 함께 돌려준다.
  * 소문자로 바꾸면 길이가 달라지는 글자(İ → i̇ 등)가 있어 바꾼 글의 위치를 원문에 그대로 쓸 수 없다.
@@ -108,16 +111,22 @@ function folded(str: string): { text: string; from: number[]; to: number[] } {
   let text = '';
   const from: number[] = [];
   const to: number[] = [];
-  for (let i = 0; i < str.length;) {
-    const char = String.fromCodePoint(str.codePointAt(i)!);
+  // 글자 단위(자모로 나눠 적은 한글 '한' 같은 묶음 포함)로 나눠, 생김새가 같은 글자는 같게 맞춘다:
+  // 합자 ﬁ → fi, 전각 Ａ → A, 자모로 나눈 한글 → 완성형 (NFKC). 공백 종류(줄 안 띄움 등)는 공백 하나로
+  for (const { segment, index } of segmenter.segment(str)) {
+    let normal = segment.normalize('NFKC');
+    if (/^\s+$/u.test(normal)) {
+      // 이어지는 공백은 하나로 본다
+      if (text.endsWith(' ')) continue;
+      normal = ' ';
+    }
     // 브라우저 언어(터키어의 I → ı 등)에 따라 달라지지 않게 언어와 무관한 소문자로 바꾼다
-    const lower = char.toLowerCase();
+    const lower = normal.toLowerCase();
     text += lower;
     for (let k = 0; k < lower.length; k++) {
-      from.push(i);
-      to.push(i + char.length);
+      from.push(index);
+      to.push(index + segment.length);
     }
-    i += char.length;
   }
   return { text, from, to };
 }
