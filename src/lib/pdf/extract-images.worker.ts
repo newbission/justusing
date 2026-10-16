@@ -128,16 +128,65 @@ function sample(row: Uint8Array, offset: number, x: number, bits: number): numbe
   return (byte >> (8 - bits - (bit & 7))) & ((1 << bits) - 1);
 }
 
-/** 투명도(SMask)를 같은 크기의 0~255 값으로. 없거나 다룰 수 없으면 undefined */
-async function alphaOf(dict: PDFDict, width: number, height: number) {
+/** 다룰 수 없는 투명도. 투명도를 잃은 채 저장하지 않고 이 사진을 꺼내지 못한 것으로 센다 */
+const UNSUPPORTED = 'unsupported';
+
+/**
+ * 투명도(SMask)를 사진과 같은 크기의 0~255 값으로. 없으면 undefined.
+ * 1·2·4·8비트와 뒤집기(/Decode [1 0])를 다루고, 그 밖(크기가 다르거나 다른 필터 등)은 UNSUPPORTED
+ */
+async function alphaOf(
+  dict: PDFDict,
+  width: number,
+  height: number,
+): Promise<Uint8Array | typeof UNSUPPORTED | undefined> {
   const mask = dict.lookup(name('SMask'));
-  if (!(mask instanceof PDFRawStream)) return undefined;
+  if (mask === undefined) return undefined;
+  if (!(mask instanceof PDFRawStream)) return UNSUPPORTED;
   if (numberOf(mask.dict, 'Width') !== width || numberOf(mask.dict, 'Height') !== height) {
-    return undefined;
+    return UNSUPPORTED;
   }
-  if ((numberOf(mask.dict, 'BitsPerComponent') ?? 8) !== 8) return undefined;
-  return rawPixels(mask, width, height, 1, 8);
+  const bits = numberOf(mask.dict, 'BitsPerComponent') ?? 8;
+  if (![1, 2, 4, 8].includes(bits)) return UNSUPPORTED;
+  const decode = mask.dict.lookup(name('Decode'));
+  let inverted = false;
+  if (decode instanceof PDFArray) {
+    const [low, high] = decode.asArray().map((item) => {
+      const value = dict.context.lookup(item);
+      return value instanceof PDFNumber ? value.asNumber() : NaN;
+    });
+    if (low === 1 && high === 0) inverted = true;
+    else if (!(low === 0 && high === 1)) return UNSUPPORTED;
+  }
+  const data = await rawPixels(mask, width, height, 1, bits);
+  if (!data) return UNSUPPORTED;
+  const bytesPerRow = Math.ceil((width * bits) / 8);
+  const max = (1 << bits) - 1;
+  const alpha = new Uint8Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const value = Math.round((sample(data, y * bytesPerRow, x, bits) * 255) / max);
+      alpha[y * width + x] = inverted ? 255 - value : value;
+    }
+  }
+  return alpha;
 }
+
+/** /Mask 배열(성분마다 [최소 최대])을 읽는다. 없으면 undefined, 그림으로 가리는 /Mask 등은 UNSUPPORTED */
+function colorKeyOf(dict: PDFDict, components: number): number[] | typeof UNSUPPORTED | undefined {
+  const value = dict.lookup(name('Mask'));
+  if (value === undefined) return undefined;
+  if (!(value instanceof PDFArray)) return UNSUPPORTED;
+  const key = value.asArray().map((item) => {
+    const resolved = dict.context.lookup(item);
+    return resolved instanceof PDFNumber ? resolved.asNumber() : NaN;
+  });
+  return key.length === components * 2 && key.every(Number.isFinite) ? key : UNSUPPORTED;
+}
+
+/** 성분 값들이 색 키 범위에 모두 들면 투명 */
+const inKey = (key: number[] | undefined, ...components: number[]) =>
+  !!key && components.every((c, i) => c >= key[i * 2]! && c <= key[i * 2 + 1]!);
 
 /** 화소를 풀어 RGBA로 (ICC 색공간이면 그 프로필과 함께). 다룰 수 없는 형식이면 undefined */
 async function decodePixels(
@@ -153,26 +202,14 @@ async function decodePixels(
   const indexed = 'palette' in colors;
   // 색 목록은 1·2·4·8비트, 회색·RGB는 8비트만
   if (indexed ? ![1, 2, 4, 8].includes(bits) : bits !== 8) return undefined;
-  // 색으로 투명 처리(/Mask 배열: 성분마다 [최소 최대])는 알파로 바꾼다. 그림으로 가리는 /Mask는 다루지 않는다
-  const maskValue = dict.lookup(name('Mask'));
-  let colorKey: number[] | undefined;
-  if (maskValue instanceof PDFArray) {
-    colorKey = maskValue.asArray().map((item) => {
-      const value = dict.context.lookup(item);
-      return value instanceof PDFNumber ? value.asNumber() : NaN;
-    });
-    if (colorKey.length !== colors.components * 2 || !colorKey.every(Number.isFinite)) {
-      return undefined;
-    }
-  } else if (maskValue !== undefined) {
-    return undefined;
-  }
-  const keyed = (...components: number[]) =>
-    !!colorKey && components.every((c, i) => c >= colorKey[i * 2]! && c <= colorKey[i * 2 + 1]!);
+  // 색으로 투명 처리(/Mask 배열)는 알파로 바꾼다. 그림으로 가리는 /Mask는 다루지 않는다
+  const colorKey = colorKeyOf(dict, colors.components);
+  if (colorKey === UNSUPPORTED) return undefined;
   const bytesPerRow = Math.ceil((width * colors.components * bits) / 8);
   const data = await rawPixels(stream, width, height, colors.components, bits);
   if (!data) return undefined;
   const alpha = await alphaOf(dict, width, height);
+  if (alpha === UNSUPPORTED) return undefined;
   const rgba = new Uint8ClampedArray(width * height * 4);
   for (let y = 0; y < height; y++) {
     const offset = y * bytesPerRow;
@@ -187,15 +224,15 @@ async function decodePixels(
         rgba[out] = p[i] ?? 0;
         rgba[out + 1] = p[n === 3 ? i + 1 : i] ?? 0;
         rgba[out + 2] = p[n === 3 ? i + 2 : i] ?? 0;
-        transparent = keyed(index);
+        transparent = inKey(colorKey, index);
       } else if (colors.components === 3) {
         rgba[out] = data[offset + x * 3]!;
         rgba[out + 1] = data[offset + x * 3 + 1]!;
         rgba[out + 2] = data[offset + x * 3 + 2]!;
-        transparent = keyed(rgba[out]!, rgba[out + 1]!, rgba[out + 2]!);
+        transparent = inKey(colorKey, rgba[out]!, rgba[out + 1]!, rgba[out + 2]!);
       } else {
         rgba[out] = rgba[out + 1] = rgba[out + 2] = data[offset + x]!;
-        transparent = keyed(rgba[out]!);
+        transparent = inKey(colorKey, rgba[out]!);
       }
       rgba[out + 3] = transparent ? 0 : alpha ? alpha[y * width + x]! : 255;
     }
@@ -248,8 +285,13 @@ async function png(image: ImageData | ImageBitmap): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-/** JPG에 투명도를 합쳐 PNG로 */
-async function jpegWithAlpha(stream: PDFRawStream, alpha: Uint8Array) {
+/** JPG에 투명도(SMask)나 색 키 투명(/Mask 배열)을 합쳐 PNG로 */
+async function jpegToPng(
+  stream: PDFRawStream,
+  alpha: Uint8Array | undefined,
+  key: number[] | undefined,
+  components: number,
+) {
   const bitmap = await createImageBitmap(
     new Blob([stream.contents as BlobPart], { type: 'image/jpeg' }),
     { imageOrientation: 'none' },
@@ -259,8 +301,14 @@ async function jpegWithAlpha(stream: PDFRawStream, alpha: Uint8Array) {
   context.drawImage(bitmap, 0, 0);
   bitmap.close();
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < alpha.length && i * 4 + 3 < pixels.data.length; i++) {
-    pixels.data[i * 4 + 3] = alpha[i]!;
+  const data = pixels.data;
+  for (let i = 0; i * 4 < data.length; i++) {
+    const at = i * 4;
+    const keyed =
+      components === 3
+        ? inKey(key, data[at]!, data[at + 1]!, data[at + 2]!)
+        : inKey(key, data[at]!);
+    data[at + 3] = keyed ? 0 : alpha ? (alpha[i] ?? 255) : 255;
   }
   return png(pixels);
 }
@@ -276,7 +324,15 @@ async function extract(
   const last = list.at(-1);
   if (list.length === 1 && last === 'DCTDecode') {
     const alpha = await alphaOf(dict, width, height);
-    if (alpha) return { ext: 'png', bytes: await jpegWithAlpha(stream, alpha), width, height };
+    if (alpha === UNSUPPORTED) return undefined;
+    // 색 키 투명은 회색·RGB JPG만 (CMYK는 브라우저가 읽은 값과 PDF의 값이 달라 맞춰 볼 수 없다)
+    const components = colorsOf(dict)?.components;
+    const key = colorKeyOf(dict, components ?? 3);
+    if (key === UNSUPPORTED || (key && !components)) return undefined;
+    if (alpha || key) {
+      const bytes = await jpegToPng(stream, alpha, key, components ?? 3);
+      return { ext: 'png', bytes, width, height };
+    }
     return { ext: 'jpg', bytes: stream.contents.slice(), width, height };
   }
   if (list.length === 1 && last === 'JPXDecode') {
