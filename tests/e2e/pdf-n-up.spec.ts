@@ -7,7 +7,7 @@
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { PDFDocument, PDFName, degrees } from '@cantoo/pdf-lib';
+import { PDFDocument, PDFName, PDFNumber, degrees } from '@cantoo/pdf-lib';
 import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { expectLocalOnly } from './local-only';
 
@@ -202,13 +202,16 @@ test('양식 입력값·주석처럼 주석으로 보이는 내용도 함께 옮
 });
 
 /** 모양(/AP) 없이 값만 저장된 입력 칸 하나가 있는 PDF */
-async function formWithoutAppearance(value: string) {
+async function formWithoutAppearance(value: string, printed = true) {
   const source = await PDFDocument.create();
   const added = source.addPage([300, 200]);
   const field = source.getForm().createTextField('name');
   field.addToPage(added, { x: 20, y: 80, width: 200, height: 30 });
   field.setText(value);
-  for (const widget of field.acroField.getWidgets()) widget.dict.delete(PDFName.of('AP'));
+  for (const widget of field.acroField.getWidgets()) {
+    widget.dict.delete(PDFName.of('AP'));
+    widget.dict.set(PDFName.of('F'), PDFNumber.of(printed ? 4 : 0));
+  }
   return Buffer.from(await source.save({ updateFieldAppearances: false }));
 }
 
@@ -238,6 +241,61 @@ test('모양을 만들 수 없는 양식 입력값이 있으면 조용히 빼지
   await frame.getByRole('button', { name: '모아찍기' }).click();
   await expect(
     frame.getByText('양식 입력값 일부는 모양이 저장되어 있지 않아', { exact: false }),
+  ).toBeVisible();
+});
+
+test('인쇄되지 않는 입력 칸은 한글 값이 있어도 막지 않는다', async ({ page }) => {
+  const frame = await openNUp(page);
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'form-screen.pdf',
+    mimeType: 'application/pdf',
+    buffer: await formWithoutAppearance('홍길동', false),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
+});
+
+/** 모양(/AP) 없이 저장된 주석 하나가 있는 PDF */
+async function annotationWithoutAppearance(subtype: string) {
+  const source = await PDFDocument.create();
+  const added = source.addPage([300, 200]);
+  const context = source.context;
+  const annot = context.register(
+    context.obj({
+      Type: 'Annot',
+      Subtype: subtype,
+      F: 4,
+      Rect: [20, 100, 200, 130],
+      QuadPoints: [20, 130, 200, 130, 20, 100, 200, 100],
+      C: [1, 1, 0],
+    }),
+  );
+  added.node.set(PDFName.of('Annots'), context.obj([annot]));
+  return Buffer.from(await source.save());
+}
+
+test('모양 없이 저장된 형광펜은 다시 그려 넣고, 그릴 수 없는 주석은 알린다', async ({ page }) => {
+  const frame = await openNUp(page);
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'highlight.pdf',
+    mimeType: 'application/pdf',
+    buffer: await annotationWithoutAppearance('Highlight'),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  const { bytes } = await download(page, frame);
+  const { placed, inner } = await placedPages(bytes, 1);
+  expect(placed).toHaveLength(1);
+  expect(inner).toBe(1);
+
+  await frame.getByRole('button', { name: '다른 파일' }).click();
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'ink.pdf',
+    mimeType: 'application/pdf',
+    buffer: await annotationWithoutAppearance('Ink'),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  await expect(
+    frame.getByText('주석이나 양식 입력값 일부는 모양이 저장되어 있지 않아', { exact: false }),
   ).toBeVisible();
 });
 
