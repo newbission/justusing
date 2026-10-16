@@ -370,6 +370,32 @@ test('드롭다운의 표시 글자를 그릴 수 없으면 알린다', async ({
   ).toBeVisible();
 });
 
+test('링크 주석은 모양이 없어도 막지 않는다', async ({ page }) => {
+  // 목차 링크처럼 인쇄 플래그가 있지만 모양이 없는 링크
+  const source = await PDFDocument.create();
+  const first = source.addPage([200, 300]);
+  const second = source.addPage([200, 300]);
+  const context = source.context;
+  const link = context.register(
+    context.obj({
+      Type: 'Annot',
+      Subtype: 'Link',
+      F: 4,
+      Rect: [10, 10, 60, 30],
+      Dest: [second.ref, 'Fit'],
+    }),
+  );
+  first.node.set(PDFName.of('Annots'), context.obj([link]));
+  const frame = await openNUp(page);
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'links.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
+});
+
 test('모으는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
   const requests: Request[] = [];
   page.on('request', (request) => requests.push(request));
