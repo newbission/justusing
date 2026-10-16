@@ -34,23 +34,26 @@ CATALOG = os.path.join(ROOT, 'src', 'lib', 'fonts', 'catalog.json')
 GOOGLE_FONTS = 'https://raw.githubusercontent.com/google/fonts/1d0e46c7933245c8180fe83e47917961c913bbdb/ofl/'
 PRETENDARD = os.path.join(ROOT, 'node_modules', 'pretendard', 'dist', 'public', 'static')
 
-# id: 주소·파일 이름. weights: 굵기 → (원본 파일, 가변 글꼴이면 wght 값). license: OFL 원문 위치
+# id: 주소·파일 이름. family: 만든 글꼴 안에 적는 이름. weights: 굵기 → (원본 파일, 가변 글꼴이면 wght 값).
+# license: OFL 원문 위치.
+# 글자를 덜어 낸 글꼴은 OFL의 '고친 판'이라, 허가서에 예약 글꼴 이름(Reserved Font Name)이 있으면 그 이름을
+# 쓸 수 없다 (Pretendard, Nanum…). 그런 글꼴은 우리 이름(JUS …)을 붙인다. 원본 이름은 화면에 출처로만 밝힌다
 FONTS = [
-    {'id': 'pretendard', 'weights': {400: ('pretendard:Pretendard-Regular.otf', None), 700: ('pretendard:Pretendard-Bold.otf', None)},
+    {'id': 'pretendard', 'family': 'JUS Modern Gothic', 'weights': {400: ('pretendard:Pretendard-Regular.otf', None), 700: ('pretendard:Pretendard-Bold.otf', None)},
      'license': 'pretendard:LICENSE'},
-    {'id': 'noto-sans-kr', 'weights': {400: ('notosanskr/NotoSansKR[wght].ttf', 400), 700: ('notosanskr/NotoSansKR[wght].ttf', 700)},
+    {'id': 'noto-sans-kr', 'family': 'Noto Sans KR', 'weights': {400: ('notosanskr/NotoSansKR[wght].ttf', 400), 700: ('notosanskr/NotoSansKR[wght].ttf', 700)},
      'license': 'notosanskr/OFL.txt'},
-    {'id': 'noto-serif-kr', 'weights': {400: ('notoserifkr/NotoSerifKR[wght].ttf', 400), 700: ('notoserifkr/NotoSerifKR[wght].ttf', 700)},
+    {'id': 'noto-serif-kr', 'family': 'Noto Serif KR', 'weights': {400: ('notoserifkr/NotoSerifKR[wght].ttf', 400), 700: ('notoserifkr/NotoSerifKR[wght].ttf', 700)},
      'license': 'notoserifkr/OFL.txt'},
-    {'id': 'nanum-gothic', 'weights': {400: ('nanumgothic/NanumGothic-Regular.ttf', None), 700: ('nanumgothic/NanumGothic-Bold.ttf', None)},
+    {'id': 'nanum-gothic', 'family': 'JUS Basic Gothic', 'weights': {400: ('nanumgothic/NanumGothic-Regular.ttf', None), 700: ('nanumgothic/NanumGothic-Bold.ttf', None)},
      'license': 'nanumgothic/OFL.txt'},
-    {'id': 'nanum-myeongjo', 'weights': {400: ('nanummyeongjo/NanumMyeongjo-Regular.ttf', None), 700: ('nanummyeongjo/NanumMyeongjo-Bold.ttf', None)},
+    {'id': 'nanum-myeongjo', 'family': 'JUS Basic Myeongjo', 'weights': {400: ('nanummyeongjo/NanumMyeongjo-Regular.ttf', None), 700: ('nanummyeongjo/NanumMyeongjo-Bold.ttf', None)},
      'license': 'nanummyeongjo/OFL.txt'},
-    {'id': 'nanum-pen', 'weights': {400: ('nanumpenscript/NanumPenScript-Regular.ttf', None)},
+    {'id': 'nanum-pen', 'family': 'JUS Pen Script', 'weights': {400: ('nanumpenscript/NanumPenScript-Regular.ttf', None)},
      'license': 'nanumpenscript/OFL.txt'},
-    {'id': 'gowun-dodum', 'weights': {400: ('gowundodum/GowunDodum-Regular.ttf', None)},
+    {'id': 'gowun-dodum', 'family': 'Gowun Dodum', 'weights': {400: ('gowundodum/GowunDodum-Regular.ttf', None)},
      'license': 'gowundodum/OFL.txt'},
-    {'id': 'black-han-sans', 'weights': {400: ('blackhansans/BlackHanSans-Regular.ttf', None)},
+    {'id': 'black-han-sans', 'family': 'Black Han Sans', 'weights': {400: ('blackhansans/BlackHanSans-Regular.ttf', None)},
      'license': 'blackhansans/OFL.txt'},
 ]
 
@@ -90,7 +93,25 @@ def source(path: str) -> str:
     return local
 
 
-def build_file(path: str, wght, out: str) -> TTFont:
+def rename(font: TTFont, family: str, weight: int):
+    """글꼴 이름을 우리가 정한 이름으로 바꾼다 (예약 글꼴 이름 빼기, 가변 글꼴을 고정한 뒤 남는 'Thin' 같은 이름 고치기)"""
+    style = 'Bold' if weight == 700 else 'Regular'
+    postscript = family.replace(' ', '') + '-' + style
+    table = font['name']
+    table.names = [record for record in table.names if record.nameID not in (1, 2, 3, 4, 6, 16, 17, 18, 21, 22, 25)]
+    for name_id, value in [
+        (1, family), (2, style), (3, f'justusing;{postscript}'), (4, f'{family} {style}'), (6, postscript),
+    ]:
+        table.setName(value, name_id, 3, 1, 0x409)
+    if 'CFF ' in font:
+        cff = font['CFF '].cff
+        top = cff[cff.fontNames[0]]
+        cff.fontNames = [postscript]
+        top.FullName = f'{family} {style}'
+        top.FamilyName = family
+
+
+def build_file(path: str, wght, out: str, family: str, weight: int) -> TTFont:
     font = TTFont(source(path))
     if wght is not None:
         font = instancer.instantiateVariableFont(font, {'wght': wght})
@@ -103,6 +124,7 @@ def build_file(path: str, wght, out: str) -> TTFont:
     subsetter = subset.Subsetter(options)
     subsetter.populate(unicodes=UNICODES)
     subsetter.subset(font)
+    rename(font, family, weight)
     plain = out + '.tmp'
     font.save(plain)
     compress(plain, out, transform_tables=set())
@@ -168,7 +190,7 @@ def main():
         for weight, (path, wght) in spec['weights'].items():
             name = f"{spec['id']}-{weight}.woff2"
             out = os.path.join(OUT, name)
-            font = build_file(path, wght, out)
+            font = build_file(path, wght, out, spec['family'], weight)
             regular = regular or font
             cmap = font.getBestCmap()
             files.append({
