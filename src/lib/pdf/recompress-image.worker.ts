@@ -4,53 +4,10 @@
  * 파일은 메모리에서만 다룬다.
  */
 import type { ImageRequest, ImageResponse, SourceImage } from './compress';
+import { inflate, unpredict } from './image-pixels';
 
 /** 사진을 원본보다 이만큼 이상 작게 만들었을 때만 바꾼다 (화질만 잃고 용량은 그대로인 일을 막음) */
 const MIN_SAVING = 0.9;
-
-async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
-  const stream = new Blob([bytes as BlobPart])
-    .stream()
-    .pipeThrough(new DecompressionStream('deflate'));
-  return new Uint8Array(await new Response(stream).arrayBuffer());
-}
-
-function paeth(a: number, b: number, c: number): number {
-  const p = a + b - c;
-  const pa = Math.abs(p - a);
-  const pb = Math.abs(p - b);
-  const pc = Math.abs(p - c);
-  return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
-}
-
-/** PNG 예측(줄마다 앞에 붙은 필터 종류)을 풀어 화소만 남긴다 */
-function unpredict(data: Uint8Array, width: number, height: number, colors: number): Uint8Array {
-  const row = width * colors;
-  const out = new Uint8Array(row * height);
-  for (let y = 0; y < height; y++) {
-    const filter = data[y * (row + 1)];
-    const src = y * (row + 1) + 1;
-    const dst = y * row;
-    for (let x = 0; x < row; x++) {
-      const raw = data[src + x]!;
-      const left = x >= colors ? out[dst + x - colors]! : 0;
-      const up = y > 0 ? out[dst - row + x]! : 0;
-      const upLeft = y > 0 && x >= colors ? out[dst - row + x - colors]! : 0;
-      const predicted =
-        filter === 1
-          ? left
-          : filter === 2
-            ? up
-            : filter === 3
-              ? (left + up) >> 1
-              : filter === 4
-                ? paeth(left, up, upLeft)
-                : 0;
-      out[dst + x] = (raw + predicted) & 0xff;
-    }
-  }
-  return out;
-}
 
 /** 사진을 그릴 수 있는 모양으로 연다 */
 async function open(image: SourceImage): Promise<ImageBitmap | ImageData> {
