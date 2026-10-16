@@ -148,6 +148,13 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
       else if (object instanceof PDFDict) {
         // 앱 데이터(/PieceInfo)에도 고친 날짜·회사 이름 같은 앱별 정보가 들어 있다
         for (const key of hidden) object.delete(key);
+        // 주석(메모·도장 등)의 작성자(/T)와 만든·고친 시각. 입력 칸(Widget)의 /T는 칸 이름이라 둔다
+        const subtype = object.get(PDFName.of('Subtype'));
+        if (subtype instanceof PDFName && object.has(PDFName.of('Rect'))) {
+          object.delete(PDFName.of('M'));
+          object.delete(PDFName.of('CreationDate'));
+          if (subtype !== PDFName.of('Widget')) object.delete(PDFName.of('T'));
+        }
         for (const value of object.values()) strip(value);
       } else if (object instanceof PDFArray) {
         for (const value of object.asArray()) strip(value);
