@@ -16,6 +16,7 @@ import {
   PDFBool,
   PDFDict,
   PDFDocument,
+  PDFFlateStream,
   PDFName,
   PDFNumber,
   PDFRawStream,
@@ -43,7 +44,12 @@ const DEFAULT_SPACES = ['DefaultGray', 'DefaultRGB', 'DefaultCMYK'];
 
 function streamText(stream: PDFStream): string {
   const bytes =
-    stream instanceof PDFRawStream ? decodePDFRawStream(stream).decode() : stream.getContents();
+    stream instanceof PDFRawStream
+      ? decodePDFRawStream(stream).decode()
+      : // pdf-lib가 만든 스트림(굳힌 주석을 그리는 내용 등)은 getContents가 압축한 바이트라 푼 것을 쓴다
+        stream instanceof PDFFlateStream
+        ? stream.getUnencodedContents()
+        : stream.getContents();
   // 이름은 ASCII라 바이트를 그대로 글자로 읽어도 된다
   let text = '';
   for (let i = 0; i < bytes.length; i += 8192) {

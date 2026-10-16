@@ -1754,3 +1754,41 @@ test('미리보기도 인쇄할 때 보이는 주석으로 그려, 저장될 인
     )
     .toBeLessThan(50);
 });
+
+test('가리지 않은 쪽의 주석은 쪽 내용에 그려 넣어 남긴다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  const look = context.register(
+    context.stream('0 0 1 rg 0 0 100 100 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 100, 100],
+    }),
+  );
+  second.node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Square',
+        Rect: [0, 0, 100, 100],
+        F: 4,
+        AP: { N: look },
+      }),
+    ]),
+  );
+  const frame = await openRedact(page, {
+    name: 'kept-annot.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const pdf = await getDocument({ data: bytes.slice() }).promise;
+  const list = await (await pdf.getPage(2)).getOperatorList();
+  const { OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  // 주석 모양(묶음 그림)을 그리고, 그 안의 파란 사각형까지 그린다
+  expect(list.fnArray).toContain(OPS.paintFormXObjectBegin);
+  expect(list.fnArray).toContain(OPS.constructPath);
+});
