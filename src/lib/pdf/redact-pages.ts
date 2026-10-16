@@ -21,7 +21,7 @@ import {
   decodePDFRawStream,
   type PDFPage,
 } from '@cantoo/pdf-lib';
-import { contentUsage, type ResourceUse } from './content-usage';
+import { contentUsage, type FormLookup, type ResourceUse } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { userUnit, viewSize } from './page-geometry';
 
@@ -74,16 +74,9 @@ function pruneResources(
 ) {
   if (!resources) return;
   const context = holder.context;
-  // 묶음 그림은 부른 자리에서 이어서 훑는다. 자원 목록이 없는 것은 이 목록을 물려받고(예전 방식),
+  // 묶음 그림은 부른 자리에서 이어서 훑는다. 자원 목록이 없는 것은 그 목록을 물려받고(예전 방식),
   // 있는 것도 부른 자리의 글꼴로 찍은 글자는 그 글꼴의 것이다
-  const xobjects = context.lookup(resources.get(PDFName.of('XObject')));
-  const usage = contentUsage(streams.map(streamText), (name) => {
-    const form =
-      xobjects instanceof PDFDict ? context.lookup(xobjects.get(PDFName.of(name))) : undefined;
-    if (!(form instanceof PDFStream)) return undefined;
-    if (form.dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) return undefined;
-    return { text: streamText(form), own: form.dict.has(PDFName.of('Resources')) };
-  });
+  const usage = contentUsage(streams.map(streamText), formsIn(resources));
   usedThroughNames(resources, usage.resources);
   const own = context.obj({});
   for (const [key, value] of resources.entries()) {
@@ -113,6 +106,22 @@ function pruneResources(
     const codesOf = dict instanceof PDFDict ? pruning.type3.get(dict) : undefined;
     for (const code of codes) codesOf?.add(code);
   }
+}
+
+/** 자원 목록에서 이름으로 묶음 그림을 찾는다 (그 안에서 또 부르는 것은 그 묶음 그림의 목록에서) */
+function formsIn(resources: PDFDict): FormLookup {
+  const context = resources.context;
+  const xobjects = context.lookup(resources.get(PDFName.of('XObject')));
+  return (name) => {
+    const form =
+      xobjects instanceof PDFDict ? context.lookup(xobjects.get(PDFName.of(name))) : undefined;
+    if (!(form instanceof PDFStream)) return undefined;
+    if (form.dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) return undefined;
+    const own = context.lookup(form.dict.get(PDFName.of('Resources')));
+    return own instanceof PDFDict
+      ? { text: streamText(form), own: true, forms: formsIn(own) }
+      : { text: streamText(form), own: false };
+  };
 }
 
 /**
