@@ -296,9 +296,20 @@ export function contentUsage(
       if (op === 'BI') {
         inInlineImage = true;
       } else if (op === 'ID' && inInlineImage) {
-        // 바로 써 넣은 그림의 색공간(/CS 이름)은 자원을 부를 수 있다
-        const at = names.findIndex((name) => name.value === 'CS' || name.value === 'ColorSpace');
-        if (at !== -1 && names[at + 1] && !foreign) use('ColorSpace', names[at + 1]!.value);
+        // 바로 써 넣은 그림의 색공간은 자원을 부를 수 있다: /CS /CS0, 또는 색 목록 [/I /CS1 255 <…>]의 기본
+        const at = operands.findIndex(
+          (operand) =>
+            operand.kind === 'name' && (operand.value === 'CS' || operand.value === 'ColorSpace'),
+        );
+        const value = operands[at + 1];
+        if (at !== -1 && !foreign) {
+          if (value?.kind === 'name') use('ColorSpace', value.value);
+          else if (value?.kind === 'other' && value.text === undefined) {
+            // 배열: 첫 이름은 종류(/I·/Indexed), 둘째 이름이 기본 색공간
+            const base = operands[at + 3];
+            if (base?.kind === 'name') use('ColorSpace', base.value);
+          }
+        }
         inInlineImage = false;
       } else if (op === 'Tf' && names[0]) {
         // 다른 목록의 글꼴로 바꾸면 이 목록에서는 알 수 없는 글꼴이다
