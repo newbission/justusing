@@ -144,10 +144,17 @@ async function download(page: Page, frame: ReturnType<Page['frameLocator']>) {
   await frame.getByRole('button', { name: '다운로드' }).click();
   const file = await event;
   const bytes = new Uint8Array(await readFile(await file.path()));
+  const doc = await PDFDocument.load(bytes, { updateMetadata: false });
+  // 결과는 객체를 압축 묶음(object stream)에 넣으므로, 글자로 찾으려면 풀어서 다시 쓴다.
+  // 다시 쓰기는 아무도 가리키지 않는 객체까지 모두 쓰므로 파일에 남은 것을 빠짐없이 본다
+  const plain = await (
+    await PDFDocument.load(bytes, { updateMetadata: false })
+  ).save({ useObjectStreams: false, updateFieldAppearances: false });
   return {
     name: file.suggestedFilename(),
     bytes,
-    doc: await PDFDocument.load(bytes, { updateMetadata: false }),
+    doc,
+    text: Buffer.from(plain).toString('latin1'),
   };
 }
 
@@ -174,7 +181,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   const frame = await openTool(page);
   await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
   await expect(frame.getByLabel('제목')).toBeDisabled();
-  const { doc, bytes } = await download(page, frame);
+  const { doc, text } = await download(page, frame);
   expect(doc.getTitle()).toBeUndefined();
   expect(doc.getAuthor()).toBeUndefined();
   expect(doc.getCreator()).toBeUndefined();
@@ -182,14 +189,14 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(doc.getCreationDate()).toBeUndefined();
   expect(infoOf(doc).get(PDFName.of('Company'))).toBeUndefined();
   expect(doc.catalog.get(PDFName.of('Metadata'))).toBeUndefined();
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('XMP Secret Kim');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Page XMP Lee');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Orphan XMP Park');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Nested XMP Choi');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('PieceInfo Corp Secret');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('0123456789ABCDEF0123456789ABCDEF');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20251231235959');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Annot Author Yoon');
+  expect(text).not.toContain('XMP Secret Kim');
+  expect(text).not.toContain('Page XMP Lee');
+  expect(text).not.toContain('Orphan XMP Park');
+  expect(text).not.toContain('Nested XMP Choi');
+  expect(text).not.toContain('PieceInfo Corp Secret');
+  expect(text).not.toContain('0123456789ABCDEF0123456789ABCDEF');
+  expect(text).not.toContain('D:20251231235959');
+  expect(text).not.toContain('Annot Author Yoon');
   for (const secret of [
     'NM-Unique-Yoon',
     'Thread Secret Title',
@@ -198,10 +205,10 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
     'D:20240505000000Z',
     'Spider Secret',
   ]) {
-    expect(Buffer.from(bytes).toString('latin1')).not.toContain(secret);
+    expect(text).not.toContain(secret);
   }
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20240102000000Z');
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:2023030');
+  expect(text).not.toContain('D:20240102000000Z');
+  expect(text).not.toContain('D:2023030');
   expect(doc.getForm().getTextField('field_keep')).toBeDefined();
 });
 
