@@ -27,8 +27,8 @@ import { userUnit, viewSize } from './page-geometry';
 
 /** 쪽 자원 중 내용에서 이름으로 부르는 것들 */
 const NAMED = ['XObject', 'Font', 'ExtGState', 'Pattern', 'Shading', 'ColorSpace', 'Properties'];
-/** 남긴 자원(그림·묶음 그림·글꼴 등)에서 빼는 항목: 첨부 파일, 앱 데이터 */
-const NESTED_DROP = ['AF', 'PieceInfo'];
+/** 남긴 자원(그림·묶음 그림·글꼴 등)에서 빼는 항목: 첨부 파일, 앱 데이터, XMP(사진 설명 등) */
+const NESTED_DROP = ['AF', 'PieceInfo', 'Metadata'];
 /** 장치 색공간 대신 저절로 쓰이는 기본 색공간 */
 const DEFAULT_SPACES = ['DefaultGray', 'DefaultRGB', 'DefaultCMYK'];
 /**
