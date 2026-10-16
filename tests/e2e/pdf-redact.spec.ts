@@ -8,6 +8,7 @@ import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import {
+  PDFDict,
   PDFDocument,
   PDFName,
   PDFNumber,
@@ -382,4 +383,70 @@ test('같이 쓰는 Type3 글꼴은 남길 쪽에서 찍은 글자 모양만 남
   await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
   const { bytes } = await download(page, frame);
   expect(await imageWidths(bytes)).not.toContain(7);
+});
+
+test('내용 스트림이 나뉘어도 앞 스트림에서 고른 Type3 글꼴의 글자 모양을 남긴다', async ({
+  page,
+}) => {
+  // 2쪽은 글꼴을 고르는 스트림과 글자를 찍는 스트림이 나뉘어 있다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const glyph = context.register(context.stream('500 0 d0 0 0 400 400 re f'));
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 500, 500],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: { a: glyph },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a'] },
+      FirstChar: 97,
+      LastChar: 97,
+      Widths: [500],
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ Font: { T3: type3 } }));
+  second.node.set(
+    PDFName.of('Contents'),
+    context.obj([
+      context.register(context.stream('BT /T3 40 Tf 20 100 Td')),
+      context.register(context.stream('(a) Tj ET')),
+    ]),
+  );
+  const frame = await openRedact(page, {
+    name: 'split.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = await PDFDocument.load(bytes);
+  const fonts = result.getPage(1).node.Resources()!.lookup(PDFName.of('Font'), PDFDict);
+  const kept = fonts.lookup(PDFName.of('T3'), PDFDict);
+  expect(kept.lookup(PDFName.of('CharProcs'), PDFDict).has(PDFName.of('a'))).toBe(true);
+});
+
+test('이름으로 부르지 않아도 저절로 쓰이는 기본 색공간은 남긴다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({ ColorSpace: { DefaultRGB: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }] } }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('1 0 0 rg 20 20 100 100 re f')),
+  );
+  const frame = await openRedact(page, {
+    name: 'default-rgb.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = await PDFDocument.load(bytes);
+  const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
+  expect(spaces.has(PDFName.of('DefaultRGB'))).toBe(true);
 });
