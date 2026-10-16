@@ -71,14 +71,15 @@ function pruneResources(
 ) {
   if (!resources) return;
   const context = holder.context;
-  // 자원 목록이 없는 묶음 그림은 부른 쪽의 자원을 물려받는다 (예전 방식). 그 내용도 이 목록 기준으로 훑는다
+  // 묶음 그림은 부른 자리에서 이어서 훑는다. 자원 목록이 없는 것은 이 목록을 물려받고(예전 방식),
+  // 있는 것도 부른 자리의 글꼴로 찍은 글자는 그 글꼴의 것이다
   const xobjects = context.lookup(resources.get(PDFName.of('XObject')));
   const usage = contentUsage(streams.map(streamText), (name) => {
     const form =
       xobjects instanceof PDFDict ? context.lookup(xobjects.get(PDFName.of(name))) : undefined;
     if (!(form instanceof PDFStream)) return undefined;
     if (form.dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) return undefined;
-    return form.dict.has(PDFName.of('Resources')) ? undefined : streamText(form);
+    return { text: streamText(form), own: form.dict.has(PDFName.of('Resources')) };
   });
   const own = context.obj({});
   for (const [key, value] of resources.entries()) {

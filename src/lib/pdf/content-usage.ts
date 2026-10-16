@@ -132,12 +132,14 @@ const LAST_NAME: Record<string, string> = {
 
 /**
  * 내용 스트림에서 부른 자원과, 글꼴별로 찍은 글자 코드를 모은다.
- * inherited(이름): 자원 목록 없이 부른 쪽의 자원을 물려받는 묶음 그림이면 그 내용. 그런 묶음 그림은
- * 부른 자리의 글꼴 상태 그대로 이어서 훑는다 (묶음 그림은 부른 자리의 그래픽 상태를 물려받는다)
+ * form(이름): 그 이름이 묶음 그림이면 내용(text)과, 자기 자원 목록이 있는지(own).
+ * 묶음 그림은 부른 자리의 그래픽 상태(글꼴 포함)를 물려받으므로 부른 자리에서 이어서 훑는다.
+ * 자기 자원 목록이 있으면 그 안의 이름은 이 목록의 것이 아니라서, 물려받은 글꼴로 찍은 글자만 센다
+ * (그 묶음 그림이 부르는 자원은 따로 정리한다)
  */
 export function contentUsage(
   texts: string[],
-  inherited?: (name: string) => string | undefined,
+  form?: (name: string) => { text: string; own: boolean } | undefined,
 ): { resources: ResourceUse; text: TextUse[] } {
   const resources: ResourceUse = new Map();
   const use = (kind: string, name: string) => {
@@ -150,7 +152,8 @@ export function contentUsage(
   const saved: string[] = [];
   /** 지금 훑는 중인 묶음 그림 (서로 부르는 잘못된 파일에서 끝나게) */
   const entered = new Set<string>();
-  const scan = (tokens: Token[]) => {
+  /** foreign: 자기 자원 목록이 있는 묶음 그림 안 (이름이 다른 목록을 가리킨다) */
+  const scan = (tokens: Token[], foreign: boolean) => {
     let operands: Token[] = [];
     let inInlineImage = false;
     for (const token of tokens) {
@@ -169,11 +172,12 @@ export function contentUsage(
       } else if (op === 'ID' && inInlineImage) {
         // 바로 써 넣은 그림의 색공간(/CS 이름)은 자원을 부를 수 있다
         const at = names.findIndex((name) => name.value === 'CS' || name.value === 'ColorSpace');
-        if (at !== -1 && names[at + 1]) use('ColorSpace', names[at + 1]!.value);
+        if (at !== -1 && names[at + 1] && !foreign) use('ColorSpace', names[at + 1]!.value);
         inInlineImage = false;
       } else if (op === 'Tf' && names[0]) {
-        font = names[0].value;
-        use('Font', font);
+        // 다른 목록의 글꼴로 바꾸면 이 목록에서는 알 수 없는 글꼴이다
+        font = foreign ? '' : names[0].value;
+        if (!foreign) use('Font', font);
       } else if (op === 'q') {
         saved.push(font);
       } else if (op === 'Q') {
@@ -183,14 +187,14 @@ export function contentUsage(
           operand.kind === 'string' ? operand.bytes : [],
         );
         if (font) shown.push({ font, codes });
-      } else if (LAST_NAME[op] && last?.kind === 'name') {
+      } else if (LAST_NAME[op] && last?.kind === 'name' && !foreign) {
         use(LAST_NAME[op], last.value);
-        const inner = op === 'Do' && !entered.has(last.value) ? inherited?.(last.value) : undefined;
-        if (inner !== undefined) {
+        const inner = op === 'Do' && !entered.has(last.value) ? form?.(last.value) : undefined;
+        if (inner) {
           // 묶음 그림은 앞뒤로 q/Q를 한 것처럼 실행된다 (안에서 Q를 더 해도 바깥 상태는 그대로)
           entered.add(last.value);
           const outer = { font, saved: [...saved] };
-          scan(tokenize(inner));
+          scan(tokenize(inner.text), inner.own);
           font = outer.font;
           saved.splice(0, saved.length, ...outer.saved);
           entered.delete(last.value);
@@ -201,6 +205,9 @@ export function contentUsage(
   };
   // 쪽의 내용 스트림 여러 개는 이어서 하나로 실행되므로 상태를 스트림 사이에 이어 간다
   // (앞 스트림 끝의 /T3 12 Tf가 다음 스트림의 (a) Tj에 쓰인다)
-  scan(texts.flatMap((text) => tokenize(text)));
+  scan(
+    texts.flatMap((text) => tokenize(text)),
+    false,
+  );
   return { resources, text: shown };
 }
