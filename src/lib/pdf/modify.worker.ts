@@ -6,6 +6,7 @@ import { PDFDocument, StandardFonts, degrees, rgb, type PDFPage } from '@cantoo/
 import type { ModifyJob, ModifyRequest, ModifyResponse, NUpCount, PaperSize } from './modify';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { normalizedRotation, scaleRect, toPdfPoint, viewSize } from './page-geometry';
+import { addTextLayers } from './text-layer';
 
 const NUMBER_SIZE = 11;
 /** 쪽 번호와 쪽 가장자리 사이 (pt, 약 10mm) */
@@ -192,6 +193,9 @@ async function apply(doc: PDFDocument, job: ModifyJob): Promise<void> {
       }
       return;
     }
+    case 'text-layer':
+      await addTextLayers(doc, job.layers);
+      return;
   }
 }
 

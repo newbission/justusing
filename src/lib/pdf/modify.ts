@@ -50,7 +50,9 @@ export type ModifyJob =
   /** 고른 쪽들의 보이는 영역을 rect로 줄인다 (pages는 0부터) */
   | { kind: 'crop'; rect: PageRect; pages: number[] }
   /** 여러 쪽을 한 장에 모은 새 PDF (모아찍기) */
-  | { kind: 'n-up'; perSheet: NUpCount; paper: PaperSize; border: boolean };
+  | { kind: 'n-up'; perSheet: NUpCount; paper: PaperSize; border: boolean }
+  /** 글자 인식 결과(쪽마다 투명 글자층 PDF, 없으면 null)를 쪽 위에 겹친다 */
+  | { kind: 'text-layer'; layers: (Uint8Array | null)[] };
 
 export interface ModifyRequest {
   id: number;
