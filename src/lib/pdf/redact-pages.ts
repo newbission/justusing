@@ -69,7 +69,24 @@ function pruneResources(
 ) {
   if (!resources) return;
   const context = holder.context;
-  const usage = contentUsage(streams.map(streamText));
+  const texts = streams.map(streamText);
+  let usage = contentUsage(texts);
+  // 자원 목록이 없는 묶음 그림은 부른 쪽의 자원을 물려받는다 (예전 방식). 그 내용도 이 목록 기준으로 훑는다
+  const xobjects = context.lookup(resources.get(PDFName.of('XObject')));
+  const inherited = new Set<PDFStream>();
+  for (let grew = xobjects instanceof PDFDict; grew;) {
+    grew = false;
+    for (const name of usage.resources.get('XObject') ?? []) {
+      const form = context.lookup((xobjects as PDFDict).get(PDFName.of(name)));
+      if (!(form instanceof PDFStream) || inherited.has(form)) continue;
+      if (form.dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) continue;
+      if (form.dict.has(PDFName.of('Resources'))) continue;
+      inherited.add(form);
+      texts.push(streamText(form));
+      grew = true;
+    }
+    if (grew) usage = contentUsage(texts);
+  }
   const own = context.obj({});
   for (const [key, value] of resources.entries()) {
     const kind = key.decodeText();
