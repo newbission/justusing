@@ -130,23 +130,30 @@ const LAST_NAME: Record<string, string> = {
   DP: 'Properties',
 };
 
-/** 내용 스트림에서 부른 자원과, 글꼴별로 찍은 글자 코드를 모은다 */
-export function contentUsage(texts: string[]): { resources: ResourceUse; text: TextUse[] } {
+/**
+ * 내용 스트림에서 부른 자원과, 글꼴별로 찍은 글자 코드를 모은다.
+ * inherited(이름): 자원 목록 없이 부른 쪽의 자원을 물려받는 묶음 그림이면 그 내용. 그런 묶음 그림은
+ * 부른 자리의 글꼴 상태 그대로 이어서 훑는다 (묶음 그림은 부른 자리의 그래픽 상태를 물려받는다)
+ */
+export function contentUsage(
+  texts: string[],
+  inherited?: (name: string) => string | undefined,
+): { resources: ResourceUse; text: TextUse[] } {
   const resources: ResourceUse = new Map();
   const use = (kind: string, name: string) => {
     if (!resources.has(kind)) resources.set(kind, new Set());
     resources.get(kind)!.add(name);
   };
   const shown: TextUse[] = [];
-  // 쪽의 내용 스트림 여러 개는 이어서 하나로 실행되므로 상태를 스트림 사이에 이어 간다
-  // (앞 스트림 끝의 /T3 12 Tf가 다음 스트림의 (a) Tj에 쓰인다)
-  let operands: Token[] = [];
   /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
   let font = '';
   const saved: string[] = [];
-  let inInlineImage = false;
-  for (const text of texts) {
-    for (const token of tokenize(text)) {
+  /** 지금 훑는 중인 묶음 그림 (서로 부르는 잘못된 파일에서 끝나게) */
+  const entered = new Set<string>();
+  const scan = (tokens: Token[]) => {
+    let operands: Token[] = [];
+    let inInlineImage = false;
+    for (const token of tokens) {
       if (token.kind !== 'op') {
         operands.push(token);
         continue;
@@ -154,6 +161,8 @@ export function contentUsage(texts: string[]): { resources: ResourceUse; text: T
       const names = operands.filter(
         (operand): operand is { kind: 'name'; value: string } => operand.kind === 'name',
       );
+      // 자원을 부르는 이름은 연산자 바로 앞의 피연산자다 (/OC << /Type … >> BDC의 사전 안 이름은 아니다)
+      const last = operands.at(-1);
       const op = token.value;
       if (op === 'BI') {
         inInlineImage = true;
@@ -174,12 +183,24 @@ export function contentUsage(texts: string[]): { resources: ResourceUse; text: T
           operand.kind === 'string' ? operand.bytes : [],
         );
         if (font) shown.push({ font, codes });
-      } else if (LAST_NAME[op] && operands.at(-1)?.kind === 'name') {
-        // 자원을 부르는 이름은 연산자 바로 앞의 피연산자다 (/OC << /Type … >> BDC의 사전 안 이름은 아니다)
-        use(LAST_NAME[op], names.at(-1)!.value);
+      } else if (LAST_NAME[op] && last?.kind === 'name') {
+        use(LAST_NAME[op], last.value);
+        const inner = op === 'Do' && !entered.has(last.value) ? inherited?.(last.value) : undefined;
+        if (inner !== undefined) {
+          // 묶음 그림은 앞뒤로 q/Q를 한 것처럼 실행된다 (안에서 Q를 더 해도 바깥 상태는 그대로)
+          entered.add(last.value);
+          const outer = { font, saved: [...saved] };
+          scan(tokenize(inner));
+          font = outer.font;
+          saved.splice(0, saved.length, ...outer.saved);
+          entered.delete(last.value);
+        }
       }
       if (!inInlineImage) operands = [];
     }
-  }
+  };
+  // 쪽의 내용 스트림 여러 개는 이어서 하나로 실행되므로 상태를 스트림 사이에 이어 간다
+  // (앞 스트림 끝의 /T3 12 Tf가 다음 스트림의 (a) Tj에 쓰인다)
+  scan(texts.flatMap((text) => tokenize(text)));
   return { resources, text: shown };
 }
