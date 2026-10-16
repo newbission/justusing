@@ -42,7 +42,12 @@
     /** 선택 상자·목록의 항목: 내보내는 값과 보이는 글자 */
     options: { value: string; label: string }[];
     multiple: boolean;
+    /** 선택지에 없는 글자도 직접 적을 수 있는 선택 상자 */
+    editable: boolean;
   }
+
+  /** PDF 입력 칸 플래그: 선택 상자에 직접 적기 (/Ff Edit) */
+  const FLAG_EDIT = 0x40000;
 
   /** pdf.js가 알려 주는 입력 칸 정보 중 쓰는 것 */
   interface WidgetData {
@@ -63,6 +68,7 @@
     multiSelect?: boolean;
     multiLine?: boolean;
     maxLen?: number;
+    fieldFlags?: number;
   }
 
   let pdf: LoadedPdf | undefined = $state.raw();
@@ -114,6 +120,11 @@
     const value = values[name];
     return value?.kind === 'check' ? value.on : '';
   };
+  /** 선택 상자: 내보내는 값 → 보이는 글자, 적은 글자 → 내보내는 값 (선택지에 없으면 적은 그대로) */
+  const labelOf = (field: Field, value: string) =>
+    field.options.find((option) => option.value === value)?.label ?? value;
+  const valueOf = (field: Field, label: string) =>
+    field.options.find((option) => option.label === label)?.value ?? label;
   const choiceOf = (name: string) => {
     const value = values[name];
     return value?.kind === 'choice' ? value.values : [];
@@ -177,6 +188,7 @@
             kind === 'checkbox' ? a.exportValue : kind === 'radio' ? a.buttonValue : undefined,
           options,
           multiple: !!a.multiSelect,
+          editable: kind === 'select' && ((a.fieldFlags ?? 0) & FLAG_EDIT) !== 0,
         });
         if (a.fieldName in start) continue;
         const raw = a.fieldValue;
@@ -364,6 +376,27 @@
                       onchange={() =>
                         (values[field.name] = { kind: 'check', on: field.onValue ?? '' })}
                     />
+                  {:else if field.kind === 'select' && field.editable}
+                    <!-- 직접 적을 수 있는 선택 상자: 선택지를 고르거나 적는다 -->
+                    <input
+                      type="text"
+                      list={`options-${field.key}`}
+                      aria-label={field.name}
+                      readonly={field.readOnly}
+                      bind:value={
+                        () => labelOf(field, choiceOf(field.name)[0] ?? ''),
+                        (text) =>
+                          (values[field.name] = {
+                            kind: 'choice',
+                            values: text ? [valueOf(field, text)] : [],
+                          })
+                      }
+                    />
+                    <datalist id={`options-${field.key}`}>
+                      {#each field.options as option (option.value)}
+                        <option value={option.label}></option>
+                      {/each}
+                    </datalist>
                   {:else if field.kind === 'select'}
                     <select
                       aria-label={field.name}
