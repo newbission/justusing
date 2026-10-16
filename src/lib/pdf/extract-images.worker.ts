@@ -662,7 +662,9 @@ function jpxAlphaMatches(
  */
 function jpxKind(bytes: Uint8Array): 'jp2' | 'jpx' | 'j2k' {
   if (bytes[0] === 0xff && bytes[1] === 0x4f) return 'j2k';
-  const brand = String.fromCharCode(...bytes.subarray(20, 24));
+  // 형식 상자의 머리는 길이를 8바이트로 적으면 16바이트라 상자를 읽어 자리를 찾는다
+  const type = findBox(bytes, 0, bytes.length, 'ftyp');
+  const brand = type ? String.fromCharCode(...bytes.subarray(type.content, type.content + 4)) : '';
   return brand === 'jpx ' ? 'jpx' : 'jp2';
 }
 
