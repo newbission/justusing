@@ -21,12 +21,14 @@ function missingChars(fontBytes: Uint8Array, text: string): string[] {
 /** 이 작업이 PDF에 넣을 수 있는 모든 글자 (빠진 글자 검사용) */
 function usedText(job: TextJob, total: number): string {
   if (job.kind === 'watermark') return job.text;
-  // 자리표시는 숫자와 날짜로 바뀐다
-  return (
-    [job.header.text, job.footer.text]
-      .map((text) => fillTemplate(text, total, total, job.date))
-      .join('') + '0123456789'
-  );
+  // 쪽마다 실제로 넣을 글자 (자리표시가 바뀐 숫자·날짜만 검사해 숫자가 없는 글꼴도 쓸 수 있게)
+  const texts: string[] = [];
+  for (let page = job.skipFirst ? 2 : 1; page <= total; page++) {
+    for (const line of [job.header, job.footer]) {
+      texts.push(fillTemplate(line.text, page, total, job.date));
+    }
+  }
+  return texts.join('');
 }
 
 function drawWatermark(
