@@ -36,6 +36,7 @@ const TOOL_IDS: readonly string[] = [
   'pdf/unlock',
   'pdf/protect',
   'pdf/edit',
+  'pdf/fill-form',
   'image/compress',
   'image/resize',
   'image/convert',
