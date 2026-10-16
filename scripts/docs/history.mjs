@@ -205,6 +205,7 @@ const END = '<!-- auto:end -->';
 
 function write(path, generated) {
   const file = join(root, 'docs', path, 'history.md');
+  written.push(file);
   mkdirSync(dirname(file), { recursive: true });
   const block = `${START}\n<!-- scripts/docs/history.mjs가 만든다. 직접 고치지 않는다 -->\n\n${generated}\n${END}`;
   if (!existsSync(file)) {
@@ -222,6 +223,8 @@ function write(path, generated) {
   writeFileSync(file, text.slice(0, start) + block + text.slice(end + END.length));
 }
 
+/** 쓴 파일들. 끝나면 저장소 포맷(Prettier, CI가 검사)으로 맞춘다 (표 칸 너비 등) */
+const written = [];
 const only = process.argv[2];
 const allCommits = commits();
 const allPulls = pulls();
@@ -230,3 +233,4 @@ for (const [path, spec] of Object.entries(DOCS)) {
   write(path, render(spec, allCommits, allPulls));
   console.log('history:', path);
 }
+if (written.length > 0) run('npx', ['prettier', '--write', ...written]);
