@@ -7,7 +7,14 @@
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { PDFDocument, PDFName, PDFNumber, PDFRawStream, decodePDFRawStream } from '@cantoo/pdf-lib';
+import {
+  PDFDocument,
+  PDFName,
+  PDFNumber,
+  PDFRawStream,
+  StandardFonts,
+  decodePDFRawStream,
+} from '@cantoo/pdf-lib';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { expectLocalOnly } from './local-only';
 
@@ -191,4 +198,34 @@ test('키보드로 상자를 넣고 옮기고 지운다', async ({ page }) => {
   expect(after.y).toBeLessThan(before.y);
   await page.keyboard.press('Delete');
   await expect(frame.getByText('가릴 곳 0개 (0쪽)')).toBeVisible();
+});
+
+test('폭이 다른 글자가 섞인 줄에서도 찾은 말을 실제 글자 자리대로 덮는다', async ({ page }) => {
+  // 좁은 i와 넓은 W 사이의 SECRET (한 글자 조각으로 들어간다)
+  const source = await PDFDocument.create();
+  const font = await source.embedFont(StandardFonts.Helvetica);
+  const line = 'iiiiiiiiiiiiSECRETWWWWWWWWWWWW';
+  const size = 12;
+  source.addPage([400, 200]).drawText(line, { x: 20, y: 100, size, font });
+  const frame = await openRedact(page, {
+    name: 'mixed.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByLabel('찾아서 가리기').fill('secret');
+  await frame.getByRole('button', { name: '모두 찾아 가리기' }).click();
+  await expect(frame.getByText('1곳을 찾아 가렸습니다.')).toBeVisible();
+
+  const box = await frame
+    .locator('.box')
+    .first()
+    .evaluate((element: HTMLElement) => ({
+      left: parseFloat(element.style.left) / 100,
+      width: parseFloat(element.style.width) / 100,
+    }));
+  const start = (20 + font.widthOfTextAtSize(line.slice(0, 12), size)) / 400;
+  const end = (20 + font.widthOfTextAtSize(line.slice(0, 18), size)) / 400;
+  expect(box.left).toBeLessThanOrEqual(start);
+  expect(box.left + box.width).toBeGreaterThanOrEqual(end);
+  // 줄 전체를 덮지는 않는다
+  expect(box.width).toBeLessThan((end - start) * 3);
 });
