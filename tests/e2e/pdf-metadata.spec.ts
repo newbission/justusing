@@ -6,7 +6,7 @@
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { PDFDict, PDFDocument, PDFName, PDFString } from '@cantoo/pdf-lib';
+import { PDFDict, PDFDocument, PDFHexString, PDFName, PDFString } from '@cantoo/pdf-lib';
 import { expectLocalOnly } from './local-only';
 
 const infoOf = (doc: PDFDocument) => doc.context.lookup(doc.context.trailerInfo.Info) as PDFDict;
@@ -20,6 +20,9 @@ async function infoPdf() {
   doc.setProducer('Secret PDF Maker');
   // 세계 표준시 03:04:05 (서울 12:04)
   infoOf(doc).set(PDFName.of('CreationDate'), PDFString.of('D:20260102030405Z'));
+  // 원본 파일 식별자
+  const original = PDFHexString.of('0123456789ABCDEF0123456789ABCDEF');
+  doc.context.trailerInfo.ID = doc.context.obj([original, original]);
   // 워드 등이 더하는 사용자 정의 항목
   infoOf(doc).set(PDFName.of('Company'), PDFString.of('Secret Corp'));
   // 쪽에 붙은 XMP
@@ -129,6 +132,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Orphan XMP Park');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Nested XMP Choi');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('PieceInfo Corp Secret');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('0123456789ABCDEF0123456789ABCDEF');
 });
 
 test.describe('서울 시간대에서', () => {
@@ -148,6 +152,7 @@ test('Info에 없고 XMP에만 있는 제목·작성자도 읽어 칸에 채운�
 <rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">
 <dc:title><rdf:Alt><rdf:li xml:lang="x-default">XMP Title</rdf:li></rdf:Alt></dc:title>
 <dc:creator><rdf:Seq><rdf:li>Lee XMP</rdf:li></rdf:Seq></dc:creator>
+<dc:subject><rdf:Bag><rdf:li>alpha</rdf:li><rdf:li>beta</rdf:li></rdf:Bag></dc:subject>
 </rdf:Description>
 <rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:pdf="http://ns.adobe.com/pdf/1.3/">
 <xmp:CreatorTool>XMP Writer 9</xmp:CreatorTool>
@@ -168,6 +173,7 @@ test('Info에 없고 XMP에만 있는 제목·작성자도 읽어 칸에 채운�
   });
   await expect(frame.getByLabel('제목')).toHaveValue('XMP Title');
   await expect(frame.getByLabel('작성자')).toHaveValue('Lee XMP');
+  await expect(frame.getByLabel('키워드 (쉼표로 구분)')).toHaveValue('alpha, beta');
   // 고칠 수 없는 정보(만든 프로그램·날짜)도 XMP에서 읽어 보여 준다
   await expect(frame.getByText('XMP Writer 9')).toBeVisible();
   await expect(frame.getByText('XMP Producer 3')).toBeVisible();
