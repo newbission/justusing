@@ -16,6 +16,7 @@ import {
   PDFNumber,
   PDFRawStream,
   PDFRef,
+  PDFString,
   StandardFonts,
   decodePDFRawStream,
 } from '@cantoo/pdf-lib';
@@ -1658,4 +1659,55 @@ test('원본에서 꺼 둔 보이기 층은 결과에서도 꺼 두고, 투명�
   // 투명도 묶음의 /CS /CS1
   const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
   expect(spaces.has(PDFName.of('CS1'))).toBe(true);
+});
+
+test('볼 때 저절로 적용되는 규칙(/AS)이 끄는 층도 결과에서 꺼 둔다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const layer = (name: string, usage: Record<string, Record<string, string | number>>) =>
+    context.register(context.obj({ Type: 'OCG', Name: PDFString.of(name), Usage: usage }));
+  const viewOff = layer('View off', { View: { ViewState: 'OFF' } });
+  const zoomed = layer('Zoom only', { Zoom: { min: 4 } });
+  const byUser = layer('For someone', { User: { Type: 'Ind', Name: 'Someone' } });
+  const shown = layer('Shown', { View: { ViewState: 'ON' } });
+  const layers = [viewOff, zoomed, byUser, shown];
+  source.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({
+      OCGs: layers,
+      D: {
+        BaseState: 'ON',
+        AS: [{ Event: 'View', OCGs: layers, Category: ['View', 'Zoom', 'User'] }],
+      },
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({ Properties: { L1: viewOff, L2: zoomed, L3: byUser, L4: shown } }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream(
+        ['L1', 'L2', 'L3', 'L4'].map((name) => `/OC /${name} BDC 0 0 10 10 re f EMC`).join(' '),
+      ),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'auto-layers.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const pdf = await getDocument({ data: bytes.slice() }).promise;
+  const config = await pdf.getOptionalContentConfig();
+  const visible = Object.fromEntries([...config].map(([, group]) => [group.name, group.visible]));
+  expect(visible).toEqual({
+    'View off': false,
+    'Zoom only': false,
+    'For someone': false,
+    Shown: true,
+  });
 });
