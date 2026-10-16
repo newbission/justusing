@@ -1,11 +1,17 @@
 /**
- * 글자 넣기 워커 (text-pdf.ts가 부른다): 글자 워터마크, 머리말·꼬리말, PDF 편집.
+ * 글자 넣기 워커 (text-pdf.ts가 부른다): 글자 워터마크, 머리말·꼬리말, PDF 편집, 양식 채우기.
  * 글꼴 엔진(fontkit)이 커서 PDF 고치기 워커와 따로 둔다. 파일과 글꼴은 메모리에서만 다룬다.
  */
 import {
+  PDFCheckBox,
   PDFDocument,
+  PDFDropdown,
   PDFName,
   PDFNumber,
+  PDFOptionList,
+  PDFRadioGroup,
+  PDFTextField,
+  StandardFonts,
   degrees,
   rgb,
   type PDFFont,
@@ -32,6 +38,11 @@ function usedText(job: TextJob, total: number): string {
   if (job.kind === 'watermark') return job.text;
   if (job.kind === 'edit') {
     return job.items.map((item) => (item.kind === 'text' ? item.text : '')).join('');
+  }
+  if (job.kind === 'fill-form') {
+    return Object.values(job.values)
+      .flatMap((value) => (typeof value === 'boolean' ? [] : value))
+      .join('');
   }
   // 쪽마다 실제로 넣을 글자 (자리표시가 바뀐 숫자·날짜만 검사해 숫자가 없는 글꼴도 쓸 수 있게)
   const texts: string[] = [];
@@ -166,6 +177,51 @@ function drawEdits(
   }
 }
 
+/**
+ * 양식 칸에 값을 넣고 바뀐 칸의 모양을 다시 만든다. 글꼴이 없으면 기본 글꼴(Helvetica)로 만들고,
+ * 기본 글꼴에 없는 글자가 있으면 그 글자들을 돌려준다 (pdf-lib는 그런 글자를 오류 없이 빼 버린다)
+ */
+function fillFields(
+  doc: PDFDocument,
+  font: PDFFont | undefined,
+  job: Extract<TextJob, { kind: 'fill-form' }>,
+): string[] {
+  const form = doc.getForm();
+  // XFA 양식이 남아 있으면 일부 보기 프로그램이 넣은 값 대신 XFA를 보여 준다
+  if (form.hasXFA()) form.deleteXFA();
+  for (const [name, value] of Object.entries(job.values)) {
+    const field = form.getFieldMaybe(name);
+    if (!field || field.isReadOnly()) continue;
+    if (field instanceof PDFTextField && typeof value === 'string') {
+      const max = field.getMaxLength();
+      field.setText(max === undefined ? value : value.slice(0, max));
+    } else if (field instanceof PDFCheckBox && typeof value === 'boolean') {
+      if (value) field.check();
+      else field.uncheck();
+    } else if (field instanceof PDFRadioGroup && typeof value === 'string') {
+      if (value) field.select(value);
+      else field.clear();
+    } else if (field instanceof PDFDropdown && typeof value === 'string') {
+      if (value) field.select(value);
+      else field.clear();
+    } else if (field instanceof PDFOptionList && Array.isArray(value)) {
+      if (value.length > 0) field.select(value);
+      else field.clear();
+    }
+  }
+  const appearanceFont = font ?? doc.embedStandardFont(StandardFonts.Helvetica);
+  if (!font) {
+    const supported = new Set(appearanceFont.getCharacterSet());
+    const missing = [...new Set(usedText(job, 0))].filter(
+      (char) => char.trim() !== '' && !supported.has(char.codePointAt(0)!),
+    );
+    if (missing.length > 0) return missing;
+  }
+  form.updateFieldAppearances(appearanceFont);
+  if (job.flatten) form.flatten();
+  return [];
+}
+
 addEventListener('message', async (event: MessageEvent<TextRequest>) => {
   const { id, bytes, password, job } = event.data;
   const send = (response: TextResponse, transfer: Transferable[] = []) =>
@@ -186,7 +242,13 @@ addEventListener('message', async (event: MessageEvent<TextRequest>) => {
       font = await doc.embedFont(job.font, { subset: true });
     }
     if (job.kind === 'edit') drawEdits(doc, font, job);
-    else if (font) {
+    else if (job.kind === 'fill-form') {
+      const missing = fillFields(doc, font, job);
+      if (missing.length > 0) {
+        send({ id, kind: 'missing', chars: missing });
+        return;
+      }
+    } else if (font) {
       if (job.kind === 'watermark') drawWatermark(doc, font, job);
       else drawHeaderFooter(doc, font, job);
     } else if (text.trim()) throw new Error('font required');
