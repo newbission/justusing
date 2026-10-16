@@ -646,3 +646,62 @@ test('JPEG 2000은 형식에 맞는 확장자로 꺼내고, 장치 색공간이 
   await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
   expect((await event).suggestedFilename()).toBe('jpx_p1_1.jpx');
 });
+
+test('자원 목록의 기본 색공간(/DefaultRGB 등)이 장치 색공간을 대신한다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const profile = new Uint8Array(300).map((_, i) => (i * 13) % 251);
+  const jpg = context.register(
+    context.stream(await readFile(fixture('photo.jpg')), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      ColorSpace: 'DeviceRGB',
+      Filter: 'DCTDecode',
+    }),
+  );
+  const gray = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(100), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+    }),
+  );
+  // 1쪽: DefaultRGB가 ICC 프로필 → 그 프로필을 넣어 꺼낸다. 2쪽: DefaultGray가 보정 색공간 → 못 꺼낸다
+  for (const [ref, spaces] of [
+    [
+      jpg,
+      context.obj({
+        DefaultRGB: ['ICCBased', context.register(context.flateStream(profile, { N: 3 }))],
+      }),
+    ],
+    [gray, context.obj({ DefaultGray: ['CalGray', { WhitePoint: [0.9505, 1, 1.089] }] })],
+  ] as const) {
+    const added = doc.addPage([600, 800]);
+    const name = added.node.newXObject('Image', ref);
+    (added.node.Resources() as unknown as { set: (k: PDFName, v: unknown) => void }).set(
+      PDFName.of('ColorSpace'),
+      spaces,
+    );
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'defaults.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  const bytes = await readFile(await (await event).path());
+  expect(bytes.toString('latin1')).toContain('ICC_PROFILE\0');
+});
