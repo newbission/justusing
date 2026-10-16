@@ -246,3 +246,63 @@ test('1비트·뒤집은 투명도와 JPG 색 키 투명을 살리고, 글자열
   const entries = unzipSync(new Uint8Array(await readFile(await (await event).path())));
   for (const bytes of Object.values(entries)) expect(bytes[25]).toBe(6);
 });
+
+test('자원 목록에 정의한 색공간 이름을 풀고, 투명도가 붙은 JPEG 2000은 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const named = context.register(
+    context.flateStream(
+      new Uint8Array(64 * 64).map((_, i) => i % 2),
+      {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        BitsPerComponent: 8,
+        ColorSpace: 'CS0',
+      },
+    ),
+  );
+  const alpha = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(128), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+    }),
+  );
+  const jpx = context.register(
+    context.stream(new Uint8Array(32), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      Filter: 'JPXDecode',
+      SMask: alpha,
+    }),
+  );
+  const added = doc.addPage([300, 300]);
+  for (const ref of [named, jpx]) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+  (added.node.Resources() as unknown as { set: (k: PDFName, v: unknown) => void }).set(
+    PDFName.of('ColorSpace'),
+    context.obj({ CS0: ['Indexed', 'DeviceRGB', 1, PDFHexString.of('FF00000000FF')] }),
+  );
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'named.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+  await expect(frame.getByText('1쪽 · 64×64 · PNG', { exact: false })).toBeVisible();
+});
