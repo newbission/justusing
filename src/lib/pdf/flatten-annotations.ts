@@ -95,30 +95,51 @@ function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
   const stroke = color.replace(/(\S+)$/, (op) => op.toUpperCase());
   const ops = ['q', '/GS0 gs', color, stroke];
   for (let i = 0; i < points.length; i += 8) {
-    const xs = [points[i]!, points[i + 2]!, points[i + 4]!, points[i + 6]!];
-    const ys = [points[i + 1]!, points[i + 3]!, points[i + 5]!, points[i + 7]!];
-    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-    const height = y1 - y0;
+    // 네 점은 왼쪽 위, 오른쪽 위, 왼쪽 아래, 오른쪽 아래 순서다 (Acrobat이 쓰는 순서).
+    // 기울어진 글자에서도 글자를 따라가도록 사각형이 아니라 이 네 점으로 그린다
+    const [ax, ay, bx, by, cx, cy, dx, dy] = points.slice(i, i + 8) as [
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+      number,
+    ];
+    const height = Math.hypot(ax - cx, ay - cy);
+    if (height === 0) continue;
+    // 아래 변에서 위쪽으로 향하는 단위 벡터
+    const ux = (ax - cx) / height;
+    const uy = (ay - cy) / height;
+    /** 아래 변에서 줄 높이의 t만큼 올라간 선 */
+    const along = (t: number): [number, number, number, number] => [
+      cx + ux * height * t,
+      cy + uy * height * t,
+      dx + ux * height * t,
+      dy + uy * height * t,
+    ];
     // 형광펜은 줄 전체, 밑줄은 아래쪽, 취소선은 가운데에 줄 높이의 7% 굵기로
     const line = Math.max(0.5, height * 0.07);
-    if (kind === 'Squiggly') {
-      // 물결 밑줄: 아래쪽을 따라 오르내리는 꺾은선
+    if (highlight) {
+      ops.push(`${ax} ${ay} m ${bx} ${by} l ${dx} ${dy} l ${cx} ${cy} l h f`);
+    } else if (kind === 'Squiggly') {
+      // 물결 밑줄: 아래 변을 따라 오르내리는 꺾은선
+      const [x0, y0, x1, y1] = along(0.1);
+      const length = Math.hypot(x1 - x0, y1 - y0);
       const wave = Math.max(1, height * 0.08);
       const step = Math.max(1, height * 0.12);
-      const base = y0 + height * 0.1;
-      const path = [`${x0} ${base} m`];
-      for (let x = x0 + step, up = true; x <= x1; x += step, up = !up) {
-        path.push(`${x} ${up ? base + wave : base} l`);
+      const path = [`${x0} ${y0} m`];
+      for (let at = step, up = true; at <= length; at += step, up = !up) {
+        const x = x0 + ((x1 - x0) * at) / length + (up ? ux * wave : 0);
+        const y = y0 + ((y1 - y0) * at) / length + (up ? uy * wave : 0);
+        path.push(`${x} ${y} l`);
       }
       ops.push(`${line} w`, ...path, 'S');
-      continue;
+    } else {
+      const [x0, y0, x1, y1] = along(kind === 'StrikeOut' ? 0.5 : 0.1);
+      ops.push(`${line} w ${x0} ${y0} m ${x1} ${y1} l S`);
     }
-    const y = highlight
-      ? y0
-      : kind === 'StrikeOut'
-        ? y0 + height / 2 - line / 2
-        : y0 + height * 0.1;
-    ops.push(`${x0} ${y} ${x1 - x0} ${highlight ? height : line} re f`);
   }
   ops.push('Q');
   const stream = context.stream(ops.join('\n'), {
@@ -127,7 +148,9 @@ function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
     BBox: rect,
     Resources: {
       // 형광펜은 곱하기로 섞어 밑의 글자가 비치게 한다
-      ExtGState: { GS0: { Type: 'ExtGState', BM: highlight ? 'Multiply' : 'Normal', ca: alpha } },
+      ExtGState: {
+        GS0: { Type: 'ExtGState', BM: highlight ? 'Multiply' : 'Normal', ca: alpha, CA: alpha },
+      },
     },
   });
   return context.register(stream);
