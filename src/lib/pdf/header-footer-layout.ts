@@ -44,10 +44,17 @@ export function linePosition(
 }
 
 /**
- * 글자가 쪽의 쓸 수 있는 폭(양쪽 여백을 뺀 폭, 늘 쪽 폭의 80% 이상)보다 넓으면 들어가도록 줄인 글자 크기.
- * 긴 제목이나 폭이 좁은 쪽에서 글자가 쪽 밖으로 잘리지 않게 한다
+ * 글자가 쪽에 들어가도록 줄인 글자 크기.
+ * - 폭: 쓸 수 있는 폭(양쪽 여백을 뺀 폭, 늘 쪽 폭의 80% 이상)보다 넓으면 줄인다
+ * - 높이: 머리말과 꼬리말이 겹치지 않게 쪽 높이의 30%를 넘지 않는다 (아주 낮게 잘린 쪽)
  */
-export function fitSize(textWidth: number, fontSize: number, pageWidth: number): number {
-  const available = pageWidth - edgeMargin(pageWidth) * 2;
-  return textWidth > available && textWidth > 0 ? (fontSize * available) / textWidth : fontSize;
+export function fitSize(
+  textWidth: number,
+  fontSize: number,
+  page: { width: number; height: number },
+): number {
+  const available = page.width - edgeMargin(page.width) * 2;
+  const byWidth =
+    textWidth > available && textWidth > 0 ? (fontSize * available) / textWidth : fontSize;
+  return Math.min(byWidth, page.height * 0.3);
 }

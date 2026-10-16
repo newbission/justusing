@@ -2,7 +2,15 @@
  * 글자 넣기 워커 (text-pdf.ts가 부른다): 글자 워터마크, 머리말·꼬리말.
  * 글꼴 엔진(fontkit)이 커서 PDF 고치기 워커와 따로 둔다. 파일과 글꼴은 메모리에서만 다룬다.
  */
-import { PDFDocument, degrees, rgb, type PDFFont } from '@cantoo/pdf-lib';
+import {
+  PDFDocument,
+  PDFName,
+  PDFNumber,
+  degrees,
+  rgb,
+  type PDFFont,
+  type PDFPage,
+} from '@cantoo/pdf-lib';
 import fontkit from '@cantoo/fontkit';
 import type { TextJob, TextRequest, TextResponse } from './text-pdf';
 import { placements } from './watermark-layout';
@@ -29,6 +37,16 @@ function usedText(job: TextJob, total: number): string {
     }
   }
   return texts.join('');
+}
+
+/**
+ * 쪽의 좌표 단위가 몇 pt인지 (/UserUnit, 없으면 1). 1이 아니면 pt로 정한 글자 크기·여백을 이 단위로 바꿔야
+ * 화면 미리보기(pt)와 같은 크기가 된다
+ */
+function userUnit(page: PDFPage): number {
+  const value = page.node.lookup(PDFName.of('UserUnit'));
+  const unit = value instanceof PDFNumber ? value.asNumber() : 1;
+  return unit > 0 ? unit : 1;
 }
 
 function drawWatermark(
@@ -68,19 +86,22 @@ function drawHeaderFooter(
   const pages = doc.getPages();
   pages.forEach((page, index) => {
     if (job.skipFirst && index === 0) return;
-    const view = viewSize(page);
+    const unit = userUnit(page);
+    // 자리 계산은 pt로 하고(미리보기와 같게) 그릴 때 쪽 단위로 바꾼다
+    const units = viewSize(page);
+    const view = { width: units.width * unit, height: units.height * unit };
     for (const [line, edge] of [
       [job.header, 'top'],
       [job.footer, 'bottom'],
     ] as const) {
       const text = fillTemplate(line.text, index + 1, pages.length, job.date).trim();
       if (!text) continue;
-      const size = fitSize(font.widthOfTextAtSize(text, job.size), job.size, view.width);
+      const size = fitSize(font.widthOfTextAtSize(text, job.size), job.size, view);
       const width = font.widthOfTextAtSize(text, size);
       const at = linePosition(view, width, size, line.align, edge);
       page.drawText(text, {
-        ...toPdfPoint(page, at.x, at.y),
-        size,
+        ...toPdfPoint(page, at.x / unit, at.y / unit),
+        size: size / unit,
         font,
         color,
         // 회전한 쪽에서도 화면에 바로 보이게 같은 만큼 돌린다
