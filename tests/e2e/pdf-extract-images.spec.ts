@@ -306,3 +306,61 @@ test('자원 목록에 정의한 색공간 이름을 풀고, 투명도가 붙은
   await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
   await expect(frame.getByText('1쪽 · 64×64 · PNG', { exact: false })).toBeVisible();
 });
+
+test('예측 행 크기가 사진과 다르거나 Matte로 미리 섞인 투명도는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (extra: Record<string, unknown>) =>
+    context.register(
+      context.flateStream(new Uint8Array(65 * 64).fill(100), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+        ...extra,
+      }),
+    );
+  // 예측 행 크기(Columns)를 적지 않아 PDF 기본값 1이 된다 → 사진 폭 64와 다르다
+  const predicted = gray({ DecodeParms: { Predictor: 15 } });
+  const matte = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(128), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+      Matte: [0],
+    }),
+  );
+  const premultiplied = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(50), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+      SMask: matte,
+    }),
+  );
+  const added = doc.addPage([300, 300]);
+  for (const ref of [predicted, premultiplied]) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'odd.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
+  await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
