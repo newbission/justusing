@@ -110,6 +110,20 @@ test('가리기만 하면 글꼴 없이 만들고, 키보드로 지울 수 있�
   expect(result.fills).toBeGreaterThanOrEqual(1);
 });
 
+test('가린 자리를 글자 도구로 누르면 그 위에 새 글자 상자를 만든다', async ({ page }) => {
+  const frame = await openTool(page);
+  await frame.getByText('흰색으로 가리기').click();
+  await drawRect(page, frame, [0.1, 0.1], [0.5, 0.2]);
+  await expect(frame.getByText('넣은 것 1개')).toBeVisible();
+
+  await frame.getByText('글자 넣기').click();
+  const inside = await at(frame, 0.3, 0.15);
+  await page.mouse.click(inside.x, inside.y);
+  // 사각형을 옮기지 않고 새 글자 상자를 연다 (빈 글자 상자는 개수에 넣지 않는다)
+  await frame.getByLabel('글자 (줄바꿈 가능)').fill('고친 글자');
+  await expect(frame.getByText('넣은 것 2개')).toBeVisible();
+});
+
 test('글자를 넣었는데 글꼴이 없으면 받으라고 알린다', async ({ page }) => {
   const frame = await openTool(page);
   const point = await at(frame, 0.3, 0.3);
