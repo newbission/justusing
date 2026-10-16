@@ -388,3 +388,35 @@ test('한글 암호는 글꼴 없이 가려 저장하고, 암호 칸은 PDF 칸 
   const content = await (await saved.getPage(1)).getTextContent();
   expect(content.items.map((item) => ('str' in item ? item.str : '')).join('')).toContain('*****');
 });
+
+test('끌 수 있는 라디오는 고른 단추를 다시 눌러 고르지 않은 상태로 돌린다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 200]);
+  const form = doc.getForm();
+  const optional = form.createRadioGroup('optional');
+  optional.enableOffToggling();
+  optional.addOptionToPage('A', added, { x: 20, y: 120, width: 14, height: 14 });
+  const required = form.createRadioGroup('required');
+  required.disableOffToggling();
+  required.addOptionToPage('B', added, { x: 20, y: 60, width: 14, height: 14 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'radio.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  const a = frame.getByLabel('optional: A');
+  await a.click();
+  await expect(a).toBeChecked();
+  await a.click();
+  await expect(a).not.toBeChecked();
+  const b = frame.getByLabel('required: B');
+  await b.click();
+  await b.click();
+  await expect(b).toBeChecked();
+  const { bytes } = await download(page, frame);
+  const saved = (await PDFDocument.load(bytes)).getForm();
+  expect(saved.getRadioGroup('optional').getSelected()).toBeUndefined();
+  expect(saved.getRadioGroup('required').getSelected()).toBe('B');
+});
