@@ -52,7 +52,7 @@ test('글꼴을 받아 모든 쪽에 워터마크를 넣는다', async ({ page, 
   requests.length = 0; // 페이지를 여는 요청은 빼고, 파일을 고른 뒤부터 센다
 
   await expect(frame.getByText('아래에서 글꼴을 받아 고르세요.')).toBeVisible();
-  await frame.getByRole('button', { name: '나눔고딕 받기' }).click();
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
   await expect(frame.getByText('모든 쪽(3쪽)에 워터마크를 넣습니다.')).toBeVisible();
   await frame.getByLabel('넣을 글자').fill('사본 COPY');
   const { name, bytes } = await download(page, frame);
@@ -71,7 +71,7 @@ test('글꼴을 받아 모든 쪽에 워터마크를 넣는다', async ({ page, 
 
 test('받은 글꼴은 다시 들어와도 받지 않고, 지워지면 다시 받으라고 알린다', async ({ page }) => {
   let frame = await openTool(page);
-  await frame.getByRole('button', { name: '나눔고딕 받기' }).click();
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
   await expect(frame.getByText('받음')).toBeVisible();
 
   const fontRequests: string[] = [];
@@ -101,13 +101,13 @@ test('목록과 다른 글꼴 파일은 쓰지 않는다', async ({ page }) => {
     route.fulfill({ body: Buffer.from('not a font'), contentType: 'font/woff2' }),
   );
   const frame = await openTool(page);
-  await frame.getByRole('button', { name: '나눔고딕 받기' }).click();
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
   await expect(frame.getByText('글꼴을 받지 못했습니다.', { exact: false })).toBeVisible();
   await expect(frame.getByText('아래에서 글꼴을 받아 고르세요.')).toBeVisible();
 
   // 잘못된 파일은 보관하지 않으므로, 제대로 받을 수 있게 되면 다시 받기로 쓸 수 있다
   await page.unroute('**/data/fonts/nanum-gothic-*');
-  await frame.getByRole('button', { name: '나눔고딕 받기' }).click();
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
   await expect(frame.getByText('모든 쪽(3쪽)에 워터마크를 넣습니다.')).toBeVisible();
 });
 
