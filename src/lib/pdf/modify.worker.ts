@@ -124,28 +124,15 @@ async function nUp(
   return out;
 }
 
-/** 문서 정보(Info)의 모든 항목 */
-const INFO_KEYS = [
-  'Title',
-  'Author',
-  'Subject',
-  'Keywords',
-  'Creator',
-  'Producer',
-  'CreationDate',
-  'ModDate',
-  'Trapped',
-];
-
 /**
  * 문서 정보를 적는다. 보기 프로그램에 따라 XMP 메타데이터를 먼저 보므로, 예전 값이 남지 않게 XMP는 지운다.
- * clear면 Info의 모든 항목(만든 프로그램·날짜 포함)을 지운다
+ * clear면 Info의 모든 항목(만든 프로그램·날짜, 워드 등이 더한 회사 이름 같은 항목 포함)을 지운다
  */
 function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
   doc.catalog.delete(PDFName.of('Metadata'));
   const dict = doc.context.lookup(doc.context.trailerInfo.Info);
   if (clear) {
-    if (dict instanceof PDFDict) for (const key of INFO_KEYS) dict.delete(PDFName.of(key));
+    if (dict instanceof PDFDict) for (const key of dict.keys()) dict.delete(key);
     return;
   }
   const set = (key: string, value: string, apply: (text: string) => void) => {
