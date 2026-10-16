@@ -15,6 +15,8 @@ const ko = {
   working: '모으는 중…',
   run: '모아찍기',
   failed: 'PDF를 만들지 못했습니다. 파일이 손상되었거나 기기의 메모리가 부족할 수 있습니다.',
+  formFailed:
+    '이 PDF의 양식 입력값 일부는 모양이 저장되어 있지 않아 옮길 수 없습니다. PDF 보기 프로그램에서 "인쇄 → PDF로 저장"으로 한 번 저장한 뒤 다시 해 보세요.',
   suffix: '모아찍기',
 };
 
@@ -32,6 +34,8 @@ const en: typeof ko = {
   working: 'Combining…',
   run: 'Create N-up PDF',
   failed: 'Could not create the PDF. The file may be damaged, or your device may be low on memory.',
+  formFailed:
+    'Some form entries in this PDF have no saved appearance and cannot be moved. Save it once with "Print → Save as PDF" in your PDF viewer, then try again.',
   suffix: 'n-up',
 };
 

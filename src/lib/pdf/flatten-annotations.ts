@@ -7,16 +7,23 @@ import {
   PDFArray,
   PDFContentStream,
   PDFDict,
+  PDFDropdown,
   PDFName,
   PDFNumber,
+  PDFOptionList,
   PDFRef,
   PDFStream,
+  PDFTextField,
   concatTransformationMatrix,
   drawObject,
   popGraphicsState,
   pushGraphicsState,
+  StandardFonts,
+  type PDFDocument,
+  type PDFField,
   type PDFPage,
 } from '@cantoo/pdf-lib';
+import { UNRENDERED_FORM } from './modify-errors';
 
 /** /F 플래그: 숨김(2), 인쇄(4) */
 const HIDDEN = 2;
@@ -46,6 +53,44 @@ function normalAppearance(annot: PDFDict): PDFRef | undefined {
   // 직접 들어 있는 스트림은 참조로 등록해야 쪽 자원에서 부를 수 있다
   if (normal instanceof PDFStream) return annot.context.register(normal);
   return undefined;
+}
+
+/** 입력 칸이 모양으로 그릴 글자 */
+function fieldText(field: PDFField): string[] {
+  if (field instanceof PDFTextField) return [field.getText() ?? ''];
+  if (field instanceof PDFDropdown || field instanceof PDFOptionList) return field.getSelected();
+  return [];
+}
+
+/**
+ * 모양 스트림(/AP) 없이 저장된 양식 입력값은 보기 프로그램이 그때그때 그린다 (NeedAppearances).
+ * 평면화하려면 모양이 있어야 하므로 먼저 만든다. 만들 수 없으면(기본 글꼴에 없는 한글 등) 조용히 빼지 않고 알린다.
+ */
+export function renderMissingFormAppearances(doc: PDFDocument): void {
+  let form;
+  let missing: PDFField[];
+  try {
+    form = doc.getForm();
+    missing = form.getFields().filter((field) => field.needsAppearancesUpdate());
+  } catch {
+    // 양식 구조를 읽을 수 없으면 있는 모양만 쓴다
+    return;
+  }
+  if (missing.length === 0) return;
+  const font = doc.embedStandardFont(StandardFonts.Helvetica);
+  // 기본 글꼴에 없는 글자는 pdf-lib가 오류 없이 빼 버리므로 먼저 확인한다
+  const supported = new Set(font.getCharacterSet());
+  const unsupported = missing.some((field) =>
+    fieldText(field).some((text) =>
+      [...text].some((char) => !/[\r\n]/.test(char) && !supported.has(char.codePointAt(0)!)),
+    ),
+  );
+  if (unsupported) throw new Error(UNRENDERED_FORM);
+  try {
+    form.updateFieldAppearances(font);
+  } catch {
+    throw new Error(UNRENDERED_FORM);
+  }
 }
 
 /** 쪽의 주석 모양을 쪽 내용에 그려 넣고 주석은 뺀다. 그려 넣은 주석이 있으면 true */

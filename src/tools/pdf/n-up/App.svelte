@@ -12,6 +12,7 @@
   import { downloadFile } from '../../../frame/download';
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
+  import { UNRENDERED_FORM } from '../../../lib/pdf/modify-errors';
   import { modifyPdf, type NUpCount, type PaperSize } from '../../../lib/pdf/modify';
   import SinglePdfTool, { type LoadedPdf } from '../../../lib/pdf/SinglePdfTool.svelte';
   import Thumbnail from '../../../lib/pdf/Thumbnail.svelte';
@@ -69,9 +70,10 @@
         bytes,
         signature: startedWith,
       };
-    } catch {
+    } catch (error) {
       if (pdf !== source) return;
-      run = { kind: 'failed', message: t.failed };
+      const unrendered = error instanceof Error && error.message === UNRENDERED_FORM;
+      run = { kind: 'failed', message: unrendered ? t.formFailed : t.failed };
     }
   }
 
