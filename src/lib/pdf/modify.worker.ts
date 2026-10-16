@@ -139,27 +139,46 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
   const dict = context.lookup(context.trailerInfo.Info);
   if (clear) {
     if (dict instanceof PDFDict) for (const key of dict.keys()) dict.delete(key);
-    // 쪽·그림·글꼴 등에 붙은 XMP와 앱 데이터에도 작성자·회사 이름이 들어 있을 수 있다.
-    // 객체 안에 바로 들어 있는 사전·배열(쪽의 자원 목록 등)까지 들어가 지운다
-    // 쪽·묶음 그림 등에 바로 적힌 고친 시각(/LastModified)도 숨은 정보다
-    const hidden = [metadata, PDFName.of('PieceInfo'), PDFName.of('LastModified')];
+    // 문서 정보 밖에 숨은 정보가 있는 자리를 모두 훑는다 (객체 안에 바로 들어 있는 사전·배열까지):
+    // - 어디에나: XMP(/Metadata), 앱 데이터(/PieceInfo), 고친 시각(/LastModified), 웹에서 받은 기록(/SpiderInfo)
+    // - 첨부 파일(/Params): 만든·고친 날짜, Mac 파일 정보(만든 앱)
+    // - 주석: 작성자(/T, 입력 칸 Widget의 /T는 칸 이름이라 둔다), 만든·고친 시각, 고유 이름(/NM)
+    // - 기사 흐름(/Thread)의 정보 사전(/I): 제목·작성자 등
+    // - 전자 서명 사전: 서명한 사람·시각·장소·이유·연락처·서명 프로그램 (저장하면 서명은 어차피 깨진다)
+    const named = (...keys: string[]) => keys.map((key) => PDFName.of(key));
+    const hidden = named('Metadata', 'PieceInfo', 'LastModified', 'SpiderInfo');
+    const fileDates = named('CreationDate', 'ModDate', 'Mac');
+    const annotation = named('M', 'CreationDate', 'NM');
+    const signature = named(
+      'Name',
+      'M',
+      'Location',
+      'Reason',
+      'ContactInfo',
+      'Prop_Build',
+      'Prop_AuthTime',
+      'Prop_AuthType',
+    );
     const strip = (object: unknown) => {
       if (object instanceof PDFStream) strip(object.dict);
       else if (object instanceof PDFDict) {
-        // 앱 데이터(/PieceInfo)에도 고친 날짜·회사 이름 같은 앱별 정보가 들어 있다
         for (const key of hidden) object.delete(key);
-        // 첨부 파일의 만든·고친 날짜 (첨부 파일 스트림의 /Params, /Type은 생략되기도 한다)
+        const type = object.get(PDFName.of('Type'));
         const params = context.lookup(object.get(PDFName.of('Params')));
-        if (params instanceof PDFDict) {
-          params.delete(PDFName.of('CreationDate'));
-          params.delete(PDFName.of('ModDate'));
-        }
-        // 주석(메모·도장 등)의 작성자(/T)와 만든·고친 시각. 입력 칸(Widget)의 /T는 칸 이름이라 둔다
+        if (params instanceof PDFDict) for (const key of fileDates) params.delete(key);
         const subtype = object.get(PDFName.of('Subtype'));
         if (subtype instanceof PDFName && object.has(PDFName.of('Rect'))) {
-          object.delete(PDFName.of('M'));
-          object.delete(PDFName.of('CreationDate'));
+          for (const key of annotation) object.delete(key);
           if (subtype !== PDFName.of('Widget')) object.delete(PDFName.of('T'));
+        }
+        if (type === PDFName.of('Thread')) {
+          const threadInfo = context.lookup(object.get(PDFName.of('I')));
+          if (threadInfo instanceof PDFDict) {
+            for (const key of threadInfo.keys()) threadInfo.delete(key);
+          }
+        }
+        if (type === PDFName.of('Sig') || object.has(PDFName.of('ByteRange'))) {
+          for (const key of signature) object.delete(key);
         }
         for (const value of object.values()) strip(value);
       } else if (object instanceof PDFArray) {
