@@ -136,8 +136,11 @@ export async function redact(
 ): Promise<PDFDocument> {
   const out = await PDFDocument.create();
   const rasters = new Map(pages.map((page) => [page.index, page.jpg]));
-  // 양식 입력값은 쪽에 그려 넣어야 옮겨진다 (모양이 없으면 먼저 만든다)
-  renderMissingFormAppearances(source);
+  // 양식 입력값은 쪽에 그려 넣어야 옮겨진다 (모양이 없으면 먼저 만든다). 그림으로 바꾸는 쪽의 칸은 옮기지 않는다
+  renderMissingFormAppearances(
+    source,
+    source.getPages().filter((_, index) => !rasters.has(index)),
+  );
   for (const [index, page] of source.getPages().entries()) {
     const jpg = rasters.get(index);
     if (jpg) {
