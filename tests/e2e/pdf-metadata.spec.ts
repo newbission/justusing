@@ -37,6 +37,8 @@ async function infoPdf() {
     PDFName.of('PieceInfo'),
     doc.context.obj({
       App: {
+        LastModified: PDFString.of('D:20260101000000Z'),
+        Private: { Company: PDFString.of('PieceInfo Corp Secret') },
         Metadata: doc.context.register(
           doc.context.stream('<x:xmpmeta><dc:creator>Nested XMP Choi</dc:creator></x:xmpmeta>', {
             Type: 'Metadata',
@@ -126,6 +128,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Page XMP Lee');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Orphan XMP Park');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Nested XMP Choi');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('PieceInfo Corp Secret');
 });
 
 test.describe('서울 시간대에서', () => {
@@ -217,4 +220,29 @@ test('암호가 걸린 PDF는 저장하면 암호가 풀린다고 알린다', as
 test('암호가 없는 PDF에는 암호 안내를 보이지 않는다', async ({ page }) => {
   const frame = await openTool(page);
   await expect(frame.getByText('저장한 파일에서 풀립니다', { exact: false })).toHaveCount(0);
+});
+
+test.describe('세계 표준시보다 느린 시간대에서', () => {
+  test.use({ timezoneId: 'America/Los_Angeles' });
+
+  test('시간대 없이 날짜만 적힌 XMP 날짜는 그날 그대로 보여 준다', async ({ page }) => {
+    const doc = await PDFDocument.create({ updateMetadata: false });
+    doc.addPage([200, 200]);
+    const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/">
+<xmp:CreateDate>2025-05-06</xmp:CreateDate>
+</rdf:Description></rdf:RDF></x:xmpmeta>`;
+    doc.catalog.set(
+      PDFName.of('Metadata'),
+      doc.context.register(doc.context.stream(xmp, { Type: 'Metadata', Subtype: 'XML' })),
+    );
+    await page.goto('/pdf/metadata/');
+    const frame = page.frameLocator('iframe[data-tool-frame]');
+    await frame.locator('input[type=file]').setInputFiles({
+      name: 'date-only.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from(await doc.save()),
+    });
+    await expect(frame.getByText('2025. 5. 6.')).toBeVisible();
+  });
 });
