@@ -3,6 +3,7 @@
  * 파일은 메모리에서만 다룬다.
  */
 import {
+  PDFArray,
   PDFDict,
   PDFDocument,
   PDFName,
@@ -137,11 +138,18 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
   const dict = context.lookup(context.trailerInfo.Info);
   if (clear) {
     if (dict instanceof PDFDict) for (const key of dict.keys()) dict.delete(key);
-    // 쪽·그림·글꼴 등에 붙은 XMP에도 작성자·회사 이름이 들어 있을 수 있다
-    for (const [, object] of context.enumerateIndirectObjects()) {
-      const holder = object instanceof PDFStream ? object.dict : object;
-      if (holder instanceof PDFDict) holder.delete(metadata);
-    }
+    // 쪽·그림·글꼴 등에 붙은 XMP에도 작성자·회사 이름이 들어 있을 수 있다.
+    // 객체 안에 바로 들어 있는 사전·배열(쪽의 자원 목록 등)까지 들어가 지운다
+    const strip = (object: unknown) => {
+      if (object instanceof PDFStream) strip(object.dict);
+      else if (object instanceof PDFDict) {
+        object.delete(metadata);
+        for (const value of object.values()) strip(value);
+      } else if (object instanceof PDFArray) {
+        for (const value of object.asArray()) strip(value);
+      }
+    };
+    for (const [, object] of context.enumerateIndirectObjects()) strip(object);
   } else {
     const set = (key: string, value: string, apply: (text: string) => void) => {
       if (value.trim()) apply(value.trim());
