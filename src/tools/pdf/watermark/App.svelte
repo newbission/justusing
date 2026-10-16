@@ -144,11 +144,17 @@
     if (!bytes) return;
     const name = `watermark-${familyId++}`;
     const face = new FontFace(name, bytes.slice());
+    // 그새 다른 글꼴로 바꿨으면 늦게 끝난 이전 글꼴은 쓰지 않는다 (미리보기와 결과 글꼴이 달라지지 않게)
+    let current = true;
     face.load().then(() => {
+      if (!current) return;
       document.fonts.add(face);
       family = name;
     });
-    return () => document.fonts.delete(face);
+    return () => {
+      current = false;
+      document.fonts.delete(face);
+    };
   });
 
   /** 글자 폭(pt). 화면 글꼴로 잰다 (워커는 같은 글꼴의 폭으로 잰다) */
