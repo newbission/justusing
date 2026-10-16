@@ -30,9 +30,11 @@ import { userUnit, viewSize } from './page-geometry';
 const NAMED = ['XObject', 'Font', 'ExtGState', 'Pattern', 'Shading', 'ColorSpace', 'Properties'];
 /**
  * 남긴 자원(그림·묶음 그림·글꼴 등)에서 빼는 항목: 첨부 파일, 앱 데이터, XMP(사진 설명 등),
- * 그림의 대체 그림(/Alternates, 화면에 보이지 않지만 다른 그림을 가리킬 수 있다)
+ * 그림의 대체 그림(/Alternates, 화면에 보이지 않지만 다른 그림을 가리킬 수 있다),
+ * 다른 PDF 쪽을 가리키는 연결(/Ref, 파일을 품을 수 있다)과 인쇄용 원본 파일 연결(/OPI).
+ * 묶음 그림은 자기 내용(대신 보여 주는 모습)만 남는다
  */
-const NESTED_DROP = ['AF', 'PieceInfo', 'Metadata', 'Alternates'];
+const NESTED_DROP = ['AF', 'PieceInfo', 'Metadata', 'Alternates', 'Ref', 'OPI'];
 /** 장치 색공간 대신 저절로 쓰이는 기본 색공간 */
 const DEFAULT_SPACES = ['DefaultGray', 'DefaultRGB', 'DefaultCMYK'];
 /**
