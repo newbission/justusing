@@ -6,6 +6,7 @@ import {
   PDFDict,
   PDFDocument,
   PDFName,
+  PDFRef,
   StandardFonts,
   degrees,
   rgb,
@@ -129,15 +130,25 @@ async function nUp(
  * clear면 Info의 모든 항목(만든 프로그램·날짜, 워드 등이 더한 회사 이름 같은 항목 포함)을 지운다
  */
 function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
-  doc.catalog.delete(PDFName.of('Metadata'));
-  const dict = doc.context.lookup(doc.context.trailerInfo.Info);
+  const { context } = doc;
+  /**
+   * 항목을 뺀다. 값이 따로 된 객체면 그 객체도 지운다
+   * (pdf-lib는 아무도 가리키지 않는 객체도 저장하므로 참조만 끊으면 예전 값이 파일에 남는다)
+   */
+  const drop = (holder: PDFDict, key: PDFName) => {
+    const value = holder.get(key);
+    holder.delete(key);
+    if (value instanceof PDFRef) context.delete(value);
+  };
+  drop(doc.catalog, PDFName.of('Metadata'));
+  const dict = context.lookup(context.trailerInfo.Info);
   if (clear) {
-    if (dict instanceof PDFDict) for (const key of dict.keys()) dict.delete(key);
+    if (dict instanceof PDFDict) for (const key of dict.keys()) drop(dict, key);
     return;
   }
   const set = (key: string, value: string, apply: (text: string) => void) => {
     if (value.trim()) apply(value.trim());
-    else if (dict instanceof PDFDict) dict.delete(PDFName.of(key));
+    else if (dict instanceof PDFDict) drop(dict, PDFName.of(key));
   };
   set('Title', info.title, (text) => doc.setTitle(text));
   set('Author', info.author, (text) => doc.setAuthor(text));
