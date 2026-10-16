@@ -239,14 +239,16 @@ function fillFields(
   if (form.hasXFA()) form.deleteXFA();
   /** 모양을 만든 뒤 내보내는 값으로 되돌릴 선택 칸 (pdf-lib는 보이는 글자를 값으로 저장한다) */
   const exports: { field: PDFDropdown | PDFOptionList; values: string[] }[] = [];
-  // 바꾸지 않는 선택 상자도 모양을 다시 만들면 내보내는 값(KR)이 아니라 보이는 글자(대한민국)로 그린다
+  // 바꾸지 않는 선택 상자·목록도 모양을 다시 만들면 내보내는 값(KR)이 아니라 보이는 글자(대한민국)로
+  // 그린다 (목록은 보이는 글자로 고른 줄을 표시한다). 읽기 전용 칸도 모양은 다시 만든다
   for (const field of form.getFields()) {
-    if (!(field instanceof PDFDropdown) || field.getName() in job.values) continue;
-    if (!field.needsAppearancesUpdate() || field.isReadOnly()) continue;
+    if (!(field instanceof PDFDropdown || field instanceof PDFOptionList)) continue;
+    if (field.getName() in job.values || !field.needsAppearancesUpdate()) continue;
     const values = field.getSelected();
     const shown = values.map((item) => displayOf(field, item));
     if (shown.length === 0 || shown.every((item, i) => item === values[i])) continue;
-    field.select(shown[0]!);
+    if (field instanceof PDFDropdown) field.select(shown[0]!);
+    else field.select(shown);
     exports.push({ field, values });
   }
   for (const [name, value] of Object.entries(job.values)) {
