@@ -31,6 +31,7 @@ async function infoPdf() {
         Subtype: 'Text',
         Rect: [10, 10, 30, 30],
         T: PDFString.of('Annot Author Yoon'),
+        NM: PDFString.of('NM-Unique-Yoon'),
         M: PDFString.of('D:20240101000000Z'),
         CreationDate: PDFString.of('D:20240102000000Z'),
       }),
@@ -43,6 +44,39 @@ async function infoPdf() {
     creationDate: new Date(Date.UTC(2023, 2, 4, 5, 6, 7)),
     modificationDate: new Date(Date.UTC(2023, 2, 5, 5, 6, 7)),
   });
+  // 기사 흐름 정보, 전자 서명 사전, 웹에서 받은 기록
+  doc.catalog.set(
+    PDFName.of('Threads'),
+    doc.context.obj([
+      doc.context.register(
+        doc.context.obj({ Type: 'Thread', I: { Title: PDFString.of('Thread Secret Title') } }),
+      ),
+    ]),
+  );
+  const sigField = doc.context.register(
+    doc.context.obj({
+      Type: 'Annot',
+      Subtype: 'Widget',
+      FT: 'Sig',
+      T: PDFString.of('sig_field'),
+      Rect: [0, 0, 0, 0],
+      V: doc.context.obj({
+        Type: 'Sig',
+        Filter: 'Adobe.PPKLite',
+        ByteRange: [0, 0, 0, 0],
+        Name: PDFString.of('Signer Secret Kim'),
+        Reason: PDFString.of('Secret Reason'),
+        M: PDFString.of('D:20240505000000Z'),
+      }),
+    }),
+  );
+  (
+    doc.getPage(0).node.lookup(PDFName.of('Annots')) as unknown as { push: (v: unknown) => void }
+  ).push(sigField);
+  doc.catalog.set(
+    PDFName.of('SpiderInfo'),
+    doc.context.obj({ V: 1.1, Note: PDFString.of('Spider Secret') }),
+  );
   // 원본 파일 식별자
   const original = PDFHexString.of('0123456789ABCDEF0123456789ABCDEF');
   doc.context.trailerInfo.ID = doc.context.obj([original, original]);
@@ -158,6 +192,16 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('0123456789ABCDEF0123456789ABCDEF');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20251231235959');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Annot Author Yoon');
+  for (const secret of [
+    'NM-Unique-Yoon',
+    'Thread Secret Title',
+    'Signer Secret Kim',
+    'Secret Reason',
+    'D:20240505000000Z',
+    'Spider Secret',
+  ]) {
+    expect(Buffer.from(bytes).toString('latin1')).not.toContain(secret);
+  }
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20240102000000Z');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:2023030');
   expect(doc.getForm().getTextField('field_keep')).toBeDefined();
