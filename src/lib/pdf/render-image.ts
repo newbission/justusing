@@ -25,11 +25,20 @@ const MAX_SIDE = 16_384;
 /** JPG 화질 (0~1). 글자가 번지지 않을 만큼 높게 둔다 */
 const JPEG_QUALITY = 0.92;
 
+/** 그림 위에 검게 칠할 자리. 그림 크기 대비 비율(0~1), 왼쪽 위가 (0, 0) (가리기) */
+export interface FillRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface EncodeRequest {
   id: number;
   bitmap: ImageBitmap;
   type: string;
   quality: number;
+  fill?: FillRect[];
 }
 
 export type EncodeResponse =
@@ -38,8 +47,16 @@ export type EncodeResponse =
 let workerPromise: Promise<Worker> | undefined;
 let nextId = 0;
 
-/** 그린 쪽을 워커에서 이미지 바이트로 바꾼다. bitmap은 워커로 넘어가 닫힌다. */
-async function encode(bitmap: ImageBitmap, type: string): Promise<Uint8Array> {
+/**
+ * 그린 쪽을 워커에서 이미지 바이트로 바꾼다. bitmap은 워커로 넘어가 닫힌다.
+ * fill: 저장하기 전에 검게 칠할 자리 (가리기)
+ */
+export async function encodeBitmap(
+  bitmap: ImageBitmap,
+  type: string,
+  quality = JPEG_QUALITY,
+  fill?: FillRect[],
+): Promise<Uint8Array> {
   const worker = await (workerPromise ??= createWorker(workerUrl));
   const id = nextId++;
   return new Promise((resolve, reject) => {
@@ -50,9 +67,7 @@ async function encode(bitmap: ImageBitmap, type: string): Promise<Uint8Array> {
       else reject(new Error(event.data.message));
     };
     worker.addEventListener('message', listener);
-    worker.postMessage({ id, bitmap, type, quality: JPEG_QUALITY } satisfies EncodeRequest, [
-      bitmap,
-    ]);
+    worker.postMessage({ id, bitmap, type, quality, fill } satisfies EncodeRequest, [bitmap]);
   });
 }
 
@@ -100,5 +115,5 @@ export async function renderPageImage(
 ): Promise<Uint8Array> {
   const { bitmap } = await renderPageBitmap(page, dpi);
   // 저장(인코딩)은 무거워서 워커에서 한다. 그린 화소만 넘긴다
-  return encode(bitmap, IMAGE_TYPES[format]);
+  return encodeBitmap(bitmap, IMAGE_TYPES[format]);
 }
