@@ -332,7 +332,8 @@ Co-Authored-By: ...
         엔진·언어 데이터는 `scripts/copy-ocr-data.mjs`가 node_modules에서 `public/data/ocr/`로 복사하고
         목록(`src/lib/ocr/catalog.json`, 크기·SHA-256)을 쓴다. 워커(`src/lib/ocr/`)는 데이터를 화면에서 받아 쓰고
         스스로 받지 않는다. 쪽마다 Tesseract가 만든 투명 글자층 PDF를 원래 쪽 위에 겹친다(`src/lib/pdf/text-layer.ts`)
-  - [ ] PDF 안의 사진 원본 뽑기
+  - [x] 사진 꺼내기 (`/pdf/extract-images/`, 2026-10-15): JPG는 원본 바이트 그대로, Flate 8비트 이하 회색·RGB·색 목록
+        (+투명도)은 PNG로, JPX는 .jp2로. 흑백 팩스·CMYK 등은 꺼내지 못한 수로 알린다(`src/lib/pdf/extract-images.worker.ts`)
   - [x] 양식 채우기 (`/pdf/fill-form/`, 2026-10-15): pdf.js가 알려 주는 입력 칸 자리에 HTML 입력 칸을 겹친다
         (`PageSheet`의 `hideForms`로 원래 칸 모양은 그리지 않음). 저장은 글자 넣기 워커가 pdf-lib 양식 API로 하고,
         기본 글꼴에 없는 글자를 적으면 글꼴을 고르게 한다. 굳히기(flatten) 선택
