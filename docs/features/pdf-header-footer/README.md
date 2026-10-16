@@ -1,5 +1,7 @@
 # PDF 머리말·꼬리말 (`pdf/header-footer`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/header-footer/` (영어 `/en/pdf/header-footer/`)
 - 상태: live (2026-10-15 배포, PR #50으로 dev 병합 2026-10-16)
 - 관련 문서: [히스토리](./history.md), [글꼴과 데이터 보관](../../foundations/fonts-and-data/README.md),

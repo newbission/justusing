@@ -1,5 +1,7 @@
 # PDF 글자 워터마크 (`pdf/watermark`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/watermark/` (영어 `/en/pdf/watermark/`)
 - 상태: live (2026-10-15 배포, PR #47로 dev 병합 2026-10-16)
 - 관련 문서: [히스토리](./history.md), [글꼴과 데이터 보관](../../foundations/fonts-and-data/README.md),

@@ -1,5 +1,7 @@
 # PDF 글자 인식 (`pdf/ocr`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/ocr/` (영어 `/en/pdf/ocr/`)
 - 상태: dev 병합 (2026-10-16, PR #56), 배포 대기
 - 관련 문서: [히스토리](./history.md), [글꼴·데이터 보관](../../foundations/fonts-and-data/README.md),

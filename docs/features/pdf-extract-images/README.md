@@ -1,5 +1,7 @@
 # PDF 사진 꺼내기 (`pdf/extract-images`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/extract-images/` (영어 `/en/pdf/extract-images/`)
 - 상태: PR #59 리뷰 중 (브랜치 `feat/pdf-extract-images`, 아직 dev에 병합 전)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

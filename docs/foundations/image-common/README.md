@@ -1,5 +1,7 @@
 # 이미지 도구 공통 (`src/lib/image/`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 쓰는 곳: [이미지 압축](../../features/image-compress/README.md), [크기 조절](../../features/image-resize/README.md),
   [형식 변환](../../features/image-convert/README.md). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
   (이미지를 PDF로·이미지 넣기·서명 넣기)도 쓴다

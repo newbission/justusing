@@ -1,5 +1,7 @@
 # frame-isolation — 검증·오류·수정 히스토리
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 ## 요약
 
 - 2026-10-10 결정: 광고·통계 스크립트가 파일 내용을 읽지 못하게 도구 영역을 출처 없는 sandbox iframe(`allow-scripts allow-downloads`)에 둔다.

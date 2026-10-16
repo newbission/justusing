@@ -1,5 +1,7 @@
 # PDF 가리기 (영구 삭제) (`pdf/redact`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/redact/` (영어 `/en/pdf/redact/`)
 - 상태: PR #58 리뷰 중 (브랜치 `feat/pdf-redact`, 아직 dev에 병합 전)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

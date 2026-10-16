@@ -1,5 +1,7 @@
 # PDF 모아찍기 (`pdf/n-up`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/n-up/` (영어 `/en/pdf/n-up/`)
 - 상태: live. PR #52(2026-10-16 병합)의 내용이 main 배포 커밋 `89ddb74`("PDF 편집·모아찍기 배포")에 들어갔다
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

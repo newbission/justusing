@@ -1,5 +1,7 @@
 # process — 검증·오류·수정 히스토리
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 ## 요약
 
 - 2026-10-11: GitHub Pages에서 Cloudflare(Workers 정적 배포)로 옮기고, Codex 리뷰 기준(`AGENTS.md`)과 PR·리뷰·병합 흐름을 정했다

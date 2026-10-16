@@ -210,9 +210,10 @@ function write(path, generated) {
   const block = `${START}\n<!-- scripts/docs/history.mjs가 만든다. 직접 고치지 않는다 -->\n\n${generated}\n${END}`;
   if (!existsSync(file)) {
     const title = path.split('/').at(-1);
+    const today = new Date().toISOString().slice(0, 10);
     writeFileSync(
       file,
-      `# ${title} — 검증·오류·수정 히스토리\n\n## 요약\n\n(사람이 쓰는 부분: 중요한 결정, 큰 오류와 원인, 배운 점)\n\n## 기록\n\n${block}\n`,
+      `# ${title} — 검증·오류·수정 히스토리\n\n쓴 날 ${today} · 고친 날 ${today}\n\n## 요약\n\n(사람이 쓰는 부분: 중요한 결정, 큰 오류와 원인, 배운 점)\n\n## 기록\n\n${block}\n`,
     );
     return;
   }

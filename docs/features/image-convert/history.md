@@ -1,5 +1,7 @@
 # image-convert — 검증·오류·수정 히스토리
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 ## 요약
 
 - 2026-10-15 만듦 (PR #44). 브라우저가 읽는 이미지(GIF·BMP·AVIF, Safari의 HEIC 등)를 JPG·PNG·WebP로

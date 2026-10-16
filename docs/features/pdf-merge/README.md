@@ -1,5 +1,7 @@
 # PDF 합치기 (`pdf/merge`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/merge/` (영어 `/en/pdf/merge/`)
 - 상태: live (2026-10-11 `b85a8c4`에서 공개로 바꿈)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

@@ -1,5 +1,7 @@
 # PDF 페이지 정리 (`pdf/organize`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/organize/` (영어 `/en/pdf/organize/`)
 - 상태: live (2026-10-11 `1ccfb7b`에서 공개로 바꿈)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),
