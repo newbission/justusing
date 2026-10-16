@@ -40,7 +40,16 @@
    * 시간대가 있으면 그 순간을 이 기기의 시각으로 바꿔 보여 준다
    */
   function formatDate(value: unknown): string {
-    if (typeof value !== 'string') return '';
+    if (typeof value !== 'string' || !value) return '';
+    // XMP 날짜 (2026-01-02T03:04:05+09:00)
+    if (/^\d{4}-\d{2}/.test(value)) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat(frameLocale, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(date);
+    }
     const match =
       /^D:(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(?:(Z)|([+-])(\d{2})'?(\d{2})?'?)?/.exec(
         value,
@@ -87,10 +96,11 @@
         keywords: text(raw.Keywords) || xmp('pdf:keywords'),
       };
       other = {
-        creator: text(raw.Creator),
-        producer: text(raw.Producer),
-        created: formatDate(raw.CreationDate),
-        modified: formatDate(raw.ModDate),
+        // PDF/A 등은 이 값들을 XMP에만 적기도 한다 (pdf.js는 XMP 이름을 소문자로 준다)
+        creator: text(raw.Creator) || xmp('xmp:creatortool'),
+        producer: text(raw.Producer) || xmp('pdf:producer'),
+        created: formatDate(raw.CreationDate) || formatDate(xmp('xmp:createdate')),
+        modified: formatDate(raw.ModDate) || formatDate(xmp('xmp:modifydate')),
       };
     } finally {
       if (pdf === source) reading = false;
