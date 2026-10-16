@@ -2,8 +2,23 @@
  * PDF 고치기 워커 (modify.ts가 부른다). 무거운 처리라 화면이 멈추지 않도록 워커에서 돈다.
  * 파일은 메모리에서만 다룬다.
  */
-import { PDFDocument, StandardFonts, degrees, rgb, type PDFPage } from '@cantoo/pdf-lib';
-import type { ModifyJob, ModifyRequest, ModifyResponse, NUpCount, PaperSize } from './modify';
+import {
+  PDFDict,
+  PDFDocument,
+  PDFName,
+  StandardFonts,
+  degrees,
+  rgb,
+  type PDFPage,
+} from '@cantoo/pdf-lib';
+import type {
+  DocumentInfo,
+  ModifyJob,
+  ModifyRequest,
+  ModifyResponse,
+  NUpCount,
+  PaperSize,
+} from './modify';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { normalizedRotation, scaleRect, toPdfPoint, viewSize } from './page-geometry';
 import { addTextLayers } from './text-layer';
@@ -109,6 +124,41 @@ async function nUp(
   return out;
 }
 
+/** 문서 정보(Info)의 모든 항목 */
+const INFO_KEYS = [
+  'Title',
+  'Author',
+  'Subject',
+  'Keywords',
+  'Creator',
+  'Producer',
+  'CreationDate',
+  'ModDate',
+  'Trapped',
+];
+
+/**
+ * 문서 정보를 적는다. 보기 프로그램에 따라 XMP 메타데이터를 먼저 보므로, 예전 값이 남지 않게 XMP는 지운다.
+ * clear면 Info의 모든 항목(만든 프로그램·날짜 포함)을 지운다
+ */
+function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
+  doc.catalog.delete(PDFName.of('Metadata'));
+  const dict = doc.context.lookup(doc.context.trailerInfo.Info);
+  if (clear) {
+    if (dict instanceof PDFDict) for (const key of INFO_KEYS) dict.delete(PDFName.of(key));
+    return;
+  }
+  const set = (key: string, value: string, apply: (text: string) => void) => {
+    if (value.trim()) apply(value.trim());
+    else if (dict instanceof PDFDict) dict.delete(PDFName.of(key));
+  };
+  set('Title', info.title, (text) => doc.setTitle(text));
+  set('Author', info.author, (text) => doc.setAuthor(text));
+  set('Subject', info.subject, (text) => doc.setSubject(text));
+  set('Keywords', info.keywords, (text) => doc.setKeywords([text]));
+  doc.setModificationDate(new Date());
+}
+
 async function apply(doc: PDFDocument, job: ModifyJob): Promise<void> {
   const pages = doc.getPages();
   switch (job.kind) {
@@ -196,6 +246,9 @@ async function apply(doc: PDFDocument, job: ModifyJob): Promise<void> {
     case 'text-layer':
       await addTextLayers(doc, job.layers);
       return;
+    case 'metadata':
+      setDocumentInfo(doc, job.info, job.clear);
+      return;
   }
 }
 
@@ -206,7 +259,11 @@ addEventListener('message', async (event: MessageEvent<ModifyRequest>) => {
   try {
     // 암호 PDF는 받은 암호로 풀어서 연다. 암호 걸기 말고는 결과에 암호가 없다.
     // 열기 암호 없이 인쇄·복사 제한만 걸린 PDF는 빈 암호로 풀린다 (암호를 안 주면 열지 않는다)
-    const doc = await PDFDocument.load(bytes, { password: password ?? '' });
+    const doc = await PDFDocument.load(bytes, {
+      password: password ?? '',
+      // pdf-lib는 열 때 만든 프로그램·고친 날짜를 자기 것으로 바꾼다. 문서 정보 도구는 적은 대로만 남긴다
+      updateMetadata: job.kind !== 'metadata',
+    });
     // 모아찍기는 새 PDF를 만들고, 나머지는 연 PDF를 고친다
     const result = job.kind === 'n-up' ? await nUp(doc, job) : (await apply(doc, job), doc);
     const out = await result.save();

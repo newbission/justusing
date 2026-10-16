@@ -52,7 +52,17 @@ export type ModifyJob =
   /** 여러 쪽을 한 장에 모은 새 PDF (모아찍기) */
   | { kind: 'n-up'; perSheet: NUpCount; paper: PaperSize; border: boolean }
   /** 글자 인식 결과(쪽마다 투명 글자층 PDF, 없으면 null)를 쪽 위에 겹친다 */
-  | { kind: 'text-layer'; layers: (Uint8Array | null)[] };
+  | { kind: 'text-layer'; layers: (Uint8Array | null)[] }
+  /** 문서 정보를 바꾼다. clear면 만든 프로그램·날짜까지 모든 문서 정보를 지운다 */
+  | { kind: 'metadata'; info: DocumentInfo; clear: boolean };
+
+/** 고칠 수 있는 문서 정보 (빈 글자는 지운다) */
+export interface DocumentInfo {
+  title: string;
+  author: string;
+  subject: string;
+  keywords: string;
+}
 
 export interface ModifyRequest {
   id: number;
