@@ -23,6 +23,7 @@ import type {
   NUpCount,
   PaperSize,
 } from './modify';
+import { redact } from './redact-pages';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { normalizedRotation, scaleRect, toPdfPoint, viewSize } from './page-geometry';
 import { stripJpegMetadata } from '../image/jpeg-metadata';
@@ -339,7 +340,8 @@ async function apply(doc: PDFDocument, job: ModifyJob): Promise<void> {
       return;
     }
     case 'n-up':
-      // 새 PDF를 만드는 작업이라 nUp()이 한다
+    case 'redact':
+      // 새 PDF를 만드는 작업이라 nUp()·redact()가 한다
       return;
     case 'crop': {
       for (const index of job.pages) {
@@ -379,8 +381,13 @@ addEventListener('message', async (event: MessageEvent<ModifyRequest>) => {
       // pdf-lib는 열 때 만든 프로그램·고친 날짜를 자기 것으로 바꾼다. 문서 정보 도구는 적은 대로만 남긴다
       updateMetadata: job.kind !== 'metadata',
     });
-    // 모아찍기는 새 PDF를 만들고, 나머지는 연 PDF를 고친다
-    const result = job.kind === 'n-up' ? await nUp(doc, job) : (await apply(doc, job), doc);
+    // 모아찍기·가리기는 새 PDF를 만들고, 나머지는 연 PDF를 고친다
+    const result =
+      job.kind === 'n-up'
+        ? await nUp(doc, job)
+        : job.kind === 'redact'
+          ? await redact(doc, job.pages)
+          : (await apply(doc, job), doc);
     const out = await result.save();
     send({ id, kind: 'done', bytes: out }, [out.buffer]);
   } catch (error) {
