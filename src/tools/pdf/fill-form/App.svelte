@@ -44,10 +44,13 @@
     multiple: boolean;
     /** 선택지에 없는 글자도 직접 적을 수 있는 선택 상자 */
     editable: boolean;
+    /** 적은 글자를 가려 보여 주는 암호 칸 */
+    password: boolean;
   }
 
-  /** PDF 입력 칸 플래그: 선택 상자에 직접 적기 (/Ff Edit) */
+  /** PDF 입력 칸 플래그: 선택 상자에 직접 적기 (/Ff Edit), 암호 칸 (/Ff Password) */
   const FLAG_EDIT = 0x40000;
+  const FLAG_PASSWORD = 0x2000;
 
   /** pdf.js가 알려 주는 입력 칸 정보 중 쓰는 것 */
   interface WidgetData {
@@ -189,6 +192,7 @@
           options,
           multiple: !!a.multiSelect,
           editable: kind === 'select' && ((a.fieldFlags ?? 0) & FLAG_EDIT) !== 0,
+          password: kind === 'text' && ((a.fieldFlags ?? 0) & FLAG_PASSWORD) !== 0,
         });
         if (a.fieldName in start) continue;
         const raw = a.fieldValue;
@@ -344,7 +348,7 @@
                       }></textarea>
                   {:else if field.kind === 'text'}
                     <input
-                      type="text"
+                      type={field.password ? 'password' : 'text'}
                       aria-label={field.name}
                       maxlength={field.maxLength}
                       readonly={field.readOnly}
