@@ -7,7 +7,7 @@
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { PDFDocument, PDFName, PDFNumber, degrees } from '@cantoo/pdf-lib';
+import { PDFDocument, PDFHexString, PDFName, PDFNumber, PDFString, degrees } from '@cantoo/pdf-lib';
 import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { expectLocalOnly } from './local-only';
 
@@ -43,6 +43,8 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
   let borders = 0;
   let inner = 0;
   let strokes = 0;
+  /** 쪽 안에서 그은 선들의 범위 [x0, y0, x1, y1] */
+  const lines: number[][] = [];
   fnArray.forEach((fn, i) => {
     const args = argsArray[i];
     if (fn === OPS.constructPath) {
@@ -50,7 +52,10 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
       else {
         inner++;
         // 경로를 칠하는지 긋는지 (pdf.js는 마지막 인자에 그리기 연산자를 담는다)
-        if ((args as unknown[])[0] === OPS.stroke) strokes++;
+        if ((args as unknown[])[0] === OPS.stroke) {
+          strokes++;
+          lines.push([...((args as unknown[])[2] as ArrayLike<number>)]);
+        }
       }
     } else if (fn === OPS.save) stack.push(ctm);
     else if (fn === OPS.restore) ctm = stack.pop() ?? ctm;
@@ -82,7 +87,7 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
       ctm = stack.pop() ?? ctm;
     }
   });
-  return { placed, borders, inner, strokes };
+  return { placed, borders, inner, strokes, lines };
 }
 
 async function openNUp(page: Page) {
@@ -261,7 +266,10 @@ test('인쇄되지 않는 입력 칸은 한글 값이 있어도 막지 않는다
 });
 
 /** 모양(/AP) 없이 저장된 주석 하나가 있는 PDF */
-async function annotationWithoutAppearance(subtype: string) {
+async function annotationWithoutAppearance(
+  subtype: string,
+  quad = [20, 130, 200, 130, 20, 100, 200, 100],
+) {
   const source = await PDFDocument.create();
   const added = source.addPage([300, 200]);
   const context = source.context;
@@ -270,8 +278,13 @@ async function annotationWithoutAppearance(subtype: string) {
       Type: 'Annot',
       Subtype: subtype,
       F: 4,
-      Rect: [20, 100, 200, 130],
-      QuadPoints: [20, 130, 200, 130, 20, 100, 200, 100],
+      Rect: [
+        Math.min(...quad.filter((_, i) => i % 2 === 0)),
+        Math.min(...quad.filter((_, i) => i % 2 === 1)),
+        Math.max(...quad.filter((_, i) => i % 2 === 0)),
+        Math.max(...quad.filter((_, i) => i % 2 === 1)),
+      ],
+      QuadPoints: quad,
       C: [1, 1, 0],
     }),
   );
@@ -303,11 +316,53 @@ test('모양 없이 저장된 형광펜은 다시 그려 넣고, 그릴 수 없�
   const squiggly = await download(page, frame);
   expect((await placedPages(squiggly.bytes, 1)).strokes).toBeGreaterThanOrEqual(1);
 
+  // 45° 기울어진 글자의 밑줄은 글자를 따라 비스듬히 긋는다 (가로줄이 아니라)
+  await frame.getByRole('button', { name: '다른 파일' }).click();
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'tilted.pdf',
+    mimeType: 'application/pdf',
+    // 왼쪽 위, 오른쪽 위, 왼쪽 아래(60, 60), 오른쪽 아래(160, 160)
+    buffer: await annotationWithoutAppearance(
+      'Underline',
+      [45.86, 74.14, 145.86, 174.14, 60, 60, 160, 160],
+    ),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  const tilted = await placedPages((await download(page, frame)).bytes, 1);
+  const [line] = tilted.lines;
+  expect(line).toBeDefined();
+  expect(line![2]! - line![0]!).toBeGreaterThan(20);
+  expect(line![3]! - line![1]!).toBeGreaterThan(20);
+
   await frame.getByRole('button', { name: '다른 파일' }).click();
   await frame.locator('input[type=file]').setInputFiles({
     name: 'ink.pdf',
     mimeType: 'application/pdf',
     buffer: await annotationWithoutAppearance('Ink'),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  await expect(
+    frame.getByText('주석이나 양식 입력값 일부는 모양이 저장되어 있지 않아', { exact: false }),
+  ).toBeVisible();
+});
+
+test('드롭다운의 표시 글자를 그릴 수 없으면 알린다', async ({ page }) => {
+  // 내보내는 값은 영문(a)이고 화면에 보이는 글자는 한글(가)인 선택 상자
+  const source = await PDFDocument.create();
+  const added = source.addPage([300, 200]);
+  const dropdown = source.getForm().createDropdown('choice');
+  dropdown.addToPage(added, { x: 20, y: 80, width: 200, height: 30 });
+  dropdown.acroField.setOptions([
+    { value: PDFString.of('a'), display: PDFHexString.fromText('가') },
+  ]);
+  dropdown.acroField.dict.set(PDFName.of('V'), PDFString.of('a'));
+  for (const widget of dropdown.acroField.getWidgets()) widget.dict.delete(PDFName.of('AP'));
+
+  const frame = await openNUp(page);
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'dropdown.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await source.save({ updateFieldAppearances: false })),
   });
   await frame.getByRole('button', { name: '모아찍기' }).click();
   await expect(
