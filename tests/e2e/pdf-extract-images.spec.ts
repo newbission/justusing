@@ -36,11 +36,14 @@ function jp2Bytes({
   channels = 3,
   space = 16,
   cdef,
+  longType = false,
 }: {
   brand?: string;
   channels?: number;
   space?: number;
   cdef?: [number, number, number][];
+  /** 형식 상자를 길이 8바이트(XLBox) 머리로 */
+  longType?: boolean;
 }) {
   const u16 = (value: number) => [value >> 8, value & 0xff];
   const header = box(
@@ -51,7 +54,29 @@ function jp2Bytes({
   );
   return new Uint8Array([
     ...[0, 0, 0, 12, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a],
-    ...box('ftyp', [...Buffer.from(brand)], [0, 0, 0, 0], [...Buffer.from(brand)]),
+    ...(longType
+      ? [
+          0,
+          0,
+          0,
+          1,
+          ...Buffer.from('ftyp'),
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          28,
+          ...Buffer.from(brand),
+          0,
+          0,
+          0,
+          0,
+          ...Buffer.from(brand),
+        ]
+      : box('ftyp', [...Buffer.from(brand)], [0, 0, 0, 0], [...Buffer.from(brand)])),
     ...header,
   ]);
 }
@@ -1358,4 +1383,71 @@ test('Differences에 없는 코드로 찍은 Type3 글자(기본 인코딩) 안�
   );
   const frame = await openPdf(page, 'type3-base.pdf', doc);
   await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+});
+
+test('보이기 식(/VE)과 주석 모양의 /OC로 꺼진 사진은 꺼내지 않고, 긴 머리 형식 상자의 JPEG 2000 형식도 읽는다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (value: number, extra: Record<string, unknown> = {}) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(value), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+        ...extra,
+      }),
+    );
+  const layer = (title: string) =>
+    context.register(context.obj({ Type: 'OCG', Name: PDFHexString.fromText(title) }));
+  const off = layer('Off');
+  const on = layer('On');
+  doc.catalog.set(PDFName.of('OCProperties'), context.obj({ OCGs: [off, on], D: { OFF: [off] } }));
+  // /P AnyOn으로는 보이지만 /VE [/And 꺼진 층 켜진 층]으로는 꺼진다
+  const both = context.register(
+    context.obj({ Type: 'OCMD', OCGs: [off, on], P: 'AnyOn', VE: ['And', off, on] }),
+  );
+  const jpx = context.register(
+    context.stream(jp2Bytes({ brand: 'jpx ', longType: true }), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      Filter: 'JPXDecode',
+      ColorSpace: 'DeviceRGB',
+    }),
+  );
+  drawAll(doc, [jpx, gray(20, { OC: both })]);
+  // 주석에는 /OC가 없고 모양 묶음 그림에만 꺼진 층
+  const look = context.register(
+    context.stream('q 64 0 0 64 0 0 cm /Im Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 64, 64],
+      OC: off,
+      Resources: { XObject: { Im: gray(30) } },
+    }),
+  );
+  doc
+    .getPage(0)
+    .node.set(
+      PDFName.of('Annots'),
+      context.obj([
+        context.obj({
+          Type: 'Annot',
+          Subtype: 'Stamp',
+          Rect: [300, 300, 364, 364],
+          AP: { N: look },
+        }),
+      ]),
+    );
+  const frame = await openPdf(page, 've.pdf', doc);
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  expect((await event).suggestedFilename()).toBe('ve_p1_1.jpx');
 });
