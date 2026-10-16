@@ -19,7 +19,7 @@ export default defineContent({
       },
       {
         q: '본문 내용도 바뀌나요?',
-        a: '아니요. 문서 정보만 바꾸고 쪽 내용은 그대로 둡니다. 본문의 이름·번호를 지우려면 "PDF 가리기"를 쓰세요.',
+        a: '아니요. 문서 정보만 바꾸고 쪽 내용은 그대로 둡니다. 본문의 이름·번호를 지우려면 "PDF 가리기"를 쓰세요. 다만 파일을 새로 써서 저장하므로 전자 서명된 PDF는 서명이 더 이상 유효하지 않습니다 ("문서 정보 모두 지우기"를 고르면 서명 정보도 지웁니다).',
       },
       {
         q: '암호가 걸린 PDF도 되나요?',
@@ -49,7 +49,7 @@ export default defineContent({
       },
       {
         q: 'Does the content change?',
-        a: 'No. Only the document info changes; the pages stay as they are. To remove names or numbers from the pages, use "Redact PDF".',
+        a: 'No. Only the document info changes; the pages stay as they are. To remove names or numbers from the pages, use "Redact PDF". However, the file is rewritten when saved, so a digitally signed PDF loses its valid signature ("Remove all document info" also removes the signature information).',
       },
       {
         q: 'Does it work with password-protected PDFs?',
