@@ -196,3 +196,24 @@ test('같은 이름의 체크 상자는 누른 상자만 켠다', async ({ page 
     '/B',
   ]);
 });
+
+test('직접 적을 수 있는 선택 상자에는 선택지에 없는 글자도 적는다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([400, 200]);
+  const dept = doc.getForm().createDropdown('dept');
+  dept.addOptions(['Sales', 'Support']);
+  dept.enableEditing();
+  dept.addToPage(added, { x: 20, y: 100, width: 150, height: 22 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'dept.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await frame.getByLabel('dept').fill('Research Lab');
+  const { bytes } = await download(page, frame);
+  expect((await PDFDocument.load(bytes)).getForm().getDropdown('dept').getSelected()).toEqual([
+    'Research Lab',
+  ]);
+});
