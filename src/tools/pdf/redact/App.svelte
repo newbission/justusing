@@ -294,7 +294,8 @@
       {/if}
 
       <div class="sheet">
-        <PageSheet {doc} bind:pageIndex bind:view help={t.help}>
+        <!-- 결과는 인쇄할 때 보이는 모습으로 만들므로 미리보기도 같게 그린다 (인쇄 전용 주석도 보고 가릴 수 있게) -->
+        <PageSheet {doc} bind:pageIndex bind:view help={t.help} intent="print">
           <!-- 쪽 위의 가리기 칸. 끌어서 상자를 그리고, 상자를 끌어 옮긴다 -->
           <div
             class="overlay"
