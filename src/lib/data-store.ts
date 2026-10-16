@@ -10,7 +10,7 @@
  * - 사용자가 한 번 받기로 한 것(동의)을 기억해, 보관본이 지워졌을 때 '다시 받아야 한다'고 알릴 수 있게 한다
  *
  * frame → 바깥: { type: 'data-status', id, paths, consent }   보관 여부 묻기
- *               { type: 'data-get', id, paths, consent }      받기 (없으면 내려받아 보관)
+ *               { type: 'data-get', id, paths, hashes, consent }  받기 (없으면 내려받아 보관)
  * 바깥 → frame: { type: 'data-status', id, cached, consented, available }
  *               { type: 'data-progress', id, loaded, total }
  *               { type: 'data-files', id, files: { path, bytes }[] } | { type: 'data-error', id }
@@ -24,7 +24,14 @@ const CONSENT_KEY = 'data-consent';
 
 export type DataRequest =
   | { type: 'data-status'; id: number; paths: string[]; consent: string }
-  | { type: 'data-get'; id: number; paths: string[]; consent: string };
+  | {
+      type: 'data-get';
+      id: number;
+      paths: string[];
+      /** 파일마다 기대하는 SHA-256 (paths와 같은 순서). 맞는 것만 보관한다 */
+      hashes: string[];
+      consent: string;
+    };
 
 export type DataResponse =
   | {
@@ -98,9 +105,20 @@ async function status(paths: string[], consent: string): Promise<DataResponse> {
   };
 }
 
-/** 보관본을 쓰고, 없으면 받아서 보관한다. 받는 동안 받은 양을 알린다 */
+async function sha256(bytes: Uint8Array): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * 보관본을 쓰고, 없으면 받아서 보관한다. 받는 동안 받은 양을 알린다.
+ * 기대한 SHA-256과 다른 것은 보관하지 않고, 보관본이 다르면 지우고 다시 받는다
+ * (안 그러면 손상된 보관본을 계속 넘겨 사이트 데이터를 지우기 전까지 그 데이터를 쓸 수 없다).
+ * 쓸지 말지는 frame이 다시 확인한다 (src/frame/data.ts).
+ */
 async function get(
   paths: string[],
+  hashes: string[],
   consent: string,
   progress: (loaded: number, total: number) => void,
 ): Promise<{ path: string; bytes: Uint8Array }[]> {
@@ -111,10 +129,16 @@ async function get(
 
   const results: { path: string; bytes: Uint8Array }[] = [];
   const missing: string[] = [];
+  const expected = new Map(paths.map((path, i) => [path, hashes[i]]));
   for (const path of paths) {
     const hit = cache && (await cache.match(path));
-    if (hit) results.push({ path, bytes: new Uint8Array(await hit.arrayBuffer()) });
-    else missing.push(path);
+    const bytes = hit ? new Uint8Array(await hit.arrayBuffer()) : undefined;
+    if (bytes && (await sha256(bytes)) === expected.get(path)) {
+      results.push({ path, bytes });
+    } else {
+      if (bytes) await cache?.delete(path);
+      missing.push(path);
+    }
   }
 
   // 받을 양을 먼저 알아야 진행률을 보여 줄 수 있다
@@ -146,7 +170,9 @@ async function get(
       bytes.set(chunk, offset);
       offset += chunk.length;
     }
-    await cache?.put(path, new Response(bytes.slice())).catch(() => {});
+    if ((await sha256(bytes)) === expected.get(path)) {
+      await cache?.put(path, new Response(bytes.slice())).catch(() => {});
+    }
     results.push({ path, bytes });
   }
   return results;
@@ -171,7 +197,8 @@ export function serveData(frame: HTMLIFrameElement) {
         reply({ ...(await status(paths, consent)), id } as DataResponse);
         return;
       }
-      const files = await get(paths, consent, (loaded, total) =>
+      const hashes = Array.isArray(request.hashes) ? request.hashes : [];
+      const files = await get(paths, hashes, consent, (loaded, total) =>
         reply({ type: 'data-progress', id, loaded, total }),
       );
       reply(

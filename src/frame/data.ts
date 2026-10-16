@@ -30,8 +30,11 @@ let nextId = 0;
 /** 보관소가 있는 바깥 페이지 (도구 페이지 안에서 열렸을 때만) */
 const store = parent !== window ? parent : undefined;
 
+/** 요청 종류마다 id를 뺀 모양 (유니온에 Omit을 바로 쓰면 종류별 속성이 사라진다) */
+type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never;
+
 function ask(
-  request: Omit<DataRequest, 'id'>,
+  request: WithoutId<DataRequest>,
   onProgress?: (loaded: number) => void,
 ): Promise<DataResponse> {
   const id = nextId++;
@@ -79,7 +82,12 @@ export async function loadData(
   let received: { path: string; bytes: Uint8Array }[];
   if (store) {
     const response = await ask(
-      { type: 'data-get', paths: files.map((f) => f.path), consent },
+      {
+        type: 'data-get',
+        paths: files.map((f) => f.path),
+        hashes: files.map((f) => f.sha256),
+        consent,
+      },
       onProgress,
     );
     if (response.type !== 'data-files') throw new Error('data unavailable');
