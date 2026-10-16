@@ -123,10 +123,16 @@ async function rawPixels(
   if (list.length > 1 || (list.length === 1 && list[0] !== 'FlateDecode')) return undefined;
   const bytesPerRow = Math.ceil((width * components * bits) / 8);
   let data = list.length === 1 ? await inflate(stream.contents) : stream.contents;
-  let parms = stream.dict.lookup(name('DecodeParms'));
-  if (parms instanceof PDFArray) parms = parms.lookup(0);
-  const predictor = list.length === 1 ? (numberOf(parms as PDFDict, 'Predictor') ?? 1) : 1;
+  let found = stream.dict.lookup(name('DecodeParms'));
+  if (found instanceof PDFArray) found = found.lookup(0);
+  const parms = found instanceof PDFDict ? found : undefined;
+  const predictor = list.length === 1 ? (numberOf(parms, 'Predictor') ?? 1) : 1;
   if (predictor >= 10) {
+    // 예측의 행 크기는 DecodeParms가 정한다 (없으면 PDF 기본값). 사진과 다르면 행 경계를 맞출 수 없다
+    const columns = numberOf(parms, 'Columns') ?? 1;
+    const colors = numberOf(parms, 'Colors') ?? 1;
+    const parmBits = numberOf(parms, 'BitsPerComponent') ?? 8;
+    if (columns !== width || colors !== components || parmBits !== bits) return undefined;
     // PNG 예측은 화소 단위(8비트면 성분 수 바이트), 8비트 미만이면 1바이트 단위로 앞 화소를 본다
     data =
       bits === 8
