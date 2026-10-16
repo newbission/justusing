@@ -133,10 +133,16 @@
   $effect(() => {
     const doc = pdf?.doc;
     if (!doc) return;
+    // 쪽을 빠르게 넘기면 이전 쪽 크기가 늦게 올 수 있어 지금 쪽의 것만 쓴다
+    let current = true;
     doc.getPage(pageIndex + 1).then((page) => {
+      if (!current) return;
       const viewport = page.getViewport({ scale: 1 });
       pagePt = { width: viewport.width, height: viewport.height };
     });
+    return () => {
+      current = false;
+    };
   });
 
   $effect(() => {
