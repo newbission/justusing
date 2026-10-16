@@ -111,13 +111,15 @@
       const bytes = new Uint8Array(await file.arrayBuffer());
       // 브라우저가 읽을 수 있는 글꼴인지 확인한다 (파일을 어디로도 보내지 않는다)
       await new FontFace('upload-check', bytes).load();
-      if (attempt !== uploading) return;
+      // 그새 다른 올리기를 시작했거나 다른 글꼴(이전에 올린 글꼴 포함)을 골랐으면 이 글꼴은 쓰지 않는다.
+      // 고른 것과 화면에 보이는 '내 글꼴'이 어긋나지 않게 한다
+      if (attempt !== uploading || pick !== picks) return;
       uploaded = {
         id: `upload-${uploads++}`,
         name: file.name.replace(/\.[^.]+$/, ''),
         files: { 400: bytes },
       };
-      if (pick === picks) selected = uploaded;
+      selected = uploaded;
     } catch {
       if (attempt === uploading) uploadError = true;
     }
