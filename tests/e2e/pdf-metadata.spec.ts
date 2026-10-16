@@ -144,6 +144,11 @@ test('Info에 없고 XMP에만 있는 제목·작성자도 읽어 칸에 채운�
 <rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">
 <dc:title><rdf:Alt><rdf:li xml:lang="x-default">XMP Title</rdf:li></rdf:Alt></dc:title>
 <dc:creator><rdf:Seq><rdf:li>Lee XMP</rdf:li></rdf:Seq></dc:creator>
+</rdf:Description>
+<rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:pdf="http://ns.adobe.com/pdf/1.3/">
+<xmp:CreatorTool>XMP Writer 9</xmp:CreatorTool>
+<pdf:Producer>XMP Producer 3</pdf:Producer>
+<xmp:CreateDate>2025-05-06T07:08:09Z</xmp:CreateDate>
 </rdf:Description></rdf:RDF></x:xmpmeta>
 <?xpacket end="w"?>`;
   doc.catalog.set(
@@ -159,6 +164,10 @@ test('Info에 없고 XMP에만 있는 제목·작성자도 읽어 칸에 채운�
   });
   await expect(frame.getByLabel('제목')).toHaveValue('XMP Title');
   await expect(frame.getByLabel('작성자')).toHaveValue('Lee XMP');
+  // 고칠 수 없는 정보(만든 프로그램·날짜)도 XMP에서 읽어 보여 준다
+  await expect(frame.getByText('XMP Writer 9')).toBeVisible();
+  await expect(frame.getByText('XMP Producer 3')).toBeVisible();
+  await expect(frame.getByText('2025', { exact: false })).toBeVisible();
   // 다른 칸만 고쳐 저장해도 XMP에 있던 제목·작성자가 Info로 옮겨진다
   await frame.getByLabel('주제').fill('report');
   const { doc: saved } = await download(page, frame);
