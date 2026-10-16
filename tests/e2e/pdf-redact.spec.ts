@@ -290,3 +290,96 @@ test('가리지 않은 쪽들이 같이 쓰는 그림은 결과에 한 번만 �
     );
   expect(logos).toHaveLength(1);
 });
+
+/** 7×7 회색 그림 (가린 쪽에서만 쓰는 비밀 그림 흉내) */
+function secretImage(context: PDFDocument['context']) {
+  return context.register(
+    context.flateStream(new Uint8Array(49).fill(9), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 7,
+      Height: 7,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+    }),
+  );
+}
+
+/** 결과에 남은 그림들의 가로 크기 */
+async function imageWidths(bytes: Uint8Array) {
+  const { doc } = await allStreams(bytes);
+  return [...doc.context.enumerateIndirectObjects()]
+    .map(([, object]) => object)
+    .filter((object): object is PDFRawStream => object instanceof PDFRawStream)
+    .filter((object) => object.dict.get(PDFName.of('Subtype')) === PDFName.of('Image'))
+    .map((object) => (object.dict.get(PDFName.of('Width')) as PDFNumber).asNumber());
+}
+
+test('글꼴과 그림이 같은 이름이어도 쓰는 종류만 남긴다', async ({ page }) => {
+  // 같은 자원 목록에 글꼴 /F1과 그림 /F1. 1쪽은 그림 F1을, 2쪽은 글꼴 F1만 쓴다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const font = await source.embedFont(StandardFonts.Helvetica);
+  const resources = context.register(
+    context.obj({ Font: { F1: font.ref }, XObject: { F1: secretImage(context) } }),
+  );
+  const first = source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  for (const [added, draw] of [
+    [first, 'q 50 0 0 50 10 10 cm /F1 Do Q'],
+    [second, 'BT /F1 12 Tf 20 100 Td (Hello) Tj ET'],
+  ] as const) {
+    added.node.set(PDFName.of('Resources'), resources);
+    added.node.set(PDFName.of('Contents'), context.register(context.stream(draw)));
+  }
+  const frame = await openRedact(page, {
+    name: 'names.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).not.toContain(7);
+  expect(await pageTexts(bytes)).toEqual(['', 'Hello']);
+});
+
+test('같이 쓰는 Type3 글꼴은 남길 쪽에서 찍은 글자 모양만 남긴다', async ({ page }) => {
+  // Type3 글꼴: 글자 a는 사각형, 글자 b는 비밀 그림을 그린다. 1쪽(가림)은 b, 2쪽은 a를 찍는다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const glyphA = context.register(context.stream('500 0 d0 0 0 400 400 re f'));
+  const glyphB = context.register(context.stream('500 0 d0 q 400 0 0 400 0 0 cm /Secret Do Q'));
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 500, 500],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: { a: glyphA, b: glyphB },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a', 'b'] },
+      FirstChar: 97,
+      LastChar: 98,
+      Widths: [500, 500],
+      Resources: { XObject: { Secret: secretImage(context) } },
+    }),
+  );
+  const resources = context.register(context.obj({ Font: { T3: type3 } }));
+  const first = source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  for (const [added, letter] of [
+    [first, 'b'],
+    [second, 'a'],
+  ] as const) {
+    added.node.set(PDFName.of('Resources'), resources);
+    added.node.set(
+      PDFName.of('Contents'),
+      context.register(context.stream(`BT /T3 40 Tf 20 100 Td (${letter}) Tj ET`)),
+    );
+  }
+  const frame = await openRedact(page, {
+    name: 'type3.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).not.toContain(7);
+});
