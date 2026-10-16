@@ -183,7 +183,18 @@ function displayOf(field: PDFDropdown | PDFOptionList, value: string): string {
   return option ? option.display.decodeText() : value;
 }
 
-/** 양식 채우기가 모양으로 그릴 글자 (글꼴에 있는지 보려고). 목록은 선택지를 모두 그린다 */
+/** 칸이 지금 모양으로 그리는 글자 (목록은 선택지를 모두 그린다) */
+function shownText(field: unknown): string[] {
+  if (field instanceof PDFTextField) return [field.getText() ?? ''];
+  if (field instanceof PDFDropdown) return field.getSelected();
+  if (field instanceof PDFOptionList) return field.getOptions();
+  return [];
+}
+
+/**
+ * 양식 채우기가 모양으로 그릴 글자 (글꼴에 있는지 보려고): 바꿀 칸의 새 글자와, 바꾸지 않아도
+ * 모양을 다시 만들어야 하는 칸(모양이 없거나 낡은 칸)의 지금 글자. 목록은 선택지를 모두 그린다
+ */
 function formText(doc: PDFDocument, job: Extract<TextJob, { kind: 'fill-form' }>): string {
   const form = doc.getForm();
   const texts: string[] = [];
@@ -195,6 +206,10 @@ function formText(doc: PDFDocument, job: Extract<TextJob, { kind: 'fill-form' }>
     } else if (value.kind === 'choice' && field instanceof PDFOptionList) {
       texts.push(...field.getOptions());
     }
+  }
+  for (const field of form.getFields()) {
+    if (field.getName() in job.values || !field.needsAppearancesUpdate()) continue;
+    texts.push(...shownText(field));
   }
   return texts.join('');
 }
