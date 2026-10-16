@@ -57,7 +57,7 @@ function streamText(stream: PDFStream): string {
 /** 한 번의 가리기에서 정리한 것들 */
 interface Pruning {
   /** 이미 정리한 사전 (같이 쓰는 묶음 그림을 두 번 정리하지 않게) */
-  visited: Set<PDFDict>;
+  visited: Set<PDFDict | PDFArray>;
   /** Type3 글꼴 → 남길 쪽에서 실제로 찍은 글자 코드 (모든 쪽을 훑은 뒤 한 번에 정리한다) */
   type3: Map<PDFDict, Set<number>>;
 }
@@ -220,6 +220,13 @@ function usedThroughNames(resources: PDFDict, used: ResourceUse) {
 
 /** 자원 하나 안에 다시 내용과 자원이 있으면 정리한다 */
 function pruneNested(object: unknown, pruning: Pruning) {
+  // 배열(색공간 [/ICCBased 프로필] 등) 안의 객체도 정리한다
+  if (object instanceof PDFArray) {
+    if (pruning.visited.has(object)) return;
+    pruning.visited.add(object);
+    for (let i = 0; i < object.size(); i++) pruneNested(object.lookup(i), pruning);
+    return;
+  }
   const dict = object instanceof PDFStream ? object.dict : object;
   if (!(dict instanceof PDFDict) || pruning.visited.has(dict)) return;
   pruning.visited.add(dict);
