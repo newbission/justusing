@@ -319,3 +319,43 @@ test('바꾸지 않은 선택 상자의 모양을 다시 만들 때도 보이는
   expect(text).toContain('대한민국');
   expect(text).not.toContain('KR');
 });
+
+test('읽기 전용 선택 상자와 목록도 모양을 다시 만들 때 보이는 글자로 그린다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([400, 300]);
+  const form = doc.getForm();
+  const options = [
+    { value: PDFHexString.fromText('KR'), display: PDFHexString.fromText('대한민국') },
+    { value: PDFHexString.fromText('JP'), display: PDFHexString.fromText('일본') },
+  ];
+  const country = form.createDropdown('country');
+  country.addToPage(added, { x: 20, y: 220, width: 150, height: 22 });
+  country.acroField.setOptions(options);
+  country.acroField.dict.set(PDFName.of('V'), PDFHexString.fromText('KR'));
+  country.enableReadOnly();
+  const visited = form.createOptionList('visited');
+  visited.addToPage(added, { x: 200, y: 160, width: 150, height: 60 });
+  visited.acroField.setOptions(options);
+  visited.acroField.dict.set(PDFName.of('V'), PDFHexString.fromText('JP'));
+  for (const field of [country, visited]) {
+    for (const widget of field.acroField.getWidgets()) widget.dict.delete(PDFName.of('AP'));
+  }
+  form.createTextField('note').addToPage(added, { x: 20, y: 60, width: 200, height: 24 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'readonly.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save({ updateFieldAppearances: false })),
+  });
+  await frame.getByLabel('note').fill('ok');
+  await frame.getByLabel('칸을 글자로 굳히기', { exact: false }).check();
+  await frame.getByRole('button', { name: '양식 저장' }).click();
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
+  const { bytes } = await download(page, frame);
+  const saved = await getDocument({ data: bytes.slice() }).promise;
+  const content = await (await saved.getPage(1)).getTextContent();
+  const text = content.items.map((item) => ('str' in item ? item.str : '')).join('');
+  expect(text).toContain('대한민국');
+  expect(text).not.toContain('KR');
+});
