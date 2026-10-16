@@ -152,6 +152,9 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   한글 음절·영문·숫자·문장부호만, 한자 없음 → WOFF2). 결과(`public/data/fonts/`, 미리보기 SVG, 허가서,
   `src/lib/fonts/catalog.json`)는 커밋한다. 글꼴을 더하면 `src/lib/fonts/catalog.ts`의 이름도 더한다
 - WOFF2는 글리프 변환(transform)을 끄고 만든다. 켜면 PDF에 넣는 fontkit이 실패한다
+- 글자를 덜어 낸 글꼴은 OFL의 '고친 판'이다. 허가서에 **예약 글꼴 이름(Reserved Font Name)**이 있으면
+  (Pretendard, Nanum…) 글꼴 파일 안의 이름과 화면 이름에 그 이름을 쓸 수 없어 우리 이름(JUS …, 모던 고딕 등)을
+  붙이고 원본 이름은 출처로만 밝힌다. 글꼴을 더할 때 허가서의 예약 이름을 먼저 확인한다
 - 미리보기 문구는 5줄 고정 (한글 문장, 영어 대문자·소문자 문장, 숫자, 특수문자. 영어 화면은 영어 줄이 먼저)
 - PDF에 글자를 넣는 처리는 fontkit이 커서 따로 된 워커에서 하고, 쓴 글자만 넣는다(subset). 글꼴에 없는 글자는
   미리 알린다
