@@ -234,3 +234,21 @@ test('폭이 다른 글자가 섞인 줄에서도 찾은 말을 실제 글자 �
   // 줄 전체를 덮지는 않는다
   expect(box.width).toBeLessThan((end - start) * 3);
 });
+
+test('가리는 쪽에만 있는 모양 없는 한글 입력 칸은 막지 않는다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const first = source.addPage([300, 200]);
+  source.addPage([300, 200]);
+  const field = source.getForm().createTextField('name');
+  field.addToPage(first, { x: 20, y: 80, width: 200, height: 30 });
+  field.setText('홍길동');
+  for (const widget of field.acroField.getWidgets()) widget.dict.delete(PDFName.of('AP'));
+  const frame = await openRedact(page, {
+    name: 'form.pdf',
+    buffer: Buffer.from(await source.save({ updateFieldAppearances: false })),
+  });
+  // 1쪽(입력 칸이 있는 쪽)을 가린다
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  await frame.getByRole('button', { name: '가리고 저장' }).click();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
+});
