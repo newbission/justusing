@@ -337,10 +337,12 @@ async function jpegToPng(
   alpha: Uint8Array | undefined,
   key: number[] | undefined,
   components: number,
+  /** PDF가 ICC 프로필을 정했으면 JPG 안의 프로필로 색을 바꾸지 않은 원래 값을 읽는다 (결과에 PDF 프로필을 붙인다) */
+  raw: boolean,
 ) {
   const bitmap = await createImageBitmap(
     new Blob([stream.contents as BlobPart], { type: 'image/jpeg' }),
-    { imageOrientation: 'none' },
+    { imageOrientation: 'none', colorSpaceConversion: raw ? 'none' : 'default' },
   );
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
   const context = canvas.getContext('2d')!;
@@ -491,7 +493,7 @@ async function extract(
       // CMYK 프로필은 PNG에 넣을 수도, 브라우저로 그 색대로 바꿀 수도 없다
       if (space.icc && components === undefined) return undefined;
       const icc = components === 3 ? space.icc : undefined;
-      const bytes = await jpegToPng(stream, alpha, key, components ?? 3);
+      const bytes = await jpegToPng(stream, alpha, key, components ?? 3, !!icc);
       return { ext: 'png', bytes: icc ? await withIcc(bytes, icc) : bytes, width, height };
     }
     const bytes = space.icc ? jpegWithIcc(stream.contents, space.icc) : stream.contents.slice();
