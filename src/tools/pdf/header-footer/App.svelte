@@ -39,7 +39,16 @@
   /** 자리표시 이름은 화면 언어대로 보여 준다 (두 언어 모두 알아듣는다) */
   const TOKENS =
     frameLocale === 'ko' ? ['{쪽}', '{전체}', '{날짜}'] : ['{page}', '{total}', '{date}'];
-  const today = new Intl.DateTimeFormat(frameLocale).format(new Date());
+  const formatToday = () => new Intl.DateTimeFormat(frameLocale).format(new Date());
+  /** 탭을 오래 열어 두어도 실행한 날의 날짜가 들어가게, 실행할 때와 탭으로 돌아올 때 다시 계산한다 */
+  let today = $state(formatToday());
+  $effect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') today = formatToday();
+    };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
+  });
 
   let pdf: LoadedPdf | undefined = $state.raw();
   let header = $state('');
@@ -69,7 +78,9 @@
       : undefined,
   );
   const signature = $derived(
-    [header, headerAlign, footer, footerAlign, size, tint, skipFirst, font?.id].join('\u0000'),
+    [header, headerAlign, footer, footerAlign, size, tint, skipFirst, font?.id, today].join(
+      '\u0000',
+    ),
   );
 
   type Run =
@@ -90,6 +101,7 @@
   }
 
   async function apply() {
+    today = formatToday();
     if (!pdf || !options || run.kind === 'working') return;
     const entitlement = await canUse('pdf/header-footer');
     if (!entitlement.allowed) {
