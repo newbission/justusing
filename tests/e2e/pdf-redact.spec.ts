@@ -1562,3 +1562,50 @@ test('바로 써 넣은 색 목록 그림이 기본으로 부르는 색공간을
   const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
   expect(spaces.has(PDFName.of('CS1'))).toBe(true);
 });
+
+test('원본에서 꺼 둔 보이기 층은 결과에서도 꺼 두고, 투명도 묶음이 부르는 색공간은 남긴다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const layer = context.register(
+    context.obj({ Type: 'OCG', Name: PDFHexString.fromText('Hidden') }),
+  );
+  source.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({ OCGs: [layer], D: { BaseState: 'ON', OFF: [layer] } }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      Properties: { L1: layer },
+      ColorSpace: { CS1: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }] },
+    }),
+  );
+  second.node.set(PDFName.of('Group'), context.obj({ S: 'Transparency', CS: 'CS1' }));
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('/OC /L1 BDC 0 0 1 rg 20 20 100 100 re f EMC')),
+  );
+  const frame = await openRedact(page, {
+    name: 'layers.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = await PDFDocument.load(bytes);
+  // 쪽이 쓰는 층이 결과의 보이기 설정에서 꺼져 있다
+  const properties = result.getPage(1).node.Resources()!.lookup(PDFName.of('Properties'), PDFDict);
+  const copied = properties.get(PDFName.of('L1'));
+  const settings = result.catalog.lookup(PDFName.of('OCProperties'), PDFDict);
+  const off = settings.lookup(PDFName.of('D'), PDFDict).lookup(PDFName.of('OFF'), PDFArray);
+  expect(off.asArray()).toContain(copied);
+  const pdf = await getDocument({ data: bytes.slice() }).promise;
+  const config = await pdf.getOptionalContentConfig();
+  expect([...config].every(([, group]) => !group.visible)).toBe(true);
+  // 투명도 묶음의 /CS /CS1
+  const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
+  expect(spaces.has(PDFName.of('CS1'))).toBe(true);
+});
