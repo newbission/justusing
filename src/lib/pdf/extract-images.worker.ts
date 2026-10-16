@@ -106,6 +106,17 @@ function baseSpace(
     const profile = resolved.lookup(1);
     if (!(profile instanceof PDFRawStream)) return undefined;
     const n = numberOf(profile.dict, 'N');
+    // 값 범위(/Range)가 0~1이 아니면 화소 값을 그 범위로 바꿔 읽어야 해서 다룰 수 없다
+    const range = profile.dict.lookup(name('Range'));
+    if (
+      range instanceof PDFArray &&
+      range.asArray().some((item, i) => {
+        const value = dict.context.lookup(item);
+        return !(value instanceof PDFNumber) || value.asNumber() !== i % 2;
+      })
+    ) {
+      return undefined;
+    }
     // 프로필은 PNG에 같이 넣어 보기 프로그램이 색을 맞추게 한다 (회색 프로필은 회색 PNG에 넣는다)
     if (n === 3) return { n: 3, icc: decodePDFRawStream(profile).decode() };
     if (n === 1) return { n: 1, icc: decodePDFRawStream(profile).decode() };
