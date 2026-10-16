@@ -93,21 +93,18 @@ function commits() {
   return list.reverse();
 }
 
+/** 저장소의 모든 PR. 개수 상한 없이 끝 쪽까지 받는다 (빠진 PR의 기록이 지워지지 않게) */
 function pulls() {
-  return JSON.parse(
-    run('gh', [
-      'pr',
-      'list',
-      '--repo',
-      REPO,
-      '--state',
-      'all',
-      '--limit',
-      '300',
-      '--json',
-      'number,title,state,createdAt,mergedAt,headRefName',
-    ]),
+  const pages = JSON.parse(
+    run('gh', ['api', '--paginate', '--slurp', `repos/${REPO}/pulls?state=all&per_page=100`]),
   );
+  return pages.flat().map((pr) => ({
+    number: pr.number,
+    title: pr.title,
+    state: pr.merged_at ? 'MERGED' : pr.state === 'open' ? 'OPEN' : 'CLOSED',
+    mergedAt: pr.merged_at ?? '',
+    headRefName: pr.head.ref,
+  }));
 }
 
 /** PR의 리뷰 지적(Codex)과 처리 답글 */
