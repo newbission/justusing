@@ -8,12 +8,14 @@ import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import {
+  PDFArray,
   PDFDict,
   PDFHexString,
   PDFDocument,
   PDFName,
   PDFNumber,
   PDFRawStream,
+  PDFRef,
   StandardFonts,
   decodePDFRawStream,
 } from '@cantoo/pdf-lib';
@@ -930,4 +932,113 @@ test('자원이 있는 묶음 그림 안에서 다시 부른 묶음 그림이 �
   const fonts = result.getPage(1).node.Resources()!.lookup(PDFName.of('Font'), PDFDict);
   const kept = fonts.lookup(PDFName.of('T3'), PDFDict);
   expect(kept.lookup(PDFName.of('CharProcs'), PDFDict).has(PDFName.of('a'))).toBe(true);
+});
+
+test('그래픽 상태(gs)로 고른 Type3 글꼴도 남길 쪽에서 찍은 글자 모양만 남긴다', async ({
+  page,
+}) => {
+  // 1쪽(가림)은 글꼴 자원으로 b(비밀 그림)를, 2쪽은 /GS1 gs의 /Font로 같은 글꼴을 골라 a를 찍는다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 500, 500],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('500 0 d0 0 0 400 400 re f')),
+        b: context.register(context.stream('500 0 d0 q 400 0 0 400 0 0 cm /Secret Do Q')),
+      },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a', 'b'] },
+      FirstChar: 97,
+      LastChar: 98,
+      Widths: [500, 500],
+      Resources: { XObject: { Secret: secretImage(context) } },
+    }),
+  );
+  const resources = context.register(
+    context.obj({ Font: { T3: type3 }, ExtGState: { GS1: { Font: [type3, 40] } } }),
+  );
+  const first = source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  for (const [added, draw] of [
+    [first, 'BT /T3 40 Tf 20 100 Td (b) Tj ET'],
+    [second, 'BT /GS1 gs 20 100 Td (a) Tj ET'],
+  ] as const) {
+    added.node.set(PDFName.of('Resources'), resources);
+    added.node.set(PDFName.of('Contents'), context.register(context.stream(draw)));
+  }
+  const frame = await openRedact(page, {
+    name: 'gs-font.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).not.toContain(7);
+  const result = await PDFDocument.load(bytes);
+  const states = result.getPage(1).node.Resources()!.lookup(PDFName.of('ExtGState'), PDFDict);
+  const font = states.lookup(PDFName.of('GS1'), PDFDict).lookup(PDFName.of('Font'), PDFArray);
+  const procs = (result.context.lookup(font.get(0)) as PDFDict).lookup(
+    PDFName.of('CharProcs'),
+    PDFDict,
+  );
+  expect(procs.has(PDFName.of('a'))).toBe(true);
+  expect(procs.has(PDFName.of('b'))).toBe(false);
+});
+
+test('색공간 배열 안에서 이름으로 부르는 색공간과, 깊이 겹친 묶음 그림이 쓰는 그림을 남긴다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const indexed = context.register(
+    context.flateStream(new Uint8Array(81).fill(0), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 9,
+      Height: 9,
+      ColorSpace: ['Indexed', 'CS1', 0, PDFHexString.of('FF0000')],
+      BitsPerComponent: 8,
+    }),
+  );
+  // 자원 목록 없이 바깥 자원을 물려받는 묶음 그림 14겹, 가장 안쪽에서만 /Pic Do
+  let form = context.register(
+    context.stream('q 50 0 0 50 10 10 cm /Pic Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 200, 200],
+    }),
+  );
+  const xobjects: Record<string, PDFRef> = { Pic: indexed, F0: form };
+  for (let depth = 1; depth < 14; depth++) {
+    form = context.register(
+      context.stream(`/F${depth - 1} Do`, {
+        Type: 'XObject',
+        Subtype: 'Form',
+        BBox: [0, 0, 200, 200],
+      }),
+    );
+    xobjects[`F${depth}`] = form;
+  }
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      XObject: xobjects,
+      ColorSpace: { CS1: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }] },
+    }),
+  );
+  second.node.set(PDFName.of('Contents'), context.register(context.stream('/F13 Do')));
+  const frame = await openRedact(page, {
+    name: 'deep.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).toContain(9);
+  const result = await PDFDocument.load(bytes);
+  const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
+  expect(spaces.has(PDFName.of('CS1'))).toBe(true);
 });
