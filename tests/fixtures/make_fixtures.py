@@ -6,6 +6,7 @@ E2E 테스트용 PDF를 만든다. 외부 라이브러리 없이 PDF 문법을 �
 - three-pages.pdf  영문 3쪽
 - korean.pdf       한글 (폰트를 넣지 않은 CID 폰트 → pdf.js가 CMap 파일을 받아야 보임)
 - encrypted.pdf    암호 1234 (표준 보안 처리기 R2, RC4 40비트)
+- user-unit.pdf    좌표 단위가 2pt인 쪽 (/UserUnit 2, 297.5×421 단위 = A4 크기)
 """
 import hashlib
 import os
@@ -67,7 +68,7 @@ def build(objects, encrypt_password=None):
     return bytes(out)
 
 
-def text_pages(texts, font_dict, encode):
+def text_pages(texts, font_dict, encode, page_extra='/MediaBox [0 0 595 842]'):
     """texts 하나당 한 쪽. 객체 번호: 1 Catalog, 2 Pages, 3 Font, 이후 (Page, Contents) 쌍"""
     n = len(texts)
     kids = ' '.join('%d 0 R' % (4 + i * 2) for i in range(n))
@@ -78,8 +79,8 @@ def text_pages(texts, font_dict, encode):
     ]
     for i, text in enumerate(texts):
         objects.append((
-            '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents %d 0 R '
-            '/Resources << /Font << /F1 3 0 R >> >> >>' % (5 + i * 2), None))
+            '<< /Type /Page /Parent 2 0 R %s /Contents %d 0 R '
+            '/Resources << /Font << /F1 3 0 R >> >> >>' % (page_extra, 5 + i * 2), None))
         objects.append(('<< >>', b'BT /F1 36 Tf 72 700 Td ' + encode(text) + b' Tj ET'))
     return objects
 
@@ -106,6 +107,8 @@ files = {
     'three-pages.pdf': build(text_pages(['Page 1', 'Page 2', 'Page 3'], HELVETICA, latin)),
     'korean.pdf': build(text_pages(['안녕하세요 한글 PDF'], KOREAN_FONT, ucs2)),
     'encrypted.pdf': build(text_pages(['Secret page'], HELVETICA, latin), encrypt_password='1234'),
+    'user-unit.pdf': build(text_pages(['Unit'], HELVETICA, latin,
+                                      '/MediaBox [0 0 297.5 421] /UserUnit 2')),
 }
 for name, data in files.items():
     with open(os.path.join(HERE, name), 'wb') as f:
