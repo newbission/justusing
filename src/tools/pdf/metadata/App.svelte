@@ -106,7 +106,8 @@
         title: text(raw.Title) || xmp('dc:title'),
         author: text(raw.Author) || xmp('dc:creator'),
         subject: text(raw.Subject) || xmp('dc:description'),
-        keywords: text(raw.Keywords) || xmp('pdf:keywords'),
+        // 키워드는 pdf:Keywords 또는 Dublin Core의 dc:subject(목록)에 있다
+        keywords: text(raw.Keywords) || xmp('pdf:keywords') || xmp('dc:subject'),
       };
       other = {
         // PDF/A 등은 이 값들을 XMP에만 적기도 한다 (pdf.js는 XMP 이름을 소문자로 준다)
