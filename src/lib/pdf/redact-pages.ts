@@ -166,11 +166,11 @@ function finishType3(pruning: Pruning) {
     const procs = context.lookup(font.get(PDFName.of('CharProcs')));
     if (!(procs instanceof PDFDict)) continue;
     const names = glyphNames(font);
-    // 글자 코드와 모양을 잇는 표가 없으면(규격 위반) 어떤 모양을 쓰는지 알 수 없어 모두 남긴다
-    const used =
-      names.size === 0
-        ? new Set(procs.keys().map((key) => key.decodeText()))
-        : new Set([...codes].map((code) => names.get(code)).filter(Boolean) as string[]);
+    // 찍은 글자 중 /Differences에 없는 것이 있으면(기본 인코딩 /BaseEncoding을 따르거나 규격 위반)
+    // 어떤 모양을 쓰는지 알 수 없어 모두 남긴다
+    const used = [...codes].some((code) => !names.has(code))
+      ? new Set(procs.keys().map((key) => key.decodeText()))
+      : new Set([...codes].map((code) => names.get(code)).filter(Boolean) as string[]);
     const kept = context.obj({});
     const streams: PDFStream[] = [];
     for (const [name, item] of procs.entries()) {
