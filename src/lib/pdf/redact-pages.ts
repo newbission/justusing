@@ -228,10 +228,13 @@ function pruneNested(object: unknown, pruning: Pruning) {
   // 그래픽 상태가 /Font [글꼴 크기]로 고르는 글꼴 (Type3이면 찍은 글자 모양만 남긴다)
   const stateFont = context.lookup(dict.get(PDFName.of('Font')));
   if (stateFont instanceof PDFArray) pruneNested(context.lookup(stateFont.get(0)), pruning);
-  // 투명 마스크(ExtGState /SMask /G)의 그림
+  // 투명 마스크: 그래픽 상태의 /SMask /G 묶음 그림, 그림의 /SMask·/Mask 그림
   const softMask = context.lookup(dict.get(PDFName.of('SMask')));
-  if (softMask instanceof PDFDict)
+  if (softMask instanceof PDFStream) pruneNested(softMask, pruning);
+  else if (softMask instanceof PDFDict)
     pruneNested(context.lookup(softMask.get(PDFName.of('G'))), pruning);
+  const mask = context.lookup(dict.get(PDFName.of('Mask')));
+  if (mask instanceof PDFStream) pruneNested(mask, pruning);
 }
 
 /** Type3 글꼴의 글자 코드 → 글자 모양 이름 (/Encoding /Differences) */
