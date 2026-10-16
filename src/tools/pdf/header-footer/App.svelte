@@ -177,7 +177,7 @@
       const text = fillTemplate(template.trim(), pageIndex + 1, total, today).trim();
       if (!text) return [];
       // 쪽 폭보다 길면 워커와 같이 줄여서 그린다
-      const lineSize = fitSize(measure(text, fontSize, family), fontSize, pagePt.width);
+      const lineSize = fitSize(measure(text, fontSize, family), fontSize, pagePt);
       const at = linePosition(pagePt, measure(text, lineSize, family), lineSize, align, edge);
       return [
         {
