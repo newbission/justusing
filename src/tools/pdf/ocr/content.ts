@@ -51,7 +51,7 @@ export default defineContent({
       },
       {
         q: 'Why do I need to download data?',
-        a: 'Recognizing text needs an engine and language data (about 4 MB for English, 7 MB with Korean). These are public files from this site. Once downloaded they are kept in this browser, so they are ready next time. Other browsers, devices and private windows need to download them again, and clearing browser data removes them. If the stored copy is removed, we ask again instead of downloading silently.',
+        a: 'Recognizing text needs an engine and language data (about 6 MB for English, 7 MB with Korean). These are public files from this site. Once downloaded they are kept in this browser, so they are ready next time. Other browsers, devices and private windows need to download them again, and clearing browser data removes them. If the stored copy is removed, we ask again instead of downloading silently.',
       },
       {
         q: 'How accurate is it?',
