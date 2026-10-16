@@ -131,6 +131,17 @@ const LAST_NAME: Record<string, string> = {
 };
 
 /**
+ * 이름 → 묶음 그림. text: 내용, own: 자기 자원 목록이 있음, forms: 그 안에서 부르는 이름을 찾는 곳
+ * (자기 자원 목록이 있을 때)
+ */
+export type FormLookup = (
+  name: string,
+) => { text: string; own: boolean; forms?: FormLookup } | undefined;
+
+/** 묶음 그림이 묶음 그림을 부르는 깊이 한도 (서로 부르는 잘못된 파일에서 끝나게) */
+const MAX_FORM_DEPTH = 12;
+
+/**
  * 내용 스트림에서 부른 자원과, 글꼴별로 찍은 글자 코드를 모은다.
  * form(이름): 그 이름이 묶음 그림이면 내용(text)과, 자기 자원 목록이 있는지(own).
  * 묶음 그림은 부른 자리의 그래픽 상태(글꼴 포함)를 물려받으므로 부른 자리에서 이어서 훑는다.
@@ -139,7 +150,7 @@ const LAST_NAME: Record<string, string> = {
  */
 export function contentUsage(
   texts: string[],
-  form?: (name: string) => { text: string; own: boolean } | undefined,
+  form?: FormLookup,
 ): { resources: ResourceUse; text: TextUse[] } {
   const resources: ResourceUse = new Map();
   const use = (kind: string, name: string) => {
@@ -150,10 +161,16 @@ export function contentUsage(
   /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
   let font = '';
   const saved: string[] = [];
-  /** 지금 훑는 중인 묶음 그림 (서로 부르는 잘못된 파일에서 끝나게) */
-  const entered = new Set<string>();
-  /** foreign: 자기 자원 목록이 있는 묶음 그림 안 (이름이 다른 목록을 가리킨다) */
-  const scan = (tokens: Token[], foreign: boolean) => {
+  /**
+   * foreign: 자기 자원 목록이 있는 묶음 그림 안 (이름이 다른 목록을 가리켜 이 목록의 자원으로 세지 않는다).
+   * forms: 지금 내용에서 부르는 묶음 그림 이름을 찾는 곳, depth: 묶음 그림 깊이
+   */
+  const scan = (
+    tokens: Token[],
+    foreign: boolean,
+    forms: FormLookup | undefined,
+    depth: number,
+  ) => {
     let operands: Token[] = [];
     let inInlineImage = false;
     for (const token of tokens) {
@@ -187,17 +204,21 @@ export function contentUsage(
           operand.kind === 'string' ? operand.bytes : [],
         );
         if (font) shown.push({ font, codes });
-      } else if (LAST_NAME[op] && last?.kind === 'name' && !foreign) {
-        use(LAST_NAME[op], last.value);
-        const inner = op === 'Do' && !entered.has(last.value) ? form?.(last.value) : undefined;
+      } else if (LAST_NAME[op] && last?.kind === 'name') {
+        if (!foreign) use(LAST_NAME[op], last.value);
+        // 묶음 그림 안에서 다시 부르는 묶음 그림도 그 자리의 글꼴 상태로 이어서 훑는다
+        const inner = op === 'Do' && depth < MAX_FORM_DEPTH ? forms?.(last.value) : undefined;
         if (inner) {
           // 묶음 그림은 앞뒤로 q/Q를 한 것처럼 실행된다 (안에서 Q를 더 해도 바깥 상태는 그대로)
-          entered.add(last.value);
           const outer = { font, saved: [...saved] };
-          scan(tokenize(inner.text), inner.own);
+          scan(
+            tokenize(inner.text),
+            foreign || inner.own,
+            inner.own ? inner.forms : forms,
+            depth + 1,
+          );
           font = outer.font;
           saved.splice(0, saved.length, ...outer.saved);
-          entered.delete(last.value);
         }
       }
       if (!inInlineImage) operands = [];
@@ -208,6 +229,8 @@ export function contentUsage(
   scan(
     texts.flatMap((text) => tokenize(text)),
     false,
+    form,
+    0,
   );
   return { resources, text: shown };
 }
