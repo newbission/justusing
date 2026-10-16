@@ -16,7 +16,8 @@ type Token =
   | { kind: 'name'; value: string }
   | { kind: 'string'; bytes: number[] }
   | { kind: 'op'; value: string }
-  | { kind: 'other' };
+  /** text: 숫자·true·false는 그 글자 (바로 써 넣은 그림의 크기를 읽으려고) */
+  | { kind: 'other'; text?: string };
 
 const WHITESPACE = /[\0\t\n\f\r ]/;
 const DELIMITER = /[()<>[\]{}/%]/;
@@ -61,6 +62,92 @@ function readLiteral(text: string, start: number): { bytes: number[]; end: numbe
   return { bytes, end: text.length };
 }
 
+/** 마지막 BI부터 ID 앞까지의 사전 (/W 10 /H 10 /CS /RGB …): 이름 → 값(이름이나 숫자 글자, 배열이면 '[' 다음 이름) */
+function inlineImageDict(tokens: Token[]): Map<string, string> {
+  let start = tokens.length - 2;
+  while (
+    start >= 0 &&
+    !(tokens[start]!.kind === 'op' && (tokens[start] as { value: string }).value === 'BI')
+  ) {
+    start--;
+  }
+  const dict = new Map<string, string>();
+  for (let k = start + 1; k < tokens.length - 1; k++) {
+    const key = tokens[k]!;
+    if (key.kind !== 'name') continue;
+    let value = tokens[k + 1];
+    // 배열 값([/I /RGB 255 …])은 첫 이름으로 본다
+    if (value?.kind === 'other' && value.text === undefined) value = tokens[k + 2];
+    if (value?.kind === 'name') dict.set(key.value, value.value);
+    else if (value?.kind === 'other' && value.text !== undefined) dict.set(key.value, value.text);
+    k++;
+  }
+  return dict;
+}
+
+/** 성분 수: 장치 색공간과 색 목록은 알고, 자원 이름 색공간은 알 수 없다 */
+const INLINE_COMPONENTS: Record<string, number> = {
+  G: 1,
+  DeviceGray: 1,
+  RGB: 3,
+  DeviceRGB: 3,
+  CMYK: 4,
+  DeviceCMYK: 4,
+  I: 1,
+  Indexed: 1,
+};
+
+/** 공백·글자가 아닌 바이트 (그림 바이트 안이라는 표시) */
+const BINARY = /[^\t\n\f\r\x20-\x7e]/;
+
+/**
+ * 바로 써 넣은 그림 바이트(start부터)의 끝 다음 자리 (EI 뒤).
+ * 길이(/L)를 적었거나 압축하지 않아 크기로 길이를 알 수 있으면 그 길이로 건너뛴다.
+ * 모르면 공백으로 둘러싼 EI를 찾되, 그 뒤가 그림 바이트처럼 보이면(압축 자료 안의 우연한 EI) 다음 것을 찾는다
+ */
+function inlineImageEnd(text: string, start: number, dict: Map<string, string>): number {
+  const number = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = Number(dict.get(key));
+      if (dict.has(key) && Number.isFinite(value)) return value;
+    }
+    return undefined;
+  };
+  const endsAt = (at: number) => {
+    let k = at;
+    while (k < text.length && WHITESPACE.test(text[k]!)) k++;
+    return text.startsWith('EI', k) && (k + 2 === text.length || WHITESPACE.test(text[k + 2]!))
+      ? k + 2
+      : undefined;
+  };
+  let length = number('L', 'Length');
+  if (length === undefined && !dict.has('F') && !dict.has('Filter')) {
+    const mask = dict.get('IM') === 'true' || dict.get('ImageMask') === 'true';
+    const width = number('W', 'Width');
+    const height = number('H', 'Height');
+    const bits = mask ? 1 : number('BPC', 'BitsPerComponent');
+    const components = mask ? 1 : INLINE_COMPONENTS[dict.get('CS') ?? dict.get('ColorSpace') ?? ''];
+    if (width && height && bits && components) {
+      length = Math.ceil((width * components * bits) / 8) * height;
+    }
+  }
+  if (length !== undefined) {
+    const end = endsAt(start + length);
+    if (end !== undefined) return end;
+  }
+  const pattern = /[\0\t\n\f\r ]EI(?=[\0\t\n\f\r ]|$)/g;
+  pattern.lastIndex = Math.max(0, start - 1);
+  let first: number | undefined;
+  for (let match = pattern.exec(text); match; match = pattern.exec(text)) {
+    const end = match.index + match[0].length;
+    first ??= end;
+    // 글자열 (…) 안은 원래 아무 바이트나 올 수 있어 그 앞까지만 본다
+    const after = text.slice(end, end + 64).split('(')[0]!;
+    if (!BINARY.test(after)) return end;
+  }
+  return first ?? text.length;
+}
+
 function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
@@ -103,15 +190,12 @@ function tokenize(text: string): Token[] {
       const word = text.slice(i, end);
       i = end;
       if (/^[+-]?(\d+\.?\d*|\.\d+)$/.test(word) || word === 'true' || word === 'false') {
-        tokens.push({ kind: 'other' });
+        tokens.push({ kind: 'other', text: word });
         continue;
       }
       tokens.push({ kind: 'op', value: word });
-      if (word === 'ID') {
-        // 바로 써 넣은 그림의 바이트는 공백+EI+공백까지 건너뛴다
-        const ei = /[\0\t\n\f\r ]EI(?=[\0\t\n\f\r ]|$)/.exec(text.slice(i + 1));
-        i = ei ? i + 1 + ei.index + ei[0].length : text.length;
-      }
+      // 바로 써 넣은 그림의 바이트는 ID 뒤 공백 하나부터 EI 앞까지. 그 안을 연산자로 읽지 않게 건너뛴다
+      if (word === 'ID') i = inlineImageEnd(text, i + 1, inlineImageDict(tokens));
     }
   }
   return tokens;
