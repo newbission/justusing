@@ -122,9 +122,43 @@ function folded(str: string): { text: string; from: number[]; to: number[] } {
   return { text, from, to };
 }
 
+/** 글자 조각 하나 (pdf.js의 TextItem) 와 찾기에 쓰는 값들 */
+interface Piece {
+  str: string;
+  width: number;
+  /** 소문자로 바꾼 글과 원문 위치 (folded) */
+  text: string;
+  from: number[];
+  to: number[];
+  /** 조각의 시작점(PDF 좌표)과 글자 방향·위 방향 단위 벡터 */
+  e: number;
+  f: number;
+  dir: [number, number];
+  top: [number, number];
+  height: number;
+  family: string;
+  rtl: boolean;
+  eol: boolean;
+  prefix?: Float64Array;
+}
+
+/** 뒤 조각이 앞 조각에 바로 이어 같은 줄에 놓였는지 (글꼴·모양이 바뀌어 조각이 나뉜 경우) */
+function continues(prev: Piece, next: Piece): boolean {
+  if (prev.eol) return false;
+  if (prev.dir[0] * next.dir[0] + prev.dir[1] * next.dir[1] < 0.99) return false;
+  const endX = prev.e + prev.dir[0] * prev.width;
+  const endY = prev.f + prev.dir[1] * prev.width;
+  const dx = next.e - endX;
+  const dy = next.f - endY;
+  const along = dx * prev.dir[0] + dy * prev.dir[1];
+  const across = dx * prev.top[0] + dy * prev.top[1];
+  const size = Math.max(prev.height, next.height);
+  return Math.abs(across) < size * 0.5 && along > -size * 0.5 && along < size * 1.5;
+}
+
 /**
  * 쪽들에서 글자를 찾아 가릴 자리를 만든다. 대소문자는 가리지 않는다.
- * 한 글자 조각 안에서만 찾는다 (줄이 바뀌거나 PDF가 글자를 나눠 둔 곳에 걸친 말은 못 찾는다)
+ * 같은 줄에 바로 이어 놓인 조각들(글꼴이 바뀌어 나뉜 경우 등)은 이어서 찾는다 (줄이 바뀐 곳에 걸친 말은 못 찾는다)
  */
 export async function findText(doc: PDFDocumentProxy, term: string): Promise<RedactBox[]> {
   const needle = folded(term.trim()).text;
@@ -135,41 +169,70 @@ export async function findText(doc: PDFDocumentProxy, term: string): Promise<Red
     const viewport = page.getViewport({ scale: 1 });
     const content = await page.getTextContent();
     page.cleanup();
+    // 같은 줄에 이어 놓인 조각끼리 묶는다
+    const lines: Piece[][] = [];
     for (const item of content.items) {
-      if (!('str' in item) || !item.str) continue;
-      const { text, from, to } = folded(item.str);
+      if (!('str' in item)) continue;
       const [a, b, c, d, e, f] = item.transform as number[];
       const along = Math.hypot(a!, b!);
       const up = Math.hypot(c!, d!);
-      if (along === 0 || up === 0) continue;
-      // 글자 방향과 위 방향 (회전한 글자도 따라간다)
-      const dir = [a! / along, b! / along];
-      const top = [c! / up, d! / up];
-      const height = item.height || up;
-      const family = content.styles[item.fontName]?.fontFamily ?? 'sans-serif';
-      const rtl = item.dir === 'rtl' || RTL.test(item.str);
-      let prefix: Float64Array | undefined;
+      if (!item.str || along === 0 || up === 0) {
+        // 빈 조각은 줄 끝 표시만 옮긴다
+        const last = lines.at(-1)?.at(-1);
+        if (last && 'hasEOL' in item && item.hasEOL) last.eol = true;
+        continue;
+      }
+      const piece: Piece = {
+        str: item.str,
+        width: item.width,
+        ...folded(item.str),
+        e: e!,
+        f: f!,
+        // 글자 방향과 위 방향 (회전한 글자도 따라간다)
+        dir: [a! / along, b! / along],
+        top: [c! / up, d! / up],
+        height: item.height || up,
+        family: content.styles[item.fontName]?.fontFamily ?? 'sans-serif',
+        rtl: item.dir === 'rtl' || RTL.test(item.str),
+        eol: item.hasEOL,
+      };
+      const line = lines.at(-1);
+      if (line && continues(line.at(-1)!, piece)) line.push(piece);
+      else lines.push([piece]);
+    }
+    for (const line of lines) {
+      const text = line.map((piece) => piece.text).join('');
       for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + 1)) {
-        // 찾은 조각에서만, 조각마다 한 번 잰다
-        prefix ??= prefixWidths(item.str, family);
-        // 원문 위치로 옮겨 잰다 (찾은 첫 자리를 만든 글자의 시작부터 마지막 자리를 만든 글자의 끝까지)
-        const start = from[at]!;
-        const end = to[at + needle.length - 1]!;
-        // 오른쪽에서 왼쪽으로 쓰는 글자(히브리어·아랍어 등)가 섞이면 글자 순서와 놓인 자리가 달라
-        // 찾은 말의 자리를 알 수 없으므로 조각 전체를 가린다
-        const [s0, s1] = rtl
-          ? [0, item.width]
-          : matchSpan(prefix, start, end - start, item.width, height);
-        const corners = [s0, s1].flatMap((s) =>
-          [-height * DESCENT, height].map((t) =>
-            viewport.convertToViewportPoint(
-              e! + dir[0]! * s + top[0]! * t,
-              f! + dir[1]! * s + top[1]! * t,
-            ),
-          ),
-        );
-        const xs = corners.map(([x]) => x! / viewport.width);
-        const ys = corners.map(([, y]) => y! / viewport.height);
+        // 찾은 말이 걸친 조각마다 그 부분을 재고, 모두 덮는 상자 하나로 합친다
+        const xs: number[] = [];
+        const ys: number[] = [];
+        let offset = 0;
+        for (const piece of line) {
+          const startIn = Math.max(at, offset) - offset;
+          const endIn = Math.min(at + needle.length, offset + piece.text.length) - offset;
+          offset += piece.text.length;
+          if (startIn >= endIn) continue;
+          // 찾은 조각에서만, 조각마다 한 번 잰다
+          piece.prefix ??= prefixWidths(piece.str, piece.family);
+          // 원문 위치로 옮겨 잰다 (찾은 첫 자리를 만든 글자의 시작부터 마지막 자리를 만든 글자의 끝까지)
+          const start = piece.from[startIn]!;
+          const end = piece.to[endIn - 1]!;
+          // 오른쪽에서 왼쪽으로 쓰는 글자(히브리어·아랍어 등)가 섞이면 글자 순서와 놓인 자리가 달라
+          // 찾은 말의 자리를 알 수 없으므로 조각 전체를 가린다
+          const [s0, s1] = piece.rtl
+            ? [0, piece.width]
+            : matchSpan(piece.prefix, start, end - start, piece.width, piece.height);
+          for (const s of [s0, s1]) {
+            for (const t of [-piece.height * DESCENT, piece.height]) {
+              const [x, y] = viewport.convertToViewportPoint(
+                piece.e + piece.dir[0] * s + piece.top[0] * t,
+                piece.f + piece.dir[1] * s + piece.top[1] * t,
+              );
+              xs.push(x! / viewport.width);
+              ys.push(y! / viewport.height);
+            }
+          }
+        }
         const x = Math.max(0, Math.min(...xs));
         const y = Math.max(0, Math.min(...ys));
         boxes.push({
