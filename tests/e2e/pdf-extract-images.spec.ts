@@ -463,3 +463,120 @@ test('ICC 색공간을 정한 JPG는 프로필을 넣어 꺼내고, 보정 색�
     photo.subarray(photo.length - 1000),
   );
 });
+
+test('SMask가 있으면 /Mask 색 키는 쓰지 않는다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const opaque = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(255), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+    }),
+  );
+  // 색 키 [0 255]는 모든 화소를 투명하게 하지만, SMask(모두 불투명)가 우선한다
+  const image = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(100), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+      SMask: opaque,
+      Mask: [0, 255],
+    }),
+  );
+  const added = doc.addPage([300, 300]);
+  const name = added.node.newXObject('Image', image);
+  added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'smask.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  const png = await readFile(await (await event).path());
+  const alpha = await page.evaluate(async (base64) => {
+    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+    const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    return context.getImageData(10, 10, 1, 1).data[3];
+  }, png.toString('base64'));
+  expect(alpha).toBe(255);
+});
+
+test('여러 쪽이 같이 쓰는 자원 없는 묶음 그림은 쪽마다 그 쪽 사진을 따라가고, ColorTransform JPG는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (value: number) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(value), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+      }),
+    );
+  const form = context.register(
+    context.stream('q 50 0 0 50 0 0 cm /Im0 Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 100, 100],
+    }),
+  );
+  const transformed = context.register(
+    context.stream(await readFile(fixture('photo.jpg')), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      ColorSpace: 'DeviceRGB',
+      Filter: 'DCTDecode',
+      DecodeParms: { ColorTransform: 0 },
+    }),
+  );
+  for (const [index, value] of [10, 200].entries()) {
+    const added = doc.addPage([300, 300]);
+    added.node.set(
+      PDFName.of('Resources'),
+      context.obj({
+        XObject:
+          index === 0
+            ? { Fm: form, Im0: gray(value), Jp: transformed }
+            : { Fm: form, Im0: gray(value) },
+      }),
+    );
+    added.node.set(
+      PDFName.of('Contents'),
+      context.register(context.stream(index === 0 ? '/Fm Do /Jp Do' : '/Fm Do')),
+    );
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'shared-form.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('1쪽 · 64×64 · PNG', { exact: false })).toBeVisible();
+  await expect(frame.getByText('2쪽 · 64×64 · PNG', { exact: false })).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
