@@ -5,6 +5,7 @@
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { PDFDocument } from '@cantoo/pdf-lib';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { expectLocalOnly } from './local-only';
 
@@ -71,6 +72,23 @@ test('표지를 빼면 둘째 쪽부터 넣고, 쪽 번호는 첫 쪽부터 센�
   expect(texts[0]).toEqual(['Page 1']);
   expect(texts[1]).toContain('- 2 -');
   expect(texts[2]).toContain('- 3 -');
+});
+
+test('한 쪽짜리 문서에서 표지를 빼면 아무것도 넣지 않고 그대로 저장한다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  source.addPage([300, 400]);
+  await page.goto('/pdf/header-footer/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'one.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
+  await frame.getByLabel('꼬리말 (쪽 아래)', { exact: true }).fill('- {쪽} -');
+  await frame.getByLabel('첫 쪽(표지)에는 넣지 않기').check();
+  const { bytes } = await download(page, frame);
+  expect(await pageTexts(bytes)).toEqual([[]]);
 });
 
 test('머리말·꼬리말이 모두 비면 넣을 수 없다', async ({ page }) => {
