@@ -332,6 +332,10 @@ Co-Authored-By: ...
         엔진·언어 데이터는 `scripts/copy-ocr-data.mjs`가 node_modules에서 `public/data/ocr/`로 복사하고
         목록(`src/lib/ocr/catalog.json`, 크기·SHA-256)을 쓴다. 워커(`src/lib/ocr/`)는 데이터를 화면에서 받아 쓰고
         스스로 받지 않는다. 쪽마다 Tesseract가 만든 투명 글자층 PDF를 원래 쪽 위에 겹친다(`src/lib/pdf/text-layer.ts`)
+  - [x] 가리기 (`/pdf/redact/`, 2026-10-15): 상자 그리기·글자 찾아 가리기. 가린 쪽은 칠한 그림(JPG)으로 바꾸고
+        나머지 쪽만 새 PDF에 옮긴다(`src/lib/pdf/redact-pages.ts`). 원래 PDF를 고치면 pdf-lib가 쓰지 않는
+        객체까지 저장해 가린 내용이 남으므로 고치지 않는다. 옮기는 쪽은 주석을 평면화하고, 같이 쓰던 자원 중
+        안 쓰는 것과 링크·기사 흐름을 끊는다. 책갈피·양식·문서 정보는 넣지 않는다
   - [x] 사진 꺼내기 (`/pdf/extract-images/`, 2026-10-15): JPG는 원본 바이트 그대로, Flate 8비트 이하 회색·RGB·색 목록
         (+투명도)은 PNG로, JPX는 .jp2로. 흑백 팩스·CMYK 등은 꺼내지 못한 수로 알린다(`src/lib/pdf/extract-images.worker.ts`)
   - [x] 양식 채우기 (`/pdf/fill-form/`, 2026-10-15): pdf.js가 알려 주는 입력 칸 자리에 HTML 입력 칸을 겹친다
