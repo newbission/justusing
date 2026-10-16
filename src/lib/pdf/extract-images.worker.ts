@@ -826,6 +826,21 @@ function collect(doc: PDFDocument, minSide: number) {
       if (key) visitedForms.set(key, visits);
       visit([pattern], usedResources, page, first);
     }
+    // 고른 Type3 글꼴의 글자 모양(CharProcs)도 훑는다 (글꼴의 자원 목록, 없으면 부른 쪽 것)
+    const fontDict = resources?.lookup(name('Font'));
+    for (const used of new Set(scanned.fonts)) {
+      const value = fontDict instanceof PDFDict ? fontDict.get(name(used)) : undefined;
+      const font = doc.context.lookup(value);
+      if (!(font instanceof PDFDict) || font.lookup(name('Subtype')) !== name('Type3')) continue;
+      const procs = font.lookup(name('CharProcs'));
+      if (!(procs instanceof PDFDict) || !(value instanceof PDFRef)) continue;
+      const own = font.lookup(name('Resources'));
+      const glyphs = procs
+        .values()
+        .map((item) => doc.context.lookup(item))
+        .filter((item): item is PDFStream => item instanceof PDFStream);
+      enter(value, glyphs, own instanceof PDFDict ? own : resources, page);
+    }
     const xobjects = resources?.lookup(name('XObject'));
     if (!(xobjects instanceof PDFDict)) return;
     for (const drawn of new Set(scanned.drawn)) {
@@ -845,16 +860,24 @@ function collect(doc: PDFDocument, minSide: number) {
       } else if (subtype === name('Form')) {
         // 자원 목록이 없는 묶음 그림은 부른 쪽의 자원을 물려받는다 (예전 방식)
         const own = object.dict.lookup(name('Resources'));
-        const used = own instanceof PDFDict ? own : resources;
-        const visits = visitedForms.get(value) ?? new Set();
-        if (visits.has(used)) continue;
-        // 바로 써 넣은 그림은 묶음 그림 안에 있으므로 처음 한 번만 센다
-        const first = visits.size === 0;
-        visits.add(used);
-        visitedForms.set(value, visits);
-        visit([object], used, page, first);
+        enter(value, [object], own instanceof PDFDict ? own : resources, page);
       }
     }
+  };
+  /** 묶음 그림·글자 모양·주석 모양처럼 안에 내용이 있는 것을 그 자원 목록으로 훑는다 (같은 짝은 한 번만) */
+  const enter = (
+    key: PDFRef,
+    streams: PDFStream[],
+    resources: PDFDict | undefined,
+    page: number,
+  ) => {
+    const visits = visitedForms.get(key) ?? new Set();
+    if (visits.has(resources)) return;
+    // 바로 써 넣은 그림은 그 안에 있으므로 처음 한 번만 센다
+    const first = visits.size === 0;
+    visits.add(resources);
+    visitedForms.set(key, visits);
+    visit(streams, resources, page, first);
   };
   doc.getPages().forEach((page, index) => {
     const value = doc.context.lookup(page.node.get(name('Contents')));
@@ -865,6 +888,28 @@ function collect(doc: PDFDocument, minSide: number) {
       page.node.Resources(),
       index,
     );
+    // 주석(도장·서명·입력 칸 등)의 보이는 모양 안에서 그리는 사진 (숨긴 주석·말풍선은 빼고)
+    const annots = page.node.lookup(name('Annots'));
+    if (!(annots instanceof PDFArray)) return;
+    for (const item of annots.asArray()) {
+      const annot = doc.context.lookup(item);
+      if (!(annot instanceof PDFDict) || annot.lookup(name('Subtype')) === name('Popup')) continue;
+      const flags = numberOf(annot, 'F') ?? 0;
+      if (flags & 2) continue;
+      const appearances = annot.lookup(name('AP'));
+      if (!(appearances instanceof PDFDict)) continue;
+      let normal = appearances.get(name('N'));
+      // 상태가 여럿이면(체크 상자 등) 지금 상태(/AS)의 모양
+      const states = doc.context.lookup(normal);
+      if (states instanceof PDFDict && !(states instanceof PDFStream)) {
+        const state = annot.lookup(name('AS'));
+        normal = state instanceof PDFName ? states.get(state) : undefined;
+      }
+      const stream = doc.context.lookup(normal);
+      if (!(normal instanceof PDFRef) || !(stream instanceof PDFStream)) continue;
+      const own = stream.dict.lookup(name('Resources'));
+      enter(normal, [stream], own instanceof PDFDict ? own : undefined, index);
+    }
   });
   return { found, inline };
 }
