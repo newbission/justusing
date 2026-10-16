@@ -1045,3 +1045,126 @@ test('도장 주석과 Type3 글자 모양 안의 사진도 꺼내고, 파일 �
   await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
   await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
+
+test('화면에 보이지 않는 사진(꺼진 층·숨긴 주석·찍지 않은 Type3 글자)은 꺼내지 않는다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (value: number, extra: Record<string, unknown> = {}) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(value), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+        ...extra,
+      }),
+    );
+  const hiddenLayer = context.register(
+    context.obj({ Type: 'OCG', Name: PDFHexString.fromText('Off') }),
+  );
+  doc.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({ OCGs: [hiddenLayer], D: { OFF: [hiddenLayer] } }),
+  );
+  const noView = context.register(
+    context.stream('q 64 0 0 64 0 0 cm /Im Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 64, 64],
+      Resources: { XObject: { Im: gray(40) } },
+    }),
+  );
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 1000, 1000],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('1000 0 d0 q 1000 0 0 1000 0 0 cm /A Do Q')),
+        b: context.register(context.stream('1000 0 d0 q 1000 0 0 1000 0 0 cm /B Do Q')),
+      },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a', 'b'] },
+      FirstChar: 97,
+      LastChar: 98,
+      Widths: [1000, 1000],
+      Resources: { XObject: { A: gray(50), B: gray(60) } },
+    }),
+  );
+  const added = doc.addPage([600, 800]);
+  added.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      Font: { T3: type3 },
+      Properties: { L1: hiddenLayer },
+      XObject: { V: gray(10), H1: gray(20, { OC: hiddenLayer }), H2: gray(30) },
+    }),
+  );
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream('/V Do /H1 Do /OC /L1 BDC /H2 Do EMC BT /T3 64 Tf 100 100 Td (a) Tj ET'),
+    ),
+  );
+  added.node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Stamp',
+        F: 32,
+        Rect: [300, 300, 364, 364],
+        AP: { N: noView },
+      }),
+    ]),
+  );
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'invisible.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  // 보이는 V와 찍은 글자 a 안의 사진만
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('흑백 팩스·CMYK', { exact: false })).toHaveCount(0);
+});
+
+test('길이를 8바이트로 적은 JPEG 2000 머리 상자 안의 색 정보도 읽는다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  // jp2h를 큰 상자 형식(길이 1 + 8바이트 길이)으로 적고, 안의 색 정보는 ICC(방법 2)
+  const bytes = new Uint8Array(80);
+  bytes.set([0, 0, 0, 12, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a]);
+  bytes.set([0, 0, 0, 20, ...Buffer.from('ftypjp2 ')], 12);
+  bytes.set([0, 0, 0, 1, ...Buffer.from('jp2h'), 0, 0, 0, 0, 0, 0, 0, 28], 32);
+  bytes.set([0, 0, 0, 12, ...Buffer.from('colr'), 2, 0, 0, 0], 48);
+  const jpx = context.register(
+    context.stream(bytes, {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      Filter: 'JPXDecode',
+      ColorSpace: 'DeviceRGB',
+    }),
+  );
+  const added = doc.addPage([300, 300]);
+  const imageName = added.node.newXObject('Image', jpx);
+  added.pushOperators(pushGraphicsState(), drawObject(imageName), popGraphicsState());
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'xlbox.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
