@@ -18,6 +18,7 @@
   import {
     addHeaderFooter,
     fillTemplate,
+    fitSize,
     linePosition,
     MissingGlyphsError,
     type Align,
@@ -175,14 +176,16 @@
     ).flatMap(([template, align, edge]) => {
       const text = fillTemplate(template.trim(), pageIndex + 1, total, today).trim();
       if (!text) return [];
-      const at = linePosition(pagePt, measure(text, fontSize, family), fontSize, align, edge);
+      // 쪽 폭보다 길면 워커와 같이 줄여서 그린다
+      const lineSize = fitSize(measure(text, fontSize, family), fontSize, pagePt.width);
+      const at = linePosition(pagePt, measure(text, lineSize, family), lineSize, align, edge);
       return [
         {
           text,
           left: (at.x / pagePt.width) * 100,
           // 바닥선에서 글자 높이만큼 위가 글자 칸의 위쪽 (line-height 1 기준)
-          top: ((at.y - fontSize * 0.88) / pagePt.height) * 100,
-          size: fontSize * scale,
+          top: ((at.y - lineSize * 0.88) / pagePt.height) * 100,
+          size: lineSize * scale,
         },
       ];
     });

@@ -35,3 +35,12 @@ export function linePosition(
   const y = edge === 'top' ? EDGE_MARGIN + fontSize * 0.8 : page.height - EDGE_MARGIN;
   return { x, y };
 }
+
+/**
+ * 글자가 쪽의 쓸 수 있는 폭(양쪽 EDGE_MARGIN을 뺀 폭)보다 넓으면 들어가도록 줄인 글자 크기.
+ * 긴 제목이나 폭이 좁은 쪽에서 글자가 쪽 밖으로 잘리지 않게 한다
+ */
+export function fitSize(textWidth: number, fontSize: number, pageWidth: number): number {
+  const available = pageWidth - EDGE_MARGIN * 2;
+  return textWidth > available && textWidth > 0 ? (fontSize * available) / textWidth : fontSize;
+}
