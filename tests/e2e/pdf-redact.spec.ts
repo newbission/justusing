@@ -1271,3 +1271,41 @@ test('가린 쪽은 인쇄할 때 보이는 주석만 그림에 넣는다', asyn
   // 흰 종이 그대로 (화면 전용 주석은 그리지 않는다)
   expect(shade).toBeGreaterThan(200);
 });
+
+test('글꼴이 바뀌어 조각이 나뉜 말도 같은 줄이면 이어서 찾는다', async ({ page }) => {
+  // "SEC"는 Helvetica, "RET"은 Times로 이어 찍는다 (pdf.js는 글꼴마다 조각을 나눈다)
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const helvetica = await source.embedFont(StandardFonts.Helvetica);
+  const times = await source.embedFont(StandardFonts.TimesRoman);
+  const added = source.addPage([400, 200]);
+  added.node.set(
+    PDFName.of('Resources'),
+    context.obj({ Font: { F1: helvetica.ref, F2: times.ref } }),
+  );
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream('BT /F1 12 Tf 20 100 Td (my SEC) Tj /F2 12 Tf (RET code) Tj ET'),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'split-fonts.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByLabel('찾아서 가리기').fill('secret');
+  await frame.getByRole('button', { name: '모두 찾아 가리기' }).click();
+  await expect(frame.getByText('1곳을 찾아 가렸습니다.')).toBeVisible();
+  const box = await frame
+    .locator('.box')
+    .first()
+    .evaluate((element: HTMLElement) => ({
+      left: parseFloat(element.style.left) / 100,
+      width: parseFloat(element.style.width) / 100,
+    }));
+  const start = (20 + helvetica.widthOfTextAtSize('my ', 12)) / 400;
+  const end =
+    (20 + helvetica.widthOfTextAtSize('my SEC', 12) + times.widthOfTextAtSize('RET', 12)) / 400;
+  expect(box.left).toBeLessThanOrEqual(start);
+  expect(box.left + box.width).toBeGreaterThanOrEqual(end);
+});
