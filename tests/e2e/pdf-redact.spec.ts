@@ -1875,3 +1875,62 @@ test('꺼진 보이기 층에 딸린 주석은 굳힐 때도 같은 층으로 �
   const { OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
   expect(list.fnArray).toContain(OPS.beginMarkedContentProps);
 });
+
+test('압축한 바로 써 넣은 그림 안의 가짜 EI 뒤를 연산자로 읽지 않는다 (Flate·JPEG)', async ({
+  page,
+}) => {
+  const { deflateSync } = await import('node:zlib');
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const secret = (text: string) =>
+    context.register(
+      context.stream(text.repeat(4), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: text.length,
+        Height: 4,
+        BitsPerComponent: 8,
+        ColorSpace: 'DeviceGray',
+      }),
+    );
+  // 그림 바이트 안에 " EI /S1 Do " + 글자처럼 보이는 바이트 (압축하지 않은 덩어리라 그대로 들어간다)
+  const fake = (name: string) => ` EI /${name} Do ${'q Q '.repeat(20)}`;
+  const flate = deflateSync(Buffer.from(fake('S1'), 'latin1'), { level: 0 });
+  const photo = await readFile(fixture('small.jpg'));
+  const comment = Buffer.from(fake('S2'), 'latin1');
+  const jpeg = Buffer.concat([
+    photo.subarray(0, 2),
+    Buffer.from([0xff, 0xfe, 0, comment.length + 2]),
+    comment,
+    photo.subarray(2),
+  ]);
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({ XObject: { S1: secret('FLATE-SECRET'), S2: secret('JPEG-SECRET') } }),
+  );
+  const content = Buffer.concat([
+    Buffer.from(
+      `q 50 0 0 50 0 0 cm BI /W ${fake('S1').length} /H 1 /BPC 8 /CS /G /F /Fl ID `,
+      'latin1',
+    ),
+    flate,
+    Buffer.from(
+      ' EI Q q 50 0 0 50 60 60 cm BI /W 400 /H 300 /BPC 8 /CS /RGB /F /DCT ID ',
+      'latin1',
+    ),
+    jpeg,
+    Buffer.from(' EI Q', 'latin1'),
+  ]);
+  second.node.set(PDFName.of('Contents'), context.register(context.flateStream(content)));
+  const frame = await openRedact(page, {
+    name: 'inline-fake-ei.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('FLATE-SECRET');
+  expect(text).not.toContain('JPEG-SECRET');
+});
