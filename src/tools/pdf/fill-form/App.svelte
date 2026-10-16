@@ -93,13 +93,17 @@
     ),
   );
   const changedCount = $derived(Object.keys(changed).length);
-  /** 저장할 때 모양으로 그릴 글자: 바뀐 글자 칸과, 바뀐 선택 칸의 보이는 글자 (목록은 선택지 전체) */
+  /**
+   * 저장할 때 모양으로 그릴 글자: 바뀐 글자 칸과, 바뀐 선택 칸의 보이는 글자 (목록은 선택지 전체).
+   * 암호 칸은 * 로 가려 그리므로 글꼴이 필요 없다
+   */
   const drawnText = $derived(
     Object.entries(changed)
       .flatMap(([name, value]) => {
-        if (value.kind === 'text') return [value.text];
-        if (value.kind !== 'choice') return [];
         const field = fields.find((candidate) => candidate.name === name);
+        if (value.kind === 'text')
+          return field?.kind === 'text' && field.password ? [] : [value.text];
+        if (value.kind !== 'choice') return [];
         if (!field) return [];
         return field.kind === 'list'
           ? field.options.map((option) => option.label)
