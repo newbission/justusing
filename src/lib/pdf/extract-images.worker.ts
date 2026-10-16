@@ -552,6 +552,31 @@ function plainDecode(dict: PDFDict): boolean {
   });
 }
 
+/** JPEG 2000 상자들 [start, end)에서 type 상자의 내용 [시작, 끝) (길이를 8바이트로 적은 큰 상자 포함) */
+function findBox(
+  bytes: Uint8Array,
+  start: number,
+  end: number,
+  wanted: string,
+): { content: number; end: number } | undefined {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  for (let at = start; at + 8 <= end;) {
+    let length = view.getUint32(at);
+    let header = 8;
+    if (length === 1) {
+      if (at + 16 > end) return undefined;
+      length = Number(view.getBigUint64(at + 8));
+      header = 16;
+    } else if (length === 0) length = end - at;
+    if (length < header) return undefined;
+    if (String.fromCharCode(...bytes.subarray(at + 4, at + 8)) === wanted) {
+      return { content: at + header, end: Math.min(at + length, end) };
+    }
+    at += length;
+  }
+  return undefined;
+}
+
 /**
  * JPEG 2000 파일 안의 색 정보(colr 상자)가 PDF가 정한 장치 색공간과 같은지.
  * 상자 없는 코드 스트림은 색 정보가 없어 같은 것으로 본다. ICC 프로필이나 다른 색이면 false
@@ -559,27 +584,7 @@ function plainDecode(dict: PDFDict): boolean {
 function jpxColorMatches(bytes: Uint8Array, device: 'gray' | 'rgb' | 'cmyk'): boolean {
   if (bytes[0] === 0xff && bytes[1] === 0x4f) return true;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const type = (at: number) => String.fromCharCode(...bytes.subarray(at + 4, at + 8));
-  /** 상자들 [start, end)에서 type 상자의 내용 [시작, 끝) (길이를 8바이트로 적은 큰 상자 포함) */
-  const find = (
-    start: number,
-    end: number,
-    wanted: string,
-  ): { content: number; end: number } | undefined => {
-    for (let at = start; at + 8 <= end;) {
-      let length = view.getUint32(at);
-      let header = 8;
-      if (length === 1) {
-        if (at + 16 > end) return undefined;
-        length = Number(view.getBigUint64(at + 8));
-        header = 16;
-      } else if (length === 0) length = end - at;
-      if (length < header) return undefined;
-      if (type(at) === wanted) return { content: at + header, end: Math.min(at + length, end) };
-      at += length;
-    }
-    return undefined;
-  };
+  const find = (start: number, end: number, wanted: string) => findBox(bytes, start, end, wanted);
   const header = find(0, bytes.length, 'jp2h');
   if (header === undefined) return false;
   const box = find(header.content, header.end, 'colr');
