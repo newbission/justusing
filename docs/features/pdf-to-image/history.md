@@ -20,7 +20,7 @@
 
 - #29 feat(pdf): PDF를 이미지로·이미지를 PDF로 변환 도구 추가 (병합 2026-10-15)
 
-### 커밋 (8개)
+### 커밋 (9개)
 
 <details><summary>기능 4개</summary>
 
@@ -42,6 +42,12 @@
 <details><summary>테스트 1개</summary>
 
 - 2026-10-14 `8397d13` PDF를 이미지로 E2E 추가
+
+</details>
+
+<details><summary>문서 1개</summary>
+
+- 2026-10-16 `b7b3176` 받는 파일 이름 예시를 실제와 맞게 수정
 
 </details>
 
