@@ -5,7 +5,6 @@
  */
 import {
   PDFArray,
-  PDFContentStream,
   PDFDict,
   PDFDropdown,
   PDFName,
@@ -24,6 +23,7 @@ import {
   type PDFPage,
 } from '@cantoo/pdf-lib';
 import { UNRENDERED_ANNOTATION } from './modify-errors';
+import { isolateContent } from './page-content';
 
 /** /F 플래그: 숨김(2), 인쇄(4) */
 const HIDDEN = 2;
@@ -274,13 +274,8 @@ export function flattenAnnotations(page: PDFPage): boolean {
     const sy = (ry1 - ry0) / (y1 - y0);
 
     if (!wrapped) {
-      // 쪽 내용이 그래픽 상태를 되돌리지 않고 끝나도 주석 모양이 엉뚱한 자리에 그려지지 않게 q…Q로 감싼다
-      page.node.normalize();
-      if (page.node.Contents()) {
-        const start = context.register(PDFContentStream.of(context.obj({}), [pushGraphicsState()]));
-        const end = context.register(PDFContentStream.of(context.obj({}), [popGraphicsState()]));
-        page.node.wrapContentStreams(start, end);
-      }
+      // 쪽 내용이 그래픽 상태를 되돌리지 않고 끝나도 주석 모양이 엉뚱한 자리에 그려지지 않게 한다
+      isolateContent(page);
       wrapped = true;
     }
     const name = page.node.newXObject('FlatAnnot', appearance);
