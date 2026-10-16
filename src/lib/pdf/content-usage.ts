@@ -221,9 +221,16 @@ const LAST_NAME: Record<string, string> = {
 /** 그래픽 상태(/GS1 gs)의 /Font로 고른 글꼴을 글꼴 이름 대신 적는 표시 (GS_FONT + 상태 이름) */
 export const GS_FONT = '\0gs:';
 
-export type FormLookup = (
-  name: string,
-) => { key: object; text: string; own: boolean; forms?: FormLookup } | undefined;
+export type FormLookup = (name: string) =>
+  | {
+      key: object;
+      text: string;
+      own: boolean;
+      forms?: FormLookup;
+      /** 자기 자원 목록이 있을 때: 그 목록의 그래픽 상태가 /Font로 글꼴을 고르는지 */
+      gsFont?: (name: string) => boolean;
+    }
+  | undefined;
 
 /**
  * 내용 스트림에서 부른 자원과, 글꼴별로 찍은 글자 코드를 모은다.
@@ -253,7 +260,12 @@ export function contentUsage(
    * foreign: 자기 자원 목록이 있는 묶음 그림 안 (이름이 다른 목록을 가리켜 이 목록의 자원으로 세지 않는다).
    * forms: 지금 내용에서 부르는 묶음 그림 이름을 찾는 곳
    */
-  const scan = (tokens: Token[], foreign: boolean, forms: FormLookup | undefined) => {
+  const scan = (
+    tokens: Token[],
+    foreign: boolean,
+    forms: FormLookup | undefined,
+    gsFonts: ((name: string) => boolean) | undefined,
+  ) => {
     let operands: Token[] = [];
     let inInlineImage = false;
     for (const token of tokens) {
@@ -278,9 +290,13 @@ export function contentUsage(
         // 다른 목록의 글꼴로 바꾸면 이 목록에서는 알 수 없는 글꼴이다
         font = foreign ? '' : names[0].value;
         if (!foreign) use('Font', font);
-      } else if (op === 'gs' && last?.kind === 'name' && !foreign && gsFont?.(last.value)) {
-        use('ExtGState', last.value);
-        font = GS_FONT + last.value;
+      } else if (op === 'gs' && last?.kind === 'name' && gsFonts?.(last.value)) {
+        // 다른 목록의 그래픽 상태가 고른 글꼴은 이 목록에서 알 수 없는 글꼴이다 (물려받은 글꼴은 끝난다)
+        if (foreign) font = '';
+        else {
+          use('ExtGState', last.value);
+          font = GS_FONT + last.value;
+        }
       } else if (op === 'q') {
         saved.push(font);
       } else if (op === 'Q') {
@@ -299,7 +315,12 @@ export function contentUsage(
           path.add(inner.key);
           // 묶음 그림은 앞뒤로 q/Q를 한 것처럼 실행된다 (안에서 Q를 더 해도 바깥 상태는 그대로)
           const outer = { font, saved: [...saved] };
-          scan(tokenize(inner.text), foreign || inner.own, inner.own ? inner.forms : forms);
+          scan(
+            tokenize(inner.text),
+            foreign || inner.own,
+            inner.own ? inner.forms : forms,
+            inner.own ? inner.gsFont : gsFonts,
+          );
           path.delete(inner.key);
           font = outer.font;
           saved.splice(0, saved.length, ...outer.saved);
@@ -314,6 +335,7 @@ export function contentUsage(
     texts.flatMap((text) => tokenize(text)),
     false,
     form,
+    gsFont,
   );
   return { resources, text: shown };
 }

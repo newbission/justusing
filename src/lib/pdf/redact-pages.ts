@@ -77,15 +77,7 @@ function pruneResources(
   const context = holder.context;
   // 묶음 그림은 부른 자리에서 이어서 훑는다. 자원 목록이 없는 것은 그 목록을 물려받고(예전 방식),
   // 있는 것도 부른 자리의 글꼴로 찍은 글자는 그 글꼴의 것이다
-  const states = context.lookup(resources.get(PDFName.of('ExtGState')));
-  /** 그래픽 상태가 /Font [글꼴 크기]로 고른 글꼴 */
-  const stateFont = (name: string) => {
-    const state =
-      states instanceof PDFDict ? context.lookup(states.get(PDFName.of(name))) : undefined;
-    const font =
-      state instanceof PDFDict ? context.lookup(state.get(PDFName.of('Font'))) : undefined;
-    return font instanceof PDFArray ? context.lookup(font.get(0)) : undefined;
-  };
+  const stateFont = stateFontIn(resources);
   const usage = contentUsage(
     streams.map(streamText),
     formsIn(resources),
@@ -125,6 +117,19 @@ function pruneResources(
   }
 }
 
+/** 자원 목록의 그래픽 상태가 /Font [글꼴 크기]로 고른 글꼴 */
+function stateFontIn(resources: PDFDict) {
+  const context = resources.context;
+  const states = context.lookup(resources.get(PDFName.of('ExtGState')));
+  return (name: string) => {
+    const state =
+      states instanceof PDFDict ? context.lookup(states.get(PDFName.of(name))) : undefined;
+    const font =
+      state instanceof PDFDict ? context.lookup(state.get(PDFName.of('Font'))) : undefined;
+    return font instanceof PDFArray ? context.lookup(font.get(0)) : undefined;
+  };
+}
+
 /** 자원 목록에서 이름으로 묶음 그림을 찾는다 (그 안에서 또 부르는 것은 그 묶음 그림의 목록에서) */
 function formsIn(resources: PDFDict): FormLookup {
   const context = resources.context;
@@ -136,7 +141,13 @@ function formsIn(resources: PDFDict): FormLookup {
     if (form.dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) return undefined;
     const own = context.lookup(form.dict.get(PDFName.of('Resources')));
     return own instanceof PDFDict
-      ? { key: form, text: streamText(form), own: true, forms: formsIn(own) }
+      ? {
+          key: form,
+          text: streamText(form),
+          own: true,
+          forms: formsIn(own),
+          gsFont: (state: string) => stateFontIn(own)(state) instanceof PDFDict,
+        }
       : { key: form, text: streamText(form), own: false };
   };
 }
