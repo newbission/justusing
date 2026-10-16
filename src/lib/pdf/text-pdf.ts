@@ -1,5 +1,5 @@
 /**
- * 고른 글꼴로 PDF 쪽 위에 글자를 넣는다 (글자 워터마크, 머리말·꼬리말).
+ * 고른 글꼴로 PDF 쪽 위에 글자를 넣는다 (글자 워터마크, 머리말·꼬리말, PDF 편집).
  * 글자를 PDF에 넣으려면 글꼴이 필요해 글꼴 엔진(fontkit)을 쓰는 따로 된 워커(text-pdf.worker.ts)가 한다.
  * 쓰는 글자만 골라 넣으므로(subset) 결과 PDF는 글꼴 전체만큼 커지지 않는다.
  * 이 모듈을 import한 도구 frame에서만 로드된다.
@@ -8,9 +8,12 @@ import workerUrl from './text-pdf.worker.ts?worker&url';
 import { createWorker } from '../worker';
 import type { WatermarkOptions } from './watermark';
 import type { HeaderFooterOptions } from './header-footer';
+import type { EditOptions } from './edit';
 
 export type TextJob =
-  ({ kind: 'watermark' } & WatermarkOptions) | ({ kind: 'header-footer' } & HeaderFooterOptions);
+  | ({ kind: 'watermark' } & WatermarkOptions)
+  | ({ kind: 'header-footer' } & HeaderFooterOptions)
+  | ({ kind: 'edit' } & EditOptions);
 
 export interface TextRequest {
   id: number;
