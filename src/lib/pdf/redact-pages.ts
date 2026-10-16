@@ -96,7 +96,7 @@ function pruneResources(
       grew = true;
     }
   }
-  usedThroughNames(resources, usage.resources);
+  usedThroughNames(holder, resources, usage.resources);
   const own = context.obj({});
   for (const [key, value] of resources.entries()) {
     const kind = key.decodeText();
@@ -169,7 +169,7 @@ function formsIn(resources: PDFDict): FormLookup {
  * 남기는 그림·음영·무늬가 사전 안에서 이름으로 부르는 같은 목록의 색공간(/ColorSpace /CS1)도 쓰는 것으로 센다.
  * 내용에는 그 이름이 나오지 않는다
  */
-function usedThroughNames(resources: PDFDict, used: ResourceUse) {
+function usedThroughNames(holder: PDFDict, resources: PDFDict, used: ResourceUse) {
   const context = resources.context;
   const spaces = used.get('ColorSpace') ?? new Set<string>();
   /**
@@ -208,19 +208,42 @@ function usedThroughNames(resources: PDFDict, used: ResourceUse) {
       }
     }
   };
-  const addSpace = (dict: unknown) => {
-    const holder = dict instanceof PDFStream ? dict.dict : dict;
-    if (holder instanceof PDFDict) namesIn(holder.get(PDFName.of('ColorSpace')));
+  /** 사전 안에서 색공간 이름을 부르는 자리: /ColorSpace, 투명도 묶음(/Group)의 /CS, 그림의 마스크 그림 */
+  const addSpace = (object: unknown, depth = 0) => {
+    const dict = object instanceof PDFStream ? object.dict : object;
+    if (!(dict instanceof PDFDict) || depth > 4) return;
+    namesIn(dict.get(PDFName.of('ColorSpace')));
+    // 자기 자원 목록이 있는 묶음 그림의 /Group /CS는 그 목록의 이름이다 (이 목록 것이 아니다)
+    const group = context.lookup(dict.get(PDFName.of('Group')));
+    const inherits = depth === 0 && object === holder ? true : !dict.has(PDFName.of('Resources'));
+    if (group instanceof PDFDict && inherits) namesIn(group.get(PDFName.of('CS')));
+    for (const key of ['SMask', 'Mask']) {
+      const mask = context.lookup(dict.get(PDFName.of(key)));
+      if (mask instanceof PDFStream) addSpace(mask, depth + 1);
+    }
   };
+  // 이 목록을 쓰는 쪽·묶음 그림 자신의 투명도 묶음
+  addSpace(holder);
   for (const kind of ['XObject', 'Shading', 'Pattern']) {
     const entry = context.lookup(resources.get(PDFName.of(kind)));
     if (!(entry instanceof PDFDict)) continue;
     for (const name of used.get(kind) ?? []) {
       const object = context.lookup(entry.get(PDFName.of(name)));
+      // 자원 목록 없이 이 목록을 물려받는 묶음 그림이면 그 투명도 묶음도 이 목록의 이름을 쓴다
       addSpace(object);
       // 음영 무늬(PatternType 2)는 안의 음영이 색공간을 정한다
       const pattern = object instanceof PDFStream ? object.dict : object;
       if (pattern instanceof PDFDict) addSpace(context.lookup(pattern.get(PDFName.of('Shading'))));
+    }
+  }
+  // 그래픽 상태의 투명 마스크(/SMask /G) 묶음 그림이 자원 목록 없이 이 목록을 물려받으면 그 /Group /CS
+  const states = context.lookup(resources.get(PDFName.of('ExtGState')));
+  if (states instanceof PDFDict) {
+    for (const name of used.get('ExtGState') ?? []) {
+      const state = context.lookup(states.get(PDFName.of(name)));
+      const mask =
+        state instanceof PDFDict ? context.lookup(state.get(PDFName.of('SMask'))) : undefined;
+      if (mask instanceof PDFDict) addSpace(context.lookup(mask.get(PDFName.of('G'))));
     }
   }
   // 색공간 정의가 다른 이름 색공간을 부르면(/CS1 [/Indexed /CS2 …]) 그것도 남긴다.
