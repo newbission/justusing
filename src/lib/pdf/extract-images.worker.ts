@@ -57,6 +57,16 @@ type Colors =
       icc?: Uint8Array;
     };
 
+/** ICC 프로필의 값 범위(/Range)가 0~1이면 true. 아니면 화소 값을 그 범위로 바꿔 읽어야 해서 다룰 수 없다 */
+function plainRange(profile: PDFRawStream): boolean {
+  const range = profile.dict.lookup(name('Range'));
+  if (!(range instanceof PDFArray)) return true;
+  return range.asArray().every((item, i) => {
+    const value = profile.dict.context.lookup(item);
+    return value instanceof PDFNumber && value.asNumber() === i % 2;
+  });
+}
+
 /** 장치 색공간 이름 → 자원 목록에 그 대신 쓰라고 정한 기본 색공간(/DefaultRGB 등) */
 function defaultSpace(device: string, resources: PDFDict | undefined): PDFObject | undefined {
   const key = {
@@ -106,17 +116,7 @@ function baseSpace(
     const profile = resolved.lookup(1);
     if (!(profile instanceof PDFRawStream)) return undefined;
     const n = numberOf(profile.dict, 'N');
-    // 값 범위(/Range)가 0~1이 아니면 화소 값을 그 범위로 바꿔 읽어야 해서 다룰 수 없다
-    const range = profile.dict.lookup(name('Range'));
-    if (
-      range instanceof PDFArray &&
-      range.asArray().some((item, i) => {
-        const value = dict.context.lookup(item);
-        return !(value instanceof PDFNumber) || value.asNumber() !== i % 2;
-      })
-    ) {
-      return undefined;
-    }
+    if (!plainRange(profile)) return undefined;
     // 프로필은 PNG에 같이 넣어 보기 프로그램이 색을 맞추게 한다 (회색 프로필은 회색 PNG에 넣는다)
     if (n === 3) return { n: 3, icc: decodePDFRawStream(profile).decode() };
     if (n === 1) return { n: 1, icc: decodePDFRawStream(profile).decode() };
@@ -452,7 +452,7 @@ async function jpegPixels(
 function jpegSpace(
   dict: PDFDict,
   resources: PDFDict | undefined,
-): { icc?: Uint8Array } | undefined {
+): { icc?: Uint8Array; device?: 'gray' | 'rgb' | 'cmyk' } | undefined {
   let space = dict.lookup(name('ColorSpace'));
   const named = resources?.lookup(name('ColorSpace'));
   for (let depth = 0; space instanceof PDFName && depth < 4; depth++) {
@@ -466,12 +466,21 @@ function jpegSpace(
   }
   if (space === undefined) return {};
   if (space instanceof PDFName) {
-    const device = ['DeviceGray', 'DeviceRGB', 'DeviceCMYK', 'G', 'RGB', 'CMYK'];
-    return device.includes(space.decodeText()) ? {} : undefined;
+    const device = (
+      {
+        DeviceGray: 'gray',
+        G: 'gray',
+        DeviceRGB: 'rgb',
+        RGB: 'rgb',
+        DeviceCMYK: 'cmyk',
+        CMYK: 'cmyk',
+      } as const
+    )[space.decodeText()];
+    return device ? { device } : undefined;
   }
   if (space instanceof PDFArray && space.lookup(0) === name('ICCBased')) {
     const profile = space.lookup(1);
-    return profile instanceof PDFRawStream
+    return profile instanceof PDFRawStream && plainRange(profile)
       ? { icc: decodePDFRawStream(profile).decode() }
       : undefined;
   }
@@ -543,6 +552,46 @@ function plainDecode(dict: PDFDict): boolean {
 }
 
 /**
+ * JPEG 2000 파일 안의 색 정보(colr 상자)가 PDF가 정한 장치 색공간과 같은지.
+ * 상자 없는 코드 스트림은 색 정보가 없어 같은 것으로 본다. ICC 프로필이나 다른 색이면 false
+ */
+function jpxColorMatches(bytes: Uint8Array, device: 'gray' | 'rgb' | 'cmyk'): boolean {
+  if (bytes[0] === 0xff && bytes[1] === 0x4f) return true;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const type = (at: number) => String.fromCharCode(...bytes.subarray(at + 4, at + 8));
+  /** 상자들 [start, end)에서 type 상자의 내용 시작 */
+  const find = (start: number, end: number, wanted: string): number | undefined => {
+    for (let at = start; at + 8 <= end;) {
+      let length = view.getUint32(at);
+      let header = 8;
+      if (length === 1 && at + 16 <= end) {
+        length = Number(view.getBigUint64(at + 8));
+        header = 16;
+      } else if (length === 0) length = end - at;
+      if (length < header) return undefined;
+      if (type(at) === wanted) return at + header;
+      at += length;
+    }
+    return undefined;
+  };
+  const header = find(0, bytes.length, 'jp2h');
+  if (header === undefined) return false;
+  const headerEnd = header - 8 + view.getUint32(header - 8);
+  const colr = find(header, Math.min(headerEnd, bytes.length), 'colr');
+  // 색 정보가 없으면 보기 프로그램도 PDF처럼 장치 색으로 본다
+  if (colr === undefined) return true;
+  // 방법 1(정해진 색공간 번호)만 비교한다. 2(ICC 등)는 PDF와 다르게 보일 수 있다
+  if (bytes[colr] !== 1) return false;
+  const space = view.getUint32(colr + 3);
+  // 16 sRGB, 18 sYCC(보기 프로그램이 RGB로 바꿈), 17 회색, 12 CMYK
+  return device === 'rgb'
+    ? space === 16 || space === 18
+    : device === 'gray'
+      ? space === 17
+      : space === 12;
+}
+
+/**
  * JPEG 2000 바이트의 형식: JP2 상자 파일이면 형식 상자(ftyp)의 이름에 따라 jp2·jpx,
  * 상자 없는 코드 스트림이면 j2k
  */
@@ -597,6 +646,8 @@ async function extract(
     // (보기 프로그램은 파일 안 색공간 대신 PDF 사전의 색공간으로 그린다)
     const space = jpegSpace(dict, resources);
     if (!space || space.icc) return undefined;
+    // PDF가 장치 색공간을 정했으면 파일 안 색 정보가 그것과 같을 때만 원본을 낸다
+    if (space.device && !jpxColorMatches(stream.contents, space.device)) return undefined;
     return { ext: jpxKind(stream.contents), bytes: stream.contents.slice(), width, height };
   }
   const decoded = await decodePixels(stream, resources);
@@ -636,10 +687,11 @@ const DELIMITER = /[()<>[\]{}/%]/;
 function scanContent(
   streams: PDFStream[],
   minSide: number,
-): { inline: number; drawn: string[]; patterns: string[] } {
+): { inline: number; drawn: string[]; patterns: string[]; fonts: string[] } {
   let count = 0;
   const drawn: string[] = [];
   const patterns: string[] = [];
+  const fonts: string[] = [];
   let lastName = '';
   for (const stream of streams) {
     const text = streamText(stream);
@@ -687,9 +739,13 @@ function scanContent(
         end++;
       const token = text.slice(i, end);
       i = end;
+      // 숫자는 피연산자라 앞의 이름을 그대로 둔다 (/F1 12 Tf)
+      if (/^[+-]?(\d+\.?\d*|\.\d+)$/.test(token)) continue;
       if (token === 'Do' && lastName) drawn.push(lastName);
       // 무늬로 칠하기 (/P1 scn): 바둑무늬 무늬는 안에서 사진을 그릴 수 있다
       if ((token === 'scn' || token === 'SCN') && lastName) patterns.push(lastName);
+      // 글꼴 고르기 (/F1 12 Tf): Type3 글꼴은 글자 모양 안에서 사진을 그릴 수 있다
+      if (token === 'Tf' && lastName) fonts.push(lastName);
       // 이름은 바로 뒤 연산자의 피연산자일 때만 쓴다
       lastName = '';
       if (token !== 'BI') continue;
@@ -705,7 +761,7 @@ function scanContent(
       i = ei ? dataStart + ei.index + ei[0].length : text.length;
     }
   }
-  return { inline: count, drawn, patterns };
+  return { inline: count, drawn, patterns, fonts };
 }
 
 /**
