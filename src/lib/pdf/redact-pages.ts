@@ -353,13 +353,14 @@ function finishType3(pruning: Pruning) {
 const LAYER_STATE = PDFName.of('JustusingLayerOff');
 
 /**
- * 원본의 기본 보이기 설정(/OCProperties /D)에서 꺼 둔 층을 표시한다.
+ * 원본의 기본 보이기 설정(/OCProperties /D)에서 꺼 둔 층.
  * 새 PDF에는 문서 전체 설정이 없어, 옮기지 않으면 꺼 두었던 층(숨긴 내용)이 켜진 채로 보인다
  */
-function markLayerStates(source: PDFDocument) {
+function hiddenLayers(source: PDFDocument): Set<PDFDict> {
   const context = source.context;
+  const hiddenSet = new Set<PDFDict>();
   const properties = context.lookup(source.catalog.get(PDFName.of('OCProperties')));
-  if (!(properties instanceof PDFDict)) return;
+  if (!(properties instanceof PDFDict)) return hiddenSet;
   const config = context.lookup(properties.get(PDFName.of('D')));
   const refs = (key: string) => {
     const list =
@@ -371,13 +372,68 @@ function markLayerStates(source: PDFDocument) {
   const on = refs('ON');
   const off = refs('OFF');
   const layers = context.lookup(properties.get(PDFName.of('OCGs')));
-  if (!(layers instanceof PDFArray)) return;
+  if (!(layers instanceof PDFArray)) return hiddenSet;
+  const autoOff = autoHiddenLayers(config);
   for (const item of layers.asArray()) {
     const layer = context.lookup(item);
     if (!(layer instanceof PDFDict)) continue;
     const hidden = baseOff ? !on.includes(layer) : off.includes(layer);
-    if (hidden) layer.set(LAYER_STATE, PDFBool.True);
+    if (hidden || autoOff.has(layer)) hiddenSet.add(layer);
   }
+  return hiddenSet;
+}
+
+/**
+ * 볼 때 저절로 적용되는 규칙(/AS, 사건 /View)이 끌 수 있는 층. 결과에는 층의 사용 정보(/Usage)를 옮기지 않아
+ * 규칙이 사라지므로, 원본에서 꺼질 수 있던 층은 꺼 둔다:
+ * - 보기(/View /ViewState /OFF)
+ * - 확대 배율(/Zoom /min·/max): 100%에서 꺼지는 범위
+ * - 언어(/Language)·사람(/User): 보는 사람의 환경에 따라 정해져 알 수 없으므로, 규칙이 걸려 있으면 꺼 둔다
+ *   (숨겨 둔 내용이 켜진 채로 보이는 것보다 낫다. 층은 남아 있어 보기 프로그램에서 다시 켤 수 있다)
+ */
+function autoHiddenLayers(config: unknown): Set<PDFDict> {
+  const hidden = new Set<PDFDict>();
+  if (!(config instanceof PDFDict)) return hidden;
+  const context = config.context;
+  const list = (value: unknown) => {
+    const resolved = context.lookup(value as PDFObject);
+    return resolved instanceof PDFArray
+      ? resolved.asArray().map((item) => context.lookup(item))
+      : [];
+  };
+  const number = (value: unknown) => {
+    const resolved = context.lookup(value as PDFObject);
+    return resolved instanceof PDFNumber ? resolved.asNumber() : undefined;
+  };
+  for (const rule of list(config.get(PDFName.of('AS')))) {
+    if (!(rule instanceof PDFDict) || rule.get(PDFName.of('Event')) !== PDFName.of('View'))
+      continue;
+    const categories = list(rule.get(PDFName.of('Category')));
+    for (const layer of list(rule.get(PDFName.of('OCGs')))) {
+      if (!(layer instanceof PDFDict)) continue;
+      const usage = context.lookup(layer.get(PDFName.of('Usage')));
+      if (!(usage instanceof PDFDict)) continue;
+      const entry = (category: string) => {
+        if (!categories.includes(PDFName.of(category))) return undefined;
+        const value = context.lookup(usage.get(PDFName.of(category)));
+        return value instanceof PDFDict ? value : undefined;
+      };
+      const view = entry('View');
+      const zoom = entry('Zoom');
+      const min = zoom ? (number(zoom.get(PDFName.of('min'))) ?? 0) : 0;
+      const max = zoom ? (number(zoom.get(PDFName.of('max'))) ?? Infinity) : Infinity;
+      if (
+        view?.get(PDFName.of('ViewState')) === PDFName.of('OFF') ||
+        min > 1 ||
+        max <= 1 ||
+        entry('Language') ||
+        entry('User')
+      ) {
+        hidden.add(layer);
+      }
+    }
+  }
+  return hidden;
 }
 
 /** 새 PDF로 옮겨진 층들로 보이기 설정을 만들고, 꺼 둔 층은 꺼 둔다 */
@@ -440,10 +496,13 @@ export async function redact(
     size = pruning.type3.size;
     finishType3(pruning);
   }
+  // 층의 켜짐·꺼짐은 사용 정보(/Usage)로도 정해지므로, 그것을 지우기 전에 알아 둔다
+  const hidden = hiddenLayers(source);
   // 남길 쪽에서 그리기에 필요한 항목만 남긴다 (XMP·첨부 파일·앱 데이터·대체 그림·바깥 파일 연결 등은
   // 화면에 보이지 않지만 가린 쪽의 자료를 가리킬 수 있다)
   for (const index of kept) keepRenderingOnly(source.getPage(index).node);
-  markLayerStates(source);
+  // 정리가 모르는 항목을 지우므로 꺼 둔 표시는 정리한 뒤에 붙인다
+  for (const layer of hidden) layer.set(LAYER_STATE, PDFBool.True);
   const copied = await out.copyPages(source, kept);
   copyLayerStates(out);
   for (const [index, page] of source.getPages().entries()) {
