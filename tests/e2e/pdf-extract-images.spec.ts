@@ -1282,3 +1282,37 @@ test('표시 앞에 채움 바이트가 있는 JPG도 안쪽 프로필을 빼고
   expect(jpg.toString('latin1')).not.toContain('ICC_PROFILE');
   expect(jpg).toEqual(photo);
 });
+
+test('볼 때 저절로 끄는 층(/AS)의 사진은 꺼내지 않는다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (value: number, extra: Record<string, unknown> = {}) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(value), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+        ...extra,
+      }),
+    );
+  const viewOff = context.register(
+    context.obj({
+      Type: 'OCG',
+      Name: PDFHexString.fromText('Print only'),
+      Usage: { View: { ViewState: 'OFF' } },
+    }),
+  );
+  doc.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({
+      OCGs: [viewOff],
+      D: { AS: [{ Event: 'View', OCGs: [viewOff], Category: ['View'] }] },
+    }),
+  );
+  drawAll(doc, [gray(10), gray(20, { OC: viewOff })]);
+  const frame = await openPdf(page, 'auto-layer.pdf', doc);
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+});
