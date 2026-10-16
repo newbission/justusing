@@ -90,7 +90,10 @@ function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
   const highlight = kind === 'Highlight';
   const opacity = context.lookup(annot.get(PDFName.of('CA')));
   const alpha = opacity instanceof PDFNumber ? opacity.asNumber() : 1;
-  const ops = ['q', '/GS0 gs', fillColor(annot, highlight ? '1 1 0 rg' : '0 0 0 rg')];
+  const color = fillColor(annot, highlight ? '1 1 0 rg' : '0 0 0 rg');
+  // 같은 색을 선에도 쓴다 (g/rg/k → G/RG/K)
+  const stroke = color.replace(/(\S+)$/, (op) => op.toUpperCase());
+  const ops = ['q', '/GS0 gs', color, stroke];
   for (let i = 0; i < points.length; i += 8) {
     const xs = [points[i]!, points[i + 2]!, points[i + 4]!, points[i + 6]!];
     const ys = [points[i + 1]!, points[i + 3]!, points[i + 5]!, points[i + 7]!];
@@ -98,6 +101,18 @@ function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
     const height = y1 - y0;
     // 형광펜은 줄 전체, 밑줄은 아래쪽, 취소선은 가운데에 줄 높이의 7% 굵기로
     const line = Math.max(0.5, height * 0.07);
+    if (kind === 'Squiggly') {
+      // 물결 밑줄: 아래쪽을 따라 오르내리는 꺾은선
+      const wave = Math.max(1, height * 0.08);
+      const step = Math.max(1, height * 0.12);
+      const base = y0 + height * 0.1;
+      const path = [`${x0} ${base} m`];
+      for (let x = x0 + step, up = true; x <= x1; x += step, up = !up) {
+        path.push(`${x} ${up ? base + wave : base} l`);
+      }
+      ops.push(`${line} w`, ...path, 'S');
+      continue;
+    }
     const y = highlight
       ? y0
       : kind === 'StrikeOut'
