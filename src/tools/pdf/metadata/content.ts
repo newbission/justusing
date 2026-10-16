@@ -22,6 +22,10 @@ export default defineContent({
         a: '아니요. 문서 정보만 바꾸고 쪽 내용은 그대로 둡니다. 본문의 이름·번호를 지우려면 "PDF 가리기"를 쓰세요. 다만 파일을 새로 써서 저장하므로 전자 서명된 PDF는 서명이 더 이상 유효하지 않습니다 ("문서 정보 모두 지우기"를 고르면 서명 정보도 지웁니다).',
       },
       {
+        q: 'PDF 안 사진의 촬영 위치도 지우나요?',
+        a: '네. "문서 정보 모두 지우기"를 고르면 JPEG 사진에 들어 있는 촬영 정보(위치·카메라·촬영 시각 등 EXIF)와 사진 설명(XMP·IPTC)을 지웁니다. 사진은 다시 압축하지 않아 화질이 그대로입니다. JPEG 2000 사진과 첨부 파일 내용 안의 정보는 고치지 않습니다.',
+      },
+      {
         q: '암호가 걸린 PDF도 되나요?',
         a: '네. 암호를 입력해 열고 문서 정보를 고칠 수 있습니다. 다만 저장한 파일에서는 암호와 인쇄·복사 제한이 풀립니다(화면에도 알려 드립니다). 보호가 필요하면 저장한 뒤 "PDF 암호 걸기"로 다시 거세요.',
       },
@@ -50,6 +54,10 @@ export default defineContent({
       {
         q: 'Does the content change?',
         a: 'No. Only the document info changes; the pages stay as they are. To remove names or numbers from the pages, use "Redact PDF". However, the file is rewritten when saved, so a digitally signed PDF loses its valid signature ("Remove all document info" also removes the signature information).',
+      },
+      {
+        q: 'Does it remove the location from photos in the PDF?',
+        a: 'Yes. With "Remove all document info", it removes shooting details stored in JPEG photos (location, camera, time and other EXIF data) and photo descriptions (XMP, IPTC). Photos are not recompressed, so the quality stays the same. Information inside JPEG 2000 photos and attached files is not changed.',
       },
       {
         q: 'Does it work with password-protected PDFs?',
