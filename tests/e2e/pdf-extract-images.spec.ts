@@ -1243,3 +1243,42 @@ test('파일 안 투명 채널과 색(sYCC)이 PDF에서 보는 것과 다른 JP
   await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
   await expect(frame.getByText('4개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
+
+test('표시 앞에 채움 바이트가 있는 JPG도 안쪽 프로필을 빼고 꺼낸다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const photo = await readFile(fixture('photo.jpg'));
+  const app2 = Buffer.concat([
+    Buffer.from([0xff, 0xe2, 0x00, 0x20]),
+    Buffer.from('ICC_PROFILE\0'),
+    Buffer.from([1, 1]),
+    Buffer.alloc(16, 7),
+  ]);
+  // 프로필 조각 앞에 채움 바이트 FF 두 개
+  const filled = Buffer.concat([
+    photo.subarray(0, 2),
+    Buffer.from([0xff, 0xff]),
+    app2,
+    photo.subarray(2),
+  ]);
+  drawAll(doc, [
+    context.register(
+      context.stream(filled, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 1200,
+        Height: 900,
+        BitsPerComponent: 8,
+        ColorSpace: 'DeviceRGB',
+        Filter: 'DCTDecode',
+      }),
+    ),
+  ]);
+  const frame = await openPdf(page, 'filled.pdf', doc);
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  const jpg = await readFile(await (await event).path());
+  expect(jpg.toString('latin1')).not.toContain('ICC_PROFILE');
+  expect(jpg).toEqual(photo);
+});
