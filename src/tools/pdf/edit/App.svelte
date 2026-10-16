@@ -543,6 +543,10 @@
     position: absolute;
     cursor: move;
   }
+  /* 저장할 때처럼 글자는 늘 가리기·형광펜 위에 보인다 (text-pdf.worker.ts의 drawEdits) */
+  .item.text {
+    z-index: 1;
+  }
   /* 사각형을 그리는 도구에서는 넣은 것 위에서도 새로 그린다 (끌어도 넣은 것이 옮겨지지 않게) */
   .mode-whiteout .item,
   .mode-highlight .item {

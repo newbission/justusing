@@ -121,7 +121,8 @@ function drawEdits(
   job: Extract<TextJob, { kind: 'edit' }>,
 ) {
   const pages = doc.getPages();
-  // 가리기·형광펜을 먼저 그리고 글자를 위에 그린다 (가린 자리에 새 글자를 쓸 수 있게)
+  // 가리기·형광펜을 먼저 그리고 글자를 위에 그린다 (가린 자리에 새 글자를 쓸 수 있게).
+  // 미리보기도 같은 순서로 겹친다 (edit/App.svelte의 .item.text)
   const order = [...job.items].sort(
     (a, b) => Number(a.kind === 'text') - Number(b.kind === 'text'),
   );
