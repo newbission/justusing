@@ -78,11 +78,32 @@ function pruneResources(
   // 묶음 그림은 부른 자리에서 이어서 훑는다. 자원 목록이 없는 것은 그 목록을 물려받고(예전 방식),
   // 있는 것도 부른 자리의 글꼴로 찍은 글자는 그 글꼴의 것이다
   const stateFont = stateFontIn(resources);
-  const usage = contentUsage(
-    streams.map(streamText),
-    formsIn(resources),
-    (name) => stateFont(name) instanceof PDFDict,
-  );
+  const scan = (texts: string[]) =>
+    contentUsage(texts, formsIn(resources), (name) => stateFont(name) instanceof PDFDict);
+  const usage = scan(streams.map(streamText));
+  // 투명 마스크(/SMask /G)의 묶음 그림이 자원 목록 없이 이 목록을 물려받으면 그 내용도 이 목록 기준으로 센다
+  const states = context.lookup(resources.get(PDFName.of('ExtGState')));
+  const masked = new Set<PDFStream>();
+  for (let grew = true; grew && states instanceof PDFDict;) {
+    grew = false;
+    for (const name of usage.resources.get('ExtGState') ?? []) {
+      const state = context.lookup(states.get(PDFName.of(name)));
+      const mask =
+        state instanceof PDFDict ? context.lookup(state.get(PDFName.of('SMask'))) : undefined;
+      const group = mask instanceof PDFDict ? context.lookup(mask.get(PDFName.of('G'))) : undefined;
+      if (!(group instanceof PDFStream) || masked.has(group)) continue;
+      if (group.dict.has(PDFName.of('Resources'))) continue;
+      masked.add(group);
+      const inner = scan([streamText(group)]);
+      for (const [kind, names] of inner.resources) {
+        const set = usage.resources.get(kind) ?? new Set<string>();
+        for (const item of names) set.add(item);
+        usage.resources.set(kind, set);
+      }
+      usage.text.push(...inner.text);
+      grew = true;
+    }
+  }
   usedThroughNames(resources, usage.resources);
   const own = context.obj({});
   for (const [key, value] of resources.entries()) {
