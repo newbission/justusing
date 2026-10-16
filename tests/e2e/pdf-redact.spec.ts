@@ -450,3 +450,121 @@ test('이름으로 부르지 않아도 저절로 쓰이는 기본 색공간은 �
   const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
   expect(spaces.has(PDFName.of('DefaultRGB'))).toBe(true);
 });
+
+test('소문자로 바꾸면 길어지는 글자 뒤의 말도 실제 글자 자리대로 덮는다', async ({ page }) => {
+  // I를 İ(소문자로 바꾸면 두 자리가 된다)로 읽게 하는 ToUnicode를 붙인 Helvetica
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const helvetica = await source.embedFont(StandardFonts.Helvetica);
+  const cmap = context.register(
+    context.stream(
+      [
+        '/CIDInit /ProcSet findresource begin 12 dict begin begincmap',
+        '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def',
+        '/CMapName /Adobe-Identity-UCS def /CMapType 2 def',
+        '1 begincodespacerange <00> <FF> endcodespacerange',
+        '1 beginbfchar <49> <0130> endbfchar',
+        '2 beginbfrange <20> <48> <0020> <4A> <7E> <004A> endbfrange',
+        'endcmap CMapName currentdict /CMap defineresource pop end end',
+      ].join('\n'),
+    ),
+  );
+  const font = context.obj({
+    Type: 'Font',
+    Subtype: 'Type1',
+    BaseFont: 'Helvetica',
+    Encoding: 'WinAnsiEncoding',
+    ToUnicode: cmap,
+  });
+  const line = 'IIIIIIIIIIIISECRETWWWWWWWWWWWW';
+  const size = 12;
+  const added = source.addPage([400, 200]);
+  added.node.set(PDFName.of('Resources'), context.obj({ Font: { F1: font } }));
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream(`BT /F1 ${size} Tf 20 100 Td (${line}) Tj ET`)),
+  );
+  const frame = await openRedact(page, {
+    name: 'dotted-i.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByLabel('찾아서 가리기').fill('secret');
+  await frame.getByRole('button', { name: '모두 찾아 가리기' }).click();
+  await expect(frame.getByText('1곳을 찾아 가렸습니다.')).toBeVisible();
+  const box = await frame
+    .locator('.box')
+    .first()
+    .evaluate((element: HTMLElement) => ({
+      left: parseFloat(element.style.left) / 100,
+      width: parseFloat(element.style.width) / 100,
+    }));
+  const start = (20 + helvetica.widthOfTextAtSize(line.slice(0, 12), size)) / 400;
+  const end = (20 + helvetica.widthOfTextAtSize(line.slice(0, 18), size)) / 400;
+  expect(box.left).toBeLessThanOrEqual(start);
+  expect(box.left + box.width).toBeGreaterThanOrEqual(end);
+});
+
+test('기본 인코딩으로 찍은 Type3 글자 모양도 남긴다', async ({ page }) => {
+  // /Differences는 b만 바꾸고, a(97)는 기본 인코딩을 따른다. 2쪽(남김)이 a를 찍는다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 500, 500],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('500 0 d0 0 0 400 400 re f')),
+        b: context.register(context.stream('500 0 d0 0 0 200 200 re f')),
+      },
+      Encoding: { Type: 'Encoding', BaseEncoding: 'WinAnsiEncoding', Differences: [98, 'b'] },
+      FirstChar: 97,
+      LastChar: 98,
+      Widths: [500, 500],
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ Font: { T3: type3 } }));
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /T3 40 Tf 20 100 Td (a) Tj ET')),
+  );
+  const frame = await openRedact(page, {
+    name: 'base-encoding.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = await PDFDocument.load(bytes);
+  const fonts = result.getPage(1).node.Resources()!.lookup(PDFName.of('Font'), PDFDict);
+  const kept = fonts.lookup(PDFName.of('T3'), PDFDict);
+  expect(kept.lookup(PDFName.of('CharProcs'), PDFDict).has(PDFName.of('a'))).toBe(true);
+});
+
+test('자원 목록 없이 쪽 자원을 물려받는 묶음 그림이 쓰는 그림을 남긴다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const form = context.register(
+    context.stream('q 50 0 0 50 0 0 cm /Pic Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 200, 200],
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({ XObject: { Fm: form, Pic: secretImage(context) } }),
+  );
+  second.node.set(PDFName.of('Contents'), context.register(context.stream('/Fm Do')));
+  const frame = await openRedact(page, {
+    name: 'inherited.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).toContain(7);
+});
