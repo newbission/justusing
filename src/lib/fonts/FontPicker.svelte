@@ -62,10 +62,17 @@
     };
   }
 
+  /**
+   * 마지막으로 고른 것의 번호. 글꼴을 받는 동안 다른 글꼴을 고르면, 먼저 고른 것이 늦게 끝나도
+   * 고른 글꼴을 바꾸지 않는다 (받기는 끝까지 해서 보관해 둔다)
+   */
+  let picks = 0;
+
   /** 보관된 글꼴을 고른다 (보관소에서 바로 읽는다) */
   async function choose(font: FontEntry) {
     const ready = loaded.get(font.id);
     if (ready) {
+      picks++;
       selected = ready;
       return;
     }
@@ -73,6 +80,7 @@
   }
 
   async function download(font: FontEntry) {
+    const pick = ++picks;
     const wasCached = states[font.id]?.kind === 'cached';
     states[font.id] = { kind: 'downloading', percent: 0 };
     try {
@@ -85,7 +93,7 @@
       const entry = toSelected(font, bytes);
       loaded.set(font.id, entry);
       states[font.id] = { kind: 'cached' };
-      selected = entry;
+      if (pick === picks) selected = entry;
     } catch {
       states[font.id] = wasCached ? { kind: 'cached' } : { kind: 'failed' };
     }
@@ -102,6 +110,7 @@
         name: file.name.replace(/\.[^.]+$/, ''),
         files: { 400: bytes },
       };
+      picks++;
       selected = uploaded;
     } catch {
       uploadError = true;
@@ -183,7 +192,10 @@
             checked={selected !== undefined && selected.id === uploaded?.id}
             disabled={!uploaded}
             aria-label={uploaded ? t.mine(uploaded.name) : t.mineEmpty}
-            onchange={() => (selected = uploaded)}
+            onchange={() => {
+              picks++;
+              selected = uploaded;
+            }}
           />
           <strong>{uploaded ? t.mine(uploaded.name) : t.mineEmpty}</strong>
         </label>
