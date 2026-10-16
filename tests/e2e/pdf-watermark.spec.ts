@@ -104,6 +104,11 @@ test('목록과 다른 글꼴 파일은 쓰지 않는다', async ({ page }) => {
   await frame.getByRole('button', { name: '나눔고딕 받기' }).click();
   await expect(frame.getByText('글꼴을 받지 못했습니다.', { exact: false })).toBeVisible();
   await expect(frame.getByText('아래에서 글꼴을 받아 고르세요.')).toBeVisible();
+
+  // 잘못된 파일은 보관하지 않으므로, 제대로 받을 수 있게 되면 다시 받기로 쓸 수 있다
+  await page.unroute('**/data/fonts/nanum-gothic-*');
+  await frame.getByRole('button', { name: '나눔고딕 받기' }).click();
+  await expect(frame.getByText('모든 쪽(3쪽)에 워터마크를 넣습니다.')).toBeVisible();
 });
 
 test('내 글꼴을 올려 쓰고, 글꼴에 없는 글자는 알려 준다', async ({ page }) => {
@@ -121,4 +126,9 @@ test('내 글꼴을 올려 쓰고, 글꼴에 없는 글자는 알려 준다', as
   await frame.getByLabel('넣을 글자').fill('CAB');
   const { bytes } = await download(page, frame);
   for (const text of await pageTexts(bytes)) expect(text).toContain('CAB');
+
+  // 다른 글꼴을 올리면 이전 결과는 맞지 않으므로 다시 만들어야 한다
+  await frame.locator('input[type=file][accept*=".ttf"]').setInputFiles(fixture('abc.otf'));
+  await expect(frame.getByRole('button', { name: '워터마크 넣기' })).toBeVisible();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toHaveCount(0);
 });
