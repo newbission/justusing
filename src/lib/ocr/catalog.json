@@ -1,0 +1,17 @@
+{
+  "engine": {
+    "path": "/data/ocr/tesseract-core-simd-lstm.wasm",
+    "bytes": 2871377,
+    "sha256": "187d76742dfc0d8929f0b49a619f145bb6370730776c7bd0d3e20c6b2098808d"
+  },
+  "kor": {
+    "path": "/data/ocr/kor.traineddata.gz",
+    "bytes": 1572336,
+    "sha256": "78c21276ab14c9bb734d83be1055d9fe5469a4e7e977c51ad385be5737e61126"
+  },
+  "eng": {
+    "path": "/data/ocr/eng.traineddata.gz",
+    "bytes": 2952873,
+    "sha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91"
+  }
+}
