@@ -31,6 +31,18 @@ export function isPasswordError(error: unknown): boolean {
   return error instanceof Error && error.name === 'PasswordException';
 }
 
+/**
+ * 인증서로 전자 서명된 PDF인지. 우리 도구는 파일을 새로 써서 저장하므로 고친 파일에서는 서명이 깨진다.
+ * 서명 칸만 있고 서명하지 않은 PDF는 아니다. 읽지 못하면 서명이 없다고 본다
+ */
+export async function isSigned(doc: PDFDocumentProxy): Promise<boolean> {
+  try {
+    return ((await doc.getSignatures())?.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
+}
+
 export interface OpenedPdf {
   doc: PDFDocumentProxy;
   /** 문서를 닫고 메모리를 돌려준다 */

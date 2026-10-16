@@ -25,6 +25,8 @@ const ko = {
     open: '열기',
     cancel: '취소',
     cannotOpen: 'PDF를 열 수 없습니다. 파일이 손상되었거나 PDF 파일이 아닐 수 있습니다.',
+    signed:
+      '전자 서명된 PDF입니다. 이 도구로 저장한 파일에서는 서명이 더 이상 유효하지 않습니다. 서명이 필요한 문서는 원본을 보내세요.',
   },
   action: {
     download: '다운로드',
@@ -133,6 +135,8 @@ const en: FrameMessages = {
     open: 'Open',
     cancel: 'Cancel',
     cannotOpen: 'Could not open the PDF. The file may be damaged or may not be a PDF.',
+    signed:
+      'This PDF is digitally signed. The signature will no longer be valid in the file saved by this tool. Send the original when the signature matters.',
   },
   action: {
     download: 'Download',
