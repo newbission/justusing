@@ -140,13 +140,16 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
   if (clear) {
     if (dict instanceof PDFDict) for (const key of dict.keys()) dict.delete(key);
     // 문서 정보 밖에 숨은 정보가 있는 자리를 모두 훑는다 (객체 안에 바로 들어 있는 사전·배열까지):
-    // - 어디에나: XMP(/Metadata), 앱 데이터(/PieceInfo), 고친 시각(/LastModified), 웹에서 받은 기록(/SpiderInfo)
+    // - 어디에나: XMP(/Metadata), 앱 데이터(/PieceInfo), 고친 시각(/LastModified), 웹에서 받은 기록(/SpiderInfo),
+    //   문서 부분 정보(/DPM)
     // - 첨부 파일(/Params): 만든·고친 날짜, Mac 파일 정보(만든 앱)
     // - 주석: 작성자(/T, 입력 칸 Widget의 /T는 칸 이름이라 둔다), 만든·고친 시각, 고유 이름(/NM)
     // - 기사 흐름(/Thread)의 정보 사전(/I): 제목·작성자 등
+    // - 레이어(OCG)의 사용 정보(/Usage): 만든 프로그램(/CreatorInfo), 대상 사람·조직(/User)
     // - 전자 서명 사전: 서명한 사람·시각·장소·이유·연락처·서명 프로그램 (저장하면 서명은 어차피 깨진다)
     const named = (...keys: string[]) => keys.map((key) => PDFName.of(key));
-    const hidden = named('Metadata', 'PieceInfo', 'LastModified', 'SpiderInfo');
+    const hidden = named('Metadata', 'PieceInfo', 'LastModified', 'SpiderInfo', 'DPM');
+    const usage = named('CreatorInfo', 'User');
     const fileDates = named('CreationDate', 'ModDate', 'Mac');
     const annotation = named('M', 'CreationDate', 'NM');
     const signature = named(
@@ -170,6 +173,10 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
         if (subtype instanceof PDFName && object.has(PDFName.of('Rect'))) {
           for (const key of annotation) object.delete(key);
           if (subtype !== PDFName.of('Widget')) object.delete(PDFName.of('T'));
+        }
+        const layerUsage = context.lookup(object.get(PDFName.of('Usage')));
+        if (type === PDFName.of('OCG') && layerUsage instanceof PDFDict) {
+          for (const key of usage) layerUsage.delete(key);
         }
         if (type === PDFName.of('Thread')) {
           const threadInfo = context.lookup(object.get(PDFName.of('I')));
