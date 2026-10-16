@@ -4,6 +4,7 @@
  */
 import { PDFDocument, StandardFonts, degrees, rgb, type PDFPage } from '@cantoo/pdf-lib';
 import type { ModifyJob, ModifyRequest, ModifyResponse, NUpCount, PaperSize } from './modify';
+import { flattenAnnotations } from './flatten-annotations';
 import { normalizedRotation, scaleRect, toPdfPoint, viewSize } from './page-geometry';
 
 const NUMBER_SIZE = 11;
@@ -45,6 +46,8 @@ async function nUp(
   const cellWidth = (width - SHEET_MARGIN * 2 - CELL_GAP * (cols - 1)) / cols;
   const cellHeight = (height - SHEET_MARGIN * 2 - CELL_GAP * (rows - 1)) / rows;
   const pages = source.getPages();
+  // 양식 입력값·서명·주석은 쪽 내용이 아니라서 옮겨지지 않는다. 보이는 모양을 쪽 내용에 먼저 그려 넣는다
+  pages.forEach(flattenAnnotations);
   // 내용이 없는 빈 쪽은 pdf-lib가 넣지 못한다. 칸만 비워 둔다
   const drawable = pages.filter((page) => page.node.Contents() !== undefined);
   const embeddedList = await out.embedPages(
