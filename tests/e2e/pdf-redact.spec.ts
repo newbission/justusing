@@ -1042,3 +1042,119 @@ test('색공간 배열 안에서 이름으로 부르는 색공간과, 깊이 겹
   const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
   expect(spaces.has(PDFName.of('CS1'))).toBe(true);
 });
+
+test('바로 써 넣은 그림 바이트 안의 EI 뒤를 연산자로 읽지 않는다', async ({ page }) => {
+  // 2쪽 그림 바이트(회색 14×1) 안에 " EI /Secret Do"가 들어 있다. 1쪽(가림)이 비밀 그림을 쓴다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const resources = context.register(context.obj({ XObject: { Secret: secretImage(context) } }));
+  const first = source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  for (const [added, draw] of [
+    [first, 'q 50 0 0 50 10 10 cm /Secret Do Q'],
+    [second, 'q 50 0 0 50 10 10 cm BI /W 14 /H 1 /CS /G /BPC 8 ID  EI /Secret Do EI Q'],
+  ] as const) {
+    added.node.set(PDFName.of('Resources'), resources);
+    added.node.set(PDFName.of('Contents'), context.register(context.stream(draw)));
+  }
+  const frame = await openRedact(page, {
+    name: 'inline-ei.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).not.toContain(7);
+});
+
+test('자기 자원 묶음 그림이 gs로 바꾼 글꼴로 찍은 글자는 물려받은 Type3 글꼴로 세지 않는다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const helvetica = await source.embedFont(StandardFonts.Helvetica);
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 500, 500],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('500 0 d0 0 0 400 400 re f')),
+        b: context.register(context.stream('500 0 d0 q 400 0 0 400 0 0 cm /Secret Do Q')),
+      },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a', 'b'] },
+      FirstChar: 97,
+      LastChar: 98,
+      Widths: [500, 500],
+      Resources: { XObject: { Secret: secretImage(context) } },
+    }),
+  );
+  const form = context.register(
+    context.stream('/G2 gs BT 20 50 Td (b) Tj ET', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 200, 200],
+      Resources: { ExtGState: { G2: { Font: [helvetica.ref, 12] } } },
+    }),
+  );
+  const resources = context.register(context.obj({ Font: { T3: type3 }, XObject: { A: form } }));
+  const first = source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  for (const [added, draw] of [
+    [first, 'BT /T3 40 Tf 20 100 Td (b) Tj ET'],
+    [second, 'BT /T3 40 Tf ET /A Do BT /T3 40 Tf 20 100 Td (a) Tj ET'],
+  ] as const) {
+    added.node.set(PDFName.of('Resources'), resources);
+    added.node.set(PDFName.of('Contents'), context.register(context.stream(draw)));
+  }
+  const frame = await openRedact(page, {
+    name: 'form-gs.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).not.toContain(7);
+});
+
+test('자원 목록 없는 투명 마스크 묶음 그림이 쓰는 그림을 남긴다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const picture = context.register(
+    context.flateStream(new Uint8Array(81).fill(200), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 9,
+      Height: 9,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+    }),
+  );
+  const group = context.register(
+    context.stream('q 100 0 0 100 0 0 cm /Pic Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 200, 200],
+      Group: { S: 'Transparency', CS: 'DeviceGray' },
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      XObject: { Pic: picture },
+      ExtGState: { GS1: { SMask: { S: 'Luminosity', G: group } } },
+    }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('q /GS1 gs 0 0 1 rg 0 0 100 100 re f Q')),
+  );
+  const frame = await openRedact(page, {
+    name: 'smask-inherit.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await imageWidths(bytes)).toContain(9);
+});
