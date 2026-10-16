@@ -721,3 +721,88 @@ test('물려받는 묶음 그림은 부른 자리의 글꼴로 찍은 Type3 글�
   const kept = fonts.lookup(PDFName.of('T3'), PDFDict);
   expect(kept.lookup(PDFName.of('CharProcs'), PDFDict).has(PDFName.of('a'))).toBe(true);
 });
+
+test('남긴 그림에 붙은 XMP 설명은 옮기지 않는다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const picture = context.register(
+    context.flateStream(new Uint8Array(81).fill(9), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 9,
+      Height: 9,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+      Metadata: context.register(
+        context.stream('<x:xmpmeta>IMAGE-XMP-SECRET</x:xmpmeta>', {
+          Type: 'Metadata',
+          Subtype: 'XML',
+        }),
+      ),
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ XObject: { Pic: picture } }));
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('q 50 0 0 50 10 10 cm /Pic Do Q')),
+  );
+  const frame = await openRedact(page, {
+    name: 'image-xmp.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('IMAGE-XMP-SECRET');
+  expect(await imageWidths(bytes)).toContain(9);
+});
+
+test('자기 자원 목록이 있는 묶음 그림도 물려받은 Type3 글꼴로 찍은 글자 모양을 남긴다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 500, 500],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: { a: context.register(context.stream('500 0 d0 0 0 400 400 re f')) },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a'] },
+      FirstChar: 97,
+      LastChar: 97,
+      Widths: [500],
+    }),
+  );
+  const form = context.register(
+    context.stream('BT 20 100 Td (a) Tj ET', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 200, 200],
+      Resources: {},
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({ Font: { T3: type3 }, XObject: { Fm: form } }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /T3 40 Tf ET /Fm Do')),
+  );
+  const frame = await openRedact(page, {
+    name: 'own-resources.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = await PDFDocument.load(bytes);
+  const fonts = result.getPage(1).node.Resources()!.lookup(PDFName.of('Font'), PDFDict);
+  const kept = fonts.lookup(PDFName.of('T3'), PDFDict);
+  expect(kept.lookup(PDFName.of('CharProcs'), PDFDict).has(PDFName.of('a'))).toBe(true);
+});
