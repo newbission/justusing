@@ -35,6 +35,15 @@ const isPng = (bytes: Uint8Array) =>
  * APP1 'Exif' 조각의 첫 IFD에서 0x0112 태그만 찾는다.
  */
 export function jpegOrientation(bytes: Uint8Array): number {
+  try {
+    return readOrientation(bytes);
+  } catch {
+    // 망가진 EXIF(범위 밖을 가리키는 값)는 방향 정보가 없는 것으로 본다. 사진은 그대로 쓸 수 있다
+    return 1;
+  }
+}
+
+function readOrientation(bytes: Uint8Array): number {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let offset = 2;
   while (offset + 4 <= view.byteLength) {
