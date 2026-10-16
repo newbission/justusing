@@ -338,6 +338,17 @@ async function jpegToPng(
   return png(pixels);
 }
 
+/** /Decode가 없거나 모든 성분이 [0 1](바꾸지 않음)이면 true */
+function plainDecode(dict: PDFDict): boolean {
+  const decode = dict.lookup(name('Decode'));
+  if (decode === undefined) return true;
+  if (!(decode instanceof PDFArray)) return false;
+  return decode.asArray().every((item, i) => {
+    const value = dict.context.lookup(item);
+    return value instanceof PDFNumber && value.asNumber() === i % 2;
+  });
+}
+
 /** 사진 하나를 꺼낸다. 다룰 수 없으면 undefined */
 async function extract(
   stream: PDFRawStream,
@@ -349,6 +360,8 @@ async function extract(
   const list = filters(dict);
   const last = list.at(-1);
   if (list.length === 1 && last === 'DCTDecode') {
+    // /Decode로 값을 바꿔 보여 주는 JPG(뒤집기 등)는 원본 그대로 내면 PDF에서 보이는 것과 달라진다
+    if (!plainDecode(dict)) return undefined;
     const alpha = await alphaOf(dict, width, height);
     if (alpha === UNSUPPORTED) return undefined;
     // 색 키 투명은 회색·RGB JPG만 (CMYK는 브라우저가 읽은 값과 PDF의 값이 달라 맞춰 볼 수 없다)
