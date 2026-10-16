@@ -21,6 +21,41 @@ import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
+/** 상자 하나 (길이 4바이트 + 이름 + 내용) */
+const box = (type: string, ...content: number[][]) => {
+  const body = content.flat();
+  return [...[0, 0, 0, body.length + 8], ...Buffer.from(type), ...body];
+};
+
+/**
+ * 시험용 JPEG 2000 (JP2) 바이트: 서명·형식 상자와 머리 상자(jp2h: ihdr 채널 수, colr 색, cdef 채널 정의).
+ * 그림 자료(코드 스트림)는 없다. 꺼내는 쪽은 상자만 읽고 바이트를 그대로 옮긴다
+ */
+function jp2Bytes({
+  brand = 'jp2 ',
+  channels = 3,
+  space = 16,
+  cdef,
+}: {
+  brand?: string;
+  channels?: number;
+  space?: number;
+  cdef?: [number, number, number][];
+}) {
+  const u16 = (value: number) => [value >> 8, value & 0xff];
+  const header = box(
+    'jp2h',
+    box('ihdr', [0, 0, 0, 64, 0, 0, 0, 64], u16(channels), [7, 7, 0, 0]),
+    box('colr', [1, 0, 0, 0, 0, 0, space]),
+    cdef ? box('cdef', u16(cdef.length), ...cdef.map((entry) => entry.flatMap(u16))) : [],
+  );
+  return new Uint8Array([
+    ...[0, 0, 0, 12, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a],
+    ...box('ftyp', [...Buffer.from(brand)], [0, 0, 0, 0], [...Buffer.from(brand)]),
+    ...header,
+  ]);
+}
+
 /** 1쪽: JPG 사진 + PNG 화면, 2쪽: 같은 JPG + 10×10 작은 그림 + 흑백 팩스(CCITT) 그림 */
 async function picturesPdf() {
   const doc = await PDFDocument.create();
@@ -586,33 +621,8 @@ test('JPEG 2000은 형식에 맞는 확장자로 꺼내고, 장치 색공간이 
 }) => {
   const doc = await PDFDocument.create();
   const context = doc.context;
-  // JP2 서명 상자 + 형식 상자(이름 jpx)
-  const jpxBytes = new Uint8Array(64);
-  jpxBytes.set([0, 0, 0, 12, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a]);
-  jpxBytes.set([0, 0, 0, 20, ...Buffer.from('ftypjpx ')], 12);
-  // 머리 상자(jp2h) 안 색 정보(colr): 방법 1, sRGB(16)
-  jpxBytes.set(
-    [
-      0,
-      0,
-      0,
-      23,
-      ...Buffer.from('jp2h'),
-      0,
-      0,
-      0,
-      15,
-      ...Buffer.from('colr'),
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      16,
-    ],
-    32,
-  );
+  // 형식 상자 이름 jpx, 색 정보: 방법 1 sRGB(16)
+  const jpxBytes = jp2Bytes({ brand: 'jpx ' });
   const jpx = (extra: Record<string, unknown>) =>
     context.register(
       context.stream(jpxBytes, {
