@@ -52,7 +52,7 @@
   </label>
 {/snippet}
 
-<SinglePdfTool {onload}>
+<SinglePdfTool {onload} saves>
   {#snippet children()}
     {#if pdf}
       <StampTool

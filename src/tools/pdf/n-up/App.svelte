@@ -100,7 +100,7 @@
   }
 </script>
 
-<SinglePdfTool {onload}>
+<SinglePdfTool {onload} saves>
   {#snippet children({ doc })}
     {@const sheets = Math.ceil(doc.numPages / perSheet)}
     {@const firstCount = Math.min(perSheet, doc.numPages)}

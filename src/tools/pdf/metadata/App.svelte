@@ -170,7 +170,7 @@
   }
 </script>
 
-<SinglePdfTool {onload}>
+<SinglePdfTool {onload} saves>
   {#snippet children()}
     <ActionBar label={t.bar}>
       {#snippet text()}
