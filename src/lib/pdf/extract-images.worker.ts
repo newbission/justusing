@@ -682,9 +682,33 @@ function scanContent(streams: PDFStream[], minSide: number): { inline: number; d
   return { inline: count, drawn };
 }
 
+/**
+ * 사진의 색공간이 부른 쪽의 자원 목록에 따라 어떻게 풀리는지를 나타내는 글자.
+ * 자원 목록과 상관없는 사진은 늘 같은 글자라 여러 쪽에서 불러도 한 번만 꺼낸다
+ */
+function spaceKey(dict: PDFDict, resources: PDFDict | undefined): string {
+  const named = resources?.lookup(name('ColorSpace'));
+  const keys: string[] = [];
+  const visit = (value: unknown, depth: number) => {
+    if (value instanceof PDFName) {
+      const text = value.decodeText();
+      const entry =
+        (named instanceof PDFDict ? named.get(value) : undefined) ?? defaultSpace(text, resources);
+      if (entry === undefined) return;
+      keys.push(`${text}=${entry.toString()}`);
+      if (depth < 4) visit(dict.context.lookup(entry), depth + 1);
+    } else if (value instanceof PDFArray && depth < 4) {
+      for (const item of value.asArray()) visit(dict.context.lookup(item), depth + 1);
+    }
+  };
+  visit(dict.lookup(name('ColorSpace')), 0);
+  return keys.join(';');
+}
+
 /** 쪽마다 그 쪽(과 쪽 안의 묶음 그림)이 쓰는 사진. 같은 사진은 처음 나온 쪽에만 */
 function collect(doc: PDFDocument, minSide: number) {
-  const seen = new Set<PDFRef>();
+  /** 꺼낸 사진: 같은 사진도 부른 쪽의 자원에 따라 색이 달라지면(이름 색공간·기본 색공간) 따로 센다 */
+  const seen = new Set<string>();
   /** 훑은 묶음 그림. 자원 목록이 없는 것은 부른 쪽의 자원에 따라 그리는 사진이 달라 자원별로 센다 */
   const visitedForms = new Map<PDFRef, Set<PDFDict | undefined>>();
   /** resources: 그 사진을 부른 자원 목록 (색공간 이름을 풀려고) */
@@ -715,8 +739,10 @@ function collect(doc: PDFDocument, minSide: number) {
       if (subtype === name('Image')) {
         // 글자 모양 가림(ImageMask)은 사진이 아니다
         if (object.dict.lookup(name('ImageMask'))?.toString() === 'true') continue;
-        if (seen.has(value) || !(object instanceof PDFRawStream)) continue;
-        seen.add(value);
+        if (!(object instanceof PDFRawStream)) continue;
+        const key = `${value.toString()} ${spaceKey(object.dict, resources)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
         found.push({ ref: value, stream: object, page, resources });
       } else if (subtype === name('Form')) {
         // 자원 목록이 없는 묶음 그림은 부른 쪽의 자원을 물려받는다 (예전 방식)
