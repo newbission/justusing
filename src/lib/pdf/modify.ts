@@ -1,5 +1,6 @@
 /**
- * PDF 하나를 고쳐서 새 PDF를 만든다: 암호 풀기·걸기, 쪽 번호, 이미지 찍기(이미지 넣기·서명), 자르기.
+ * PDF 하나를 고쳐서 새 PDF를 만든다: 암호 풀기·걸기, 쪽 번호, 이미지 찍기(이미지 넣기·서명), 자르기,
+ * 모아찍기.
  * 실제 처리는 워커(modify.worker.ts)에서 pdf-lib로 한다. 이 모듈을 import한 도구 frame에서만 로드된다.
  *
  * 쪽 위의 자리는 화면에 보이는 쪽 기준 비율(0~1, 왼쪽 위가 0,0)로 넘긴다. 쪽의 회전과
@@ -26,6 +27,9 @@ export interface StampPlace {
   width: number;
 }
 
+export type NUpCount = 2 | 4 | 6 | 9;
+export type PaperSize = 'a4' | 'letter';
+
 export type NumberPosition = 'bottom-center' | 'bottom-right' | 'top-right';
 export type NumberFormat = 'plain' | 'of-total' | 'dashes';
 
@@ -44,7 +48,9 @@ export type ModifyJob =
       pages: number[];
     }
   /** 고른 쪽들의 보이는 영역을 rect로 줄인다 (pages는 0부터) */
-  | { kind: 'crop'; rect: PageRect; pages: number[] };
+  | { kind: 'crop'; rect: PageRect; pages: number[] }
+  /** 여러 쪽을 한 장에 모은 새 PDF (모아찍기) */
+  | { kind: 'n-up'; perSheet: NUpCount; paper: PaperSize; border: boolean };
 
 export interface ModifyRequest {
   id: number;
