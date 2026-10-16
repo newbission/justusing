@@ -306,6 +306,13 @@
       ArrowUp: [0, -step],
       ArrowDown: [0, step],
     };
+    if (event.key === 'Enter' || event.key === ' ') {
+      // 고르기만 한다. 글자는 바로 고칠 수 있게 입력 칸으로 간다
+      event.preventDefault();
+      select(item.id);
+      if (item.kind === 'text') tick().then(() => textArea?.focus());
+      return;
+    }
     if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault();
       remove(item.id);
@@ -413,6 +420,7 @@
                   style:color={rgbCss(item.color)}
                   onpointerdown={(event) => onItemDown(event, item)}
                   onkeydown={(event) => onItemKey(event, item)}
+                  onfocus={() => select(item.id)}
                 >
                   {#each item.text.split('\n') as line, i (i)}<span class="line"
                       >{line || '\u00a0'}</span
@@ -434,6 +442,7 @@
                     : undefined}
                   onpointerdown={(event) => onItemDown(event, item)}
                   onkeydown={(event) => onItemKey(event, item)}
+                  onfocus={() => select(item.id)}
                 ></div>
               {/if}
             {/each}
@@ -490,6 +499,12 @@
                       selected.size = value;
                       textSize = value;
                     }
+                  }}
+                  onchange={(event) => {
+                    // 범위 밖이나 빈 값은 쓰이지 않으므로, 칸을 떠날 때 실제로 쓰는 크기로 되돌린다
+                    const value = Number(event.currentTarget.value);
+                    if (!(value >= 4 && value <= 200))
+                      event.currentTarget.value = String(selected.size);
                   }}
                 />
               </label>
