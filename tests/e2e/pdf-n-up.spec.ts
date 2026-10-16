@@ -172,10 +172,20 @@ test('양식 입력값·주석처럼 주석으로 보이는 내용도 함께 옮
       BBox: [0, 0, 50, 50],
     }),
   );
-  const annot = context.register(
-    context.obj({ Type: 'Annot', Subtype: 'Square', Rect: [20, 20, 70, 70], AP: { N: look } }),
+  // 인쇄 플래그(4)가 있는 것만 종이에 나온다. 화면 전용 주석은 빠진다
+  const printed = context.register(
+    context.obj({
+      Type: 'Annot',
+      Subtype: 'Square',
+      F: 4,
+      Rect: [20, 20, 70, 70],
+      AP: { N: look },
+    }),
   );
-  added.node.set(PDFName.of('Annots'), context.obj([annot]));
+  const screenOnly = context.register(
+    context.obj({ Type: 'Annot', Subtype: 'Square', Rect: [100, 100, 150, 150], AP: { N: look } }),
+  );
+  added.node.set(PDFName.of('Annots'), context.obj([printed, screenOnly]));
 
   const frame = await openNUp(page);
   await frame.locator('input[type=file]').setInputFiles({
@@ -189,6 +199,46 @@ test('양식 입력값·주석처럼 주석으로 보이는 내용도 함께 옮
   const { placed, inner } = await placedPages(bytes, 1);
   expect(placed).toHaveLength(1);
   expect(inner).toBe(1);
+});
+
+/** 모양(/AP) 없이 값만 저장된 입력 칸 하나가 있는 PDF */
+async function formWithoutAppearance(value: string) {
+  const source = await PDFDocument.create();
+  const added = source.addPage([300, 200]);
+  const field = source.getForm().createTextField('name');
+  field.addToPage(added, { x: 20, y: 80, width: 200, height: 30 });
+  field.setText(value);
+  for (const widget of field.acroField.getWidgets()) widget.dict.delete(PDFName.of('AP'));
+  return Buffer.from(await source.save({ updateFieldAppearances: false }));
+}
+
+test('모양 없이 저장된 양식 입력값은 모양을 만들어 옮긴다', async ({ page }) => {
+  const frame = await openNUp(page);
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'form.pdf',
+    mimeType: 'application/pdf',
+    buffer: await formWithoutAppearance('Hello form'),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+
+  const { bytes } = await download(page, frame);
+  const doc = await getDocument({ data: bytes.slice() }).promise;
+  const content = await (await doc.getPage(1)).getTextContent();
+  const text = content.items.map((item) => ('str' in item ? item.str : '')).join('');
+  expect(text).toContain('Hello form');
+});
+
+test('모양을 만들 수 없는 양식 입력값이 있으면 조용히 빼지 않고 알린다', async ({ page }) => {
+  const frame = await openNUp(page);
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'form-ko.pdf',
+    mimeType: 'application/pdf',
+    buffer: await formWithoutAppearance('홍길동'),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  await expect(
+    frame.getByText('양식 입력값 일부는 모양이 저장되어 있지 않아', { exact: false }),
+  ).toBeVisible();
 });
 
 test('모으는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
