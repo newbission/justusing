@@ -15,7 +15,7 @@ export default defineTool({
       name: 'Extract Images from PDF',
       title: 'Extract Images from PDF - Original quality, in your browser',
       description:
-        'Pull the photos and pictures out of a PDF as JPG or PNG files. JPGs come out exactly as stored, with no quality loss, and many images download as one ZIP. Your file is never uploaded.',
+        'Pull the photos and pictures out of a PDF as JPG or PNG files. JPGs come out without recompression, with no quality loss, and many images download as one ZIP. Your file is never uploaded.',
     },
   },
   related: ['pdf/to-image', 'pdf/extract-text'],

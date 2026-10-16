@@ -17,7 +17,7 @@ When you need a photo from a catalog, report or paper PDF, a screenshot only cap
 
 ## Is the quality unchanged?
 
-- **JPG images** are extracted byte for byte as stored in the PDF. Nothing is recompressed, so the quality is the same.
+- **JPG images** are extracted byte for byte as stored in the PDF. Nothing is recompressed, so the quality is the same. If the PDF assigns its own color profile, that profile is added to the JPG so the colors match the PDF, and JPGs with transparency are saved as PNG to keep the transparent parts.
 - **Other images** (screenshots, transparent pictures and so on) are decoded and saved as PNG, a lossless format.
 - You get the size stored in the PDF, even if the image looked small on the page.
 
