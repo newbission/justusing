@@ -338,6 +338,81 @@ async function jpegToPng(
   return png(pixels);
 }
 
+/**
+ * JPG의 색공간: 장치 색공간(회색·RGB·CMYK)이거나 없으면 {}, ICC 프로필이면 {icc}.
+ * 보정 색공간(CalRGB·Lab)·별색 등 JPG 파일로 옮길 수 없는 것은 undefined
+ */
+function jpegSpace(
+  dict: PDFDict,
+  resources: PDFDict | undefined,
+): { icc?: Uint8Array } | undefined {
+  let space = dict.lookup(name('ColorSpace'));
+  const named = resources?.lookup(name('ColorSpace'));
+  for (let depth = 0; space instanceof PDFName && named instanceof PDFDict && depth < 4; depth++) {
+    if (!named.has(space)) break;
+    space = named.lookup(space);
+  }
+  if (space === undefined) return {};
+  if (space instanceof PDFName) {
+    const device = ['DeviceGray', 'DeviceRGB', 'DeviceCMYK', 'G', 'RGB', 'CMYK'];
+    return device.includes(space.decodeText()) ? {} : undefined;
+  }
+  if (space instanceof PDFArray && space.lookup(0) === name('ICCBased')) {
+    const profile = space.lookup(1);
+    return profile instanceof PDFRawStream
+      ? { icc: decodePDFRawStream(profile).decode() }
+      : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * JPG에 ICC 프로필을 넣는다 (APP2 ICC_PROFILE 조각들). 원래 들어 있던 프로필은 PDF가 정한 것으로 바꾼다.
+ * JPG 구조를 읽을 수 없으면 undefined
+ */
+function jpegWithIcc(jpeg: Uint8Array, icc: Uint8Array): Uint8Array | undefined {
+  if (jpeg[0] !== 0xff || jpeg[1] !== 0xd8) return undefined;
+  const signature = new TextEncoder().encode('ICC_PROFILE\0');
+  const isIcc = (at: number) => signature.every((byte, i) => jpeg[at + 4 + i] === byte);
+  // 앞쪽 표시 조각들(그림 자료 SOS 전까지)에서 예전 프로필 조각만 뺀다
+  const kept: Uint8Array[] = [];
+  let at = 2;
+  while (at + 4 <= jpeg.length && jpeg[at] === 0xff) {
+    const marker = jpeg[at + 1]!;
+    if (marker === 0xda) break;
+    const length = (jpeg[at + 2]! << 8) | jpeg[at + 3]!;
+    if (length < 2) return undefined;
+    if (!(marker === 0xe2 && isIcc(at))) kept.push(jpeg.subarray(at, at + 2 + length));
+    at += 2 + length;
+  }
+  if (jpeg[at] !== 0xff || jpeg[at + 1] !== 0xda) return undefined;
+  // 조각 하나에 65535 - 2(길이) - 14(서명·번호) 바이트까지
+  const size = 65519;
+  const count = Math.ceil(icc.length / size);
+  if (count > 255) return undefined;
+  const chunks: Uint8Array[] = [];
+  for (let i = 0; i < count; i++) {
+    const part = icc.subarray(i * size, (i + 1) * size);
+    const segment = new Uint8Array(4 + signature.length + 2 + part.length);
+    const length = segment.length - 2;
+    segment.set([0xff, 0xe2, length >> 8, length & 0xff]);
+    segment.set(signature, 4);
+    segment.set([i + 1, count], 4 + signature.length);
+    segment.set(part, 6 + signature.length);
+    chunks.push(segment);
+  }
+  // SOI 바로 뒤에 JFIF(APP0)가 있으면 그 뒤에 둔다
+  const app0 = kept[0]?.[1] === 0xe0 ? [kept.shift()!] : [];
+  const parts = [jpeg.subarray(0, 2), ...app0, ...chunks, ...kept, jpeg.subarray(at)];
+  const out = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out;
+}
+
 /** /Decode가 없거나 모든 성분이 [0 1](바꾸지 않음)이면 true */
 function plainDecode(dict: PDFDict): boolean {
   const decode = dict.lookup(name('Decode'));
@@ -368,11 +443,17 @@ async function extract(
     const components = colorsOf(dict, resources)?.components;
     const key = colorKeyOf(dict, components ?? 3);
     if (key === UNSUPPORTED || (key && !components)) return undefined;
+    // PDF가 정한 색공간(ICC 프로필)이 JPG 밖에 있으면 결과에 넣어야 PDF에서 보던 색이 된다
+    const space = jpegSpace(dict, resources);
+    if (!space) return undefined;
     if (alpha || key) {
+      // 투명도를 합친 PNG(RGB)에는 RGB 프로필만 넣는다 (회색 프로필은 다른 회색 사진처럼 그대로 본다)
+      const icc = components === 3 ? space.icc : undefined;
       const bytes = await jpegToPng(stream, alpha, key, components ?? 3);
-      return { ext: 'png', bytes, width, height };
+      return { ext: 'png', bytes: icc ? await withIcc(bytes, icc) : bytes, width, height };
     }
-    return { ext: 'jpg', bytes: stream.contents.slice(), width, height };
+    const bytes = space.icc ? jpegWithIcc(stream.contents, space.icc) : stream.contents.slice();
+    return bytes ? { ext: 'jpg', bytes, width, height } : undefined;
   }
   if (list.length === 1 && last === 'JPXDecode') {
     // 투명도가 JPEG 2000 바깥(PDF 사전)에 있으면 브라우저가 JPEG 2000을 못 읽어 합칠 수 없다
