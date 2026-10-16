@@ -24,8 +24,34 @@ export function placements(
   // 글자 방향(u)과 그에 수직인 줄 방향(v), 화면 좌표(아래가 +y)
   const u = { x: Math.cos(theta), y: -Math.sin(theta) };
   const v = { x: Math.sin(theta), y: Math.cos(theta) };
-  const stepU = textWidth + fontSize * 2;
-  const stepV = fontSize * 3.5;
+  // 글자가 아주 작거나 쪽이 아주 길어 너무 많으면 간격을 고르게 넓혀 쪽 전체에 퍼지게 한다
+  // (앞에서부터 채우다 멈추면 쪽 일부만 덮인다)
+  let spread = 1;
+  for (;;) {
+    const points = grid(
+      page,
+      center,
+      u,
+      v,
+      (textWidth + fontSize * 2) * spread,
+      fontSize * 3.5 * spread,
+      textWidth / 2 + fontSize,
+    );
+    if (points.length <= MAX_TILES) return points;
+    spread *= Math.sqrt(points.length / MAX_TILES) * 1.02;
+  }
+}
+
+/** 기울인 줄을 따라 엇갈린 격자로 쪽(과 그 둘레 margin)을 덮는 점들 */
+function grid(
+  page: { width: number; height: number },
+  center: { x: number; y: number },
+  u: { x: number; y: number },
+  v: { x: number; y: number },
+  stepU: number,
+  stepV: number,
+  margin: number,
+): { x: number; y: number }[] {
   const radius = Math.hypot(page.width, page.height) / 2 + Math.max(stepU, stepV);
   const points: { x: number; y: number }[] = [];
   const rows = Math.ceil(radius / stepV);
@@ -39,12 +65,10 @@ export function placements(
       const x = center.x + u.x * a + v.x * b;
       const y = center.y + u.y * a + v.y * b;
       // 쪽 밖으로 완전히 나간 것은 뺀다 (글자 반폭만큼 여유)
-      const margin = textWidth / 2 + fontSize;
       if (x < -margin || x > page.width + margin || y < -margin || y > page.height + margin) {
         continue;
       }
       points.push({ x, y });
-      if (points.length >= MAX_TILES) return points;
     }
   }
   return points;
