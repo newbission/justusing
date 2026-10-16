@@ -420,3 +420,32 @@ test('끌 수 있는 라디오는 고른 단추를 다시 눌러 고르지 않�
   expect(saved.getRadioGroup('optional').getSelected()).toBeUndefined();
   expect(saved.getRadioGroup('required').getSelected()).toBe('B');
 });
+
+test('__proto__·constructor 같은 이름의 칸도 지금 값을 보여 주고 고쳐 저장한다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 200]);
+  const form = doc.getForm();
+  const proto = form.createTextField('__proto__');
+  proto.setText('old proto');
+  proto.addToPage(added, { x: 20, y: 120, width: 200, height: 24 });
+  const ctor = form.createTextField('constructor');
+  ctor.setText('old ctor');
+  ctor.addToPage(added, { x: 20, y: 60, width: 200, height: 24 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'names.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByLabel('__proto__')).toHaveValue('old proto');
+  await expect(frame.getByLabel('constructor')).toHaveValue('old ctor');
+  await frame.getByLabel('__proto__').fill('new proto');
+  await expect(frame.getByText('1칸을 고쳤습니다.', { exact: false })).toBeVisible();
+  const { bytes } = await download(page, frame);
+  const saved = (await PDFDocument.load(bytes)).getForm();
+  expect(saved.getTextField('__proto__').getText()).toBe('new proto');
+  expect(saved.getTextField('constructor').getText()).toBe('old ctor');
+});
