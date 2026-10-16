@@ -13,20 +13,25 @@ import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
-/** 1쪽: 스캔본, 2쪽: 눕혀 저장하고 /Rotate 90으로 세운 스캔본, 3쪽: 글자가 있는 쪽 */
+const TEXT_PAGE = 'This page already has plenty of selectable text, so OCR skips it entirely.';
+
+/** 1쪽: 스캔본(쪽 번호만 글자), 2쪽: 눕혀 저장하고 /Rotate 90으로 세운 스캔본, 3쪽: 글자가 있는 쪽 */
 async function scannedPdf() {
   const doc = await PDFDocument.create();
   const scan = await doc.embedPng(await readFile(fixture('scan.png')));
   // 그림 1240×600을 가로 595pt에 맞춘다
   const width = 595;
   const height = (width * scan.height) / scan.width;
-  doc.addPage([width, height]).drawImage(scan, { x: 0, y: 0, width, height });
+  const first = doc.addPage([width, height]);
+  first.drawImage(scan, { x: 0, y: 0, width, height });
   // 화면에서 시계 방향으로 90° 돌려 보이므로, 내용은 반시계 방향으로 눕혀 넣는다
   const rotated = doc.addPage([height, width]);
   rotated.setRotation(degrees(90));
   rotated.drawImage(scan, { x: height, y: 0, width, height, rotate: degrees(90) });
   const font = await doc.embedFont(StandardFonts.Helvetica);
-  doc.addPage([width, height]).drawText('Already text', { x: 40, y: 100, size: 24, font });
+  // 스캔한 쪽에 쪽 번호만 글자로 있으면 본문은 그림이므로 그래도 읽는다
+  first.drawText('- 1 -', { x: width / 2, y: 8, size: 8, font });
+  doc.addPage([width, height]).drawText(TEXT_PAGE, { x: 20, y: 100, size: 10, font });
   return Buffer.from(await doc.save());
 }
 
@@ -103,7 +108,7 @@ test('스캔본의 글자를 읽어 보이는 자리에 넣고, 글자가 있는
     expect(korean.y, `${index + 1}쪽`).toBeLessThan(result.height * 0.5);
   }
   // 글자가 있던 쪽은 다시 읽지 않는다
-  expect(pages[2]!.text.trim()).toBe('Already text');
+  expect(pages[2]!.text.trim()).toBe(TEXT_PAGE);
 
   // 읽은 글자만 TXT로
   const textEvent = page.waitForEvent('download');
