@@ -27,6 +27,16 @@ const LAST_NAME: Record<string, string> = {
   DP: 'Properties',
 };
 
+/** 늘 그 색공간 자체를 뜻하고 자원 목록(/ColorSpace)을 찾지 않는 이름 */
+const DIRECT_SPACES = new Set(['DeviceGray', 'DeviceRGB', 'DeviceCMYK', 'Pattern']);
+/** 바로 써 넣은 그림(BI … ID)에서만 쓰는 장치 색공간 줄임 이름 */
+const INLINE_SPACES = new Set(['G', 'RGB', 'CMYK']);
+
+/** 색공간 이름이 자원 목록을 부르는지 (inline: 바로 써 넣은 그림 안의 이름) */
+export function namesSpaceResource(name: string, inline = false): boolean {
+  return !DIRECT_SPACES.has(name) && !(inline && INLINE_SPACES.has(name));
+}
+
 /**
  * 이름 → 묶음 그림. key: 그 묶음 그림 객체(서로 부르는지 알아보려고), text: 내용,
  * own: 자기 자원 목록이 있음, forms: 그 안에서 부르는 이름을 찾는 곳 (자기 자원 목록이 있을 때)
@@ -102,11 +112,14 @@ export function contentUsage(
         );
         const value = operands[at + 1];
         if (at !== -1 && !foreign) {
-          if (value?.kind === 'name') use('ColorSpace', value.value);
+          const space = (name: string) => {
+            if (namesSpaceResource(name, true)) use('ColorSpace', name);
+          };
+          if (value?.kind === 'name') space(value.value);
           else if (value?.kind === 'other' && value.text === undefined) {
             // 배열: 첫 이름은 종류(/I·/Indexed), 둘째 이름이 기본 색공간
             const base = operands[at + 3];
-            if (base?.kind === 'name') use('ColorSpace', base.value);
+            if (base?.kind === 'name') space(base.value);
           }
         }
         inInlineImage = false;
@@ -131,7 +144,10 @@ export function contentUsage(
         );
         if (font) shown.push({ font, codes });
       } else if (LAST_NAME[op] && last?.kind === 'name') {
-        if (!foreign) use(LAST_NAME[op], last.value);
+        const kind = LAST_NAME[op];
+        if (!foreign && (kind !== 'ColorSpace' || namesSpaceResource(last.value))) {
+          use(kind, last.value);
+        }
         // 묶음 그림 안에서 다시 부르는 묶음 그림도 그 자리의 글꼴 상태로 이어서 훑는다
         const inner = op === 'Do' ? forms?.(last.value) : undefined;
         // 지금 훑는 중인 묶음 그림을 다시 부르면(잘못된 파일) 그만둔다. 깊이 자체는 제한하지 않는다
