@@ -71,7 +71,8 @@ function colorsOf(dict: PDFDict): Colors | undefined {
   const space = dict.lookup(name('ColorSpace'));
   if (space instanceof PDFArray && space.lookup(0) === name('Indexed')) {
     const base = baseComponents(space.get(1), dict);
-    const table = space.lookup(2);
+    // [/Indexed 기본색공간 최댓값 색목록]
+    const table = space.lookup(3);
     if (!base) return undefined;
     let palette: Uint8Array | undefined;
     if (table instanceof PDFString) palette = table.asBytes();
