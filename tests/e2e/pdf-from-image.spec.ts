@@ -117,6 +117,26 @@ test('JPG는 다시 압축하지 않고 넣되, 촬영 위치 같은 정보 조�
   expect(text).toContain(photo.subarray(2).toString('latin1'));
 });
 
+test('EXIF가 망가진 사진도 넣는다', async ({ page }) => {
+  const photo = await readFile(fixture('small.jpg'));
+  // 첫 IFD 자리가 파일 밖을 가리킨다
+  const body = Buffer.from('Exif\0\0MM\0*\x7f\xff\xff\xff', 'latin1');
+  const broken = Buffer.concat([
+    photo.subarray(0, 2),
+    Buffer.from([0xff, 0xe1, 0, body.length + 2]),
+    body,
+    photo.subarray(2),
+  ]);
+  await page.goto('/pdf/from-image/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'broken-exif.jpg', mimeType: 'image/jpeg', buffer: broken });
+  await frame.getByRole('button', { name: 'PDF 만들기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(await pageSizes(bytes)).toHaveLength(1);
+});
+
 test('열 수 없는 이미지는 표시하고 빼고 만든다', async ({ page }) => {
   const frame = await openTool(page, ['broken.png']);
   await expect(frame.getByText('열 수 없는 이미지입니다.', { exact: false })).toBeVisible();
