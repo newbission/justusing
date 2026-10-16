@@ -45,12 +45,17 @@
     if (typeof value !== 'string' || !value) return '';
     // XMP 날짜만 (2025-05-06, 2025-05): 시간대가 없으니 그날 그대로 보여 준다
     // (new Date는 이를 세계 표준시 자정으로 읽어 서쪽 나라에서는 전날이 된다)
+    // 연도만·연월만 적혔으면 그만큼만 보여 준다 (없는 월·일을 만들지 않는다)
     const dateOnly = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/.exec(value);
     if (dateOnly) {
-      const [, year, month = '01', date = '01'] = dateOnly;
-      return new Intl.DateTimeFormat(frameLocale, { dateStyle: 'medium' }).format(
-        new Date(Number(year), Number(month) - 1, Number(date)),
-      );
+      const [, year, month, date] = dateOnly;
+      const at = new Date(Number(year), Number(month ?? 1) - 1, Number(date ?? 1));
+      const style: Intl.DateTimeFormatOptions = date
+        ? { dateStyle: 'medium' }
+        : month
+          ? { year: 'numeric', month: 'long' }
+          : { year: 'numeric' };
+      return new Intl.DateTimeFormat(frameLocale, style).format(at);
     }
     // XMP 날짜와 시각 (2026-01-02T03:04:05+09:00)
     if (/^\d{4}-\d{2}/.test(value)) {
