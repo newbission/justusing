@@ -183,9 +183,15 @@ function displayOf(field: PDFDropdown | PDFOptionList, value: string): string {
   return option ? option.display.decodeText() : value;
 }
 
+/** 암호 칸의 모양에 그리는 글자. 화면처럼 가린다 (값은 그대로 둔다) */
+const masked = (text: string) => '*'.repeat([...text].length);
+
 /** 칸이 지금 모양으로 그리는 글자 (목록은 선택지를 모두 그린다) */
 function shownText(field: unknown): string[] {
-  if (field instanceof PDFTextField) return [field.getText() ?? ''];
+  if (field instanceof PDFTextField) {
+    const text = field.getText() ?? '';
+    return [field.isPassword() ? masked(text) : text];
+  }
   if (field instanceof PDFDropdown) return field.getSelected();
   if (field instanceof PDFOptionList) return field.getOptions();
   return [];
@@ -200,8 +206,11 @@ function formText(doc: PDFDocument, job: Extract<TextJob, { kind: 'fill-form' }>
   const texts: string[] = [];
   for (const [name, value] of Object.entries(job.values)) {
     const field = form.getFieldMaybe(name);
-    if (value.kind === 'text') texts.push(value.text);
-    else if (value.kind === 'choice' && field instanceof PDFDropdown) {
+    if (value.kind === 'text') {
+      texts.push(
+        field instanceof PDFTextField && field.isPassword() ? masked(value.text) : value.text,
+      );
+    } else if (value.kind === 'choice' && field instanceof PDFDropdown) {
       texts.push(...value.values.map((item) => displayOf(field, item)));
     } else if (value.kind === 'choice' && field instanceof PDFOptionList) {
       texts.push(...field.getOptions());
@@ -256,6 +265,15 @@ function fillFields(
       exports.push({ field, values: value.values });
     }
   }
+  // 암호 칸은 모양에 * 로 가린 글자를 그린다 (굳히면 모양이 쪽 내용이 되므로 평문이 남지 않게)
+  const secrets: { field: PDFTextField; text: string }[] = [];
+  for (const field of form.getFields()) {
+    if (!(field instanceof PDFTextField) || !field.isPassword()) continue;
+    if (!(field.getName() in job.values) && !field.needsAppearancesUpdate()) continue;
+    const text = field.getText() ?? '';
+    secrets.push({ field, text });
+    field.setText(masked(text));
+  }
   const appearanceFont = font ?? doc.embedStandardFont(StandardFonts.Helvetica);
   if (!font) {
     const supported = new Set(appearanceFont.getCharacterSet());
@@ -265,6 +283,10 @@ function fillFields(
     if (missing.length > 0) return missing;
   }
   form.updateFieldAppearances(appearanceFont);
+  for (const { field, text } of secrets) {
+    if (text) field.acroField.dict.set(PDFName.of('V'), PDFHexString.fromText(text));
+    else field.acroField.dict.delete(PDFName.of('V'));
+  }
   // 모양(보이는 글자)은 그대로 두고, 저장되는 값은 내보내는 값으로 (받는 쪽 자동 처리가 이 값을 읽는다)
   // (pdf-lib의 setValues는 보이는 글자만 받아 값을 직접 적는다. 목록은 고른 항목 번호 /I도 맞춘다)
   for (const { field, values } of exports) {
