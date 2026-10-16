@@ -802,6 +802,8 @@ addEventListener('message', async (event: MessageEvent<ExtractRequest>) => {
       return Math.min(width, height) >= minSide;
     });
     let failed = collected.inline;
+    /** 꺼낸 사진의 번호 (꺼내지 못한 것은 건너뛰어 빈 번호가 없게) */
+    let extracted = 0;
     for (const [index, { stream, page, resources }] of found.entries()) {
       let image: Awaited<ReturnType<typeof extract>>;
       try {
@@ -810,7 +812,9 @@ addEventListener('message', async (event: MessageEvent<ExtractRequest>) => {
         image = undefined;
       }
       if (image) {
-        send({ id, kind: 'image', image: { ...image, page, index } }, [image.bytes.buffer]);
+        send({ id, kind: 'image', image: { ...image, page, index: extracted++ } }, [
+          image.bytes.buffer,
+        ]);
       } else {
         failed++;
       }
