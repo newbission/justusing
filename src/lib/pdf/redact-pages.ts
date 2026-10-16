@@ -29,7 +29,7 @@ import {
 import {
   GS_FONT,
   contentUsage,
-  namesSpaceResource,
+  spaceResource,
   type FormLookup,
   type ResourceUse,
 } from './content-usage';
@@ -39,8 +39,6 @@ import { keepRenderingOnly } from './rendering-only';
 
 /** 쪽 자원 중 내용에서 이름으로 부르는 것들 */
 const NAMED = ['XObject', 'Font', 'ExtGState', 'Pattern', 'Shading', 'ColorSpace', 'Properties'];
-/** 장치 색공간 대신 저절로 쓰이는 기본 색공간 */
-const DEFAULT_SPACES = ['DefaultGray', 'DefaultRGB', 'DefaultCMYK'];
 
 function streamText(stream: PDFStream): string {
   const bytes =
@@ -122,9 +120,8 @@ function pruneResources(
     const used = usage.resources.get(kind) ?? new Set<string>();
     const kept = context.obj({});
     for (const [name, item] of entry.entries()) {
-      // 기본 색공간(/DefaultRGB 등)은 이름으로 부르지 않고 g·rg·k와 장치 색 그림에 저절로 쓰인다
-      const implicit = kind === 'ColorSpace' && DEFAULT_SPACES.includes(name.decodeText());
-      if (!implicit && !used.has(name.decodeText())) continue;
+      // 기본 색공간(/DefaultRGB 등)은 장치 색(g·rg·k, 장치 색공간 그림 등)을 쓴 만큼만 쓴 것으로 센다
+      if (!used.has(name.decodeText())) continue;
       kept.set(name, item);
       pruneNested(context.lookup(item), pruning);
     }
@@ -194,8 +191,9 @@ function usedThroughNames(holder: PDFDict, resources: PDFDict, used: ResourceUse
   const namesIn = (value: unknown, depth = 0) => {
     const resolved = context.lookup(value as PDFObject);
     if (resolved instanceof PDFName) {
-      // /DeviceRGB 같은 장치 색공간은 같은 이름의 목록 항목이 있어도 그것을 부르지 않는다
-      if (namesSpaceResource(resolved.decodeText())) spaces.add(resolved.decodeText());
+      // /DeviceRGB 같은 장치 색공간은 같은 이름의 목록 항목이 아니라 기본 색공간(/DefaultRGB)을 부른다
+      const resource = spaceResource(resolved.decodeText());
+      if (resource) spaces.add(resource);
       return;
     }
     if (!(resolved instanceof PDFArray) || depth > 8) return;
@@ -262,10 +260,9 @@ function usedThroughNames(holder: PDFDict, resources: PDFDict, used: ResourceUse
     }
   }
   // 색공간 정의가 다른 이름 색공간을 부르면(/CS1 [/Indexed /CS2 …]) 그것도 남긴다.
-  // 저절로 쓰이는 기본 색공간의 정의도 따라간다
+  // 장치 색을 써서 쓰인 기본 색공간(/DefaultRGB 등)의 정의도 따라간다
   const defined = context.lookup(resources.get(PDFName.of('ColorSpace')));
   if (defined instanceof PDFDict) {
-    for (const name of DEFAULT_SPACES) if (defined.has(PDFName.of(name))) spaces.add(name);
     for (let size = -1; size !== spaces.size;) {
       size = spaces.size;
       for (const name of [...spaces]) namesIn(defined.get(PDFName.of(name)));

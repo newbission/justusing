@@ -455,6 +455,42 @@ test('이름으로 부르지 않아도 저절로 쓰이는 기본 색공간은 �
   expect(spaces.has(PDFName.of('DefaultRGB'))).toBe(true);
 });
 
+test('쓰지 않는 장치 색의 기본 색공간은 남기지 않는다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const profile = (text: string, n: number) =>
+    context.register(context.stream(`ICC ${text}`, { N: n }));
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  // 가린 쪽에서만 RGB·CMYK를 썼고, 남길 쪽은 회색만 쓴다
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      ColorSpace: {
+        DefaultGray: ['CalGray', { WhitePoint: [0.9505, 1, 1.089] }],
+        DefaultRGB: ['ICCBased', profile('DEFAULT-RGB-SECRET', 3)],
+        DefaultCMYK: ['ICCBased', profile('DEFAULT-CMYK-SECRET', 4)],
+      },
+    }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('0.5 g 20 20 100 100 re f')),
+  );
+  const frame = await openRedact(page, {
+    name: 'default-gray.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('DEFAULT-RGB-SECRET');
+  expect(text).not.toContain('DEFAULT-CMYK-SECRET');
+  const result = await PDFDocument.load(bytes);
+  const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
+  expect(spaces.has(PDFName.of('DefaultGray'))).toBe(true);
+});
+
 test('소문자로 바꾸면 길어지는 글자 뒤의 말도 실제 글자 자리대로 덮는다', async ({ page }) => {
   // I를 İ(소문자로 바꾸면 두 자리가 된다)로 읽게 하는 ToUnicode를 붙인 Helvetica
   const source = await PDFDocument.create();
