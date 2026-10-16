@@ -46,11 +46,14 @@
     editable: boolean;
     /** 적은 글자를 가려 보여 주는 암호 칸 */
     password: boolean;
+    /** 고른 라디오 단추를 다시 눌러 아무것도 고르지 않은 상태로 돌릴 수 있다 (/Ff NoToggleToOff가 없음) */
+    toggleOff: boolean;
   }
 
   /** PDF 입력 칸 플래그: 선택 상자에 직접 적기 (/Ff Edit), 암호 칸 (/Ff Password) */
   const FLAG_EDIT = 0x40000;
   const FLAG_PASSWORD = 0x2000;
+  const FLAG_NO_TOGGLE_TO_OFF = 0x4000;
 
   /** pdf.js가 알려 주는 입력 칸 정보 중 쓰는 것 */
   interface WidgetData {
@@ -197,6 +200,7 @@
           multiple: !!a.multiSelect,
           editable: kind === 'select' && ((a.fieldFlags ?? 0) & FLAG_EDIT) !== 0,
           password: kind === 'text' && ((a.fieldFlags ?? 0) & FLAG_PASSWORD) !== 0,
+          toggleOff: kind === 'radio' && ((a.fieldFlags ?? 0) & FLAG_NO_TOGGLE_TO_OFF) === 0,
         });
         if (a.fieldName in start) continue;
         const raw = a.fieldValue;
@@ -383,6 +387,12 @@
                       checked={onOf(field.name) !== '' && onOf(field.name) === field.onValue}
                       onchange={() =>
                         (values[field.name] = { kind: 'check', on: field.onValue ?? '' })}
+                      onclick={() => {
+                        // 이미 고른 단추를 다시 누르면 고르지 않은 상태로 (PDF가 허용할 때)
+                        if (field.toggleOff && onOf(field.name) === field.onValue) {
+                          values[field.name] = { kind: 'check', on: '' };
+                        }
+                      }}
                     />
                   {:else if field.kind === 'select' && field.editable}
                     <!-- 직접 적을 수 있는 선택 상자: 선택지를 고르거나 적는다 -->
