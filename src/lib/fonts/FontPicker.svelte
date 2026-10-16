@@ -101,6 +101,8 @@
 
   async function upload(file: File) {
     uploadError = false;
+    // 읽는 동안 다른 글꼴을 고르면 그쪽을 남긴다 (고른 순서대로)
+    const pick = ++picks;
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       // 브라우저가 읽을 수 있는 글꼴인지 확인한다 (파일을 어디로도 보내지 않는다)
@@ -110,8 +112,7 @@
         name: file.name.replace(/\.[^.]+$/, ''),
         files: { 400: bytes },
       };
-      picks++;
-      selected = uploaded;
+      if (pick === picks) selected = uploaded;
     } catch {
       uploadError = true;
     }
