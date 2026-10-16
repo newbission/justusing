@@ -145,7 +145,8 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
     // - 어디에나: XMP(/Metadata), 앱 데이터(/PieceInfo), 고친 시각(/LastModified), 웹에서 받은 기록(/SpiderInfo),
     //   문서 부분 정보(/DPM)
     // - 첨부 파일(/Params): 만든·고친 날짜, Mac 파일 정보(만든 앱)
-    // - 주석: 작성자(/T, 입력 칸 Widget의 /T는 칸 이름이라 둔다), 만든·고친 시각, 고유 이름(/NM)
+    // - 주석: 작성자(/T, 입력 칸 Widget의 /T는 칸 이름이라 둔다), 주제(/Subj), 만든·고친 시각, 고유 이름(/NM).
+    //   본문(/Contents·/RC)은 주석의 내용이라 둔다
     // - 기사 흐름(/Thread)의 정보 사전(/I): 제목·작성자 등
     // - 레이어(OCG)의 사용 정보(/Usage): 만든 프로그램(/CreatorInfo), 대상 사람·조직(/User)
     // - 전자 서명: 저장하면 서명은 어차피 깨지므로 서명 값(/V, 서명한 사람의 인증서가 든 사전)과 서명 조건(/SV,
@@ -155,7 +156,7 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
     const hidden = named('Metadata', 'PieceInfo', 'LastModified', 'SpiderInfo', 'DPM');
     const usage = named('CreatorInfo', 'User');
     const fileDates = named('CreationDate', 'ModDate', 'Mac');
-    const annotation = named('M', 'CreationDate', 'NM');
+    const annotation = named('M', 'CreationDate', 'NM', 'Subj');
     const signature = named(
       'Name',
       'M',
