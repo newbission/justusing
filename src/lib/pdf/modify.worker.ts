@@ -8,6 +8,7 @@ import {
   PDFHexString,
   PDFDocument,
   PDFName,
+  PDFRawStream,
   PDFStream,
   StandardFonts,
   degrees,
@@ -24,6 +25,7 @@ import type {
 } from './modify';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { normalizedRotation, scaleRect, toPdfPoint, viewSize } from './page-geometry';
+import { stripJpegMetadata } from '../image/jpeg-metadata';
 import { removeUnused } from './remove-unused';
 import { addTextLayers } from './text-layer';
 
@@ -201,6 +203,18 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
       }
     };
     for (const [, object] of context.enumerateIndirectObjects()) strip(object);
+    // 사진(JPEG) 안의 촬영 정보(EXIF·GPS·XMP·IPTC·설명)도 뗀다. 다른 형식으로 압축을 한 번 더 한 JPEG,
+    // JPEG 2000, 첨부 파일 내용은 고치지 않는다 (화면·FAQ에 밝힌다)
+    for (const [ref, object] of context.enumerateIndirectObjects()) {
+      if (!(object instanceof PDFRawStream)) continue;
+      const filter = context.lookup(object.dict.get(PDFName.of('Filter')));
+      const only = filter instanceof PDFArray && filter.size() === 1 ? filter.lookup(0) : filter;
+      if (only !== PDFName.of('DCTDecode')) continue;
+      const stripped = stripJpegMetadata(object.contents);
+      if (stripped && stripped !== object.contents) {
+        context.assign(ref, PDFRawStream.of(object.dict, stripped));
+      }
+    }
     // 파일 식별자(/ID)는 원본과 결과를 이어 줄 수 있어 새로 만든다 (보기 프로그램이 쓰므로 지우지 않는다)
     const id = PDFHexString.of(
       [...crypto.getRandomValues(new Uint8Array(16))]
