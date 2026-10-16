@@ -48,6 +48,8 @@
   /** 이미 읽은 글꼴 (다시 고를 때 보관소에 묻지 않는다) */
   const loaded = new Map<string, SelectedFont>();
   let uploaded: SelectedFont | undefined = $state.raw();
+  /** 올릴 때마다 다른 id를 붙여, 다른 글꼴을 올리면 도구가 이전 결과를 버리게 한다 */
+  let uploads = 0;
   let uploadError = $state(false);
 
   function toSelected(font: FontEntry, bytes: Map<string, Uint8Array>): SelectedFont {
@@ -95,7 +97,11 @@
       const bytes = new Uint8Array(await file.arrayBuffer());
       // 브라우저가 읽을 수 있는 글꼴인지 확인한다 (파일을 어디로도 보내지 않는다)
       await new FontFace('upload-check', bytes).load();
-      uploaded = { id: 'upload', name: file.name.replace(/\.[^.]+$/, ''), files: { 400: bytes } };
+      uploaded = {
+        id: `upload-${uploads++}`,
+        name: file.name.replace(/\.[^.]+$/, ''),
+        files: { 400: bytes },
+      };
       selected = uploaded;
     } catch {
       uploadError = true;
@@ -168,13 +174,13 @@
         {/if}
       </li>
     {/each}
-    <li class="row" class:checked={selected?.id === 'upload'}>
+    <li class="row" class:checked={selected !== undefined && selected.id === uploaded?.id}>
       <div class="head">
         <label class="name">
           <input
             type="radio"
             name="font"
-            checked={selected?.id === 'upload'}
+            checked={selected !== undefined && selected.id === uploaded?.id}
             disabled={!uploaded}
             aria-label={uploaded ? t.mine(uploaded.name) : t.mineEmpty}
             onchange={() => (selected = uploaded)}
