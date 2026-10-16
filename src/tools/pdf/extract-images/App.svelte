@@ -55,35 +55,42 @@
     untrack(clear);
     read = { kind: 'reading', done: 0, total: 0 };
     const found: Shown[] = [];
-    extractImages(
-      source,
-      minSide,
-      (image) => {
-        if (!current) return;
-        found.push({
-          ...image,
-          // 미리보기는 브라우저가 그릴 수 있는 것만
-          url:
-            image.ext === 'jp2'
-              ? undefined
-              : URL.createObjectURL(
-                  new Blob([image.bytes as BlobPart], { type: TYPES[image.ext] }),
-                ),
-          name: `${baseName(source.name)}_p${image.page + 1}_${image.index + 1}.${image.ext}`,
-        });
-        images = [...found];
-      },
-      (done, total) => {
-        if (current) read = { kind: 'reading', done, total };
-      },
-    ).then(
-      (failed) => {
+    // 꺼내기(미리보기 포함)도 기능 사용이라 시작하기 전에 확인한다
+    (async () => {
+      const entitlement = await canUse('pdf/extract-images');
+      if (!current) return;
+      if (!entitlement.allowed) {
+        read = { kind: 'failed', message: entitlement.reason ?? common.action.unavailable };
+        return;
+      }
+      try {
+        const failed = await extractImages(
+          source,
+          minSide,
+          (image) => {
+            if (!current) return;
+            found.push({
+              ...image,
+              // 미리보기는 브라우저가 그릴 수 있는 것만
+              url:
+                image.ext === 'jp2'
+                  ? undefined
+                  : URL.createObjectURL(
+                      new Blob([image.bytes as BlobPart], { type: TYPES[image.ext] }),
+                    ),
+              name: `${baseName(source.name)}_p${image.page + 1}_${image.index + 1}.${image.ext}`,
+            });
+            images = [...found];
+          },
+          (done, total) => {
+            if (current) read = { kind: 'reading', done, total };
+          },
+        );
         if (current) read = { kind: 'done', failed };
-      },
-      () => {
+      } catch {
         if (current) read = { kind: 'failed', message: t.failed };
-      },
-    );
+      }
+    })();
     return () => {
       current = false;
     };
