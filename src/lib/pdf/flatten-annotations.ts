@@ -9,6 +9,8 @@ import {
   PDFDropdown,
   PDFName,
   PDFNumber,
+  PDFOperator,
+  PDFOperatorNames,
   PDFOptionList,
   PDFRef,
   PDFStream,
@@ -365,12 +367,27 @@ export function flattenAnnotations(page: PDFPage): boolean {
       wrapped = true;
     }
     const name = page.node.newXObject('FlatAnnot', appearance);
-    page.pushOperators(
+    const draw = [
       pushGraphicsState(),
       concatTransformationMatrix(sx, 0, 0, sy, rx0 - x0 * sx, ry0 - y0 * sy),
       drawObject(name),
       popGraphicsState(),
-    );
+    ];
+    // 보이기 층(/OC)에 딸린 주석은 그린 것도 같은 층으로 감싼다. 그냥 그리면 꺼진 층의 주석이 보인다
+    const oc = annot.get(PDFName.of('OC'));
+    if (oc) {
+      const resources = page.node.Resources()!;
+      const existing = resources.lookup(PDFName.of('Properties'));
+      const properties = existing instanceof PDFDict ? existing : context.obj({});
+      resources.set(PDFName.of('Properties'), properties);
+      const layer = properties.uniqueKey('FlatOC');
+      properties.set(layer, oc);
+      draw.unshift(
+        PDFOperator.of(PDFOperatorNames.BeginMarkedContentSequence, [PDFName.of('OC'), layer]),
+      );
+      draw.push(PDFOperator.of(PDFOperatorNames.EndMarkedContent));
+    }
+    page.pushOperators(...draw);
     drawn = true;
   }
   page.node.delete(PDFName.of('Annots'));

@@ -1828,3 +1828,50 @@ test('가리지 않은 쪽의 주석은 쪽 내용에 그려 넣어 남긴다', 
   expect(list.fnArray).toContain(OPS.paintFormXObjectBegin);
   expect(list.fnArray).toContain(OPS.constructPath);
 });
+
+test('꺼진 보이기 층에 딸린 주석은 굳힐 때도 같은 층으로 감싸 꺼진 채로 둔다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const layer = context.register(context.obj({ Type: 'OCG', Name: PDFString.of('Hidden notes') }));
+  source.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({ OCGs: [layer], D: { BaseState: 'ON', OFF: [layer] } }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  const look = context.register(
+    context.stream('0 0 0 rg 0 0 100 100 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 100, 100],
+    }),
+  );
+  second.node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Square',
+        Rect: [0, 0, 100, 100],
+        F: 4,
+        OC: layer,
+        AP: { N: look },
+      }),
+    ]),
+  );
+  const frame = await openRedact(page, {
+    name: 'hidden-annot.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const pdf = await getDocument({ data: bytes.slice() }).promise;
+  // 굳힌 주석 모양이 꺼진 층 안에 있어 그리기 목록에 들어가지 않는다
+  const list = await (await pdf.getPage(2)).getOperatorList();
+  const config = await pdf.getOptionalContentConfig();
+  expect([...config].map(([, group]) => [group.name, group.visible])).toEqual([
+    ['Hidden notes', false],
+  ]);
+  const { OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  expect(list.fnArray).toContain(OPS.beginMarkedContentProps);
+});
