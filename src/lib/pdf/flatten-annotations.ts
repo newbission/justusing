@@ -163,7 +163,12 @@ function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
 function linkBorderAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
   const context = annot.context;
   const style = context.lookup(annot.get(PDFName.of('BS')));
-  const border = numbers(context.lookup(annot.get(PDFName.of('Border'))), 3);
+  // /Border [가로둥글기 세로둥글기 굵기 (점선 배열)]
+  const borderValue = context.lookup(annot.get(PDFName.of('Border')));
+  const border =
+    borderValue instanceof PDFArray && borderValue.size() >= 3
+      ? borderValue.asArray().map((item) => context.lookup(item))
+      : undefined;
   let width: number | undefined;
   let kind = 'S';
   let dash: number[] = [];
@@ -182,8 +187,15 @@ function linkBorderAppearance(annot: PDFDict, rect: number[]): PDFRef | undefine
             })
           : [3];
     }
-  } else if (border) {
-    width = border[2];
+  } else if (border && border[2] instanceof PDFNumber) {
+    width = border[2].asNumber();
+    const pattern = border[3];
+    if (pattern instanceof PDFArray) {
+      dash = pattern.asArray().map((item) => {
+        const value = context.lookup(item);
+        return value instanceof PDFNumber ? value.asNumber() : 3;
+      });
+    }
   }
   const color = context.lookup(annot.get(PDFName.of('C')));
   // 색을 비워 두면(빈 배열) 테두리가 보이지 않는다
