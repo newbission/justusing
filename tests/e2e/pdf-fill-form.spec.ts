@@ -5,7 +5,7 @@
  */
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
-import { PDFDocument } from '@cantoo/pdf-lib';
+import { PDFDocument, PDFHexString, PDFName } from '@cantoo/pdf-lib';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { expectLocalOnly } from './local-only';
 
@@ -111,4 +111,88 @@ test('한글을 굳히면 고른 글꼴로 그린 글자가 쪽에 남는다', a
   const doc = await getDocument({ data: bytes.slice() }).promise;
   const content = await (await doc.getPage(1)).getTextContent();
   expect(content.items.map((item) => ('str' in item ? item.str : '')).join('')).toContain('김철수');
+});
+
+test('선택 상자는 보이는 글자가 아니라 내보내는 값을 저장한다', async ({ page }) => {
+  // 화면에는 "대한민국", PDF 값은 KR인 선택 상자
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([400, 200]);
+  const country = doc.getForm().createDropdown('country');
+  country.addToPage(added, { x: 20, y: 100, width: 150, height: 22 });
+  country.acroField.setOptions([
+    { value: PDFHexString.fromText('KR'), display: PDFHexString.fromText('대한민국') },
+    { value: PDFHexString.fromText('JP'), display: PDFHexString.fromText('일본') },
+  ]);
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'country.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await frame.getByLabel('country').selectOption({ label: '대한민국' });
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
+  const { bytes } = await download(page, frame);
+  const values = (await PDFDocument.load(bytes))
+    .getForm()
+    .getDropdown('country')
+    .acroField.getValues()
+    .map((value) => value.decodeText());
+  expect(values).toEqual(['KR']);
+});
+
+test('같은 이름의 체크 상자는 누른 상자만 켠다', async ({ page }) => {
+  // 이름은 같고 켜는 값이 A, B로 다른 체크 상자 두 개 (세금 양식 등에서 쓰는 방식)
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 200]);
+  const context = doc.context;
+  const look = context.register(
+    context.stream('0 0 1 rg 0 0 14 14 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 14, 14],
+    }),
+  );
+  const off = context.register(
+    context.stream('', { Type: 'XObject', Subtype: 'Form', BBox: [0, 0, 14, 14] }),
+  );
+  const fieldRef = context.nextRef();
+  const widget = (on: string, x: number) =>
+    context.register(
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Widget',
+        F: 4,
+        Rect: [x, 100, x + 14, 114],
+        Parent: fieldRef,
+        AS: 'Off',
+        AP: { N: { [on]: look, Off: off } },
+      }),
+    );
+  const a = widget('A', 20);
+  const b = widget('B', 60);
+  context.assign(
+    fieldRef,
+    context.obj({ FT: 'Btn', T: PDFHexString.fromText('choice'), Kids: [a, b] }),
+  );
+  added.node.set(PDFName.of('Annots'), context.obj([a, b]));
+  doc.catalog.getOrCreateAcroForm().addField(fieldRef);
+
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'boxes.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await frame.getByLabel('choice: B').check();
+  await expect(frame.getByLabel('choice: A')).not.toBeChecked();
+  const { bytes } = await download(page, frame);
+  const saved = await PDFDocument.load(bytes);
+  const field = saved.getForm().getCheckBox('choice');
+  expect(field.acroField.getValue().toString()).toBe('/B');
+  expect(field.acroField.getWidgets().map((w) => w.getAppearanceState()?.toString())).toEqual([
+    '/Off',
+    '/B',
+  ]);
 });
