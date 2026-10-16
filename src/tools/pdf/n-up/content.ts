@@ -26,6 +26,10 @@ export default defineContent({
         a: '됩니다. 쪽마다 비율을 지키며 칸 안에 맞추고 가운데에 둡니다. 회전된 쪽은 화면에 보이는 방향 그대로 넣습니다.',
       },
       {
+        q: '작성한 양식이나 서명, 메모도 들어가나요?',
+        a: '인쇄할 때 나오는 모양 그대로 들어갑니다. 입력 칸의 값·서명·도장처럼 인쇄되는 것은 쪽에 그려 넣고, 화면에서만 보이는 버튼이나 메모 창은 뺍니다. 입력값의 모양이 파일에 저장되어 있지 않은 한글 양식은 옮길 수 없다고 알려 드립니다. 그럴 때는 PDF 보기 프로그램에서 "인쇄 → PDF로 저장"으로 한 번 저장한 뒤 다시 해 보세요.',
+      },
+      {
         q: '쪽 순서를 바꾸고 싶어요.',
         a: '먼저 "PDF 페이지 정리"에서 순서를 바꾸거나 필요 없는 쪽을 지운 뒤 모아찍기를 하세요.',
       },
@@ -54,6 +58,10 @@ export default defineContent({
       {
         q: 'Does it work with pages of different sizes or orientations?',
         a: 'Yes. Each page is scaled to fit its cell, keeping its proportions, and centered. Rotated pages are placed the way they appear on screen.',
+      },
+      {
+        q: 'Are filled-in forms, signatures and comments included?',
+        a: 'They are included the way they look when printed. Form entries, signatures and stamps that print are drawn onto the page, while screen-only buttons and comment pop-ups are left out. If a form entry has no saved appearance and uses characters the built-in font lacks, you will be told it cannot be moved. In that case, save the PDF once with "Print → Save as PDF" in your PDF viewer and try again.',
       },
       {
         q: 'I want to change the page order.',
