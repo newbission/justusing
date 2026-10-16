@@ -465,6 +465,10 @@ async function extract(
   if (list.length === 1 && last === 'JPXDecode') {
     // 투명도가 JPEG 2000 바깥(PDF 사전)에 있으면 브라우저가 JPEG 2000을 못 읽어 합칠 수 없다
     if (dict.has(name('SMask')) || dict.has(name('Mask'))) return undefined;
+    // PDF가 정한 색공간이 장치 색공간이 아니면 그 색을 JPEG 2000 파일에 옮길 수 없다
+    // (보기 프로그램은 파일 안 색공간 대신 PDF 사전의 색공간으로 그린다)
+    const space = jpegSpace(dict, resources);
+    if (!space || space.icc) return undefined;
     return { ext: 'jp2', bytes: stream.contents.slice(), width, height };
   }
   const decoded = await decodePixels(stream, resources);
