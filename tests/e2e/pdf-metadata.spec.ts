@@ -423,3 +423,63 @@ test('모두 지우기는 레이어를 만든 프로그램·대상 사람과 문
   expect(text).toContain('Layer 1');
   expect(saved.catalog.get(PDFName.of('OCProperties'))).toBeDefined();
 });
+
+test('모두 지우기는 PDF 안 JPEG 사진의 촬영 정보도 지우고, 사진은 다시 압축하지 않는다', async ({
+  page,
+}) => {
+  const photo = await readFile(fileURLToPath(new URL('../fixtures/small.jpg', import.meta.url)));
+  const segment = (marker: number, text: string) => {
+    const body = Buffer.from(text, 'latin1');
+    return Buffer.concat([Buffer.from([0xff, marker, 0, body.length + 2]), body]);
+  };
+  // 휴대폰 사진처럼 촬영 정보·설명 조각을 넣는다 (표시 앞 채움 바이트 FF도 하나)
+  const tagged = Buffer.concat([
+    photo.subarray(0, 2),
+    segment(0xe1, 'Exif\0\0GPS-SECRET-SEOUL'),
+    segment(0xe1, 'http://ns.adobe.com/xap/1.0/\0XMP-PHOTO-SECRET'),
+    segment(0xed, 'Photoshop 3.0\0IPTC-SECRET'),
+    Buffer.from([0xff]),
+    segment(0xfe, 'COMMENT-SECRET'),
+    photo.subarray(2),
+  ]);
+  const doc = await PDFDocument.create();
+  const jpeg = (dict: Record<string, string | number>) =>
+    doc.context.register(
+      doc.context.stream(tagged, {
+        Filter: 'DCTDecode',
+        Width: 400,
+        Height: 300,
+        BitsPerComponent: 8,
+        ColorSpace: 'DeviceRGB',
+        ...dict,
+      }),
+    );
+  const page1 = doc.addPage([200, 200]);
+  page1.node.set(
+    PDFName.of('Resources'),
+    doc.context.obj({ XObject: { Im1: jpeg({ Type: 'XObject', Subtype: 'Image' }) } }),
+  );
+  page1.node.set(
+    PDFName.of('Contents'),
+    doc.context.register(doc.context.stream('q 100 0 0 75 0 0 cm /Im1 Do Q')),
+  );
+  // 쪽 미리보기 그림(/Thumb)도 JPEG일 수 있다
+  page1.node.set(PDFName.of('Thumb'), jpeg({}));
+
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'photo.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
+  const { text } = await download(page, frame);
+  for (const secret of ['GPS-SECRET-SEOUL', 'XMP-PHOTO-SECRET', 'IPTC-SECRET', 'COMMENT-SECRET']) {
+    expect(text).not.toContain(secret);
+  }
+  // 색을 정하는 JFIF 조각과, 표부터 끝까지의 그림 자료는 바이트 그대로 남는다
+  const latin = (bytes: Uint8Array) => Buffer.from(bytes).toString('latin1');
+  expect(text).toContain(latin(photo.subarray(2, 20)));
+  expect(text).toContain(latin(photo.subarray(20)));
+});
