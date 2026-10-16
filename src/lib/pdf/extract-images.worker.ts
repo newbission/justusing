@@ -165,6 +165,8 @@ async function alphaOf(
   const mask = dict.lookup(name('SMask'));
   if (mask === undefined) return undefined;
   if (!(mask instanceof PDFRawStream)) return UNSUPPORTED;
+  // /Matte: 색이 배경색과 미리 섞여 있어 알파만 붙이면 가장자리에 그 색이 번진다
+  if (mask.dict.has(name('Matte'))) return UNSUPPORTED;
   if (numberOf(mask.dict, 'Width') !== width || numberOf(mask.dict, 'Height') !== height) {
     return UNSUPPORTED;
   }
