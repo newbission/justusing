@@ -68,13 +68,23 @@
   async function readInfo(source: LoadedPdf) {
     reading = true;
     try {
-      const { info: raw } = (await source.doc.getMetadata()) as { info: Record<string, unknown> };
+      const { info: raw, metadata } = (await source.doc.getMetadata()) as {
+        info: Record<string, unknown>;
+        metadata: { get: (name: string) => unknown } | null;
+      };
       if (pdf !== source) return;
+      // Info에 없고 XMP에만 있는 값도 읽는다 (저장하면 XMP를 지우므로, 읽지 않으면 그 값이 사라진다)
+      const xmp = (name: string) => {
+        const value = metadata?.get(name);
+        return Array.isArray(value)
+          ? value.filter((item) => typeof item === 'string').join(', ')
+          : text(value);
+      };
       info = {
-        title: text(raw.Title),
-        author: text(raw.Author),
-        subject: text(raw.Subject),
-        keywords: text(raw.Keywords),
+        title: text(raw.Title) || xmp('dc:title'),
+        author: text(raw.Author) || xmp('dc:creator'),
+        subject: text(raw.Subject) || xmp('dc:description'),
+        keywords: text(raw.Keywords) || xmp('pdf:keywords'),
       };
       other = {
         creator: text(raw.Creator),
