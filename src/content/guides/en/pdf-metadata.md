@@ -3,6 +3,7 @@ title: How to change a PDF's author and title and remove hidden info
 description: PDF files often carry the author name, company, apps used and creation date. How to check, change or remove this document information.
 tool: pdf/metadata
 published: 2026-10-15
+updated: 2026-10-16
 order: 16
 ---
 
@@ -31,6 +32,8 @@ If a document was made by editing an older one, the title may still name a previ
 ## Remove all hidden information
 
 For documents you send outside, turn on "Remove all document info" before saving. It removes the title and author as well as the apps and dates. The pages do not change.
+
+Phone photos placed in a PDF may still carry where they were taken and camera details (EXIF). These are removed too (JPEG photos, without recompressing them). Information inside JPEG 2000 photos and attached files stays as it is.
 
 Names and numbers written on the pages are page content, not document info, so this does not remove them. Use [Redact PDF](/en/pdf/redact/) for those.
 
