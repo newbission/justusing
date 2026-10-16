@@ -9,6 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import {
   PDFDict,
+  PDFHexString,
   PDFDocument,
   PDFName,
   PDFNumber,
@@ -567,4 +568,156 @@ test('자원 목록 없이 쪽 자원을 물려받는 묶음 그림이 쓰는 �
   await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
   const { bytes } = await download(page, frame);
   expect(await imageWidths(bytes)).toContain(7);
+});
+
+test('오른쪽에서 왼쪽으로 쓰는 글자가 섞인 조각은 조각 전체를 가린다', async ({ page }) => {
+  // I를 히브리 글자 א로 읽게 하는 ToUnicode를 붙인 Helvetica
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const helvetica = await source.embedFont(StandardFonts.Helvetica);
+  const cmap = context.register(
+    context.stream(
+      [
+        '/CIDInit /ProcSet findresource begin 12 dict begin begincmap',
+        '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def',
+        '/CMapName /Adobe-Identity-UCS def /CMapType 2 def',
+        '1 begincodespacerange <00> <FF> endcodespacerange',
+        '1 beginbfchar <49> <05D0> endbfchar',
+        '2 beginbfrange <20> <48> <0020> <4A> <7E> <004A> endbfrange',
+        'endcmap CMapName currentdict /CMap defineresource pop end end',
+      ].join('\n'),
+    ),
+  );
+  const font = context.obj({
+    Type: 'Font',
+    Subtype: 'Type1',
+    BaseFont: 'Helvetica',
+    Encoding: 'WinAnsiEncoding',
+    ToUnicode: cmap,
+  });
+  const line = 'IIIIIIIIIIIISECRETWWWWWWWWWWWW';
+  const size = 12;
+  const added = source.addPage([400, 200]);
+  added.node.set(PDFName.of('Resources'), context.obj({ Font: { F1: font } }));
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream(`BT /F1 ${size} Tf 20 100 Td (${line}) Tj ET`)),
+  );
+  const frame = await openRedact(page, {
+    name: 'rtl.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByLabel('찾아서 가리기').fill('secret');
+  await frame.getByRole('button', { name: '모두 찾아 가리기' }).click();
+  await expect(frame.getByText('1곳을 찾아 가렸습니다.')).toBeVisible();
+  const box = await frame
+    .locator('.box')
+    .first()
+    .evaluate((element: HTMLElement) => ({
+      left: parseFloat(element.style.left) / 100,
+      width: parseFloat(element.style.width) / 100,
+    }));
+  const end = (20 + helvetica.widthOfTextAtSize(line, size)) / 400;
+  expect(box.left).toBeLessThanOrEqual(20 / 400 + 0.001);
+  expect(box.left + box.width).toBeGreaterThanOrEqual(end - 0.001);
+});
+
+test('남긴 그림에 붙은 첨부 파일과 사전 안의 이름은 옮기지 않는다', async ({ page }) => {
+  // 2쪽 그림에 첨부 파일(/AF)이 붙어 있고, 쪽 자원의 Properties /Pagination은 비밀 그림을 가리킨다.
+  // 내용은 /Artifact << /Type /Pagination >> BDC 로 사전 안에서만 그 이름을 쓴다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const attached = context.register(
+    context.stream('ATTACHED-SECRET-NOTE', { Type: 'EmbeddedFile' }),
+  );
+  const picture = context.register(
+    context.flateStream(new Uint8Array(81).fill(9), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 9,
+      Height: 9,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+      AF: [
+        context.obj({
+          Type: 'Filespec',
+          F: PDFHexString.fromText('note.txt'),
+          EF: { F: attached },
+        }),
+      ],
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      XObject: { Pic: picture },
+      Properties: { Pagination: context.obj({ Leak: secretImage(context) }) },
+    }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream('/Artifact << /Type /Pagination >> BDC EMC q 50 0 0 50 10 10 cm /Pic Do Q'),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'attached.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('ATTACHED-SECRET-NOTE');
+  const widths = await imageWidths(bytes);
+  expect(widths).toContain(9);
+  expect(widths).not.toContain(7);
+});
+
+test('물려받는 묶음 그림은 부른 자리의 글꼴로 찍은 Type3 글자 모양을 남긴다', async ({ page }) => {
+  // 쪽이 T3을 고르고 묶음 그림을 부른 뒤 F2로 바꾼다. 묶음 그림은 Tf 없이 a를 찍는다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const helvetica = await source.embedFont(StandardFonts.Helvetica);
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 500, 500],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: { a: context.register(context.stream('500 0 d0 0 0 400 400 re f')) },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a'] },
+      FirstChar: 97,
+      LastChar: 97,
+      Widths: [500],
+    }),
+  );
+  const form = context.register(
+    context.stream('BT 20 100 Td (a) Tj ET', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 200, 200],
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({ Font: { T3: type3, F2: helvetica.ref }, XObject: { Fm: form } }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /T3 40 Tf ET /Fm Do BT /F2 12 Tf ET')),
+  );
+  const frame = await openRedact(page, {
+    name: 'inherited-font.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = await PDFDocument.load(bytes);
+  const fonts = result.getPage(1).node.Resources()!.lookup(PDFName.of('Font'), PDFDict);
+  const kept = fonts.lookup(PDFName.of('T3'), PDFDict);
+  expect(kept.lookup(PDFName.of('CharProcs'), PDFDict).has(PDFName.of('a'))).toBe(true);
 });
