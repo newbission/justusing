@@ -560,27 +560,32 @@ function jpxColorMatches(bytes: Uint8Array, device: 'gray' | 'rgb' | 'cmyk'): bo
   if (bytes[0] === 0xff && bytes[1] === 0x4f) return true;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const type = (at: number) => String.fromCharCode(...bytes.subarray(at + 4, at + 8));
-  /** 상자들 [start, end)에서 type 상자의 내용 시작 */
-  const find = (start: number, end: number, wanted: string): number | undefined => {
+  /** 상자들 [start, end)에서 type 상자의 내용 [시작, 끝) (길이를 8바이트로 적은 큰 상자 포함) */
+  const find = (
+    start: number,
+    end: number,
+    wanted: string,
+  ): { content: number; end: number } | undefined => {
     for (let at = start; at + 8 <= end;) {
       let length = view.getUint32(at);
       let header = 8;
-      if (length === 1 && at + 16 <= end) {
+      if (length === 1) {
+        if (at + 16 > end) return undefined;
         length = Number(view.getBigUint64(at + 8));
         header = 16;
       } else if (length === 0) length = end - at;
       if (length < header) return undefined;
-      if (type(at) === wanted) return at + header;
+      if (type(at) === wanted) return { content: at + header, end: Math.min(at + length, end) };
       at += length;
     }
     return undefined;
   };
   const header = find(0, bytes.length, 'jp2h');
   if (header === undefined) return false;
-  const headerEnd = header - 8 + view.getUint32(header - 8);
-  const colr = find(header, Math.min(headerEnd, bytes.length), 'colr');
+  const box = find(header.content, header.end, 'colr');
   // 색 정보가 없으면 보기 프로그램도 PDF처럼 장치 색으로 본다
-  if (colr === undefined) return true;
+  if (box === undefined) return true;
+  const colr = box.content;
   // 방법 1(정해진 색공간 번호)만 비교한다. 2(ICC 등)는 PDF와 다르게 보일 수 있다
   if (bytes[colr] !== 1) return false;
   const space = view.getUint32(colr + 3);
