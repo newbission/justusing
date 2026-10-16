@@ -53,8 +53,22 @@ async function infoPdf() {
       doc.context.register(
         doc.context.obj({ Type: 'Thread', I: { Title: PDFString.of('Thread Secret Title') } }),
       ),
+      // /Type은 적지 않아도 된다
+      doc.context.register(
+        doc.context.obj({ I: { Author: PDFString.of('Untyped Thread Author') } }),
+      ),
     ]),
   );
+  // 쪽의 기사 조각이 가리키는 기사 흐름
+  const beadThread = doc.context.register(
+    doc.context.obj({ I: { Title: PDFString.of('Bead Thread Title') } }),
+  );
+  doc
+    .getPage(0)
+    .node.set(
+      PDFName.of('B'),
+      doc.context.obj([doc.context.obj({ T: beadThread, R: [0, 0, 100, 100] })]),
+    );
   const sigField = doc.context.register(
     doc.context.obj({
       Type: 'Annot',
@@ -202,6 +216,8 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   for (const secret of [
     'NM-Unique-Yoon',
     'Subject Case Hong',
+    'Untyped Thread Author',
+    'Bead Thread Title',
     'Thread Secret Title',
     'Signer Secret Kim',
     'Secret Reason',
