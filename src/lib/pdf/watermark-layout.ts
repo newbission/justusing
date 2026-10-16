@@ -26,7 +26,12 @@ export function placements(
   const v = { x: Math.sin(theta), y: Math.cos(theta) };
   // 글자가 아주 작거나 쪽이 아주 길어 너무 많으면 간격을 고르게 넓혀 쪽 전체에 퍼지게 한다
   // (앞에서부터 채우다 멈추면 쪽 일부만 덮인다)
-  let spread = 1;
+  // 아주 긴 쪽에서는 격자 후보가 넓이의 제곱으로 늘어 화면이 멈출 수 있어, 먼저 넓이로 개수를 어림해
+  // 간격을 넓혀 두고 만든다 (만든 뒤 아직 많으면 조금씩 더 넓힌다)
+  const margin = textWidth / 2 + fontSize;
+  const area = (page.width + margin * 2) * (page.height + margin * 2);
+  const cell = (textWidth + fontSize * 2) * fontSize * 3.5;
+  let spread = Math.max(1, Math.sqrt(area / cell / MAX_TILES));
   for (;;) {
     const points = grid(
       page,
