@@ -99,7 +99,11 @@
     }
   }
 
+  /** 마지막으로 시작한 올리기의 번호. 먼저 올린 큰 글꼴이 늦게 읽혀도 나중에 올린 글꼴을 덮지 않는다 */
+  let uploading = 0;
+
   async function upload(file: File) {
+    const attempt = ++uploading;
     uploadError = false;
     // 읽는 동안 다른 글꼴을 고르면 그쪽을 남긴다 (고른 순서대로)
     const pick = ++picks;
@@ -107,6 +111,7 @@
       const bytes = new Uint8Array(await file.arrayBuffer());
       // 브라우저가 읽을 수 있는 글꼴인지 확인한다 (파일을 어디로도 보내지 않는다)
       await new FontFace('upload-check', bytes).load();
+      if (attempt !== uploading) return;
       uploaded = {
         id: `upload-${uploads++}`,
         name: file.name.replace(/\.[^.]+$/, ''),
@@ -114,7 +119,7 @@
       };
       if (pick === picks) selected = uploaded;
     } catch {
-      uploadError = true;
+      if (attempt === uploading) uploadError = true;
     }
   }
 
