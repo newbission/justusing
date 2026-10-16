@@ -22,6 +22,21 @@ async function infoPdf() {
   infoOf(doc).set(PDFName.of('CreationDate'), PDFString.of('D:20260102030405Z'));
   // 쪽에 바로 적힌 고친 시각
   doc.getPage(0).node.set(PDFName.of('LastModified'), PDFString.of("D:20251231235959+09'00'"));
+  // 메모 주석의 작성자·시각, 입력 칸(이름은 남아야 한다)
+  doc.getPage(0).node.set(
+    PDFName.of('Annots'),
+    doc.context.obj([
+      doc.context.obj({
+        Type: 'Annot',
+        Subtype: 'Text',
+        Rect: [10, 10, 30, 30],
+        T: PDFString.of('Annot Author Yoon'),
+        M: PDFString.of('D:20240101000000Z'),
+        CreationDate: PDFString.of('D:20240102000000Z'),
+      }),
+    ]),
+  );
+  doc.getForm().createTextField('field_keep').addToPage(doc.getPage(0), { x: 50, y: 50 });
   // 원본 파일 식별자
   const original = PDFHexString.of('0123456789ABCDEF0123456789ABCDEF');
   doc.context.trailerInfo.ID = doc.context.obj([original, original]);
@@ -136,6 +151,9 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('PieceInfo Corp Secret');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('0123456789ABCDEF0123456789ABCDEF');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20251231235959');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Annot Author Yoon');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20240102000000Z');
+  expect(doc.getForm().getTextField('field_keep')).toBeDefined();
 });
 
 test.describe('서울 시간대에서', () => {
@@ -240,6 +258,7 @@ test.describe('세계 표준시보다 느린 시간대에서', () => {
     const xmp = `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 <rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/">
 <xmp:CreateDate>2025-05-06</xmp:CreateDate>
+<xmp:ModifyDate>2025-07</xmp:ModifyDate>
 </rdf:Description></rdf:RDF></x:xmpmeta>`;
     doc.catalog.set(
       PDFName.of('Metadata'),
@@ -253,5 +272,7 @@ test.describe('세계 표준시보다 느린 시간대에서', () => {
       buffer: Buffer.from(await doc.save()),
     });
     await expect(frame.getByText('2025. 5. 6.')).toBeVisible();
+    // 연월만 적혔으면 연월만
+    await expect(frame.getByText('2025년 7월', { exact: true })).toBeVisible();
   });
 });
