@@ -263,3 +263,59 @@ test('굳힐 때 모양을 다시 만들어야 하는 기존 한글 값이 있�
   const content = await (await saved.getPage(1)).getTextContent();
   expect(content.items.map((item) => ('str' in item ? item.str : '')).join('')).toContain('홍길동');
 });
+
+test('암호 칸을 굳히면 적은 글자 대신 가린 글자가 쪽에 남는다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 200]);
+  const pin = doc.getForm().createTextField('pin');
+  pin.enablePassword();
+  pin.addToPage(added, { x: 20, y: 100, width: 160, height: 24 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'pin.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await frame.getByLabel('pin').fill('S3cret99');
+  await frame.getByLabel('칸을 글자로 굳히기', { exact: false }).check();
+  const { bytes } = await download(page, frame);
+  const saved = await getDocument({ data: bytes.slice() }).promise;
+  const content = await (await saved.getPage(1)).getTextContent();
+  const text = content.items.map((item) => ('str' in item ? item.str : '')).join('');
+  expect(text).not.toContain('S3cret99');
+  expect(text).toContain('********');
+});
+
+test('바꾸지 않은 선택 상자의 모양을 다시 만들 때도 보이는 글자로 그린다', async ({ page }) => {
+  // 값은 KR(화면에는 "대한민국")이고 모양이 없는 선택 상자와, 빈 글자 칸
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([400, 200]);
+  const form = doc.getForm();
+  const country = form.createDropdown('country');
+  country.addToPage(added, { x: 20, y: 120, width: 150, height: 22 });
+  country.acroField.setOptions([
+    { value: PDFHexString.fromText('KR'), display: PDFHexString.fromText('대한민국') },
+    { value: PDFHexString.fromText('JP'), display: PDFHexString.fromText('일본') },
+  ]);
+  country.acroField.dict.set(PDFName.of('V'), PDFHexString.fromText('KR'));
+  for (const widget of country.acroField.getWidgets()) widget.dict.delete(PDFName.of('AP'));
+  form.createTextField('note').addToPage(added, { x: 20, y: 60, width: 200, height: 24 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'country.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save({ updateFieldAppearances: false })),
+  });
+  await frame.getByLabel('note').fill('ok');
+  await frame.getByLabel('칸을 글자로 굳히기', { exact: false }).check();
+  await frame.getByRole('button', { name: '양식 저장' }).click();
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
+  const { bytes } = await download(page, frame);
+  const saved = await getDocument({ data: bytes.slice() }).promise;
+  const content = await (await saved.getPage(1)).getTextContent();
+  const text = content.items.map((item) => ('str' in item ? item.str : '')).join('');
+  expect(text).toContain('대한민국');
+  expect(text).not.toContain('KR');
+});
