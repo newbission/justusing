@@ -140,10 +140,24 @@ function printable(dict: PDFDict): boolean {
   return (value & PRINT) !== 0 && (value & HIDDEN) === 0;
 }
 
-/** 입력 칸이 모양으로 그릴 글자 */
-function fieldText(field: PDFField): string[] {
+/**
+ * pdf-lib가 모양으로 그릴 글자. undefined면 보기 프로그램과 같은 모양을 만들 수 없다
+ * (드롭다운은 고른 값의 표시 문자열이 아니라 내보내는 값을 그린다)
+ */
+function fieldText(field: PDFField): string[] | undefined {
   if (field instanceof PDFTextField) return [field.getText() ?? ''];
-  if (field instanceof PDFDropdown || field instanceof PDFOptionList) return field.getSelected();
+  if (field instanceof PDFDropdown) {
+    const selected = field.getSelected();
+    const options = field.acroField.getOptions();
+    const shown = selected.map(
+      (value) =>
+        options.find((option) => option.value.decodeText() === value)?.display.decodeText() ??
+        value,
+    );
+    return shown.every((text, i) => text === selected[i]) ? selected : undefined;
+  }
+  // 목록 상자는 보이는 선택지를 모두 그린다
+  if (field instanceof PDFOptionList) return [...field.getOptions(), ...field.getSelected()];
   return [];
 }
 
@@ -169,11 +183,15 @@ export function renderMissingFormAppearances(doc: PDFDocument): void {
   const printed = missing.filter((field) =>
     field.acroField.getWidgets().some((widget) => printable(widget.dict)),
   );
-  const unsupported = printed.some((field) =>
-    fieldText(field).some((text) =>
-      [...text].some((char) => !/[\r\n]/.test(char) && !supported.has(char.codePointAt(0)!)),
-    ),
-  );
+  const unsupported = printed.some((field) => {
+    const texts = fieldText(field);
+    return (
+      !texts ||
+      texts.some((text) =>
+        [...text].some((char) => !/[\r\n]/.test(char) && !supported.has(char.codePointAt(0)!)),
+      )
+    );
+  });
   if (unsupported) throw new Error(UNRENDERED_ANNOTATION);
   try {
     form.updateFieldAppearances(font);
