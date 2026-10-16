@@ -76,6 +76,9 @@
   }
 
   const grid = $derived(GRID[perSheet]);
+  /** 종이 비율 (가로/세로, 세로 기준). 워커의 종이 크기와 같다 */
+  const PAPER_RATIO: Record<PaperSize, number> = { a4: 595.28 / 841.89, letter: 612 / 792 };
+  const sheetRatio = $derived(grid[2] ? 1 / PAPER_RATIO[paper] : PAPER_RATIO[paper]);
   /** 미리보기 종이 크기 (px). 칸 크기를 계산해 쪽 그림이 칸을 채우게 한다 */
   let sheetWidth = $state(0);
   let sheetHeight = $state(0);
@@ -158,6 +161,7 @@
           class:landscape={grid[2]}
           style:grid-template-columns="repeat({grid[0]}, 1fr)"
           style:grid-template-rows="repeat({grid[1]}, 1fr)"
+          style:aspect-ratio={sheetRatio}
           bind:clientWidth={sheetWidth}
           bind:clientHeight={sheetHeight}
           aria-label={t.sheetLabel(1, firstCount)}
@@ -203,14 +207,12 @@
     display: grid;
     gap: 6px; /* SHEET_GAP */
     width: min(100%, 320px);
-    aspect-ratio: 1 / 1.414;
     padding: 12px; /* SHEET_PADDING */
     background: var(--color-paper);
     box-shadow: var(--shadow-page);
   }
   .sheet.landscape {
     width: min(100%, 440px);
-    aspect-ratio: 1.414 / 1;
   }
   .cell {
     display: flex;
