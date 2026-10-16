@@ -7,6 +7,7 @@ import {
   PDFDocument,
   PDFName,
   PDFRef,
+  PDFStream,
   StandardFonts,
   degrees,
   rgb,
@@ -144,6 +145,11 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
   const dict = context.lookup(context.trailerInfo.Info);
   if (clear) {
     if (dict instanceof PDFDict) for (const key of dict.keys()) drop(dict, key);
+    // 쪽·그림·글꼴 등에 붙은 XMP에도 작성자·회사 이름이 들어 있을 수 있다
+    for (const [, object] of [...context.enumerateIndirectObjects()]) {
+      const holder = object instanceof PDFStream ? object.dict : object;
+      if (holder instanceof PDFDict) drop(holder, PDFName.of('Metadata'));
+    }
     return;
   }
   const set = (key: string, value: string, apply: (text: string) => void) => {
