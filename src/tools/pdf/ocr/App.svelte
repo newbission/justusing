@@ -66,6 +66,7 @@
     data = { kind: 'downloading', percent: 0 };
     try {
       await loadData(wanted, OCR_CONSENT, (received) => {
+        if (files !== wanted) return;
         data = {
           kind: 'downloading',
           percent: Math.min(99, Math.floor((received / totalBytes) * 100)),
@@ -251,7 +252,12 @@
           <legend>{t.langGroup}</legend>
           {#each OCR_LANGS as lang (lang)}
             <label class="check">
-              <input type="checkbox" value={lang} bind:group={langs} disabled={busy} />
+              <input
+                type="checkbox"
+                value={lang}
+                bind:group={langs}
+                disabled={busy || data.kind === 'downloading'}
+              />
               {t.langs[lang]}
             </label>
           {/each}
