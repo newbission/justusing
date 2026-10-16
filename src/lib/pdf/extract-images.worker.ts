@@ -5,7 +5,7 @@
  * - JPG(DCT)는 파일 안의 바이트 그대로 (화질 손실 없음). 투명도가 붙어 있으면 PNG로 합친다
  * - JPEG 2000(JPX)은 그대로 .jp2
  * - 그 밖에 흔한 형식(Flate, 8비트 이하 회색·RGB·색 목록, 투명도)은 화소를 풀어 PNG로
- * - 흑백 팩스(CCITT·JBIG2), CMYK 화소, 16비트, 보정 색공간은 꺼내지 못한 것으로 센다
+ * - 흑백 팩스(CCITT·JBIG2), CMYK 화소, 16비트, 보정 색공간, 쪽 내용에 바로 써 넣은 그림은 꺼내지 못한 것으로 센다
  * - ICC RGB 색공간이면 PNG에 그 프로필을 넣는다
  */
 import {
@@ -293,11 +293,46 @@ async function extract(
   };
 }
 
+/** 스트림을 풀어 글자로 (이름·숫자만 읽으므로 바이트를 그대로 글자로 본다) */
+function streamText(stream: PDFStream): string {
+  let bytes: Uint8Array;
+  try {
+    bytes =
+      stream instanceof PDFRawStream ? decodePDFRawStream(stream).decode() : stream.getContents();
+  } catch {
+    return '';
+  }
+  let text = '';
+  for (let i = 0; i < bytes.length; i += 8192) {
+    text += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  }
+  return text;
+}
+
+/**
+ * 쪽 내용에 바로 써 넣은 그림(BI … ID … EI) 중 짧은 변이 minSide 이상인 것의 수.
+ * 이런 그림은 따로 된 객체가 아니라 꺼내지 않고, 꺼내지 못한 수로 알린다
+ */
+function countInline(streams: PDFStream[], minSide: number): number {
+  let count = 0;
+  for (const stream of streams) {
+    for (const match of streamText(stream).matchAll(/\bBI\b([\s\S]*?)\bID\b/g)) {
+      const head = match[1]!;
+      const width = Number(/\/(?:W|Width)\s+(\d+)/.exec(head)?.[1] ?? 0);
+      const height = Number(/\/(?:H|Height)\s+(\d+)/.exec(head)?.[1] ?? 0);
+      if (Math.min(width, height) >= minSide) count++;
+    }
+  }
+  return count;
+}
+
 /** 쪽마다 그 쪽(과 쪽 안의 묶음 그림)이 쓰는 사진. 같은 사진은 처음 나온 쪽에만 */
-function collect(doc: PDFDocument): { ref: PDFRef; stream: PDFRawStream; page: number }[] {
+function collect(doc: PDFDocument) {
   const seen = new Set<PDFRef>();
   const visitedForms = new Set<PDFRef>();
   const found: { ref: PDFRef; stream: PDFRawStream; page: number }[] = [];
+  /** 쪽과 묶음 그림의 내용 (바로 써 넣은 그림을 세려고) */
+  const contents: PDFStream[] = [];
   const walk = (resources: PDFDict | undefined, page: number) => {
     const xobjects = resources?.lookup(name('XObject'));
     if (!(xobjects instanceof PDFDict)) return;
@@ -314,12 +349,19 @@ function collect(doc: PDFDocument): { ref: PDFRef; stream: PDFRawStream; page: n
         found.push({ ref: value, stream: object, page });
       } else if (subtype === name('Form') && !visitedForms.has(value)) {
         visitedForms.add(value);
+        contents.push(object);
         walk(object.dict.lookup(name('Resources')) as PDFDict | undefined, page);
       }
     }
   };
-  doc.getPages().forEach((page, index) => walk(page.node.Resources(), index));
-  return found;
+  doc.getPages().forEach((page, index) => {
+    const value = doc.context.lookup(page.node.get(name('Contents')));
+    const streams =
+      value instanceof PDFArray ? value.asArray().map((item) => doc.context.lookup(item)) : [value];
+    contents.push(...streams.filter((item): item is PDFStream => item instanceof PDFStream));
+    walk(page.node.Resources(), index);
+  });
+  return { found, contents };
 }
 
 addEventListener('message', async (event: MessageEvent<ExtractRequest>) => {
@@ -328,12 +370,13 @@ addEventListener('message', async (event: MessageEvent<ExtractRequest>) => {
     postMessage(response, { transfer });
   try {
     const doc = await PDFDocument.load(bytes, { password: password ?? '' });
-    const found = collect(doc).filter(({ stream }) => {
+    const collected = collect(doc);
+    const found = collected.found.filter(({ stream }) => {
       const width = numberOf(stream.dict, 'Width') ?? 0;
       const height = numberOf(stream.dict, 'Height') ?? 0;
       return Math.min(width, height) >= minSide;
     });
-    let failed = 0;
+    let failed = countInline(collected.contents, minSide);
     for (const [index, { stream, page }] of found.entries()) {
       let image: Awaited<ReturnType<typeof extract>>;
       try {
