@@ -354,6 +354,8 @@ async function extract(
     return { ext: 'jpg', bytes: stream.contents.slice(), width, height };
   }
   if (list.length === 1 && last === 'JPXDecode') {
+    // 투명도가 JPEG 2000 바깥(PDF 사전)에 있으면 브라우저가 JPEG 2000을 못 읽어 합칠 수 없다
+    if (dict.has(name('SMask')) || dict.has(name('Mask'))) return undefined;
     return { ext: 'jp2', bytes: stream.contents.slice(), width, height };
   }
   const decoded = await decodePixels(stream, resources);
