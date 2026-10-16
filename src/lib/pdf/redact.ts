@@ -139,10 +139,15 @@ interface Piece {
   family: string;
   rtl: boolean;
   eol: boolean;
+  /** 앞 조각과 공백 하나쯤 떨어져 있지만 글에는 공백이 없다 (찾을 때 공백을 넣어 잇는다) */
+  space?: boolean;
   prefix?: Float64Array;
 }
 
-/** 뒤 조각이 앞 조각에 바로 이어 같은 줄에 놓였는지 (글꼴·모양이 바뀌어 조각이 나뉜 경우) */
+/**
+ * 뒤 조각이 앞 조각에 이어 같은 줄에 놓였는지 (글꼴·모양이 바뀌어 조각이 나뉜 경우).
+ * 이어지면 둘 사이가 공백만큼 떨어졌는지 next.space에 적는다
+ */
 function continues(prev: Piece, next: Piece): boolean {
   if (prev.eol) return false;
   if (prev.dir[0] * next.dir[0] + prev.dir[1] * next.dir[1] < 0.99) return false;
@@ -153,7 +158,10 @@ function continues(prev: Piece, next: Piece): boolean {
   const along = dx * prev.dir[0] + dy * prev.dir[1];
   const across = dx * prev.top[0] + dy * prev.top[1];
   const size = Math.max(prev.height, next.height);
-  return Math.abs(across) < size * 0.5 && along > -size * 0.5 && along < size * 1.5;
+  if (!(Math.abs(across) < size * 0.5 && along > -size * 0.5 && along < size * 1.5)) return false;
+  // 글자 크기의 0.15배보다 넓게 띄웠으면 화면에서는 띄어 보인다 (공백 글자 폭은 보통 0.25배쯤)
+  next.space = along > size * 0.15 && !/\s$/.test(prev.str) && !/^\s/.test(next.str);
+  return true;
 }
 
 /**
@@ -201,13 +209,14 @@ export async function findText(doc: PDFDocumentProxy, term: string): Promise<Red
       else lines.push([piece]);
     }
     for (const line of lines) {
-      const text = line.map((piece) => piece.text).join('');
+      const text = line.map((piece) => (piece.space ? ' ' : '') + piece.text).join('');
       for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + 1)) {
         // 찾은 말이 걸친 조각마다 그 부분을 재고, 모두 덮는 상자 하나로 합친다
         const xs: number[] = [];
         const ys: number[] = [];
         let offset = 0;
         for (const piece of line) {
+          if (piece.space) offset += 1;
           const startIn = Math.max(at, offset) - offset;
           const endIn = Math.min(at + needle.length, offset + piece.text.length) - offset;
           offset += piece.text.length;
