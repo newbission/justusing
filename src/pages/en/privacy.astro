@@ -7,7 +7,7 @@ import DocLayout from '../../layouts/DocLayout.astro';
 import { contactEmail, siteConfig } from '../../site.config';
 
 /** 한국어판과 같은 날로 둔다 */
-const effectiveDate = 'October 14, 2026';
+const effectiveDate = 'October 15, 2026';
 ---
 
 <DocLayout
@@ -101,9 +101,23 @@ const effectiveDate = 'October 14, 2026';
 
   <h2>What we store in your browser</h2>
   <p>
-    The only things this site stores itself are your light or dark theme choice and the language you
-    picked. These values are never sent to a server.
+    The only things this site stores itself are your light or dark theme choice, the language you
+    picked, and data you chose to download in the tools.
   </p>
+  <ul>
+    <li>
+      Public files the tools use, such as fonts, are kept in this browser's storage only when you
+      click "Download", so you do not have to download them again next time.
+    </li>
+    <li>
+      We also note which data you chose to download, so we can tell you when a kept copy has been
+      removed and needs to be downloaded again.
+    </li>
+    <li>
+      None of this includes the files you use in the tools or their names, and it is never sent to a
+      server. Clearing this site's data in your browser settings removes all of it.
+    </li>
+  </ul>
 
   <h2>Third-party services</h2>
   <p>
