@@ -25,7 +25,13 @@ import {
   type PDFPage,
   type PDFRef,
 } from '@cantoo/pdf-lib';
-import { GS_FONT, contentUsage, type FormLookup, type ResourceUse } from './content-usage';
+import {
+  GS_FONT,
+  contentUsage,
+  namesSpaceResource,
+  type FormLookup,
+  type ResourceUse,
+} from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { userUnit, viewSize } from './page-geometry';
 import { keepRenderingOnly } from './rendering-only';
@@ -182,7 +188,8 @@ function usedThroughNames(holder: PDFDict, resources: PDFDict, used: ResourceUse
   const namesIn = (value: unknown, depth = 0) => {
     const resolved = context.lookup(value as PDFObject);
     if (resolved instanceof PDFName) {
-      spaces.add(resolved.decodeText());
+      // /DeviceRGB 같은 장치 색공간은 같은 이름의 목록 항목이 있어도 그것을 부르지 않는다
+      if (namesSpaceResource(resolved.decodeText())) spaces.add(resolved.decodeText());
       return;
     }
     if (!(resolved instanceof PDFArray) || depth > 8) return;
