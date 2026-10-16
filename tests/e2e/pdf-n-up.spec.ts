@@ -7,7 +7,7 @@
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { PDFDocument, degrees } from '@cantoo/pdf-lib';
+import { PDFDocument, PDFName, degrees } from '@cantoo/pdf-lib';
 import { getDocument, OPS } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { expectLocalOnly } from './local-only';
 
@@ -41,10 +41,13 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
   let ctm: Matrix = [1, 0, 0, 1, 0, 0];
   let depth = 0;
   let borders = 0;
+  let inner = 0;
   fnArray.forEach((fn, i) => {
     const args = argsArray[i];
-    if (fn === OPS.constructPath && depth === 0) borders++;
-    else if (fn === OPS.save) stack.push(ctm);
+    if (fn === OPS.constructPath) {
+      if (depth === 0) borders++;
+      else inner++;
+    } else if (fn === OPS.save) stack.push(ctm);
     else if (fn === OPS.restore) ctm = stack.pop() ?? ctm;
     else if (fn === OPS.transform) ctm = then(args as Matrix, ctm);
     else if (fn === OPS.paintFormXObjectBegin) {
@@ -74,7 +77,7 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
       ctm = stack.pop() ?? ctm;
     }
   });
-  return { placed, borders };
+  return { placed, borders, inner };
 }
 
 async function openNUp(page: Page) {
@@ -152,6 +155,37 @@ test('회전된 쪽은 보이는 방향 그대로 넣고, 테두리를 그린다
   const last = await placedPages(bytes, 2);
   expect(last.placed).toHaveLength(0);
   expect(last.borders).toBeGreaterThanOrEqual(1);
+});
+
+test('양식 입력값·주석처럼 주석으로 보이는 내용도 함께 옮긴다', async ({ page }) => {
+  // 쪽 내용은 비어 있고, 사각형을 그리는 주석 모양만 있는 쪽
+  const source = await PDFDocument.create();
+  const added = source.addPage([200, 300]);
+  const context = source.context;
+  const look = context.register(
+    context.stream('0 0 1 rg 0 0 50 50 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 50, 50],
+    }),
+  );
+  const annot = context.register(
+    context.obj({ Type: 'Annot', Subtype: 'Square', Rect: [20, 20, 70, 70], AP: { N: look } }),
+  );
+  added.node.set(PDFName.of('Annots'), context.obj([annot]));
+
+  const frame = await openNUp(page);
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'annotated.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+
+  const { bytes } = await download(page, frame);
+  const { placed, inner } = await placedPages(bytes, 1);
+  expect(placed).toHaveLength(1);
+  expect(inner).toBe(1);
 });
 
 test('모으는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
