@@ -18,7 +18,7 @@
 
 - #31 feat(pdf): 암호 해제·암호 걸기·쪽 번호·글자 추출 도구 추가 (병합 2026-10-15)
 
-### 커밋 (3개)
+### 커밋 (4개)
 
 <details><summary>기능 2개</summary>
 
@@ -30,6 +30,12 @@
 <details><summary>오류 수정 1개</summary>
 
 - 2026-10-14 `ec03627` 글자 수를 쪽마다 세어 더하도록 변경
+
+</details>
+
+<details><summary>문서 1개</summary>
+
+- 2026-10-16 `654ea8a` 스캔 PDF FAQ에 OCR 도구 안내로 변경
 
 </details>
 
