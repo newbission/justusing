@@ -10,6 +10,8 @@
  * 그래서 화면 canvas 대신 OffscreenCanvas를 쓴다.
  */
 
+import { stripJpegMetadata } from './jpeg-metadata';
+
 export interface ImageInfo {
   /** 바로 세운 뒤의 가로·세로 화소 */
   width: number;
@@ -100,11 +102,18 @@ async function redraw(file: Blob, type: 'image/jpeg' | 'image/png'): Promise<Emb
   }
 }
 
-/** PDF에 넣을 바이트로 만든다. 바꿀 필요가 없으면 원본 바이트를 그대로 쓴다 (화질 그대로). */
+/**
+ * PDF에 넣을 바이트로 만든다. 바꿀 필요가 없으면 원본 바이트를 그대로 쓴다 (화질 그대로).
+ * 결과에는 사진의 촬영 정보가 남지 않는다: JPG는 정보 조각을 떼고, PNG는 pdf-lib가 픽셀만 옮기고, 다시 그린 것은 새로 만든다
+ */
 export async function toEmbeddable(file: Blob): Promise<EmbeddableImage> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (isJpeg(bytes)) {
-    if (jpegOrientation(bytes) === 1) return { kind: 'jpg', bytes, ...(await readImageInfo(file)) };
+    if (jpegOrientation(bytes) === 1) {
+      // 원본 그대로 넣되, 받는 사람에게 갈 필요 없는 촬영 정보(위치·카메라 등)는 뗀다
+      const clean = stripJpegMetadata(bytes) ?? bytes;
+      return { kind: 'jpg', bytes: clean, ...(await readImageInfo(file)) };
+    }
     return redraw(file, 'image/jpeg');
   }
   if (isPng(bytes)) return { kind: 'png', bytes, ...(await readImageInfo(file)) };
