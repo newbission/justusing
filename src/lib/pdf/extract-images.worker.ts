@@ -422,12 +422,11 @@ async function jpegPixels(
   alpha: Uint8Array | undefined,
   key: number[] | undefined,
   components: number,
-  /** PDF가 ICC 프로필을 정했으면 JPG 안의 프로필로 색을 바꾸지 않은 원래 값을 읽는다 (결과에 PDF 프로필을 붙인다) */
-  raw: boolean,
 ) {
   const bitmap = await createImageBitmap(
     new Blob([stream.contents as BlobPart], { type: 'image/jpeg' }),
-    { imageOrientation: 'none', colorSpaceConversion: raw ? 'none' : 'default' },
+    // PDF는 JPG 안의 프로필을 쓰지 않으므로 그 프로필로 색을 바꾸지 않은 원래 값을 읽는다
+    { imageOrientation: 'none', colorSpaceConversion: 'none' },
   );
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
   const context = canvas.getContext('2d')!;
@@ -481,9 +480,10 @@ function jpegSpace(
 
 /**
  * JPG에 ICC 프로필을 넣는다 (APP2 ICC_PROFILE 조각들). 원래 들어 있던 프로필은 PDF가 정한 것으로 바꾼다.
+ * icc가 없으면(PDF가 장치 색공간을 정함) 원래 프로필만 뺀다. PDF는 JPG 안의 프로필을 쓰지 않는다.
  * JPG 구조를 읽을 수 없으면 undefined
  */
-function jpegWithIcc(jpeg: Uint8Array, icc: Uint8Array): Uint8Array | undefined {
+function jpegWithIcc(jpeg: Uint8Array, icc: Uint8Array | undefined): Uint8Array | undefined {
   if (jpeg[0] !== 0xff || jpeg[1] !== 0xd8) return undefined;
   const signature = new TextEncoder().encode('ICC_PROFILE\0');
   const isIcc = (at: number) => signature.every((byte, i) => jpeg[at + 4 + i] === byte);
@@ -499,6 +499,11 @@ function jpegWithIcc(jpeg: Uint8Array, icc: Uint8Array): Uint8Array | undefined 
     at += 2 + length;
   }
   if (jpeg[at] !== 0xff || jpeg[at + 1] !== 0xda) return undefined;
+  // 뺄 프로필도 넣을 프로필도 없으면 원본 바이트 그대로
+  const removed =
+    kept.reduce((sum, part) => sum + part.length, 2 + (jpeg.length - at)) !== jpeg.length;
+  if (!icc && !removed) return jpeg.slice();
+  icc ??= new Uint8Array();
   // 조각 하나에 65535 - 2(길이) - 14(서명·번호) 바이트까지
   const size = 65519;
   const count = Math.ceil(icc.length / size);
@@ -576,11 +581,13 @@ async function extract(
     if (alpha || key) {
       // CMYK 프로필은 PNG에 넣을 수도, 브라우저로 그 색대로 바꿀 수도 없다
       if (space.icc && components === undefined) return undefined;
-      const pixels = await jpegPixels(stream, alpha, key, components ?? 3, !!space.icc);
+      const pixels = await jpegPixels(stream, alpha, key, components ?? 3);
       const bytes = await encodePng(pixels, space.icc, components === 1);
       return { ext: 'png', bytes, width, height };
     }
-    const bytes = space.icc ? jpegWithIcc(stream.contents, space.icc) : stream.contents.slice();
+    // 구조를 읽지 못하는 JPG는 장치 색공간이면 원본 그대로 (넣을 프로필이 있으면 꺼내지 못한 것으로)
+    const bytes =
+      jpegWithIcc(stream.contents, space.icc) ?? (space.icc ? undefined : stream.contents.slice());
     return bytes ? { ext: 'jpg', bytes, width, height } : undefined;
   }
   if (list.length === 1 && last === 'JPXDecode') {
