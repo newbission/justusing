@@ -78,6 +78,8 @@ export async function encodeBitmap(
 export async function renderPageBitmap(
   page: PDFPageProxy,
   dpi: number,
+  /** 'print': 인쇄할 때 보이는 주석으로 그린다 (화면 전용 주석은 빼고, 인쇄 전용은 넣는다) */
+  intent: 'display' | 'print' = 'display',
 ): Promise<{ bitmap: ImageBitmap; dpi: number }> {
   let scale = dpi / 72;
   let viewport = page.getViewport({ scale });
@@ -97,7 +99,7 @@ export async function renderPageBitmap(
   canvas.height = Math.floor(viewport.height);
   try {
     // 배경이 투명한 PDF도 JPG처럼 흰 종이로 보이게 흰색을 깐다
-    await page.render({ canvas, viewport, background: '#ffffff' }).promise;
+    await page.render({ canvas, viewport, background: '#ffffff', intent }).promise;
     return { bitmap: await createImageBitmap(canvas), dpi: scale * 72 };
   } finally {
     // 큰 canvas의 메모리를 바로 돌려준다 (쪽이 많으면 쌓여서 탭이 죽을 수 있다)

@@ -21,7 +21,8 @@ const REDACT_DPI = 200;
 const JPEG_QUALITY = 0.9;
 
 async function paintPage(doc: PDFDocumentProxy, index: number, boxes: RedactBox[]) {
-  const { bitmap } = await renderPageBitmap(await doc.getPage(index + 1), REDACT_DPI);
+  // 가리지 않은 쪽은 인쇄용 주석만 쪽에 그려 넣으므로(flattenAnnotations) 가린 쪽도 같은 기준으로 그린다
+  const { bitmap } = await renderPageBitmap(await doc.getPage(index + 1), REDACT_DPI, 'print');
   // 칠하기와 JPG 저장은 무거워 워커에서 한다
   return encodeBitmap(bitmap, 'image/jpeg', JPEG_QUALITY, boxes);
 }
