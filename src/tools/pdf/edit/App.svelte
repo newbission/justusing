@@ -272,7 +272,32 @@
     drag = undefined;
   }
 
-  /** 고른 것을 키보드로: 화살표로 옮기고 Delete로 지운다 */
+  /** 키보드로도 넣을 수 있게, 쪽 가운데에 하나 넣고 고른다 (그다음 화살표로 옮긴다) */
+  async function addAtCenter() {
+    if (mode === 'select') return;
+    deselect();
+    const id = nextId++;
+    if (mode === 'text') {
+      items.push({
+        id,
+        kind: 'text',
+        page: pageIndex,
+        x: 0.4,
+        y: 0.45,
+        text: '',
+        size: textSize,
+        color: COLORS[textTint],
+      });
+    } else {
+      items.push({ id, kind: mode, page: pageIndex, x: 0.35, y: 0.47, width: 0.3, height: 0.06 });
+    }
+    selectedId = id;
+    await tick();
+    if (mode === 'text') textArea?.focus();
+    else overlay?.querySelector<HTMLElement>('.item.selected')?.focus();
+  }
+
+  /** 고른 것을 키보드로: 화살표로 옮기고, Alt+화살표로 사각형 크기를 바꾸고, Delete로 지운다 */
   function onItemKey(event: KeyboardEvent, item: Item) {
     const step = event.shiftKey ? 0.02 : 0.005;
     const moves: Record<string, [number, number]> = {
@@ -290,6 +315,11 @@
     if (!move) return;
     event.preventDefault();
     select(item.id);
+    if (event.altKey && item.kind !== 'text') {
+      item.width = clamp(item.width + move[0], MIN_RECT, 1 - item.x);
+      item.height = clamp(item.height + move[1], MIN_RECT, 1 - item.y);
+      return;
+    }
     const width = item.kind === 'text' ? 0 : item.width;
     const height = item.kind === 'text' ? 0 : item.height;
     item.x = clamp(item.x + move[0], 0, 1 - width);
@@ -425,6 +455,9 @@
 
       <div class="items-bar">
         <span>{t.count(cleaned.length)}</span>
+        {#if mode !== 'select'}
+          <button type="button" class="btn" onclick={addAtCenter}>{t.addCenter[mode]}</button>
+        {/if}
         <button
           type="button"
           class="btn"
@@ -432,6 +465,7 @@
           onclick={() => remove(items.at(-1)!.id)}>{t.undo}</button
         >
       </div>
+      <p class="help keys">{t.keys}</p>
 
       {#if selected}
         <fieldset class="panel">
@@ -541,11 +575,15 @@
   }
   .items-bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     font-size: 14px;
+  }
+  .keys {
+    margin: 0 0 16px;
   }
   .panel {
     margin: 0 0 16px;
