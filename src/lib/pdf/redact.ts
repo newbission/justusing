@@ -88,9 +88,7 @@ function matchSpan(
 ): [number, number] {
   const count = prefix.length - 1;
   const total = prefix[count]!;
-  // 소문자로 바꾸며 길이가 달라진 글자(İ 등)가 있어도 조각 안에 머물게 한다
-  const ratio = (end: number) =>
-    Math.min(1, total > 0 ? prefix[Math.min(end, count)]! / total : end / count);
+  const ratio = (end: number) => (total > 0 ? prefix[end]! / total : end / count);
   const start = width * ratio(at);
   const end = width * ratio(at + length);
   const margin = (edge: number) => height * 0.25 + Math.min(edge, width - edge) * 0.25;
@@ -98,11 +96,33 @@ function matchSpan(
 }
 
 /**
+ * 글자마다 소문자로 바꾸고, 바꾼 글의 각 자리(UTF-16)가 원문의 어디서 왔는지 함께 돌려준다.
+ * 소문자로 바꾸면 길이가 달라지는 글자(İ → i̇ 등)가 있어 바꾼 글의 위치를 원문에 그대로 쓸 수 없다.
+ * from[j]: 바꾼 글 j번째 자리를 만든 원문 글자의 시작, to[j]: 그 글자의 끝
+ */
+function folded(str: string): { text: string; from: number[]; to: number[] } {
+  let text = '';
+  const from: number[] = [];
+  const to: number[] = [];
+  for (let i = 0; i < str.length;) {
+    const char = String.fromCodePoint(str.codePointAt(i)!);
+    const lower = char.toLocaleLowerCase();
+    text += lower;
+    for (let k = 0; k < lower.length; k++) {
+      from.push(i);
+      to.push(i + char.length);
+    }
+    i += char.length;
+  }
+  return { text, from, to };
+}
+
+/**
  * 쪽들에서 글자를 찾아 가릴 자리를 만든다. 대소문자는 가리지 않는다.
  * 한 글자 조각 안에서만 찾는다 (줄이 바뀌거나 PDF가 글자를 나눠 둔 곳에 걸친 말은 못 찾는다)
  */
 export async function findText(doc: PDFDocumentProxy, term: string): Promise<RedactBox[]> {
-  const needle = term.trim().toLocaleLowerCase();
+  const needle = folded(term.trim()).text;
   if (!needle) return [];
   const boxes: RedactBox[] = [];
   for (let number = 1; number <= doc.numPages; number++) {
@@ -112,7 +132,7 @@ export async function findText(doc: PDFDocumentProxy, term: string): Promise<Red
     page.cleanup();
     for (const item of content.items) {
       if (!('str' in item) || !item.str) continue;
-      const text = item.str.toLocaleLowerCase();
+      const { text, from, to } = folded(item.str);
       const [a, b, c, d, e, f] = item.transform as number[];
       const along = Math.hypot(a!, b!);
       const up = Math.hypot(c!, d!);
@@ -126,7 +146,10 @@ export async function findText(doc: PDFDocumentProxy, term: string): Promise<Red
       for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + 1)) {
         // 찾은 조각에서만, 조각마다 한 번 잰다
         prefix ??= prefixWidths(item.str, family);
-        const [s0, s1] = matchSpan(prefix, at, needle.length, item.width, height);
+        // 원문 위치로 옮겨 잰다 (찾은 첫 자리를 만든 글자의 시작부터 마지막 자리를 만든 글자의 끝까지)
+        const start = from[at]!;
+        const end = to[at + needle.length - 1]!;
+        const [s0, s1] = matchSpan(prefix, start, end - start, item.width, height);
         const corners = [s0, s1].flatMap((s) =>
           [-height * DESCENT, height].map((t) =>
             viewport.convertToViewportPoint(
