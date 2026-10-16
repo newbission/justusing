@@ -19,6 +19,7 @@ import {
   PDFRawStream,
   PDFStream,
   decodePDFRawStream,
+  type PDFObject,
   type PDFPage,
 } from '@cantoo/pdf-lib';
 import { contentUsage, type FormLookup, type ResourceUse } from './content-usage';
@@ -131,11 +132,17 @@ function formsIn(resources: PDFDict): FormLookup {
 function usedThroughNames(resources: PDFDict, used: ResourceUse) {
   const context = resources.context;
   const spaces = used.get('ColorSpace') ?? new Set<string>();
+  /** 색공간 값 안의 이름을 모두 모은다 ([/Indexed /CS1 255 …], [/Separation /Gold /CS2 …] 등) */
+  const namesIn = (value: unknown, depth = 0) => {
+    const resolved = context.lookup(value as PDFObject);
+    if (resolved instanceof PDFName) spaces.add(resolved.decodeText());
+    else if (resolved instanceof PDFArray && depth < 8) {
+      for (const item of resolved.asArray()) namesIn(item, depth + 1);
+    }
+  };
   const addSpace = (dict: unknown) => {
     const holder = dict instanceof PDFStream ? dict.dict : dict;
-    if (!(holder instanceof PDFDict)) return;
-    const space = holder.get(PDFName.of('ColorSpace'));
-    if (space instanceof PDFName) spaces.add(space.decodeText());
+    if (holder instanceof PDFDict) namesIn(holder.get(PDFName.of('ColorSpace')));
   };
   for (const kind of ['XObject', 'Shading', 'Pattern']) {
     const entry = context.lookup(resources.get(PDFName.of(kind)));
