@@ -71,6 +71,13 @@
         value,
       );
     if (!match) return value;
+    // 연도·월·일까지만 적혔으면 그만큼만 보여 준다 (시각이 없으면 시간대도 따지지 않는다)
+    if (match[4] === undefined) {
+      const [, onlyYear, onlyMonth, onlyDay] = match;
+      return formatDate(
+        [onlyYear, onlyMonth, onlyDay].filter((part) => part !== undefined).join('-'),
+      );
+    }
     const [, year, month = '01', day = '01', hour = '00', minute = '00', second = '00'] = match;
     const [zulu, sign, offsetHour = '00', offsetMinute = '00'] = match.slice(7);
     const fields = [year, month, day, hour, minute, second].map(Number);
