@@ -1102,6 +1102,8 @@ function collect(doc: PDFDocument, minSide: number) {
       }
       const stream = doc.context.lookup(normal);
       if (!(normal instanceof PDFRef) || !(stream instanceof PDFStream)) continue;
+      // 모양도 묶음 그림이라 자기 /OC로 꺼질 수 있다
+      if (layerHidden(stream.dict.get(name('OC')))) continue;
       const own = stream.dict.lookup(name('Resources'));
       enter(normal, [stream], own instanceof PDFDict ? own : undefined, index);
     }
