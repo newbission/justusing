@@ -53,13 +53,24 @@ type Colors =
  * 기본 색공간의 성분 수 (회색 1, RGB 3)와 ICC 프로필. 보정 색공간(CalRGB·CalGray)처럼
  * 색을 바꿔야 하는데 바꿀 수 없는 것은 undefined (꺼내지 못한 것으로 센다)
  */
-function baseSpace(space: unknown, dict: PDFDict): { n: 1 | 3; icc?: Uint8Array } | undefined {
+function baseSpace(
+  space: unknown,
+  dict: PDFDict,
+  resources: PDFDict | undefined,
+  depth = 0,
+): { n: 1 | 3; icc?: Uint8Array } | undefined {
   const lookup = dict.context.lookup.bind(dict.context);
   const resolved = lookup(space as PDFRef);
   if (resolved instanceof PDFName) {
     const value = resolved.decodeText();
     if (value === 'DeviceGray' || value === 'G') return { n: 1 };
     if (value === 'DeviceRGB' || value === 'RGB') return { n: 3 };
+    // 자원 목록(/ColorSpace)에 정의한 이름 (예: /CS0). 잘못 서로 가리켜도 끝나게 깊이를 제한한다
+    const named = resources?.lookup(name('ColorSpace'));
+    if (named instanceof PDFDict && depth < 4) {
+      const alias = named.get(resolved);
+      if (alias) return baseSpace(alias, dict, resources, depth + 1);
+    }
     return undefined;
   }
   if (resolved instanceof PDFArray && resolved.size() >= 1) {
@@ -77,10 +88,15 @@ function baseSpace(space: unknown, dict: PDFDict): { n: 1 | 3; icc?: Uint8Array 
   return undefined;
 }
 
-function colorsOf(dict: PDFDict): Colors | undefined {
-  const space = dict.lookup(name('ColorSpace'));
+function colorsOf(dict: PDFDict, resources: PDFDict | undefined): Colors | undefined {
+  let space = dict.lookup(name('ColorSpace'));
+  // 이름이면 자원 목록에서 먼저 풀어 본다 (/CS0 → [/Indexed …])
+  const named = resources?.lookup(name('ColorSpace'));
+  if (space instanceof PDFName && named instanceof PDFDict && named.has(space)) {
+    space = named.lookup(space);
+  }
   if (space instanceof PDFArray && space.lookup(0) === name('Indexed')) {
-    const base = baseSpace(space.get(1), dict);
+    const base = baseSpace(space.get(1), dict, resources);
     // [/Indexed 기본색공간 최댓값 색목록]
     const table = space.lookup(3);
     if (!base) return undefined;
@@ -91,7 +107,7 @@ function colorsOf(dict: PDFDict): Colors | undefined {
     if (!palette) return undefined;
     return { components: 1, palette, paletteColors: base.n, icc: base.icc };
   }
-  const base = baseSpace(space, dict);
+  const base = baseSpace(space, dict, resources);
   return base ? { components: base.n, icc: base.icc } : undefined;
 }
 
@@ -191,13 +207,14 @@ const inKey = (key: number[] | undefined, ...components: number[]) =>
 /** 화소를 풀어 RGBA로 (ICC 색공간이면 그 프로필과 함께). 다룰 수 없는 형식이면 undefined */
 async function decodePixels(
   stream: PDFRawStream,
+  resources: PDFDict | undefined,
 ): Promise<{ pixels: ImageData; icc?: Uint8Array } | undefined> {
   const { dict } = stream;
   const width = numberOf(dict, 'Width');
   const height = numberOf(dict, 'Height');
   const bits = numberOf(dict, 'BitsPerComponent') ?? 8;
   if (!width || !height || dict.has(name('Decode'))) return undefined;
-  const colors = colorsOf(dict);
+  const colors = colorsOf(dict, resources);
   if (!colors) return undefined;
   const indexed = 'palette' in colors;
   // 색 목록은 1·2·4·8비트, 회색·RGB는 8비트만
@@ -316,6 +333,7 @@ async function jpegToPng(
 /** 사진 하나를 꺼낸다. 다룰 수 없으면 undefined */
 async function extract(
   stream: PDFRawStream,
+  resources: PDFDict | undefined,
 ): Promise<Omit<ExtractedImage, 'page' | 'index'> | undefined> {
   const { dict } = stream;
   const width = numberOf(dict, 'Width') ?? 0;
@@ -326,7 +344,7 @@ async function extract(
     const alpha = await alphaOf(dict, width, height);
     if (alpha === UNSUPPORTED) return undefined;
     // 색 키 투명은 회색·RGB JPG만 (CMYK는 브라우저가 읽은 값과 PDF의 값이 달라 맞춰 볼 수 없다)
-    const components = colorsOf(dict)?.components;
+    const components = colorsOf(dict, resources)?.components;
     const key = colorKeyOf(dict, components ?? 3);
     if (key === UNSUPPORTED || (key && !components)) return undefined;
     if (alpha || key) {
@@ -338,7 +356,7 @@ async function extract(
   if (list.length === 1 && last === 'JPXDecode') {
     return { ext: 'jp2', bytes: stream.contents.slice(), width, height };
   }
-  const decoded = await decodePixels(stream);
+  const decoded = await decodePixels(stream, resources);
   if (!decoded) return undefined;
   const bytes = await png(decoded.pixels);
   return {
@@ -429,7 +447,13 @@ function countInline(streams: PDFStream[], minSide: number): number {
 function collect(doc: PDFDocument) {
   const seen = new Set<PDFRef>();
   const visitedForms = new Set<PDFRef>();
-  const found: { ref: PDFRef; stream: PDFRawStream; page: number }[] = [];
+  /** resources: 그 사진을 부른 자원 목록 (색공간 이름을 풀려고) */
+  const found: {
+    ref: PDFRef;
+    stream: PDFRawStream;
+    page: number;
+    resources: PDFDict | undefined;
+  }[] = [];
   /** 쪽과 묶음 그림의 내용 (바로 써 넣은 그림을 세려고) */
   const contents: PDFStream[] = [];
   const walk = (resources: PDFDict | undefined, page: number) => {
@@ -445,7 +469,7 @@ function collect(doc: PDFDocument) {
         if (object.dict.lookup(name('ImageMask'))?.toString() === 'true') continue;
         if (seen.has(value) || !(object instanceof PDFRawStream)) continue;
         seen.add(value);
-        found.push({ ref: value, stream: object, page });
+        found.push({ ref: value, stream: object, page, resources });
       } else if (subtype === name('Form') && !visitedForms.has(value)) {
         visitedForms.add(value);
         contents.push(object);
@@ -476,10 +500,10 @@ addEventListener('message', async (event: MessageEvent<ExtractRequest>) => {
       return Math.min(width, height) >= minSide;
     });
     let failed = countInline(collected.contents, minSide);
-    for (const [index, { stream, page }] of found.entries()) {
+    for (const [index, { stream, page, resources }] of found.entries()) {
       let image: Awaited<ReturnType<typeof extract>>;
       try {
-        image = await extract(stream);
+        image = await extract(stream, resources);
       } catch {
         image = undefined;
       }
