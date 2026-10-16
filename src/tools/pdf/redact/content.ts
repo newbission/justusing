@@ -20,7 +20,7 @@ export default defineContent({
       },
       {
         q: '"찾아서 가리기"가 못 찾는 글자가 있어요.',
-        a: '스캔한 쪽은 글자가 그림이라 찾을 수 없습니다. 또 PDF가 글자를 줄 단위로 나눠 저장해 두었기 때문에, 줄이 바뀌는 곳에 걸친 말은 찾지 못합니다. 찾은 뒤에도 쪽마다 빠진 곳이 없는지 확인하고, 빠진 곳은 직접 그려 가리세요.',
+        a: '스캔한 쪽은 글자가 그림이라 찾을 수 없습니다. 또 PDF가 글자를 줄 단위로 나눠 저장해 두었기 때문에, 줄이 바뀌는 곳에 걸친 말은 찾지 못합니다. 찾은 말은 글자 폭을 어림해 넉넉하게 가리므로 옆 글자가 조금 함께 가려질 수 있습니다. 찾은 뒤에도 쪽마다 빠진 곳이 없는지 확인하고, 빠진 곳은 직접 그려 가리세요.',
       },
       {
         q: '결과에서 빠지는 것이 있나요?',
@@ -51,7 +51,7 @@ export default defineContent({
       },
       {
         q: 'Find and redact missed some text.',
-        a: 'Text on scanned pages is part of an image and cannot be found. Words that break across lines are also missed, because PDFs store text line by line. After finding, check every page and draw boxes over anything that was missed.',
+        a: 'Text on scanned pages is part of an image and cannot be found. Words that break across lines are also missed, because PDFs store text line by line. Matches are covered with some margin, because character widths are estimated, so neighboring characters may be partly covered too. After finding, check every page and draw boxes over anything that was missed.',
       },
       {
         q: 'Is anything left out of the result?',
