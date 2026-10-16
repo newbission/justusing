@@ -1006,7 +1006,12 @@ function collect(doc: PDFDocument, minSide: number) {
       if (!(procs instanceof PDFDict)) continue;
       const own = font.lookup(name('Resources'));
       const names = glyphNames(font);
-      for (const glyph of new Set([...codes].map((code) => names.get(code)))) {
+      // 찍은 글자 중 /Differences에 없는 것이 있으면(기본 인코딩 /BaseEncoding·이름 인코딩을 따르거나 규격 위반)
+      // 어떤 모양을 쓰는지 알 수 없어 모든 모양을 훑는다 (그린 사진을 빠뜨리지 않게)
+      const glyphs = [...codes].some((code) => !names.has(code))
+        ? procs.keys().map((key) => key.decodeText())
+        : [...codes].map((code) => names.get(code));
+      for (const glyph of new Set(glyphs)) {
         const value = glyph ? procs.get(name(glyph)) : undefined;
         const stream = doc.context.lookup(value);
         if (!(value instanceof PDFRef) || !(stream instanceof PDFStream)) continue;
