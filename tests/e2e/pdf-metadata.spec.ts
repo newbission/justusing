@@ -5,8 +5,10 @@
  */
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
-import { PDFDocument, PDFName } from '@cantoo/pdf-lib';
+import { PDFDict, PDFDocument, PDFName, PDFString } from '@cantoo/pdf-lib';
 import { expectLocalOnly } from './local-only';
+
+const infoOf = (doc: PDFDocument) => doc.context.lookup(doc.context.trailerInfo.Info) as PDFDict;
 
 async function infoPdf() {
   const doc = await PDFDocument.create();
@@ -16,6 +18,8 @@ async function infoPdf() {
   doc.setCreator('Secret Office 2026');
   doc.setProducer('Secret PDF Maker');
   doc.setCreationDate(new Date(2026, 0, 2, 3, 4));
+  // 워드 등이 더하는 사용자 정의 항목
+  infoOf(doc).set(PDFName.of('Company'), PDFString.of('Secret Corp'));
   return Buffer.from(await doc.save({ updateFieldAppearances: false }));
 }
 
@@ -63,7 +67,7 @@ test('제목·작성자를 바꾸고, 비운 칸은 지운다', async ({ page, b
   expectLocalOnly(page, requests, baseURL!);
 });
 
-test('모두 지우기는 만든 프로그램·날짜까지 지운다', async ({ page }) => {
+test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목까지 지운다', async ({ page }) => {
   const frame = await openTool(page);
   await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
   await expect(frame.getByLabel('제목')).toBeDisabled();
@@ -73,5 +77,6 @@ test('모두 지우기는 만든 프로그램·날짜까지 지운다', async ({
   expect(doc.getCreator()).toBeUndefined();
   expect(doc.getProducer()).toBeUndefined();
   expect(doc.getCreationDate()).toBeUndefined();
+  expect(infoOf(doc).get(PDFName.of('Company'))).toBeUndefined();
   expect(doc.catalog.get(PDFName.of('Metadata'))).toBeUndefined();
 });
