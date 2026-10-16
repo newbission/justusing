@@ -131,15 +131,12 @@ const LAST_NAME: Record<string, string> = {
 };
 
 /**
- * 이름 → 묶음 그림. text: 내용, own: 자기 자원 목록이 있음, forms: 그 안에서 부르는 이름을 찾는 곳
- * (자기 자원 목록이 있을 때)
+ * 이름 → 묶음 그림. key: 그 묶음 그림 객체(서로 부르는지 알아보려고), text: 내용,
+ * own: 자기 자원 목록이 있음, forms: 그 안에서 부르는 이름을 찾는 곳 (자기 자원 목록이 있을 때)
  */
 export type FormLookup = (
   name: string,
-) => { text: string; own: boolean; forms?: FormLookup } | undefined;
-
-/** 묶음 그림이 묶음 그림을 부르는 깊이 한도 (서로 부르는 잘못된 파일에서 끝나게) */
-const MAX_FORM_DEPTH = 12;
+) => { key: object; text: string; own: boolean; forms?: FormLookup } | undefined;
 
 /**
  * 내용 스트림에서 부른 자원과, 글꼴별로 찍은 글자 코드를 모은다.
@@ -163,14 +160,11 @@ export function contentUsage(
   const saved: string[] = [];
   /**
    * foreign: 자기 자원 목록이 있는 묶음 그림 안 (이름이 다른 목록을 가리켜 이 목록의 자원으로 세지 않는다).
-   * forms: 지금 내용에서 부르는 묶음 그림 이름을 찾는 곳, depth: 묶음 그림 깊이
+   * forms: 지금 내용에서 부르는 묶음 그림 이름을 찾는 곳
    */
-  const scan = (
-    tokens: Token[],
-    foreign: boolean,
-    forms: FormLookup | undefined,
-    depth: number,
-  ) => {
+  /** 지금 훑는 중인 묶음 그림들 */
+  const path = new Set<object>();
+  const scan = (tokens: Token[], foreign: boolean, forms: FormLookup | undefined) => {
     let operands: Token[] = [];
     let inInlineImage = false;
     for (const token of tokens) {
@@ -207,16 +201,14 @@ export function contentUsage(
       } else if (LAST_NAME[op] && last?.kind === 'name') {
         if (!foreign) use(LAST_NAME[op], last.value);
         // 묶음 그림 안에서 다시 부르는 묶음 그림도 그 자리의 글꼴 상태로 이어서 훑는다
-        const inner = op === 'Do' && depth < MAX_FORM_DEPTH ? forms?.(last.value) : undefined;
-        if (inner) {
+        const inner = op === 'Do' ? forms?.(last.value) : undefined;
+        // 지금 훑는 중인 묶음 그림을 다시 부르면(잘못된 파일) 그만둔다. 깊이 자체는 제한하지 않는다
+        if (inner && !path.has(inner.key)) {
+          path.add(inner.key);
           // 묶음 그림은 앞뒤로 q/Q를 한 것처럼 실행된다 (안에서 Q를 더 해도 바깥 상태는 그대로)
           const outer = { font, saved: [...saved] };
-          scan(
-            tokenize(inner.text),
-            foreign || inner.own,
-            inner.own ? inner.forms : forms,
-            depth + 1,
-          );
+          scan(tokenize(inner.text), foreign || inner.own, inner.own ? inner.forms : forms);
+          path.delete(inner.key);
           font = outer.font;
           saved.splice(0, saved.length, ...outer.saved);
         }
@@ -230,7 +222,6 @@ export function contentUsage(
     texts.flatMap((text) => tokenize(text)),
     false,
     form,
-    0,
   );
   return { resources, text: shown };
 }
