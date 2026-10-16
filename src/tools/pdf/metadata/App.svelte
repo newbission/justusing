@@ -35,19 +35,29 @@
   let run = $state<Run>({ kind: 'idle' });
   const result = $derived(run.kind === 'done' && run.signature === signature ? run : undefined);
 
-  /** PDF 날짜(D:YYYYMMDDHHmmSS…)를 읽기 쉬운 날짜로 */
+  /**
+   * PDF 날짜(D:YYYYMMDDHHmmSS + 시간대 Z·+09'00')를 읽기 쉬운 날짜로.
+   * 시간대가 있으면 그 순간을 이 기기의 시각으로 바꿔 보여 준다
+   */
   function formatDate(value: unknown): string {
     if (typeof value !== 'string') return '';
-    const match = /^D:(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?/.exec(value);
+    const match =
+      /^D:(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(?:(Z)|([+-])(\d{2})'?(\d{2})?'?)?/.exec(
+        value,
+      );
     if (!match) return value;
-    const [, year, month = '01', day = '01', hour = '00', minute = '00'] = match;
-    const date = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hour),
-      Number(minute),
-    );
+    const [, year, month = '01', day = '01', hour = '00', minute = '00', second = '00'] = match;
+    const [zulu, sign, offsetHour = '00', offsetMinute = '00'] = match.slice(7);
+    const fields = [year, month, day, hour, minute, second].map(Number);
+    const [y, mo, d, h, mi, se] = fields as [number, number, number, number, number, number];
+    // 시간대가 없으면(규격상 알 수 없음) 이 기기의 시각으로 본다
+    const date =
+      zulu || sign
+        ? new Date(
+            Date.UTC(y, mo - 1, d, h, mi, se) -
+              (sign === '-' ? -1 : 1) * (Number(offsetHour) * 60 + Number(offsetMinute)) * 60_000,
+          )
+        : new Date(y, mo - 1, d, h, mi, se);
     return new Intl.DateTimeFormat(frameLocale, { dateStyle: 'medium', timeStyle: 'short' }).format(
       date,
     );
