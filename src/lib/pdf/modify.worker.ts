@@ -146,8 +146,9 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
     // - 주석: 작성자(/T, 입력 칸 Widget의 /T는 칸 이름이라 둔다), 만든·고친 시각, 고유 이름(/NM)
     // - 기사 흐름(/Thread)의 정보 사전(/I): 제목·작성자 등
     // - 레이어(OCG)의 사용 정보(/Usage): 만든 프로그램(/CreatorInfo), 대상 사람·조직(/User)
-    // - 전자 서명: 저장하면 서명은 어차피 깨지므로 서명 값(/V, 서명한 사람의 인증서가 든 사전)을 칸에서 떼어 내고
-    //   서명을 가리키는 문서 권한(/Perms)도 지운다. 다른 곳에 남은 서명 사전에서도 사람·시각·장소 등을 지운다
+    // - 전자 서명: 저장하면 서명은 어차피 깨지므로 서명 값(/V, 서명한 사람의 인증서가 든 사전)과 서명 조건(/SV,
+    //   인증서·발급자를 적을 수 있다)을 칸에서 떼어 낸다. 문서에 딸린 서명 정보도 지운다: 서명을 가리키는 권한(/Perms),
+    //   장기 검증용 인증서·폐기 목록 저장소(/DSS), 서명 증명(/Legal). 다른 곳에 남은 서명 사전에서도 사람·시각·장소 등을 지운다
     const named = (...keys: string[]) => keys.map((key) => PDFName.of(key));
     const hidden = named('Metadata', 'PieceInfo', 'LastModified', 'SpiderInfo', 'DPM');
     const usage = named('CreatorInfo', 'User');
@@ -165,7 +166,7 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
       'Cert',
       'Contents',
     );
-    doc.catalog.delete(PDFName.of('Perms'));
+    for (const key of named('Perms', 'DSS', 'Legal')) doc.catalog.delete(key);
     const strip = (object: unknown) => {
       if (object instanceof PDFStream) strip(object.dict);
       else if (object instanceof PDFDict) {
@@ -182,7 +183,9 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
         if (type === PDFName.of('OCG') && layerUsage instanceof PDFDict) {
           for (const key of usage) layerUsage.delete(key);
         }
-        if (object.get(PDFName.of('FT')) === PDFName.of('Sig')) object.delete(PDFName.of('V'));
+        if (object.get(PDFName.of('FT')) === PDFName.of('Sig')) {
+          for (const key of named('V', 'SV')) object.delete(key);
+        }
         if (type === PDFName.of('Thread')) {
           const threadInfo = context.lookup(object.get(PDFName.of('I')));
           if (threadInfo instanceof PDFDict) {
