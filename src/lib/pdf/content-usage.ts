@@ -138,12 +138,14 @@ export function contentUsage(texts: string[]): { resources: ResourceUse; text: T
     resources.get(kind)!.add(name);
   };
   const shown: TextUse[] = [];
+  // 쪽의 내용 스트림 여러 개는 이어서 하나로 실행되므로 상태를 스트림 사이에 이어 간다
+  // (앞 스트림 끝의 /T3 12 Tf가 다음 스트림의 (a) Tj에 쓰인다)
+  let operands: Token[] = [];
+  /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
+  let font = '';
+  const saved: string[] = [];
+  let inInlineImage = false;
   for (const text of texts) {
-    let operands: Token[] = [];
-    /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
-    let font = '';
-    const saved: string[] = [];
-    let inInlineImage = false;
     for (const token of tokenize(text)) {
       if (token.kind !== 'op') {
         operands.push(token);
