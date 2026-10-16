@@ -37,6 +37,12 @@ async function infoPdf() {
     ]),
   );
   doc.getForm().createTextField('field_keep').addToPage(doc.getPage(0), { x: 50, y: 50 });
+  // 첨부 파일의 만든·고친 날짜
+  await doc.attach(new TextEncoder().encode('hello'), 'note.txt', {
+    mimeType: 'text/plain',
+    creationDate: new Date(Date.UTC(2023, 2, 4, 5, 6, 7)),
+    modificationDate: new Date(Date.UTC(2023, 2, 5, 5, 6, 7)),
+  });
   // 원본 파일 식별자
   const original = PDFHexString.of('0123456789ABCDEF0123456789ABCDEF');
   doc.context.trailerInfo.ID = doc.context.obj([original, original]);
@@ -153,6 +159,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20251231235959');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Annot Author Yoon');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20240102000000Z');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:2023030');
   expect(doc.getForm().getTextField('field_keep')).toBeDefined();
 });
 
@@ -274,5 +281,22 @@ test.describe('세계 표준시보다 느린 시간대에서', () => {
     await expect(frame.getByText('2025. 5. 6.')).toBeVisible();
     // 연월만 적혔으면 연월만
     await expect(frame.getByText('2025년 7월', { exact: true })).toBeVisible();
+  });
+
+  test('축약된 PDF 날짜는 적힌 만큼만 보여 준다', async ({ page }) => {
+    const doc = await PDFDocument.create();
+    doc.addPage([200, 200]);
+    const info = infoOf(doc);
+    info.set(PDFName.of('CreationDate'), PDFString.of('D:2025'));
+    info.set(PDFName.of('ModDate'), PDFString.of('D:202505'));
+    await page.goto('/pdf/metadata/');
+    const frame = page.frameLocator('iframe[data-tool-frame]');
+    await frame.locator('input[type=file]').setInputFiles({
+      name: 'short-date.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from(await doc.save({ updateFieldAppearances: false })),
+    });
+    await expect(frame.getByText('2025년', { exact: true })).toBeVisible();
+    await expect(frame.getByText('2025년 5월', { exact: true })).toBeVisible();
   });
 });
