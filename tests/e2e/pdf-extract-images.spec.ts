@@ -8,7 +8,13 @@ import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { unzipSync } from 'fflate';
-import { PDFDocument, drawObject, popGraphicsState, pushGraphicsState } from '@cantoo/pdf-lib';
+import {
+  PDFDocument,
+  PDFHexString,
+  drawObject,
+  popGraphicsState,
+  pushGraphicsState,
+} from '@cantoo/pdf-lib';
 import { expectLocalOnly } from './local-only';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
@@ -114,4 +120,65 @@ test('PNG 예측을 건 Flate 사진도 꺼낸다', async ({ page }) => {
   await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
   await expect(frame.getByText('특수한 형식', { exact: false })).toHaveCount(0);
   await expect(frame.getByText('2쪽 · 600×450 · PNG', { exact: false })).toBeVisible();
+});
+
+test('ICC 사진은 프로필을 넣고, 색 키 투명은 알파로, 바로 써 넣은 그림·보정 색공간은 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const image = (pixels: Uint8Array, dict: Record<string, unknown>) =>
+    context.register(
+      context.flateStream(pixels, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        BitsPerComponent: 8,
+        ...dict,
+      }),
+    );
+  const profile = context.register(context.flateStream(new Uint8Array(200).fill(7), { N: 3 }));
+  const icc = image(new Uint8Array(64 * 64 * 3).fill(120), { ColorSpace: ['ICCBased', profile] });
+  // 색 목록 0번(빨강)을 투명으로
+  const keyed = image(
+    new Uint8Array(64 * 64).map((_, i) => i % 2),
+    { ColorSpace: ['Indexed', 'DeviceRGB', 1, PDFHexString.of('FF000000FF00')], Mask: [0, 0] },
+  );
+  const calibrated = image(new Uint8Array(64 * 64 * 3).fill(90), {
+    ColorSpace: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }],
+  });
+  const added = doc.addPage([300, 300]);
+  for (const ref of [icc, keyed, calibrated]) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+  // 쪽 내용에 바로 써 넣은 100×100 그림
+  const inline = context.register(
+    context.stream(
+      `q 100 0 0 100 0 0 cm BI /W 100 /H 100 /CS /G /BPC 8 ID ${'x'.repeat(100 * 100)} EI Q`,
+    ),
+  );
+  added.node.addContentStream(inline);
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'colors.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '모두 받기 (ZIP)' }).click();
+  const entries = unzipSync(new Uint8Array(await readFile(await (await event).path())));
+  const [first, second] = ['colors_p1_1.png', 'colors_p1_2.png'].map((name) =>
+    Buffer.from(entries[name]!),
+  );
+  // ICC 프로필이 PNG에 들어 있다
+  expect(first!.includes(Buffer.from('iCCP'))).toBe(true);
+  // 투명이 있으므로 RGBA(색 종류 6)로 저장된다
+  expect(second![25]).toBe(6);
 });
