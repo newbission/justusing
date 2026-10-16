@@ -127,20 +127,25 @@ test('같이 쓰던 자원과 링크를 타고 가린 쪽의 내용이 딸려 �
         BitsPerComponent: 8,
       }),
     );
-  const resources = context.register(
-    context.obj({ XObject: { Secret: gray(7), Public: gray(9) } }),
+  const shared = { Secret: gray(7), Public: gray(9) };
+  // 2쪽은 묶음 그림(Form)으로 Public만 그리지만, 묶음 그림의 자원 목록에도 Secret이 들어 있다
+  const wrap = context.register(
+    context.stream('q 100 0 0 100 50 50 cm /Public Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 200, 200],
+      Resources: { XObject: shared },
+    }),
   );
+  const resources = context.register(context.obj({ XObject: { ...shared, Wrap: wrap } }));
   const first = source.addPage([200, 200]);
   const second = source.addPage([200, 200]);
-  for (const [added, image] of [
-    [first, 'Secret'],
-    [second, 'Public'],
+  for (const [added, draw] of [
+    [first, 'q 100 0 0 100 50 50 cm /Secret Do Q'],
+    [second, '/Wrap Do'],
   ] as const) {
     added.node.set(PDFName.of('Resources'), resources);
-    added.node.set(
-      PDFName.of('Contents'),
-      context.register(context.stream(`q 100 0 0 100 50 50 cm /${image} Do Q`)),
-    );
+    added.node.set(PDFName.of('Contents'), context.register(context.stream(draw)));
   }
   const link = context.register(
     context.obj({
