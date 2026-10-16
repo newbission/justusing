@@ -514,6 +514,10 @@
   .mode-highlight .item {
     pointer-events: none;
   }
+  /* 글자 도구에서는 가린 자리·형광펜 위를 눌러도 새 글자 상자를 만든다 (가리고 고쳐 쓰기) */
+  .mode-text .item.rect {
+    pointer-events: none;
+  }
   .item:focus-visible,
   .item.selected {
     outline: 2px solid var(--color-accent);
