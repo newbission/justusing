@@ -1492,3 +1492,45 @@ test('남긴 그림 스트림의 바깥 파일 연결(/F)은 뺀다', async ({ p
   const { text } = await allStreams(bytes);
   expect(text).not.toContain('STREAM-FILE-SECRET');
 });
+
+test('합자·자모로 나눈 한글·줄 안 띄움 공백처럼 생김새만 같은 글자도 찾는다', async ({ page }) => {
+  // X는 합자 ﬁ, A는 자모로 나눈 '한'(ᄒ ᅡ ᆫ), Z는 줄 안 띄움 공백으로 읽히게 한 Helvetica
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const cmap = context.register(
+    context.stream(
+      [
+        '/CIDInit /ProcSet findresource begin 12 dict begin begincmap',
+        '/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def',
+        '/CMapName /Adobe-Identity-UCS def /CMapType 2 def',
+        '1 begincodespacerange <00> <FF> endcodespacerange',
+        '3 beginbfchar <58> <FB01> <41> <1112116111AB> <5A> <00A0> endbfchar',
+        '1 beginbfrange <42> <57> <0042> endbfrange',
+        'endcmap CMapName currentdict /CMap defineresource pop end end',
+      ].join('\n'),
+    ),
+  );
+  const font = context.obj({
+    Type: 'Font',
+    Subtype: 'Type1',
+    BaseFont: 'Helvetica',
+    Encoding: 'WinAnsiEncoding',
+    ToUnicode: cmap,
+  });
+  const added = source.addPage([400, 200]);
+  added.node.set(PDFName.of('Resources'), context.obj({ Font: { F1: font } }));
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /F1 12 Tf 20 100 Td (BBXBBZAB) Tj ET')),
+  );
+  const frame = await openRedact(page, {
+    name: 'normalize.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  for (const term of ['fi', 'b 한']) {
+    await frame.getByLabel('찾아서 가리기').fill(term);
+    await frame.getByRole('button', { name: '모두 찾아 가리기' }).click();
+    await expect(frame.getByText('1곳을 찾아 가렸습니다.')).toBeVisible();
+    await frame.getByLabel('찾아서 가리기').fill('');
+  }
+});
