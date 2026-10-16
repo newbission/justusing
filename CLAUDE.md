@@ -234,6 +234,16 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 - 키보드로 모든 조작 가능, 라벨 필수, 대비 WCAG AA 이상.
 - 모바일·데스크톱 모두 지원.
 
+## 기능 문서 (`docs/`, 2026-10-16)
+
+- 기능·기반마다 폴더가 있다: `docs/features/<도구 ID>/`, `docs/foundations/<기반>/`. 목록과 규칙은 [`docs/README.md`](docs/README.md)
+  - `README.md`: 어떤 기능인지 · 어떻게 만드는지(파일·흐름·결정과 이유·주의할 점) · 구현 체크리스트 · 검증
+  - `history.md`: 위 **요약**(중요한 결정·큰 오류와 원인·배운 점)은 직접 쓰고, 아래 **기록**(PR·커밋·리뷰 지적)은
+    `node scripts/docs/history.mjs`가 만든다
+- 작업을 시작할 때 그 기능의 문서부터 읽는다
+- 기능을 만들거나 고치는 PR에서 **그 기능의 README도 같이 고친다**. 새 도구는 `docs/_template/`을 복사하고
+  `scripts/docs/history.mjs`의 `DOCS`에 더한다. 병합 뒤 `history.mjs`를 다시 돌린다
+
 ## 작업 방식 (Git)
 
 - **커밋은 최소 단위.** 커밋 하나 = 변경 하나. 여러 수정을 한 커밋에 몰아넣지 않는다.
