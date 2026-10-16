@@ -186,9 +186,11 @@ addEventListener('message', async (event: MessageEvent<TextRequest>) => {
       font = await doc.embedFont(job.font, { subset: true });
     }
     if (job.kind === 'edit') drawEdits(doc, font, job);
-    else if (!font) throw new Error('font required');
-    else if (job.kind === 'watermark') drawWatermark(doc, font, job);
-    else drawHeaderFooter(doc, font, job);
+    else if (font) {
+      if (job.kind === 'watermark') drawWatermark(doc, font, job);
+      else drawHeaderFooter(doc, font, job);
+    } else if (text.trim()) throw new Error('font required');
+    // 넣을 글자가 하나도 없으면(한 쪽 문서에서 표지를 뺀 머리말 등) 그대로 저장한다
     const out = await doc.save();
     send({ id, kind: 'done', bytes: out }, [out.buffer]);
   } catch (error) {
