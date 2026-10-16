@@ -79,3 +79,31 @@ test('머리말·꼬리말이 모두 비면 넣을 수 없다', async ({ page })
   await expect(frame.getByText('머리말이나 꼬리말을 적어 주세요.')).toBeVisible();
   await expect(frame.getByRole('button', { name: '머리말·꼬리말 넣기' })).toBeDisabled();
 });
+
+test('숫자가 없는 내 글꼴도 숫자를 넣지 않으면 쓰고, 긴 글자는 쪽 안으로 줄인다', async ({
+  page,
+}) => {
+  await page.goto('/pdf/header-footer/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').first().setInputFiles(fixture('three-pages.pdf'));
+  // abc.otf에는 A·B·C만 있다 (숫자 없음)
+  await frame.locator('input[type=file][accept*=".ttf"]').setInputFiles(fixture('abc.otf'));
+  await frame.getByLabel('머리말 (쪽 위)', { exact: true }).fill('ABC'.repeat(40));
+  await frame.getByLabel('꼬리말 (쪽 아래)', { exact: true }).fill('');
+  const { bytes } = await download(page, frame);
+
+  const task = getDocument({ data: bytes.slice() });
+  const doc = await task.promise;
+  const first = await doc.getPage(1);
+  const width = first.getViewport({ scale: 1 }).width;
+  const header = (await first.getTextContent()).items.find(
+    (item) => 'str' in item && item.str.startsWith('ABCABC'),
+  );
+  expect(header).toBeDefined();
+  if (header && 'transform' in header) {
+    const x = header.transform[4] as number;
+    expect(x).toBeGreaterThanOrEqual(0);
+    expect(x + header.width).toBeLessThanOrEqual(width);
+  }
+  await task.destroy();
+});
