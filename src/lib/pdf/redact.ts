@@ -5,7 +5,7 @@
  */
 import { modifyPdf } from './modify';
 import type { PDFDocumentProxy } from './pdfjs';
-import { renderPageBitmap } from './render-image';
+import { encodeBitmap, renderPageBitmap } from './render-image';
 
 /** 가릴 자리. 화면에 보이는 쪽(회전·보이는 영역 적용) 기준 비율(0~1), 왼쪽 위가 (0, 0) */
 export interface RedactBox {
@@ -22,21 +22,8 @@ const JPEG_QUALITY = 0.9;
 
 async function paintPage(doc: PDFDocumentProxy, index: number, boxes: RedactBox[]) {
   const { bitmap } = await renderPageBitmap(await doc.getPage(index + 1), REDACT_DPI);
-  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-  const context = canvas.getContext('2d')!;
-  context.drawImage(bitmap, 0, 0);
-  bitmap.close();
-  context.fillStyle = '#000';
-  for (const box of boxes) {
-    // 화소 경계에서 글자 끝이 비치지 않게 바깥으로 1화소씩 넓힌다
-    const x = Math.floor(box.x * canvas.width) - 1;
-    const y = Math.floor(box.y * canvas.height) - 1;
-    const right = Math.ceil((box.x + box.width) * canvas.width) + 1;
-    const bottom = Math.ceil((box.y + box.height) * canvas.height) + 1;
-    context.fillRect(x, y, right - x, bottom - y);
-  }
-  const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: JPEG_QUALITY });
-  return new Uint8Array(await blob.arrayBuffer());
+  // 칠하기와 JPG 저장은 무거워 워커에서 한다
+  return encodeBitmap(bitmap, 'image/jpeg', JPEG_QUALITY, boxes);
 }
 
 /**
