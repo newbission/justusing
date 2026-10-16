@@ -8,6 +8,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { PDFArray, PDFDict, PDFDocument, PDFHexString, PDFName, PDFString } from '@cantoo/pdf-lib';
 import { expectLocalOnly } from './local-only';
+import { signedPdf } from './signed-pdf';
 
 const infoOf = (doc: PDFDocument) => doc.context.lookup(doc.context.trailerInfo.Info) as PDFDict;
 
@@ -348,4 +349,72 @@ test.describe('세계 표준시보다 느린 시간대에서', () => {
     await expect(frame.getByText('2025년', { exact: true })).toBeVisible();
     await expect(frame.getByText('2025년 5월', { exact: true })).toBeVisible();
   });
+});
+
+test('서명된 PDF는 서명이 깨진다고 알리고, 모두 지우기는 서명한 사람의 인증서까지 지운다', async ({
+  page,
+}) => {
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'contract.pdf',
+    mimeType: 'application/pdf',
+    buffer: await signedPdf(),
+  });
+  await expect(frame.getByText('전자 서명된 PDF입니다', { exact: false })).toBeVisible();
+  await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
+  const { doc, text } = await download(page, frame);
+  for (const secret of [
+    'Cert Holder Park',
+    '5369676E65722043657274205061726B',
+    'Signer Secret Kim',
+  ]) {
+    expect(text).not.toContain(secret);
+  }
+  expect(doc.catalog.get(PDFName.of('Perms'))).toBeUndefined();
+});
+
+test('모두 지우기는 레이어를 만든 프로그램·대상 사람과 문서 부분 정보도 지운다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  doc.addPage([200, 200]);
+  const { context } = doc;
+  const layer = context.register(
+    context.obj({
+      Type: 'OCG',
+      Name: PDFString.of('Layer 1'),
+      Usage: {
+        CreatorInfo: { Creator: PDFString.of('Layer Secret Office'), Subtype: 'Artwork' },
+        User: { Type: 'Ind', Name: PDFString.of('Layer User Choi') },
+      },
+    }),
+  );
+  doc.catalog.set(PDFName.of('OCProperties'), context.obj({ OCGs: [layer], D: { ON: [layer] } }));
+  doc.catalog.set(
+    PDFName.of('DPartRoot'),
+    context.obj({
+      Type: 'DPartRoot',
+      DPartRootNode: {
+        Type: 'DPart',
+        DPM: { Owner: PDFString.of('DPM Secret Owner') },
+        Start: doc.getPage(0).ref,
+      },
+    }),
+  );
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'layers.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
+  const { doc: saved, text } = await download(page, frame);
+  for (const secret of ['Layer Secret Office', 'Layer User Choi', 'DPM Secret Owner']) {
+    expect(text).not.toContain(secret);
+  }
+  // 레이어 자체(이름·보이기 설정)는 남는다
+  expect(text).toContain('Layer 1');
+  expect(saved.catalog.get(PDFName.of('OCProperties'))).toBeDefined();
 });
