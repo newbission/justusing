@@ -252,3 +252,41 @@ test('가리는 쪽에만 있는 모양 없는 한글 입력 칸은 막지 않�
   await frame.getByRole('button', { name: '가리고 저장' }).click();
   await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
 });
+
+test('가리지 않은 쪽들이 같이 쓰는 그림은 결과에 한 번만 들어간다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const logo = context.register(
+    context.flateStream(new Uint8Array(150 * 150).fill(200), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 150,
+      Height: 150,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+    }),
+  );
+  const resources = context.register(context.obj({ XObject: { Logo: logo } }));
+  for (let i = 0; i < 4; i++) {
+    const added = source.addPage([200, 200]);
+    added.node.set(PDFName.of('Resources'), resources);
+    added.node.set(
+      PDFName.of('Contents'),
+      context.register(context.stream('q 50 0 0 50 10 10 cm /Logo Do Q')),
+    );
+  }
+  const frame = await openRedact(page, {
+    name: 'logo.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { doc } = await allStreams((await download(page, frame)).bytes);
+  const logos = [...doc.context.enumerateIndirectObjects()]
+    .map(([, object]) => object)
+    .filter((object): object is PDFRawStream => object instanceof PDFRawStream)
+    .filter(
+      (object) =>
+        (object.dict.get(PDFName.of('Width')) as PDFNumber | undefined)?.asNumber() === 150,
+    );
+  expect(logos).toHaveLength(1);
+});
