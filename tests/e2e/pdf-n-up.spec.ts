@@ -408,7 +408,17 @@ test('모양·테두리 없는 링크는 건너뛰고, 모양이나 테두리를
       C: [1, 0, 0],
     }),
   );
-  first.node.set(PDFName.of('Annots'), context.obj([plain, boxed, bordered]));
+  // 점선을 함께 적은 네 항목 /Border
+  const dashed = context.register(
+    context.obj({
+      Type: 'Annot',
+      Subtype: 'Link',
+      F: 4,
+      Rect: [10, 130, 60, 150],
+      Border: [0, 0, 1, [3, 2]],
+    }),
+  );
+  first.node.set(PDFName.of('Annots'), context.obj([plain, boxed, bordered, dashed]));
   const frame = await openNUp(page);
   await frame.locator('input[type=file]').setInputFiles({
     name: 'links.pdf',
@@ -417,8 +427,8 @@ test('모양·테두리 없는 링크는 건너뛰고, 모양이나 테두리를
   });
   await frame.getByRole('button', { name: '모아찍기' }).click();
   const { bytes } = await download(page, frame);
-  // 1쪽에는 내용이 없고 모양이 있는 링크와 테두리를 정한 링크만 그려진다
-  expect((await placedPages(bytes, 1)).strokes).toBe(2);
+  // 1쪽에는 내용이 없고 모양이 있는 링크와 테두리를 정한 링크(실선·점선)만 그려진다
+  expect((await placedPages(bytes, 1)).strokes).toBe(3);
 });
 
 test('모으는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
