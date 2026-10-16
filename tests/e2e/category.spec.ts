@@ -19,6 +19,7 @@ test('PDF 목록은 묶음별 소제목 아래 도구를 보여준다', async ({
   await expect(convert.getByRole('heading', { level: 3 })).toHaveText([
     'PDF를 이미지로',
     '이미지를 PDF로',
+    'PDF 글자 인식 (OCR)',
   ]);
   // 모든 카드에 아이콘이 있다
   const cards = page.locator('.card');
