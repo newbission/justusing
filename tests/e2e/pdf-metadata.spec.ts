@@ -20,6 +20,8 @@ async function infoPdf() {
   doc.setProducer('Secret PDF Maker');
   // 세계 표준시 03:04:05 (서울 12:04)
   infoOf(doc).set(PDFName.of('CreationDate'), PDFString.of('D:20260102030405Z'));
+  // 쪽에 바로 적힌 고친 시각
+  doc.getPage(0).node.set(PDFName.of('LastModified'), PDFString.of("D:20251231235959+09'00'"));
   // 원본 파일 식별자
   const original = PDFHexString.of('0123456789ABCDEF0123456789ABCDEF');
   doc.context.trailerInfo.ID = doc.context.obj([original, original]);
@@ -133,6 +135,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Nested XMP Choi');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('PieceInfo Corp Secret');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('0123456789ABCDEF0123456789ABCDEF');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('D:20251231235959');
 });
 
 test.describe('서울 시간대에서', () => {
