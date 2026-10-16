@@ -192,7 +192,9 @@ function shownText(field: unknown): string[] {
     const text = field.getText() ?? '';
     return [field.isPassword() ? masked(text) : text];
   }
-  if (field instanceof PDFDropdown) return field.getSelected();
+  if (field instanceof PDFDropdown) {
+    return field.getSelected().map((value) => displayOf(field, value));
+  }
   if (field instanceof PDFOptionList) return field.getOptions();
   return [];
 }
@@ -237,6 +239,16 @@ function fillFields(
   if (form.hasXFA()) form.deleteXFA();
   /** 모양을 만든 뒤 내보내는 값으로 되돌릴 선택 칸 (pdf-lib는 보이는 글자를 값으로 저장한다) */
   const exports: { field: PDFDropdown | PDFOptionList; values: string[] }[] = [];
+  // 바꾸지 않는 선택 상자도 모양을 다시 만들면 내보내는 값(KR)이 아니라 보이는 글자(대한민국)로 그린다
+  for (const field of form.getFields()) {
+    if (!(field instanceof PDFDropdown) || field.getName() in job.values) continue;
+    if (!field.needsAppearancesUpdate() || field.isReadOnly()) continue;
+    const values = field.getSelected();
+    const shown = values.map((item) => displayOf(field, item));
+    if (shown.length === 0 || shown.every((item, i) => item === values[i])) continue;
+    field.select(shown[0]!);
+    exports.push({ field, values });
+  }
   for (const [name, value] of Object.entries(job.values)) {
     const field = form.getFieldMaybe(name);
     if (!field || field.isReadOnly()) continue;
