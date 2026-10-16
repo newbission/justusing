@@ -144,17 +144,23 @@
       const layers: (Uint8Array | null)[] = Array.from({ length: total }, () => null);
       const texts = new Map<number, string>();
       run = { kind: 'working', done: 0, total: indices.length };
-      await pool.run(
-        indices,
-        async (index) => renderPageBitmap(await source.doc.getPage(index + 1), OCR_DPI),
-        (index, page) => {
-          layers[index] = page.layer;
-          texts.set(index, page.text.trim());
-          if (pdf === source && run.kind === 'working') {
-            run = { kind: 'working', done: run.done + 1, total: run.total };
-          }
-        },
-      );
+      // 쪽 그리기는 화면 스레드에서 한다 (pdf.js가 잘게 나눠 그려 화면을 막지 않는다).
+      // 워커 여러 개가 한꺼번에 부탁해도 한 번에 한 쪽씩만 그려 화면이 버벅이지 않게 줄 세운다
+      let drawing: Promise<unknown> = Promise.resolve();
+      const render = (index: number) => {
+        const next = drawing.then(async () =>
+          renderPageBitmap(await source.doc.getPage(index + 1), OCR_DPI),
+        );
+        drawing = next.catch(() => {});
+        return next;
+      };
+      await pool.run(indices, render, (index, page) => {
+        layers[index] = page.layer;
+        texts.set(index, page.text.trim());
+        if (pdf === source && run.kind === 'working') {
+          run = { kind: 'working', done: run.done + 1, total: run.total };
+        }
+      });
       pool.dispose();
       pool = undefined;
       if (pdf !== source) return;
