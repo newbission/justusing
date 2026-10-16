@@ -56,20 +56,26 @@ async function encode(bitmap: ImageBitmap, type: string): Promise<Uint8Array> {
   });
 }
 
-/** 한 쪽을 dpi 해상도로 그린 이미지 바이트. 너무 크면 한계 안으로 줄인다. */
-export async function renderPageImage(
+/**
+ * 한 쪽을 dpi 해상도로 그린 그림. 너무 크면 한계 안으로 줄이고, 실제로 그린 해상도를 함께 돌려준다.
+ * 화면에 보이는 대로(쪽 회전·보이는 영역 반영) 그린다.
+ */
+export async function renderPageBitmap(
   page: PDFPageProxy,
   dpi: number,
-  format: ImageFormat,
-): Promise<Uint8Array> {
-  let viewport = page.getViewport({ scale: dpi / 72 });
+): Promise<{ bitmap: ImageBitmap; dpi: number }> {
+  let scale = dpi / 72;
+  let viewport = page.getViewport({ scale });
   const shrink = Math.min(
     1,
     Math.sqrt(MAX_PIXELS / (viewport.width * viewport.height)),
     MAX_SIDE / viewport.width,
     MAX_SIDE / viewport.height,
   );
-  if (shrink < 1) viewport = page.getViewport({ scale: (dpi / 72) * shrink });
+  if (shrink < 1) {
+    scale *= shrink;
+    viewport = page.getViewport({ scale });
+  }
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.floor(viewport.width);
@@ -77,12 +83,22 @@ export async function renderPageImage(
   try {
     // 배경이 투명한 PDF도 JPG처럼 흰 종이로 보이게 흰색을 깐다
     await page.render({ canvas, viewport, background: '#ffffff' }).promise;
-    // 저장(인코딩)은 무거워서 워커에서 한다. 그린 화소만 넘긴다
-    return await encode(await createImageBitmap(canvas), IMAGE_TYPES[format]);
+    return { bitmap: await createImageBitmap(canvas), dpi: scale * 72 };
   } finally {
     // 큰 canvas의 메모리를 바로 돌려준다 (쪽이 많으면 쌓여서 탭이 죽을 수 있다)
     canvas.width = 0;
     canvas.height = 0;
     page.cleanup();
   }
+}
+
+/** 한 쪽을 dpi 해상도로 그린 이미지 바이트. 너무 크면 한계 안으로 줄인다. */
+export async function renderPageImage(
+  page: PDFPageProxy,
+  dpi: number,
+  format: ImageFormat,
+): Promise<Uint8Array> {
+  const { bitmap } = await renderPageBitmap(page, dpi);
+  // 저장(인코딩)은 무거워서 워커에서 한다. 그린 화소만 넘긴다
+  return encode(bitmap, IMAGE_TYPES[format]);
 }
