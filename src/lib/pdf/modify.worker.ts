@@ -5,6 +5,7 @@
 import {
   PDFArray,
   PDFDict,
+  PDFHexString,
   PDFDocument,
   PDFName,
   PDFStream,
@@ -152,6 +153,13 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
       }
     };
     for (const [, object] of context.enumerateIndirectObjects()) strip(object);
+    // 파일 식별자(/ID)는 원본과 결과를 이어 줄 수 있어 새로 만든다 (보기 프로그램이 쓰므로 지우지 않는다)
+    const id = PDFHexString.of(
+      [...crypto.getRandomValues(new Uint8Array(16))]
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join(''),
+    );
+    context.trailerInfo.ID = context.obj([id, id]);
   } else {
     const set = (key: string, value: string, apply: (text: string) => void) => {
       if (value.trim()) apply(value.trim());
