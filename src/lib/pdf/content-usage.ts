@@ -27,14 +27,57 @@ const LAST_NAME: Record<string, string> = {
   DP: 'Properties',
 };
 
-/** 늘 그 색공간 자체를 뜻하고 자원 목록(/ColorSpace)을 찾지 않는 이름 */
-const DIRECT_SPACES = new Set(['DeviceGray', 'DeviceRGB', 'DeviceCMYK', 'Pattern']);
+/** 장치 색공간 이름 → 그것을 대신하는 기본 색공간 자원 이름 (자원 목록의 /DefaultRGB 등이 있으면 그것으로 그린다) */
+const DEVICE_SPACES: Record<string, string> = {
+  DeviceGray: 'DefaultGray',
+  DeviceRGB: 'DefaultRGB',
+  DeviceCMYK: 'DefaultCMYK',
+};
 /** 바로 써 넣은 그림(BI … ID)에서만 쓰는 장치 색공간 줄임 이름 */
-const INLINE_SPACES = new Set(['G', 'RGB', 'CMYK']);
+const INLINE_SPACES: Record<string, string> = {
+  G: 'DefaultGray',
+  RGB: 'DefaultRGB',
+  CMYK: 'DefaultCMYK',
+};
+/** 장치 색을 바로 고르는 연산자 → 기본 색공간 */
+const DEVICE_COLOR_OPS: Record<string, string> = {
+  g: 'DefaultGray',
+  G: 'DefaultGray',
+  rg: 'DefaultRGB',
+  RG: 'DefaultRGB',
+  k: 'DefaultCMYK',
+  K: 'DefaultCMYK',
+};
+/**
+ * 칠하는 연산자. 처음 색은 장치 회색이라 색을 고르지 않고 칠하면 /DefaultGray로 그린다
+ * (색을 골랐는지 따라가지 않고, 칠하면 쓴 것으로 센다)
+ */
+const PAINTS = new Set([
+  'f',
+  'F',
+  'f*',
+  'B',
+  'B*',
+  'b',
+  'b*',
+  'S',
+  's',
+  'Tj',
+  'TJ',
+  "'",
+  '"',
+  'Do',
+  'ID',
+]);
 
-/** 색공간 이름이 자원 목록을 부르는지 (inline: 바로 써 넣은 그림 안의 이름) */
-export function namesSpaceResource(name: string, inline = false): boolean {
-  return !DIRECT_SPACES.has(name) && !(inline && INLINE_SPACES.has(name));
+/**
+ * 색공간 이름이 부르는 자원 목록(/ColorSpace)의 이름 (inline: 바로 써 넣은 그림 안의 이름).
+ * 장치 색공간은 같은 이름의 항목이 있어도 그것을 부르지 않고 기본 색공간(/DefaultRGB 등)을 부른다.
+ * /Pattern은 아무것도 부르지 않는다
+ */
+export function spaceResource(name: string, inline = false): string | undefined {
+  if (name === 'Pattern') return undefined;
+  return DEVICE_SPACES[name] ?? (inline ? INLINE_SPACES[name] : undefined) ?? name;
 }
 
 /**
@@ -102,6 +145,11 @@ export function contentUsage(
       // 자원을 부르는 이름은 연산자 바로 앞의 피연산자다 (/OC << /Type … >> BDC의 사전 안 이름은 아니다)
       const last = operands.at(-1);
       const op = token.value;
+      if (!foreign) {
+        const device = DEVICE_COLOR_OPS[op];
+        if (device) use('ColorSpace', device);
+        if (PAINTS.has(op)) use('ColorSpace', 'DefaultGray');
+      }
       if (op === 'BI') {
         inInlineImage = true;
       } else if (op === 'ID' && inInlineImage) {
@@ -113,7 +161,8 @@ export function contentUsage(
         const value = operands[at + 1];
         if (at !== -1 && !foreign) {
           const space = (name: string) => {
-            if (namesSpaceResource(name, true)) use('ColorSpace', name);
+            const resource = spaceResource(name, true);
+            if (resource) use('ColorSpace', resource);
           };
           if (value?.kind === 'name') space(value.value);
           else if (value?.kind === 'other' && value.text === undefined) {
@@ -145,9 +194,8 @@ export function contentUsage(
         if (font) shown.push({ font, codes });
       } else if (LAST_NAME[op] && last?.kind === 'name') {
         const kind = LAST_NAME[op];
-        if (!foreign && (kind !== 'ColorSpace' || namesSpaceResource(last.value))) {
-          use(kind, last.value);
-        }
+        const resource = kind === 'ColorSpace' ? spaceResource(last.value) : last.value;
+        if (!foreign && resource) use(kind, resource);
         // 묶음 그림 안에서 다시 부르는 묶음 그림도 그 자리의 글꼴 상태로 이어서 훑는다
         const inner = op === 'Do' ? forms?.(last.value) : undefined;
         // 지금 훑는 중인 묶음 그림을 다시 부르면(잘못된 파일) 그만둔다. 깊이 자체는 제한하지 않는다
