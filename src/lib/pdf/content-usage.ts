@@ -174,7 +174,8 @@ export function contentUsage(texts: string[]): { resources: ResourceUse; text: T
           operand.kind === 'string' ? operand.bytes : [],
         );
         if (font) shown.push({ font, codes });
-      } else if (LAST_NAME[op] && names.length > 0) {
+      } else if (LAST_NAME[op] && operands.at(-1)?.kind === 'name') {
+        // 자원을 부르는 이름은 연산자 바로 앞의 피연산자다 (/OC << /Type … >> BDC의 사전 안 이름은 아니다)
         use(LAST_NAME[op], names.at(-1)!.value);
       }
       if (!inInlineImage) operands = [];
