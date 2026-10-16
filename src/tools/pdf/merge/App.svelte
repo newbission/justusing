@@ -23,6 +23,7 @@
   import Preview, { type PreviewPage } from './Preview.svelte';
   import {
     isPasswordError,
+    isSigned,
     openPdf,
     type OpenedPdf,
     type PDFPageProxy,
@@ -45,6 +46,8 @@
     expanded: boolean;
     firstPage?: PDFPageProxy;
     opened?: OpenedPdf;
+    /** 전자 서명된 PDF인지 (합친 파일에서는 서명이 깨진다) */
+    signed?: boolean;
   }
 
   /** 목록 썸네일 크기(px) */
@@ -160,6 +163,7 @@
       }));
       item.firstPage = await item.opened.doc.getPage(1);
       item.status = 'ready';
+      item.signed = await isSigned(item.opened.doc);
     } catch (error) {
       if (isPasswordError(error)) {
         item.wrongPassword = password !== undefined;
@@ -304,6 +308,9 @@
         >
       {/if}
     </ActionBar>
+    {#if items.some((item) => item.signed)}
+      <p class="signed" role="note">{common.pdf.signed}</p>
+    {/if}
 
     <ol class="list" aria-label={t.list}>
       {#each items as item, index (item.id)}
@@ -429,6 +436,14 @@
     padding: 16px;
   }
 
+  .signed {
+    flex: none;
+    margin: 0;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--color-line);
+    font-size: 13px;
+    font-weight: 600;
+  }
   .summary {
     display: flex;
     flex: none;
