@@ -145,6 +145,31 @@ test('키보드만으로 사각형을 넣고 크기를 바꾼다', async ({ page
   expect((await firstPage(bytes)).fills).toBeGreaterThanOrEqual(1);
 });
 
+test('Tab으로 옮겨 가기만 해도 고르고, 잘못된 글자 크기는 되돌린다', async ({ page }) => {
+  const frame = await openTool(page);
+  await frame.getByText('흰색으로 가리기').click();
+  await drawRect(page, frame, [0.1, 0.1], [0.4, 0.2]);
+  // 빈 곳을 눌러 고르기를 풀면 아래 칸이 닫힌다
+  await frame.getByText('고르기·옮기기').click();
+  const empty = await at(frame, 0.8, 0.3);
+  await page.mouse.click(empty.x, empty.y);
+  await expect(frame.getByText('고른 것:', { exact: false })).toBeHidden();
+  await frame.getByRole('button', { name: '흰색 가리기' }).focus();
+  await expect(frame.getByText('고른 것:', { exact: false })).toBeVisible();
+
+  // 글자 크기 칸에 범위 밖 값을 적으면 칸을 떠날 때 실제로 쓰는 크기로 되돌린다
+  await frame.getByText('글자 넣기').click();
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
+  const point = await at(frame, 0.2, 0.6);
+  await page.mouse.click(point.x, point.y);
+  await frame.getByLabel('글자 (줄바꿈 가능)').fill('크기');
+  const size = frame.getByLabel('글자 크기 (pt)');
+  const before = await size.inputValue();
+  await size.fill('500');
+  await size.blur();
+  await expect(size).toHaveValue(before);
+});
+
 test('글자를 넣었는데 글꼴이 없으면 받으라고 알린다', async ({ page }) => {
   const frame = await openTool(page);
   const point = await at(frame, 0.3, 0.3);
