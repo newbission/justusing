@@ -189,12 +189,7 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
         if (object.get(PDFName.of('FT')) === PDFName.of('Sig')) {
           for (const key of named('V', 'SV')) object.delete(key);
         }
-        if (type === PDFName.of('Thread')) {
-          const threadInfo = context.lookup(object.get(PDFName.of('I')));
-          if (threadInfo instanceof PDFDict) {
-            for (const key of threadInfo.keys()) threadInfo.delete(key);
-          }
-        }
+        if (type === PDFName.of('Thread')) clearThreadInfo(object);
         if (type === PDFName.of('Sig') || object.has(PDFName.of('ByteRange'))) {
           for (const key of signature) object.delete(key);
         }
@@ -203,6 +198,25 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
         for (const value of object.asArray()) strip(value);
       }
     };
+    // 기사 흐름(Thread)은 /Type을 적지 않아도 되므로, 문서의 목록(/Threads)과 쪽의 기사 조각(/B → /T)을 따라가서도 지운다
+    const clearThreadInfo = (thread: unknown) => {
+      const threadInfo =
+        thread instanceof PDFDict ? context.lookup(thread.get(PDFName.of('I'))) : undefined;
+      if (threadInfo instanceof PDFDict)
+        for (const key of threadInfo.keys()) threadInfo.delete(key);
+    };
+    const threads = context.lookup(doc.catalog.get(PDFName.of('Threads')));
+    if (threads instanceof PDFArray) {
+      for (const thread of threads.asArray()) clearThreadInfo(context.lookup(thread));
+    }
+    for (const page of doc.getPages()) {
+      const beads = context.lookup(page.node.get(PDFName.of('B')));
+      if (!(beads instanceof PDFArray)) continue;
+      for (const item of beads.asArray()) {
+        const bead = context.lookup(item);
+        if (bead instanceof PDFDict) clearThreadInfo(context.lookup(bead.get(PDFName.of('T'))));
+      }
+    }
     for (const [, object] of context.enumerateIndirectObjects()) strip(object);
     // 사진(JPEG) 안의 촬영 정보(EXIF·GPS·XMP·IPTC·설명)도 뗀다. 다른 형식으로 압축을 한 번 더 한 JPEG,
     // JPEG 2000, 첨부 파일 내용은 고치지 않는다 (화면·FAQ에 밝힌다)
