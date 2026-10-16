@@ -130,7 +130,8 @@
     }
     // 받아 둔 글꼴이 있으면 목록 순서대로 첫 글꼴을 골라 둔다 (보관소에서 바로 읽는다)
     const first = FONTS.find((font) => states[font.id]?.kind === 'cached');
-    if (!selected && first) await choose(first);
+    // 사용자가 그새 글꼴을 고르거나 받기 시작했으면 건드리지 않는다
+    if (!selected && picks === 0 && first) await choose(first);
   });
 </script>
 
@@ -170,6 +171,9 @@
           {/if}
         </div>
         <img class="preview" src={fontPreview(font, locale)} alt={t.preview(font.name[locale])} />
+        {#if font.source}
+          <p class="note">{t.source(font.source)}</p>
+        {/if}
         {#if partial}
           <p class="note">{t.partial(partial)}</p>
         {/if}

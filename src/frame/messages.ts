@@ -102,6 +102,7 @@ const ko = {
     preview: (name: string) => `${name} 미리보기`,
     upload: '내 글꼴 올리기',
     mineEmpty: '내 글꼴',
+    source: (name: string) => `원본 글꼴: ${name} (자주 쓰는 글자만 담아 이름을 바꿨습니다)`,
     uploadNote: 'TTF·OTF·WOFF 글꼴. 올린 글꼴은 이 페이지에서만 쓰고 보관하지 않습니다.',
     uploadFailed: '글꼴 파일을 읽지 못했습니다.',
     mine: (name: string) => `내 글꼴: ${name}`,
@@ -207,6 +208,7 @@ const en: FrameMessages = {
     preview: (name: string) => `${name} preview`,
     upload: 'Upload my font',
     mineEmpty: 'My font',
+    source: (name: string) => `Based on ${name} (trimmed to common characters and renamed)`,
     uploadNote:
       'TTF, OTF or WOFF fonts. An uploaded font is only used on this page and is not kept.',
     uploadFailed: 'Could not read the font file.',
