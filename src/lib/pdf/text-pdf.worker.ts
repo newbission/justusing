@@ -1,5 +1,5 @@
 /**
- * 글자 넣기 워커 (text-pdf.ts가 부른다): 글자 워터마크, 머리말·꼬리말.
+ * 글자 넣기 워커 (text-pdf.ts가 부른다): 글자 워터마크, 머리말·꼬리말, PDF 편집.
  * 글꼴 엔진(fontkit)이 커서 PDF 고치기 워커와 따로 둔다. 파일과 글꼴은 메모리에서만 다룬다.
  */
 import {
@@ -16,6 +16,7 @@ import type { TextJob, TextRequest, TextResponse } from './text-pdf';
 import { placements } from './watermark-layout';
 import { fillTemplate, fitSize, linePosition } from './header-footer-layout';
 import { normalizedRotation, toPdfPoint, viewSize } from './page-geometry';
+import { BASELINE, HIGHLIGHT, LINE_HEIGHT } from './edit-constants';
 
 /** 글꼴에 없는 글자 (빈칸 제외). PDF에 빈 네모로 찍히므로 넣기 전에 알린다 */
 function missingChars(fontBytes: Uint8Array, text: string): string[] {
@@ -29,6 +30,9 @@ function missingChars(fontBytes: Uint8Array, text: string): string[] {
 /** 이 작업이 PDF에 넣을 수 있는 모든 글자 (빠진 글자 검사용) */
 function usedText(job: TextJob, total: number): string {
   if (job.kind === 'watermark') return job.text;
+  if (job.kind === 'edit') {
+    return job.items.map((item) => (item.kind === 'text' ? item.text : '')).join('');
+  }
   // 쪽마다 실제로 넣을 글자 (자리표시가 바뀐 숫자·날짜만 검사해 숫자가 없는 글꼴도 쓸 수 있게)
   const texts: string[] = [];
   for (let page = job.skipFirst ? 2 : 1; page <= total; page++) {
@@ -111,21 +115,78 @@ function drawHeaderFooter(
   });
 }
 
+function drawEdits(
+  doc: PDFDocument,
+  font: PDFFont | undefined,
+  job: Extract<TextJob, { kind: 'edit' }>,
+) {
+  const pages = doc.getPages();
+  // 가리기·형광펜을 먼저 그리고 글자를 위에 그린다 (가린 자리에 새 글자를 쓸 수 있게)
+  const order = [...job.items].sort(
+    (a, b) => Number(a.kind === 'text') - Number(b.kind === 'text'),
+  );
+  for (const item of order) {
+    const page = pages[item.page];
+    if (!page) continue;
+    const view = viewSize(page);
+    const rotate = degrees(normalizedRotation(page));
+    if (item.kind === 'text') {
+      if (!font) throw new Error('font required');
+      // 글자 크기는 pt로 정했으므로 쪽 단위(/UserUnit)로 바꾼다 (자리는 쪽 비율이라 그대로)
+      const size = item.size / userUnit(page);
+      item.text.split('\n').forEach((line, i) => {
+        if (!line.trim()) return;
+        const x = item.x * view.width;
+        const y = item.y * view.height + size * (BASELINE + i * LINE_HEIGHT);
+        page.drawText(line, {
+          ...toPdfPoint(page, x, y),
+          size,
+          font,
+          color: rgb(...item.color),
+          rotate,
+        });
+      });
+      continue;
+    }
+    const width = item.width * view.width;
+    const height = item.height * view.height;
+    // 사각형의 왼쪽 아래(화면 기준)를 기준점으로, 쪽 회전만큼 돌려 화면에서 바로 보이게 한다
+    const at = toPdfPoint(page, item.x * view.width, item.y * view.height + height);
+    page.drawRectangle({
+      ...at,
+      width,
+      height,
+      rotate,
+      borderWidth: 0,
+      ...(item.kind === 'whiteout'
+        ? { color: rgb(1, 1, 1) }
+        : { color: rgb(...HIGHLIGHT.color), opacity: HIGHLIGHT.opacity }),
+    });
+  }
+}
+
 addEventListener('message', async (event: MessageEvent<TextRequest>) => {
   const { id, bytes, password, job } = event.data;
   const send = (response: TextResponse, transfer: Transferable[] = []) =>
     postMessage(response, { transfer });
   try {
     const doc = await PDFDocument.load(bytes, { password: password ?? '' });
-    const missing = missingChars(job.font, usedText(job, doc.getPageCount()));
-    if (missing.length > 0) {
-      send({ id, kind: 'missing', chars: missing });
-      return;
+    const text = usedText(job, doc.getPageCount());
+    // 글자를 넣지 않는 편집(가리기·형광펜만)은 글꼴이 없어도 된다
+    let font: PDFFont | undefined;
+    if (job.font && text.trim()) {
+      const missing = missingChars(job.font, text);
+      if (missing.length > 0) {
+        send({ id, kind: 'missing', chars: missing });
+        return;
+      }
+      doc.registerFontkit(fontkit);
+      // 쓰는 글자만 넣는다 (글꼴 전체를 넣으면 PDF가 몇 MB 커진다)
+      font = await doc.embedFont(job.font, { subset: true });
     }
-    doc.registerFontkit(fontkit);
-    // 쓰는 글자만 넣는다 (글꼴 전체를 넣으면 PDF가 몇 MB 커진다)
-    const font = await doc.embedFont(job.font, { subset: true });
-    if (job.kind === 'watermark') drawWatermark(doc, font, job);
+    if (job.kind === 'edit') drawEdits(doc, font, job);
+    else if (!font) throw new Error('font required');
+    else if (job.kind === 'watermark') drawWatermark(doc, font, job);
     else drawHeaderFooter(doc, font, job);
     const out = await doc.save();
     send({ id, kind: 'done', bytes: out }, [out.buffer]);
