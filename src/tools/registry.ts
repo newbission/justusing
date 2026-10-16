@@ -18,6 +18,7 @@ import type { ToolContent, ToolMeta } from './types';
 const TOOL_IDS: readonly string[] = [
   'pdf/view',
   'pdf/extract-text',
+  'pdf/extract-images',
   'pdf/merge',
   'pdf/split',
   'pdf/rotate',
