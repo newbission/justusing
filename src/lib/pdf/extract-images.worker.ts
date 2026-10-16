@@ -438,6 +438,10 @@ async function extract(
   if (list.length === 1 && last === 'DCTDecode') {
     // /Decode로 값을 바꿔 보여 주는 JPG(뒤집기 등)는 원본 그대로 내면 PDF에서 보이는 것과 달라진다
     if (!plainDecode(dict)) return undefined;
+    // /ColorTransform으로 JPG 표시와 다르게 색을 바꾸라고 하면 JPG 파일만으로는 그 뜻을 옮길 수 없다
+    let parms = dict.lookup(name('DecodeParms'));
+    if (parms instanceof PDFArray) parms = parms.lookup(0);
+    if (parms instanceof PDFDict && parms.has(name('ColorTransform'))) return undefined;
     const alpha = await alphaOf(dict, width, height);
     if (alpha === UNSUPPORTED) return undefined;
     // 색 키 투명은 회색·RGB JPG만 (CMYK는 브라우저가 읽은 값과 PDF의 값이 달라 맞춰 볼 수 없다)
