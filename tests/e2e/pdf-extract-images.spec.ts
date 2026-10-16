@@ -580,3 +580,69 @@ test('여러 쪽이 같이 쓰는 자원 없는 묶음 그림은 쪽마다 그 �
   await expect(frame.getByText('2쪽 · 64×64 · PNG', { exact: false })).toBeVisible();
   await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
+
+test('JPEG 2000은 형식에 맞는 확장자로 꺼내고, 장치 색공간이 아니거나 CMYK 프로필 JPG에 투명도가 있으면 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  // JP2 서명 상자 + 형식 상자(이름 jpx)
+  const jpxBytes = new Uint8Array(64);
+  jpxBytes.set([0, 0, 0, 12, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a]);
+  jpxBytes.set([0, 0, 0, 20, ...Buffer.from('ftypjpx ')], 12);
+  const jpx = (extra: Record<string, unknown>) =>
+    context.register(
+      context.stream(jpxBytes, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        Filter: 'JPXDecode',
+        ...extra,
+      }),
+    );
+  const profile = (n: number) =>
+    context.register(context.flateStream(new Uint8Array(200).fill(1), { N: n }));
+  const plain = jpx({ ColorSpace: 'DeviceRGB' });
+  const iccJpx = jpx({ ColorSpace: ['ICCBased', profile(3)] });
+  const cmykJpg = context.register(
+    context.stream(await readFile(fixture('photo.jpg')), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      Filter: 'DCTDecode',
+      ColorSpace: ['ICCBased', profile(4)],
+      SMask: context.register(
+        context.flateStream(new Uint8Array(1200 * 900).fill(255), {
+          Type: 'XObject',
+          Subtype: 'Image',
+          Width: 1200,
+          Height: 900,
+          ColorSpace: 'DeviceGray',
+          BitsPerComponent: 8,
+        }),
+      ),
+    }),
+  );
+  const added = doc.addPage([600, 800]);
+  for (const ref of [plain, iccJpx, cmykJpg]) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'jpx.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+  await expect(frame.getByText('1쪽 · 64×64 · JPX', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  expect((await event).suggestedFilename()).toBe('jpx_p1_1.jpx');
+});
