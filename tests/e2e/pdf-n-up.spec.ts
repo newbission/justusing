@@ -370,7 +370,9 @@ test('드롭다운의 표시 글자를 그릴 수 없으면 알린다', async ({
   ).toBeVisible();
 });
 
-test('모양 없는 링크는 건너뛰고, 모양이 있는 링크는 그려 넣는다', async ({ page }) => {
+test('모양·테두리 없는 링크는 건너뛰고, 모양이나 테두리를 정한 링크는 그려 넣는다', async ({
+  page,
+}) => {
   // 목차 링크처럼 인쇄 플래그가 있지만 모양이 없는 링크와, 테두리 모양이 저장된 링크
   const source = await PDFDocument.create();
   const first = source.addPage([200, 300]);
@@ -395,7 +397,18 @@ test('모양 없는 링크는 건너뛰고, 모양이 있는 링크는 그려 �
   const boxed = context.register(
     context.obj({ Type: 'Annot', Subtype: 'Link', F: 4, Rect: [10, 50, 60, 70], AP: { N: look } }),
   );
-  first.node.set(PDFName.of('Annots'), context.obj([plain, boxed]));
+  // 모양은 없지만 굵기 2의 빨간 테두리를 정한 링크
+  const bordered = context.register(
+    context.obj({
+      Type: 'Annot',
+      Subtype: 'Link',
+      F: 4,
+      Rect: [10, 90, 60, 110],
+      Border: [0, 0, 2],
+      C: [1, 0, 0],
+    }),
+  );
+  first.node.set(PDFName.of('Annots'), context.obj([plain, boxed, bordered]));
   const frame = await openNUp(page);
   await frame.locator('input[type=file]').setInputFiles({
     name: 'links.pdf',
@@ -404,8 +417,8 @@ test('모양 없는 링크는 건너뛰고, 모양이 있는 링크는 그려 �
   });
   await frame.getByRole('button', { name: '모아찍기' }).click();
   const { bytes } = await download(page, frame);
-  // 1쪽에는 내용이 없고 테두리 모양 링크 하나만 그려진다
-  expect((await placedPages(bytes, 1)).strokes).toBe(1);
+  // 1쪽에는 내용이 없고 모양이 있는 링크와 테두리를 정한 링크만 그려진다
+  expect((await placedPages(bytes, 1)).strokes).toBe(2);
 });
 
 test('모으는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다', async ({ page, baseURL }) => {
