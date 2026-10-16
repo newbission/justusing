@@ -5,6 +5,7 @@
  */
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { PDFDict, PDFDocument, PDFName, PDFString } from '@cantoo/pdf-lib';
 import { expectLocalOnly } from './local-only';
 
@@ -198,4 +199,22 @@ test('제목만 바꿀 때 쪽과 같이 쓰는 XMP 객체는 지우지 않는�
   // 쪽이 가리키는 XMP는 그대로 남아 있다
   const pageXmp = saved.getPage(0).node.get(PDFName.of('Metadata'));
   expect(saved.context.lookup(pageXmp)).toBeDefined();
+});
+
+test('암호가 걸린 PDF는 저장하면 암호가 풀린다고 알린다', async ({ page }) => {
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame
+    .locator('input[type=file]')
+    .setInputFiles(fileURLToPath(new URL('../fixtures/encrypted.pdf', import.meta.url)));
+  await frame.getByLabel('PDF 암호').fill('1234');
+  await frame.getByLabel('PDF 암호').press('Enter');
+  await expect(
+    frame.getByText('암호와 인쇄·복사 제한은 저장한 파일에서 풀립니다', { exact: false }),
+  ).toBeVisible();
+});
+
+test('암호가 없는 PDF에는 암호 안내를 보이지 않는다', async ({ page }) => {
+  const frame = await openTool(page);
+  await expect(frame.getByText('저장한 파일에서 풀립니다', { exact: false })).toHaveCount(0);
 });
