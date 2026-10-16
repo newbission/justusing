@@ -199,7 +199,8 @@ async function alphaOf(
 /** /Mask 배열(성분마다 [최소 최대])을 읽는다. 없으면 undefined, 그림으로 가리는 /Mask 등은 UNSUPPORTED */
 function colorKeyOf(dict: PDFDict, components: number): number[] | typeof UNSUPPORTED | undefined {
   const value = dict.lookup(name('Mask'));
-  if (value === undefined) return undefined;
+  // SMask가 있으면 PDF는 /Mask를 쓰지 않는다
+  if (value === undefined || dict.has(name('SMask'))) return undefined;
   if (!(value instanceof PDFArray)) return UNSUPPORTED;
   const key = value.asArray().map((item) => {
     const resolved = dict.context.lookup(item);
