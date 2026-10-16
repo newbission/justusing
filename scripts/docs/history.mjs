@@ -115,11 +115,14 @@ function plain(text) {
   return text.replace(/[\\`*_[\]<>|~]/g, '\\$&');
 }
 
-/** PR의 리뷰 지적(Codex)과 처리 답글 */
+/** PR의 리뷰 지적(Codex)과 처리 답글. 스레드는 개수 상한 없이 끝 쪽까지 받는다 */
 function findings(number) {
-  const query = `{repository(owner:"newbission",name:"justusing"){pullRequest(number:${number}){reviewThreads(first:100){nodes{isResolved comments(first:2){nodes{body createdAt author{login}}}}}}}}`;
-  const data = JSON.parse(run('gh', ['api', 'graphql', '-f', `query=${query}`]));
-  return data.data.repository.pullRequest.reviewThreads.nodes.map((thread) => {
+  const query = `query($endCursor:String){repository(owner:"newbission",name:"justusing"){pullRequest(number:${number}){reviewThreads(first:100,after:$endCursor){pageInfo{hasNextPage endCursor} nodes{isResolved comments(first:2){nodes{body createdAt author{login}}}}}}}}`;
+  const pages = JSON.parse(
+    run('gh', ['api', 'graphql', '--paginate', '--slurp', '-f', `query=${query}`]),
+  );
+  const threads = pages.flatMap((page) => page.data.repository.pullRequest.reviewThreads.nodes);
+  return threads.map((thread) => {
     const [finding, reply] = thread.comments.nodes;
     const body = finding?.body ?? '';
     const priority = /(P[0-3]) Badge/.exec(body)?.[1] ?? '';
