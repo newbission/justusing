@@ -30,11 +30,23 @@ export async function signedPdf(pages = 1): Promise<Buffer> {
       F: 132,
       P: doc.getPage(0).ref,
       V: signature,
+      // 서명 조건: 어떤 인증서로 서명할지 적어 둘 수 있다
+      SV: context.obj({ Type: 'SV', Reason: [PDFString.of('Seed Reason Lee')] }),
     }),
   );
   doc.getPage(0).node.set(PDFName.of('Annots'), context.obj([field]));
   doc.catalog.set(PDFName.of('AcroForm'), context.obj({ Fields: [field], SigFlags: 3 }));
   // 문서 권한(DocMDP)도 같은 서명을 가리킨다
   doc.catalog.set(PDFName.of('Perms'), context.obj({ DocMDP: signature }));
+  // 장기 검증(LTV) 서명은 인증서를 문서의 DSS에도 따로 담는다
+  const cert = context.register(context.stream('DSS Cert Choi'));
+  doc.catalog.set(
+    PDFName.of('DSS'),
+    context.obj({ Certs: [cert], VRI: { ABCD: { Cert: [cert] } } }),
+  );
+  doc.catalog.set(
+    PDFName.of('Legal'),
+    context.obj({ Attestation: PDFString.of('Legal Note Jung') }),
+  );
   return Buffer.from(await doc.save({ updateFieldAppearances: false }));
 }
