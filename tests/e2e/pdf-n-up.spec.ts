@@ -54,7 +54,7 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
         // 경로를 칠하는지 긋는지 (pdf.js는 마지막 인자에 그리기 연산자를 담는다)
         if ((args as unknown[])[0] === OPS.stroke) {
           strokes++;
-          lines.push([...((args as unknown[])[2] as ArrayLike<number>)]);
+          lines.push(Array.from((args as unknown[])[2] as ArrayLike<number>));
         }
       }
     } else if (fn === OPS.save) stack.push(ctm);
