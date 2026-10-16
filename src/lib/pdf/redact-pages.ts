@@ -21,7 +21,7 @@ import {
   decodePDFRawStream,
   type PDFPage,
 } from '@cantoo/pdf-lib';
-import { contentUsage } from './content-usage';
+import { contentUsage, type ResourceUse } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { userUnit, viewSize } from './page-geometry';
 
@@ -84,6 +84,7 @@ function pruneResources(
     if (form.dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) return undefined;
     return { text: streamText(form), own: form.dict.has(PDFName.of('Resources')) };
   });
+  usedThroughNames(resources, usage.resources);
   const own = context.obj({});
   for (const [key, value] of resources.entries()) {
     const kind = key.decodeText();
@@ -112,6 +113,33 @@ function pruneResources(
     const codesOf = dict instanceof PDFDict ? pruning.type3.get(dict) : undefined;
     for (const code of codes) codesOf?.add(code);
   }
+}
+
+/**
+ * 남기는 그림·음영·무늬가 사전 안에서 이름으로 부르는 같은 목록의 색공간(/ColorSpace /CS1)도 쓰는 것으로 센다.
+ * 내용에는 그 이름이 나오지 않는다
+ */
+function usedThroughNames(resources: PDFDict, used: ResourceUse) {
+  const context = resources.context;
+  const spaces = used.get('ColorSpace') ?? new Set<string>();
+  const addSpace = (dict: unknown) => {
+    const holder = dict instanceof PDFStream ? dict.dict : dict;
+    if (!(holder instanceof PDFDict)) return;
+    const space = holder.get(PDFName.of('ColorSpace'));
+    if (space instanceof PDFName) spaces.add(space.decodeText());
+  };
+  for (const kind of ['XObject', 'Shading', 'Pattern']) {
+    const entry = context.lookup(resources.get(PDFName.of(kind)));
+    if (!(entry instanceof PDFDict)) continue;
+    for (const name of used.get(kind) ?? []) {
+      const object = context.lookup(entry.get(PDFName.of(name)));
+      addSpace(object);
+      // 음영 무늬(PatternType 2)는 안의 음영이 색공간을 정한다
+      const pattern = object instanceof PDFStream ? object.dict : object;
+      if (pattern instanceof PDFDict) addSpace(context.lookup(pattern.get(PDFName.of('Shading'))));
+    }
+  }
+  used.set('ColorSpace', spaces);
 }
 
 /** 자원 하나 안에 다시 내용과 자원이 있으면 정리한다 */
