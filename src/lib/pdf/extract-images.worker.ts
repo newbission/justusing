@@ -99,10 +99,9 @@ function baseSpace(
     const profile = resolved.lookup(1);
     if (!(profile instanceof PDFRawStream)) return undefined;
     const n = numberOf(profile.dict, 'N');
-    // RGB 프로필은 PNG에 같이 넣어 보기 프로그램이 색을 맞추게 한다.
-    // 회색 프로필은 거의 감마 2.2 회색(sGray)이라 회색 그대로 쓴다 (RGB PNG에는 회색 프로필을 넣을 수 없다)
+    // 프로필은 PNG에 같이 넣어 보기 프로그램이 색을 맞추게 한다 (회색 프로필은 회색 PNG에 넣는다)
     if (n === 3) return { n: 3, icc: decodePDFRawStream(profile).decode() };
-    if (n === 1) return { n: 1 };
+    if (n === 1) return { n: 1, icc: decodePDFRawStream(profile).decode() };
     return undefined;
   }
   return undefined;
@@ -237,7 +236,7 @@ const inKey = (key: number[] | undefined, ...components: number[]) =>
 async function decodePixels(
   stream: PDFRawStream,
   resources: PDFDict | undefined,
-): Promise<{ pixels: ImageData; icc?: Uint8Array } | undefined> {
+): Promise<{ pixels: ImageData; icc?: Uint8Array; gray: boolean } | undefined> {
   const { dict } = stream;
   const width = numberOf(dict, 'Width');
   const height = numberOf(dict, 'Height');
@@ -283,7 +282,11 @@ async function decodePixels(
       rgba[out + 3] = transparent ? 0 : alpha ? alpha[y * width + x]! : 255;
     }
   }
-  return { pixels: new ImageData(rgba, width, height), icc: colors.icc };
+  return {
+    pixels: new ImageData(rgba, width, height),
+    icc: colors.icc,
+    gray: (indexed ? colors.paletteColors : colors.components) === 1,
+  };
 }
 
 const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
@@ -322,6 +325,62 @@ async function withIcc(png: Uint8Array, icc: Uint8Array): Promise<Uint8Array> {
   return out;
 }
 
+/** 회색(+투명도) PNG를 직접 만든다 (canvas는 늘 RGB로 저장해 회색 ICC 프로필을 넣을 수 없다) */
+async function grayPng(pixels: ImageData): Promise<Uint8Array> {
+  const { width, height, data } = pixels;
+  let opaque = true;
+  for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) opaque = false;
+  const channels = opaque ? 1 : 2;
+  const raw = new Uint8Array((width * channels + 1) * height);
+  for (let y = 0, at = 0; y < height; y++) {
+    raw[at++] = 0; // 줄마다 필터 없음
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      raw[at++] = data[i]!;
+      if (!opaque) raw[at++] = data[i + 3]!;
+    }
+  }
+  const deflated = new Uint8Array(
+    await new Response(
+      new Blob([raw as BlobPart]).stream().pipeThrough(new CompressionStream('deflate')),
+    ).arrayBuffer(),
+  );
+  const chunk = (type: string, body: Uint8Array) => {
+    const typed = new Uint8Array([...new TextEncoder().encode(type), ...body]);
+    const out = new Uint8Array(12 + body.length);
+    const view = new DataView(out.buffer);
+    view.setUint32(0, body.length);
+    out.set(typed, 4);
+    view.setUint32(8 + body.length, crc32(typed));
+    return out;
+  };
+  const header = new Uint8Array(13);
+  const view = new DataView(header.buffer);
+  view.setUint32(0, width);
+  view.setUint32(4, height);
+  // 8비트, 색 종류 0(회색) 또는 4(회색+투명도)
+  header.set([8, opaque ? 0 : 4, 0, 0, 0], 8);
+  const parts = [
+    new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', header),
+    chunk('IDAT', deflated),
+    chunk('IEND', new Uint8Array()),
+  ];
+  const out = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out;
+}
+
+/** 화소를 PNG로. ICC 프로필이 있으면 넣는다 (회색이면 회색 PNG로 만들어 회색 프로필을 넣는다) */
+async function encodePng(pixels: ImageData, icc: Uint8Array | undefined, gray: boolean) {
+  if (!icc) return png(pixels);
+  return withIcc(gray ? await grayPng(pixels) : await png(pixels), icc);
+}
+
 async function png(image: ImageData | ImageBitmap): Promise<Uint8Array> {
   const canvas = new OffscreenCanvas(image.width, image.height);
   const context = canvas.getContext('2d')!;
@@ -331,8 +390,8 @@ async function png(image: ImageData | ImageBitmap): Promise<Uint8Array> {
   return new Uint8Array(await blob.arrayBuffer());
 }
 
-/** JPG에 투명도(SMask)나 색 키 투명(/Mask 배열)을 합쳐 PNG로 */
-async function jpegToPng(
+/** JPG에 투명도(SMask)나 색 키 투명(/Mask 배열)을 합친 화소 */
+async function jpegPixels(
   stream: PDFRawStream,
   alpha: Uint8Array | undefined,
   key: number[] | undefined,
@@ -358,7 +417,7 @@ async function jpegToPng(
         : inKey(key, data[at]!);
     data[at + 3] = keyed ? 0 : alpha ? (alpha[i] ?? 255) : 255;
   }
-  return png(pixels);
+  return pixels;
 }
 
 /**
@@ -489,12 +548,11 @@ async function extract(
     const space = jpegSpace(dict, resources);
     if (!space) return undefined;
     if (alpha || key) {
-      // 투명도를 합친 PNG(RGB)에는 RGB 프로필만 넣는다 (회색 프로필은 다른 회색 사진처럼 그대로 본다)
       // CMYK 프로필은 PNG에 넣을 수도, 브라우저로 그 색대로 바꿀 수도 없다
       if (space.icc && components === undefined) return undefined;
-      const icc = components === 3 ? space.icc : undefined;
-      const bytes = await jpegToPng(stream, alpha, key, components ?? 3, !!icc);
-      return { ext: 'png', bytes: icc ? await withIcc(bytes, icc) : bytes, width, height };
+      const pixels = await jpegPixels(stream, alpha, key, components ?? 3, !!space.icc);
+      const bytes = await encodePng(pixels, space.icc, components === 1);
+      return { ext: 'png', bytes, width, height };
     }
     const bytes = space.icc ? jpegWithIcc(stream.contents, space.icc) : stream.contents.slice();
     return bytes ? { ext: 'jpg', bytes, width, height } : undefined;
@@ -510,10 +568,9 @@ async function extract(
   }
   const decoded = await decodePixels(stream, resources);
   if (!decoded) return undefined;
-  const bytes = await png(decoded.pixels);
   return {
     ext: 'png',
-    bytes: decoded.icc ? await withIcc(bytes, decoded.icc) : bytes,
+    bytes: await encodePng(decoded.pixels, decoded.icc, decoded.gray),
     width,
     height,
   };
