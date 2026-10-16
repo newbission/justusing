@@ -500,11 +500,21 @@ function jpegWithIcc(jpeg: Uint8Array, icc: Uint8Array | undefined): Uint8Array 
   // 앞쪽 표시 조각들(그림 자료 SOS 전까지)에서 예전 프로필 조각만 뺀다
   const kept: Uint8Array[] = [];
   let at = 2;
-  while (at + 4 <= jpeg.length && jpeg[at] === 0xff) {
-    const marker = jpeg[at + 1]!;
-    if (marker === 0xda) break;
+  while (at + 2 <= jpeg.length) {
+    if (jpeg[at] !== 0xff) return undefined;
+    // 표시 앞의 채움 바이트(FF FF …)는 건너뛴다 (결과에는 넣지 않는다)
+    while (jpeg[at + 1] === 0xff) at++;
+    const marker = jpeg[at + 1];
+    if (marker === undefined || marker === 0xda) break;
+    // 길이 없이 표시만 있는 조각 (TEM, 다시 시작 RST0~7)
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+      kept.push(jpeg.subarray(at, at + 2));
+      at += 2;
+      continue;
+    }
+    if (at + 4 > jpeg.length) return undefined;
     const length = (jpeg[at + 2]! << 8) | jpeg[at + 3]!;
-    if (length < 2) return undefined;
+    if (length < 2 || at + 2 + length > jpeg.length) return undefined;
     if (!(marker === 0xe2 && isIcc(at))) kept.push(jpeg.subarray(at, at + 2 + length));
     at += 2 + length;
   }
@@ -689,9 +699,9 @@ async function extract(
       const bytes = await encodePng(pixels, space.icc, components === 1);
       return { ext: 'png', bytes, width, height };
     }
-    // 구조를 읽지 못하는 JPG는 장치 색공간이면 원본 그대로 (넣을 프로필이 있으면 꺼내지 못한 것으로)
-    const bytes =
-      jpegWithIcc(stream.contents, space.icc) ?? (space.icc ? undefined : stream.contents.slice());
+    // 구조를 읽지 못하는 JPG는 꺼내지 못한 것으로 본다. 원본 그대로 내면 PDF가 쓰지 않는 파일 안 프로필을
+    // 보기 프로그램이 다시 써서 색이 달라질 수 있다
+    const bytes = jpegWithIcc(stream.contents, space.icc);
     return bytes ? { ext: 'jpg', bytes, width, height } : undefined;
   }
   if (list.length === 1 && last === 'JPXDecode') {
