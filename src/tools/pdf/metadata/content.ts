@@ -23,7 +23,7 @@ export default defineContent({
       },
       {
         q: '저장했는데 다른 프로그램에서 예전 제목이 보여요.',
-        a: 'PDF에는 문서 정보가 두 곳(Info와 XMP)에 들어 있을 수 있습니다. 이 도구는 예전 값이 남지 않게 XMP를 지우고 Info에 적습니다. 그래도 예전 제목이 보이면 그 프로그램이 파일 이름이나 저장해 둔 기록을 보여 주는 것일 수 있습니다.',
+        a: 'PDF에는 문서 정보가 두 곳(Info와 XMP)에 들어 있을 수 있습니다. 이 도구는 예전 값이 남지 않게 XMP를 지우고 Info에 적습니다. 그래도 예전 제목이 보이면 그 프로그램이 파일 이름이나 저장해 둔 기록을 보여 주는 것일 수 있습니다. XMP에만 있던 저작권 정보와 PDF/A 표시도 함께 지워지므로, 보관용 PDF/A 파일이라면 원본을 따로 남겨 두세요.',
       },
     ],
   },
@@ -49,7 +49,7 @@ export default defineContent({
       },
       {
         q: 'Another app still shows the old title.',
-        a: 'PDFs can store document info in two places (Info and XMP). This tool removes the XMP copy so no old value is left and writes to Info. If an app still shows the old title, it may be showing the file name or its own history.',
+        a: 'PDFs can store document info in two places (Info and XMP). This tool removes the XMP copy so no old value is left and writes to Info. If an app still shows the old title, it may be showing the file name or its own history. Copyright details and the PDF/A marker that live only in XMP are removed too, so keep the original if it is an archival PDF/A file.',
       },
     ],
   },
