@@ -633,9 +633,13 @@ const DELIMITER = /[()<>[\]{}/%]/;
  * 짧은 변이 minSide 이상인 것의 수를 센다. 바로 써 넣은 그림은 따로 된 객체가 아니라 꺼내지 않고,
  * 꺼내지 못한 수로 알린다. 글자열 (…)·주석 %…·그림 바이트 안의 BI·Do는 세지 않는다
  */
-function scanContent(streams: PDFStream[], minSide: number): { inline: number; drawn: string[] } {
+function scanContent(
+  streams: PDFStream[],
+  minSide: number,
+): { inline: number; drawn: string[]; patterns: string[] } {
   let count = 0;
   const drawn: string[] = [];
+  const patterns: string[] = [];
   let lastName = '';
   for (const stream of streams) {
     const text = streamText(stream);
@@ -684,6 +688,10 @@ function scanContent(streams: PDFStream[], minSide: number): { inline: number; d
       const token = text.slice(i, end);
       i = end;
       if (token === 'Do' && lastName) drawn.push(lastName);
+      // 무늬로 칠하기 (/P1 scn): 바둑무늬 무늬는 안에서 사진을 그릴 수 있다
+      if ((token === 'scn' || token === 'SCN') && lastName) patterns.push(lastName);
+      // 이름은 바로 뒤 연산자의 피연산자일 때만 쓴다
+      lastName = '';
       if (token !== 'BI') continue;
       // BI 뒤 사전에서 크기를 읽고, ID 뒤 그림 바이트는 공백+EI+공백까지 건너뛴다
       const id = /\sID[\0\t\n\f\r ]/.exec(text.slice(i));
@@ -697,7 +705,7 @@ function scanContent(streams: PDFStream[], minSide: number): { inline: number; d
       i = ei ? dataStart + ei.index + ei[0].length : text.length;
     }
   }
-  return { inline: count, drawn };
+  return { inline: count, drawn, patterns };
 }
 
 /**
@@ -746,6 +754,22 @@ function collect(doc: PDFDocument, minSide: number) {
   ) => {
     const scanned = scanContent(streams, minSide);
     if (countInline) inline += scanned.inline;
+    // 칠한 바둑무늬 무늬(PatternType 1)의 내용도 훑는다 (무늬는 자기 자원 목록을 쓴다)
+    const patterns = resources?.lookup(name('Pattern'));
+    for (const used of new Set(scanned.patterns)) {
+      const value = patterns instanceof PDFDict ? patterns.get(name(used)) : undefined;
+      const pattern = value instanceof PDFRef ? doc.context.lookup(value) : value;
+      if (!(pattern instanceof PDFStream) || numberOf(pattern.dict, 'PatternType') !== 1) continue;
+      const own = pattern.dict.lookup(name('Resources'));
+      const key = value instanceof PDFRef ? value : undefined;
+      const visits = key ? (visitedForms.get(key) ?? new Set()) : new Set<PDFDict | undefined>();
+      const usedResources = own instanceof PDFDict ? own : resources;
+      if (visits.has(usedResources)) continue;
+      const first = visits.size === 0;
+      visits.add(usedResources);
+      if (key) visitedForms.set(key, visits);
+      visit([pattern], usedResources, page, first);
+    }
     const xobjects = resources?.lookup(name('XObject'));
     if (!(xobjects instanceof PDFDict)) return;
     for (const drawn of new Set(scanned.drawn)) {
