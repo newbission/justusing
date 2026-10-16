@@ -18,19 +18,45 @@ export interface FontFile extends DataFile {
 export interface FontEntry {
   id: string;
   name: Record<Locale, string>;
+  /** 고친 판이라 이름을 바꾼 글꼴의 원본 글꼴 이름 (출처로 보여 준다) */
+  source?: string;
   kind: 'sans' | 'serif' | 'hand' | 'display';
   files: FontFile[];
   /** 모든 굵기 합친 크기 */
   bytes: number;
 }
 
-const NAMES: Record<string, { name: Record<Locale, string>; kind: FontEntry['kind'] }> = {
-  pretendard: { name: { ko: '프리텐다드', en: 'Pretendard' }, kind: 'sans' },
+/**
+ * 화면에 보이는 이름. 원본 허가서에 예약 글꼴 이름(Reserved Font Name)이 있는 글꼴은 글자를 덜어 낸 고친 판이라
+ * 그 이름을 글꼴 이름으로 쓸 수 없다. 그런 글꼴은 우리 이름을 붙이고 원본 이름(source)은 출처로만 밝힌다
+ * (글꼴 파일 안의 이름도 scripts/fonts/build_fonts.py가 바꾼다)
+ */
+const NAMES: Record<
+  string,
+  { name: Record<Locale, string>; source?: string; kind: FontEntry['kind'] }
+> = {
+  pretendard: {
+    name: { ko: '모던 고딕', en: 'Modern Gothic' },
+    source: 'Pretendard',
+    kind: 'sans',
+  },
   'noto-sans-kr': { name: { ko: '본고딕 (Noto Sans KR)', en: 'Noto Sans KR' }, kind: 'sans' },
   'noto-serif-kr': { name: { ko: '본명조 (Noto Serif KR)', en: 'Noto Serif KR' }, kind: 'serif' },
-  'nanum-gothic': { name: { ko: '나눔고딕', en: 'Nanum Gothic' }, kind: 'sans' },
-  'nanum-myeongjo': { name: { ko: '나눔명조', en: 'Nanum Myeongjo' }, kind: 'serif' },
-  'nanum-pen': { name: { ko: '나눔손글씨 펜', en: 'Nanum Pen Script' }, kind: 'hand' },
+  'nanum-gothic': {
+    name: { ko: '기본 고딕', en: 'Basic Gothic' },
+    source: 'Nanum Gothic',
+    kind: 'sans',
+  },
+  'nanum-myeongjo': {
+    name: { ko: '기본 명조', en: 'Basic Myeongjo' },
+    source: 'Nanum Myeongjo',
+    kind: 'serif',
+  },
+  'nanum-pen': {
+    name: { ko: '펜 손글씨', en: 'Pen Script' },
+    source: 'Nanum Pen Script',
+    kind: 'hand',
+  },
   'gowun-dodum': { name: { ko: '고운돋움', en: 'Gowun Dodum' }, kind: 'sans' },
   'black-han-sans': { name: { ko: '검은고딕', en: 'Black Han Sans' }, kind: 'display' },
 };
