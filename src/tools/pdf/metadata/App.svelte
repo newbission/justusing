@@ -25,6 +25,8 @@
   let other = $state({ creator: '', producer: '', created: '', modified: '' });
   let clear = $state(false);
   let reading = $state(false);
+  /** 암호나 인쇄·복사 제한이 걸린 PDF (결과에서는 풀린다) */
+  let encrypted = $state(false);
 
   const signature = $derived(JSON.stringify([info, clear]));
   type Run =
@@ -82,6 +84,8 @@
         metadata: { get: (name: string) => unknown } | null;
       };
       if (pdf !== source) return;
+      // pdf.js는 암호화된 PDF에 암호화 방식 이름을 알려 준다 (열 암호 없이 제한만 걸린 PDF 포함)
+      encrypted = !!raw.EncryptFilterName;
       // Info에 없고 XMP에만 있는 값도 읽는다 (저장하면 XMP를 지우므로, 읽지 않으면 그 값이 사라진다)
       const xmp = (name: string) => {
         const value = metadata?.get(name);
@@ -110,6 +114,7 @@
   function onload(loaded: LoadedPdf) {
     pdf = loaded;
     clear = false;
+    encrypted = false;
     run = { kind: 'idle' };
     readInfo(loaded);
   }
@@ -188,6 +193,9 @@
         {t.clear}
       </label>
       <p class="help">{t.clearNote}</p>
+      {#if encrypted}
+        <p class="help"><strong>{t.encryptedNote}</strong></p>
+      {/if}
 
       <section class="other" aria-label={t.readOnlyGroup}>
         <h2>{t.readOnlyGroup}</h2>

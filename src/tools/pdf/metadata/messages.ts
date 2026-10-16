@@ -16,6 +16,8 @@ const ko = {
   clear: '문서 정보 모두 지우기 (만든 프로그램·날짜까지)',
   clearNote:
     '작성자 이름, 회사, 사용한 프로그램, 만든 날짜처럼 파일에 숨어 있는 정보를 모두 지웁니다. 남에게 보내기 전에 쓰세요.',
+  encryptedNote:
+    '이 PDF에 걸린 암호와 인쇄·복사 제한은 저장한 파일에서 풀립니다. 다시 걸려면 저장한 뒤 "PDF 암호 걸기"를 쓰세요.',
   reading: '문서 정보를 읽는 중…',
   ready: '바꿀 정보를 고친 뒤 저장하세요.',
   working: '저장하는 중…',
@@ -39,6 +41,8 @@ const en: typeof ko = {
   clear: 'Remove all document info (including apps and dates)',
   clearNote:
     'Removes hidden information such as the author name, company, apps used and creation date. Use it before sending the file to others.',
+  encryptedNote:
+    'The password and print/copy restrictions on this PDF are removed in the saved file. To add them back, use "Protect PDF" after saving.',
   reading: 'Reading document info…',
   ready: 'Edit the information, then save.',
   working: 'Saving…',
