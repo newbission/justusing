@@ -1316,3 +1316,46 @@ test('볼 때 저절로 끄는 층(/AS)의 사진은 꺼내지 않는다', async
   const frame = await openPdf(page, 'auto-layer.pdf', doc);
   await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
 });
+
+test('Differences에 없는 코드로 찍은 Type3 글자(기본 인코딩) 안의 사진도 꺼낸다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(70), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceGray',
+      BitsPerComponent: 8,
+    }),
+  );
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 1000, 1000],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('1000 0 d0 q 1000 0 0 1000 0 0 cm /A Do Q')),
+        b: context.register(context.stream('1000 0 d0')),
+      },
+      // a(97)는 기본 인코딩(WinAnsi)으로, b(98)만 Differences로
+      Encoding: { Type: 'Encoding', BaseEncoding: 'WinAnsiEncoding', Differences: [98, 'b'] },
+      FirstChar: 97,
+      LastChar: 98,
+      Widths: [1000, 1000],
+      Resources: { XObject: { A: gray } },
+    }),
+  );
+  const added = doc.addPage([600, 800]);
+  added.node.set(PDFName.of('Resources'), context.obj({ Font: { T3: type3 } }));
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /T3 64 Tf 100 100 Td (a) Tj ET')),
+  );
+  const frame = await openPdf(page, 'type3-base.pdf', doc);
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+});
