@@ -107,3 +107,27 @@ test('숫자가 없는 내 글꼴도 숫자를 넣지 않으면 쓰고, 긴 글�
   }
   await task.destroy();
 });
+
+test('좌표 단위가 pt가 아닌 쪽(/UserUnit)에도 미리보기와 같은 크기로 넣는다', async ({ page }) => {
+  await page.goto('/pdf/header-footer/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  // user-unit.pdf는 단위 하나가 2pt다
+  await frame.locator('input[type=file]').first().setInputFiles(fixture('user-unit.pdf'));
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
+  await expect(frame.getByText('모든 쪽(1쪽)에 넣습니다.')).toBeVisible();
+  const { bytes } = await download(page, frame);
+
+  const task = getDocument({ data: bytes.slice() });
+  const doc = await task.promise;
+  const first = await doc.getPage(1);
+  const footer = (await first.getTextContent()).items.find(
+    (item) => 'str' in item && item.str === '1 / 1',
+  );
+  expect(footer).toBeDefined();
+  if (footer && 'transform' in footer) {
+    // 보통 크기 11pt = 5.5단위, 아래 여백 약 10mm(28pt) = 14단위
+    expect(footer.transform[0]).toBeCloseTo(5.5, 1);
+    expect(footer.transform[5]).toBeCloseTo(14, 0);
+  }
+  await task.destroy();
+});
