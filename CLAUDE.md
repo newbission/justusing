@@ -328,7 +328,10 @@ Co-Authored-By: ...
         글자 넣기 처리는 `src/lib/pdf/text-pdf.ts`(+워커) 하나를 워터마크와 같이 쓴다
   - [x] 편집 (`/pdf/edit/`, 5-4를 여기서 마침): 글자 넣기·흰색 가리기·형광펜, 고르기·옮기기(키보드 포함).
         흰색 가리기는 아래 내용이 남는다고 화면·FAQ·가이드에 밝힌다 (진짜 지우기는 따로)
-  - [ ] OCR (스캔본 글자 인식): 데이터 크기를 밝히고 캐시
+  - [x] OCR (`/pdf/ocr/`, 2026-10-15): Tesseract(`tesseract.js-core`의 SIMD 엔진 + `tessdata_best` 정수판 한국어·영어).
+        엔진·언어 데이터는 `scripts/copy-ocr-data.mjs`가 node_modules에서 `public/data/ocr/`로 복사하고
+        목록(`src/lib/ocr/catalog.json`, 크기·SHA-256)을 쓴다. 워커(`src/lib/ocr/`)는 데이터를 화면에서 받아 쓰고
+        스스로 받지 않는다. 쪽마다 Tesseract가 만든 투명 글자층 PDF를 원래 쪽 위에 겹친다(`src/lib/pdf/text-layer.ts`)
   - [ ] PDF 안의 사진 원본 뽑기, 양식(입력 칸) 채우기
   - 하지 않음: PDF 비교 (2026-10-14 사용자 결정). 서버가 필요한 것: 오피스(워드·엑셀·PPT)→PDF,
     파일 공유·여러 사람 서명, 인증서 전자서명
