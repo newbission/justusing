@@ -480,6 +480,7 @@
     background: transparent;
   }
   .field-box input[type='text'],
+  .field-box input[type='password'],
   .field-box textarea,
   .field-box select {
     width: 100%;
