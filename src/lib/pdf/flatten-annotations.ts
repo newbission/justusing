@@ -184,16 +184,38 @@ function fieldText(field: PDFField): string[] | undefined {
   return [];
 }
 
+/** 쪽들의 주석 사전 (입력 칸이 어느 쪽에 있는지 보려고) */
+function widgetsOn(pages: PDFPage[]): Set<PDFDict> {
+  const found = new Set<PDFDict>();
+  for (const page of pages) {
+    const annots = page.doc.context.lookup(page.node.get(PDFName.of('Annots')));
+    if (!(annots instanceof PDFArray)) continue;
+    for (const item of annots.asArray()) {
+      const annot = page.doc.context.lookup(item);
+      if (annot instanceof PDFDict) found.add(annot);
+    }
+  }
+  return found;
+}
+
 /**
  * 모양 스트림(/AP) 없이 저장된 양식 입력값은 보기 프로그램이 그때그때 그린다 (NeedAppearances).
  * 평면화하려면 모양이 있어야 하므로 먼저 만든다. 만들 수 없으면(기본 글꼴에 없는 한글 등) 조용히 빼지 않고 알린다.
  */
-export function renderMissingFormAppearances(doc: PDFDocument): void {
+export function renderMissingFormAppearances(doc: PDFDocument, pages?: PDFPage[]): void {
   let form;
   let missing: PDFField[];
   try {
     form = doc.getForm();
-    missing = form.getFields().filter((field) => field.needsAppearancesUpdate());
+    // pages를 주면 그 쪽들에 있는 칸만 (가리기: 그림으로 바꾸는 쪽의 칸은 옮기지 않는다)
+    const onPages = pages && widgetsOn(pages);
+    missing = form
+      .getFields()
+      .filter((field) => field.needsAppearancesUpdate())
+      .filter(
+        (field) =>
+          !onPages || field.acroField.getWidgets().some((widget) => onPages.has(widget.dict)),
+      );
   } catch {
     // 양식 구조를 읽을 수 없으면 있는 모양만 쓴다
     return;
