@@ -4,8 +4,19 @@
  */
 import { runTextJob } from './text-pdf';
 
-/** 칸 이름 → 값. 글자 칸·선택 상자는 글자, 체크 상자는 켬/끔, 라디오는 고른 값('' 이면 해제), 목록은 고른 것들 */
-export type FormValues = Record<string, string | boolean | string[]>;
+/**
+ * 칸 하나의 값.
+ * - text: 글자 칸
+ * - check: 체크 상자·라디오. on은 켠 상자의 값('' 이면 모두 끔). 같은 이름의 상자가 여럿이면 켠 상자만 켜진다
+ * - choice: 선택 상자·목록. 고른 항목의 내보내는 값들 (화면에 보이는 글자가 아니라 PDF에 저장되는 값)
+ */
+export type FieldValue =
+  | { kind: 'text'; text: string }
+  | { kind: 'check'; on: string }
+  | { kind: 'choice'; values: string[] };
+
+/** 칸 이름 → 값 */
+export type FormValues = Record<string, FieldValue>;
 
 export interface FillFormOptions {
   values: FormValues;

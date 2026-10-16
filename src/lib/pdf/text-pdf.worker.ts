@@ -6,6 +6,7 @@ import {
   PDFCheckBox,
   PDFDocument,
   PDFDropdown,
+  PDFHexString,
   PDFName,
   PDFNumber,
   PDFOptionList,
@@ -39,11 +40,8 @@ function usedText(job: TextJob, total: number): string {
   if (job.kind === 'edit') {
     return job.items.map((item) => (item.kind === 'text' ? item.text : '')).join('');
   }
-  if (job.kind === 'fill-form') {
-    return Object.values(job.values)
-      .flatMap((value) => (typeof value === 'boolean' ? [] : value))
-      .join('');
-  }
+  // 양식 채우기는 고른 항목의 보이는 글자가 PDF에 있어 formText()가 따로 센다
+  if (job.kind === 'fill-form') return '';
   // 쪽마다 실제로 넣을 글자 (자리표시가 바뀐 숫자·날짜만 검사해 숫자가 없는 글꼴도 쓸 수 있게)
   const texts: string[] = [];
   for (let page = job.skipFirst ? 2 : 1; page <= total; page++) {
@@ -177,6 +175,30 @@ function drawEdits(
   }
 }
 
+/** 선택 상자·목록의 내보내는 값 → 보이는 글자 */
+function displayOf(field: PDFDropdown | PDFOptionList, value: string): string {
+  const option = field.acroField
+    .getOptions()
+    .find((candidate) => candidate.value.decodeText() === value);
+  return option ? option.display.decodeText() : value;
+}
+
+/** 양식 채우기가 모양으로 그릴 글자 (글꼴에 있는지 보려고). 목록은 선택지를 모두 그린다 */
+function formText(doc: PDFDocument, job: Extract<TextJob, { kind: 'fill-form' }>): string {
+  const form = doc.getForm();
+  const texts: string[] = [];
+  for (const [name, value] of Object.entries(job.values)) {
+    const field = form.getFieldMaybe(name);
+    if (value.kind === 'text') texts.push(value.text);
+    else if (value.kind === 'choice' && field instanceof PDFDropdown) {
+      texts.push(...value.values.map((item) => displayOf(field, item)));
+    } else if (value.kind === 'choice' && field instanceof PDFOptionList) {
+      texts.push(...field.getOptions());
+    }
+  }
+  return texts.join('');
+}
+
 /**
  * 양식 칸에 값을 넣고 바뀐 칸의 모양을 다시 만든다. 글꼴이 없으면 기본 글꼴(Helvetica)로 만들고,
  * 기본 글꼴에 없는 글자가 있으면 그 글자들을 돌려준다 (pdf-lib는 그런 글자를 오류 없이 빼 버린다)
@@ -189,35 +211,58 @@ function fillFields(
   const form = doc.getForm();
   // XFA 양식이 남아 있으면 일부 보기 프로그램이 넣은 값 대신 XFA를 보여 준다
   if (form.hasXFA()) form.deleteXFA();
+  /** 모양을 만든 뒤 내보내는 값으로 되돌릴 선택 칸 (pdf-lib는 보이는 글자를 값으로 저장한다) */
+  const exports: { field: PDFDropdown | PDFOptionList; values: string[] }[] = [];
   for (const [name, value] of Object.entries(job.values)) {
     const field = form.getFieldMaybe(name);
     if (!field || field.isReadOnly()) continue;
-    if (field instanceof PDFTextField && typeof value === 'string') {
+    if (field instanceof PDFTextField && value.kind === 'text') {
       const max = field.getMaxLength();
-      field.setText(max === undefined ? value : value.slice(0, max));
-    } else if (field instanceof PDFCheckBox && typeof value === 'boolean') {
-      if (value) field.check();
-      else field.uncheck();
-    } else if (field instanceof PDFRadioGroup && typeof value === 'string') {
-      if (value) field.select(value);
+      field.setText(max === undefined ? value.text : value.text.slice(0, max));
+    } else if (field instanceof PDFCheckBox && value.kind === 'check') {
+      // 같은 이름에 켜는 값이 다른 상자가 여럿이면 켠 값의 상자만 켠다
+      // (pdf-lib의 setValue는 켜는 값이 하나인 상자만 받는다)
+      const on = PDFName.of(value.on || 'Off');
+      field.acroField.dict.set(PDFName.of('V'), on);
+      for (const widget of field.acroField.getWidgets()) {
+        widget.setAppearanceState(widget.getOnValue() === on ? on : PDFName.of('Off'));
+      }
+    } else if (field instanceof PDFRadioGroup && value.kind === 'check') {
+      if (value.on) field.select(value.on);
       else field.clear();
-    } else if (field instanceof PDFDropdown && typeof value === 'string') {
-      if (value) field.select(value);
-      else field.clear();
-    } else if (field instanceof PDFOptionList && Array.isArray(value)) {
-      if (value.length > 0) field.select(value);
-      else field.clear();
+    } else if (
+      (field instanceof PDFDropdown || field instanceof PDFOptionList) &&
+      value.kind === 'choice'
+    ) {
+      const shown = value.values.map((item) => displayOf(field, item));
+      if (shown.length === 0) field.clear();
+      else if (field instanceof PDFDropdown) field.select(shown[0]!);
+      else field.select(shown);
+      exports.push({ field, values: value.values });
     }
   }
   const appearanceFont = font ?? doc.embedStandardFont(StandardFonts.Helvetica);
   if (!font) {
     const supported = new Set(appearanceFont.getCharacterSet());
-    const missing = [...new Set(usedText(job, 0))].filter(
+    const missing = [...new Set(formText(doc, job))].filter(
       (char) => char.trim() !== '' && !supported.has(char.codePointAt(0)!),
     );
     if (missing.length > 0) return missing;
   }
   form.updateFieldAppearances(appearanceFont);
+  // 모양(보이는 글자)은 그대로 두고, 저장되는 값은 내보내는 값으로 (받는 쪽 자동 처리가 이 값을 읽는다)
+  // (pdf-lib의 setValues는 보이는 글자만 받아 값을 직접 적는다. 목록은 고른 항목 번호 /I도 맞춘다)
+  for (const { field, values } of exports) {
+    if (values.length === 0) continue;
+    const dict = field.acroField.dict;
+    const encoded = values.map((item) => PDFHexString.fromText(item));
+    dict.set(PDFName.of('V'), encoded.length === 1 ? encoded[0]! : doc.context.obj(encoded));
+    if (field instanceof PDFOptionList) {
+      const options = field.acroField.getOptions().map((option) => option.value.decodeText());
+      const indices = values.map((item) => options.indexOf(item)).filter((i) => i >= 0);
+      dict.set(PDFName.of('I'), doc.context.obj(indices.sort((a, b) => a - b)));
+    }
+  }
   if (job.flatten) form.flatten();
   return [];
 }
@@ -228,7 +273,7 @@ addEventListener('message', async (event: MessageEvent<TextRequest>) => {
     postMessage(response, { transfer });
   try {
     const doc = await PDFDocument.load(bytes, { password: password ?? '' });
-    const text = usedText(job, doc.getPageCount());
+    const text = job.kind === 'fill-form' ? formText(doc, job) : usedText(job, doc.getPageCount());
     // 글자를 넣지 않는 편집(가리기·형광펜만)은 글꼴이 없어도 된다
     let font: PDFFont | undefined;
     if (job.font && text.trim()) {
