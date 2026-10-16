@@ -453,6 +453,8 @@ async function extract(
     if (!space) return undefined;
     if (alpha || key) {
       // 투명도를 합친 PNG(RGB)에는 RGB 프로필만 넣는다 (회색 프로필은 다른 회색 사진처럼 그대로 본다)
+      // CMYK 프로필은 PNG에 넣을 수도, 브라우저로 그 색대로 바꿀 수도 없다
+      if (space.icc && components === undefined) return undefined;
       const icc = components === 3 ? space.icc : undefined;
       const bytes = await jpegToPng(stream, alpha, key, components ?? 3);
       return { ext: 'png', bytes: icc ? await withIcc(bytes, icc) : bytes, width, height };
