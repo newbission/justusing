@@ -156,6 +156,51 @@ function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
   return context.register(stream);
 }
 
+/**
+ * 모양이 저장되지 않은 링크의 테두리. /BS나 /Border로 굵기를 직접 정한 경우만 그린다
+ * (정하지 않은 링크 테두리는 보기 프로그램도 보통 그리지 않는다). 그릴 것이 없으면 undefined
+ */
+function linkBorderAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
+  const context = annot.context;
+  const style = context.lookup(annot.get(PDFName.of('BS')));
+  const border = numbers(context.lookup(annot.get(PDFName.of('Border'))), 3);
+  let width: number | undefined;
+  let kind = 'S';
+  let dash: number[] = [];
+  if (style instanceof PDFDict) {
+    const w = context.lookup(style.get(PDFName.of('W')));
+    width = w instanceof PDFNumber ? w.asNumber() : 1;
+    const s = style.get(PDFName.of('S'));
+    if (s instanceof PDFName) kind = s.decodeText();
+    const d = context.lookup(style.get(PDFName.of('D')));
+    if (kind === 'D') {
+      dash =
+        d instanceof PDFArray
+          ? d.asArray().map((item) => {
+              const value = context.lookup(item);
+              return value instanceof PDFNumber ? value.asNumber() : 3;
+            })
+          : [3];
+    }
+  } else if (border) {
+    width = border[2];
+  }
+  const color = context.lookup(annot.get(PDFName.of('C')));
+  // 색을 비워 두면(빈 배열) 테두리가 보이지 않는다
+  if (!width || width <= 0 || (color instanceof PDFArray && color.size() === 0)) return undefined;
+  const w = Math.abs(rect[2]! - rect[0]!);
+  const h = Math.abs(rect[3]! - rect[1]!);
+  const stroke = fillColor(annot, '0 g').replace(/(\S+)$/, (op) => op.toUpperCase());
+  const half = width / 2;
+  const shape =
+    kind === 'U'
+      ? `0 ${half} m ${w} ${half} l S`
+      : `${half} ${half} ${w - width} ${h - width} re S`;
+  const content = ['q', stroke, `${width} w`, `[${dash.join(' ')}] 0 d`, shape, 'Q'].join('\n');
+  const stream = context.stream(content, { Type: 'XObject', Subtype: 'Form', BBox: [0, 0, w, h] });
+  return context.register(stream);
+}
+
 /** 위젯이 인쇄되는지 (/F의 인쇄 플래그, 숨김이 아님) */
 function printable(dict: PDFDict): boolean {
   const flags = dict.context.lookup(dict.get(PDFName.of('F')));
@@ -264,10 +309,12 @@ export function flattenAnnotations(page: PDFPage): boolean {
     const rect = numbers(context.lookup(annot.get(PDFName.of('Rect'))), 4);
     const normal = normalAppearance(annot);
     if (normal === 'empty') continue;
-    // 모양이 저장되지 않은 링크는 보이는 것이 없다 (링크 테두리는 보기 프로그램도 보통 그리지 않는다).
-    // 모양이 있는 링크는 다른 주석처럼 그린다
-    if (normal === undefined && subtype === PDFName.of('Link')) continue;
-    const appearance = normal ?? (rect && markupAppearance(annot, rect));
+    const isLink = subtype === PDFName.of('Link');
+    const appearance =
+      normal ??
+      (rect && (isLink ? linkBorderAppearance(annot, rect) : markupAppearance(annot, rect)));
+    // 모양이 저장되지 않은 링크는 굵기를 정한 테두리만 그리고, 그 밖에는 보이는 것이 없다
+    if (!appearance && isLink) continue;
     // 인쇄되는데 모양을 만들 수 없는 주석은 조용히 빼지 않고 알린다
     if (!rect || !appearance) throw new Error(UNRENDERED_ANNOTATION);
     const stream = context.lookup(appearance) as PDFStream;
