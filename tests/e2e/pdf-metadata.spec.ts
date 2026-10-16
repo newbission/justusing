@@ -31,6 +31,20 @@ async function infoPdf() {
       }),
     ),
   );
+  // 쪽 자원 목록 안에 바로 들어 있는 사전이 가리키는 XMP
+  doc.getPage(0).node.set(
+    PDFName.of('PieceInfo'),
+    doc.context.obj({
+      App: {
+        Metadata: doc.context.register(
+          doc.context.stream('<x:xmpmeta><dc:creator>Nested XMP Choi</dc:creator></x:xmpmeta>', {
+            Type: 'Metadata',
+            Subtype: 'XML',
+          }),
+        ),
+      },
+    }),
+  );
   // 고친 기록에서 참조를 잃은 옛 XMP
   doc.context.register(
     doc.context.stream('<x:xmpmeta><dc:creator>Orphan XMP Park</dc:creator></x:xmpmeta>', {
@@ -110,6 +124,7 @@ test('모두 지우기는 만든 프로그램·날짜·사용자 정의 항목�
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('XMP Secret Kim');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Page XMP Lee');
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Orphan XMP Park');
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Nested XMP Choi');
 });
 
 test.describe('서울 시간대에서', () => {
