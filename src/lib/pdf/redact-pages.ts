@@ -7,7 +7,8 @@
  * 옮기는 쪽에서도 다른 쪽(가린 쪽)을 가리키는 것을 끊는다:
  * - 주석은 보이는 모양만 쪽에 그려 넣고 뺀다 (링크·메모가 가린 쪽을 가리킬 수 있다)
  * - 쪽끼리 같이 쓰는 자원 목록에서 이 쪽이 쓰지 않는 것(가린 쪽의 그림·글꼴 등)을 뺀다
- * - 기사 흐름(/B), 쪽 동작(/AA), 앱 데이터(/PieceInfo), 쪽 첨부 파일(/AF) 등을 뺀다
+ * - 쪽과 쪽이 쓰는 자원에서 그리기에 필요한 항목만 남긴다 (rendering-only.ts). 기사 흐름·쪽 동작·
+ *   XMP·첨부 파일·앱 데이터·대체 그림·바깥 파일 연결처럼 보이지 않는 항목은 모두 빠진다
  * 책갈피·문서 정보·양식처럼 문서 전체에 딸린 것은 옮기지 않는다.
  */
 import {
@@ -25,23 +26,12 @@ import {
 import { GS_FONT, contentUsage, type FormLookup, type ResourceUse } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { userUnit, viewSize } from './page-geometry';
+import { keepRenderingOnly } from './rendering-only';
 
 /** 쪽 자원 중 내용에서 이름으로 부르는 것들 */
 const NAMED = ['XObject', 'Font', 'ExtGState', 'Pattern', 'Shading', 'ColorSpace', 'Properties'];
-/**
- * 남긴 자원(그림·묶음 그림·글꼴 등)에서 빼는 항목: 첨부 파일, 앱 데이터, XMP(사진 설명 등),
- * 그림의 대체 그림(/Alternates, 화면에 보이지 않지만 다른 그림을 가리킬 수 있다),
- * 다른 PDF 쪽을 가리키는 연결(/Ref, 파일을 품을 수 있다)과 인쇄용 원본 파일 연결(/OPI).
- * 묶음 그림은 자기 내용(대신 보여 주는 모습)만 남는다
- */
-const NESTED_DROP = ['AF', 'PieceInfo', 'Metadata', 'Alternates', 'Ref', 'OPI'];
 /** 장치 색공간 대신 저절로 쓰이는 기본 색공간 */
 const DEFAULT_SPACES = ['DefaultGray', 'DefaultRGB', 'DefaultCMYK'];
-/**
- * 다른 쪽이나 문서 전체를 가리킬 수 있어 빼는 쪽 항목: 기사 흐름, 쪽 동작, 앱 데이터, 미리보기 그림,
- * 쪽 정보, 쪽에 딸린 첨부 파일(PDF 2.0), 문서 부분(PDF 2.0), 분판 정보(다른 쪽을 가리킨다)
- */
-const DROP = ['B', 'AA', 'PieceInfo', 'Thumb', 'Metadata', 'AF', 'DPart', 'SeparationInfo'];
 
 function streamText(stream: PDFStream): string {
   const bytes =
@@ -258,8 +248,6 @@ function pruneNested(object: unknown, pruning: Pruning) {
   const dict = object instanceof PDFStream ? object.dict : object;
   if (!(dict instanceof PDFDict) || pruning.visited.has(dict)) return;
   pruning.visited.add(dict);
-  // 남긴 그림·묶음 그림·글꼴에 붙은 첨부 파일(PDF 2.0 /AF)과 앱 데이터는 옮기지 않는다
-  for (const key of NESTED_DROP) dict.delete(PDFName.of(key));
   const context = dict.context;
   const resources = context.lookup(dict.get(PDFName.of('Resources')));
   const own = resources instanceof PDFDict ? resources : undefined;
@@ -361,7 +349,6 @@ export async function redact(
   for (const [index, page] of source.getPages().entries()) {
     if (rasters.has(index)) continue;
     flattenAnnotations(page);
-    for (const key of DROP) page.node.delete(PDFName.of(key));
     prunePage(page, pruning);
     kept.push(index);
   }
@@ -370,6 +357,9 @@ export async function redact(
     size = pruning.type3.size;
     finishType3(pruning);
   }
+  // 남길 쪽에서 그리기에 필요한 항목만 남긴다 (XMP·첨부 파일·앱 데이터·대체 그림·바깥 파일 연결 등은
+  // 화면에 보이지 않지만 가린 쪽의 자료를 가리킬 수 있다)
+  for (const index of kept) keepRenderingOnly(source.getPage(index).node);
   const copied = await out.copyPages(source, kept);
   for (const [index, page] of source.getPages().entries()) {
     const jpg = rasters.get(index);
