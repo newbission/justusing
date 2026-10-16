@@ -130,6 +130,9 @@ test('회전된 쪽은 보이는 방향 그대로 넣고, 테두리를 그린다
     buffer: Buffer.from(await source.save()),
   });
   await frame.getByText('Letter', { exact: true }).click();
+  // 미리보기 종이도 Letter 비율
+  const sheet = (await frame.locator('.sheet').boundingBox())!;
+  expect(sheet.width / sheet.height).toBeCloseTo(612 / 792, 2);
   await frame.getByLabel('쪽마다 테두리 선').check();
   await expect(frame.getByText('5쪽을 2장에 모읍니다.')).toBeVisible();
   await frame.getByRole('button', { name: '모아찍기' }).click();
