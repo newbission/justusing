@@ -28,7 +28,7 @@ export default defineContent({
       },
       {
         q: '"글자가 이미 있는 쪽은 건너뛰기"는 무엇인가요?',
-        a: '워드에서 만든 PDF처럼 이미 글자를 고를 수 있는 쪽은 다시 읽지 않습니다. 스캔한 쪽과 섞인 PDF에서 시간을 아끼고, 글자가 두 겹으로 들어가는 것을 막습니다.',
+        a: '워드에서 만든 PDF처럼 이미 본문 글자를 고를 수 있는 쪽은 다시 읽지 않습니다. 스캔한 쪽에 쪽 번호나 워터마크 정도만 글자로 들어 있으면 다시 읽습니다. 스캔한 쪽과 섞인 PDF에서 시간을 아끼고, 글자가 두 겹으로 들어가는 것을 막습니다.',
       },
       {
         q: '파일이 정말 업로드되지 않나요?',
@@ -63,7 +63,7 @@ export default defineContent({
       },
       {
         q: 'What does "Skip pages that already have text" do?',
-        a: 'Pages whose text can already be selected, such as PDFs saved from Word, are not read again. This saves time on PDFs that mix scanned and digital pages, and avoids adding the text twice.',
+        a: 'Pages whose body text can already be selected, such as PDFs saved from Word, are not read again. Scanned pages with only a page number or watermark as text are still read. This saves time on PDFs that mix scanned and digital pages, and avoids adding the text twice.',
       },
       {
         q: 'Is my file really not uploaded?',

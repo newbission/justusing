@@ -105,12 +105,19 @@
     run = { kind: 'idle' };
   }
 
-  /** 글자가 이미 있는 쪽인지 (스캔본이 아닌 쪽) */
+  /**
+   * 본문 글자가 이미 있는 쪽인지 (스캔본이 아닌 쪽). 스캔한 쪽에 쪽 번호·워터마크만 글자로 더한 경우는
+   * 본문이 여전히 그림이므로 다시 읽는다
+   */
+  const TEXT_PAGE_MIN = 50;
   async function hasText(source: LoadedPdf, index: number) {
     const page = await source.doc.getPage(index + 1);
     const content = await page.getTextContent();
     page.cleanup();
-    return content.items.some((item) => 'str' in item && item.str.trim() !== '');
+    const characters = content.items
+      .map((item) => ('str' in item ? item.str.replace(/\s/g, '').length : 0))
+      .reduce((sum, count) => sum + count, 0);
+    return characters >= TEXT_PAGE_MIN;
   }
 
   async function recognize() {
