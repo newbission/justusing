@@ -1563,6 +1563,56 @@ test('바로 써 넣은 색 목록 그림이 기본으로 부르는 색공간을
   expect(spaces.has(PDFName.of('CS1'))).toBe(true);
 });
 
+test('장치 색공간 이름은 같은 이름의 색공간 자원을 부르지 않는다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const secret = (text: string) => context.register(context.stream(`ICC ${text}`, { N: 3 }));
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  const picture = context.register(
+    context.flateStream(new Uint8Array(3).fill(9), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1,
+      Height: 1,
+      BitsPerComponent: 8,
+      ColorSpace: 'DeviceRGB',
+    }),
+  );
+  // 가린 쪽에서만 쓰던 항목이 장치 색공간과 같은 이름이면(잘못된 파일), 남긴 쪽이 장치 색공간을 써도 딸려 오면 안 된다
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      XObject: { Im1: picture },
+      ColorSpace: {
+        DeviceRGB: ['ICCBased', secret('DEVICE-RGB-SECRET')],
+        Pattern: ['ICCBased', secret('PATTERN-SECRET')],
+        RGB: ['ICCBased', secret('INLINE-RGB-SECRET')],
+      },
+    }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream(
+        '/DeviceRGB cs 1 0 0 sc 0 0 50 50 re f /Pattern CS ' +
+          'q 50 0 0 50 60 60 cm /Im1 Do Q ' +
+          'q 50 0 0 50 10 120 cm BI /W 1 /H 1 /BPC 8 /CS /RGB ID \0\0\0 EI Q',
+      ),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'device-names.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  for (const name of ['DEVICE-RGB-SECRET', 'PATTERN-SECRET', 'INLINE-RGB-SECRET']) {
+    expect(text).not.toContain(name);
+  }
+});
+
 test('원본에서 꺼 둔 보이기 층은 결과에서도 꺼 두고, 투명도 묶음이 부르는 색공간은 남긴다', async ({
   page,
 }) => {
