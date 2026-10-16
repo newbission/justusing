@@ -342,13 +342,14 @@ export async function redact(
       out.addPage(copied[kept.indexOf(index)]!);
       continue;
     }
-    // 보이는 크기(pt) 그대로 그림 한 장짜리 쪽
+    // 보이는 크기 그대로 그림 한 장짜리 쪽. 큰 도면은 좌표 단위(/UserUnit)를 그대로 옮긴다
+    // (곱해서 크기로 바꾸면 PDF 쪽 크기 한도 14,400을 넘을 수 있다)
     const unit = userUnit(page);
-    const view = viewSize(page);
-    const width = view.width * unit;
-    const height = view.height * unit;
+    const { width, height } = viewSize(page);
     const image = await out.embedJpg(jpg);
-    out.addPage([width, height]).drawImage(image, { x: 0, y: 0, width, height });
+    const added = out.addPage([width, height]);
+    if (unit !== 1) added.node.set(PDFName.of('UserUnit'), PDFNumber.of(unit));
+    added.drawImage(image, { x: 0, y: 0, width, height });
   }
   return out;
 }
