@@ -162,8 +162,9 @@
         excluded: false,
       }));
       item.firstPage = await item.opened.doc.getPage(1);
-      item.status = 'ready';
+      // 서명 안내를 보기 전에 합치지 않게, 확인이 끝난 뒤에야 준비된 파일로 센다
       item.signed = await isSigned(item.opened.doc);
+      item.status = 'ready';
     } catch (error) {
       if (isPasswordError(error)) {
         item.wrongPassword = password !== undefined;

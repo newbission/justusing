@@ -64,16 +64,17 @@
     phase = 'loading';
     try {
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 복사본을 준다 (원본은 결과를 만들 때 쓴다)
-      opened = await openPdf(bytes.slice(), withPassword);
-      loaded = { name: fileName, bytes, password: withPassword, doc: opened.doc };
+      const current = await openPdf(bytes.slice(), withPassword);
+      opened = current;
+      // 서명 안내를 보기 전에 저장하지 않게, 확인이 끝난 뒤에야 도구 화면(저장 버튼)을 연다
+      const value = saves && (await isSigned(current.doc));
+      // 확인하는 사이에 닫았거나 다른 파일을 열었으면 그만둔다
+      if (opened !== current) return;
+      signed = value;
+      loaded = { name: fileName, bytes, password: withPassword, doc: current.doc };
       onload(loaded);
       phase = 'ready';
       requestShowTool();
-      if (saves) {
-        const current = loaded;
-        const value = await isSigned(current.doc);
-        if (loaded === current) signed = value;
-      }
     } catch (error) {
       if (isPasswordError(error)) {
         wrongPassword = withPassword !== undefined;
