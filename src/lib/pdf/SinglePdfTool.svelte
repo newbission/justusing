@@ -1,5 +1,5 @@
 <!--
-  PDF 하나를 열어 다루는 도구의 공통 틀 (나누기·회전·정리).
+  PDF 하나를 열어 다루는 도구의 공통 틀 (나누기·회전·정리 등).
   파일 고르기 → 여는 중 → (암호) → 파일 이름 막대 + 도구 화면. 도구는 연 PDF를 받아 화면만 그린다.
   파일은 어디로도 전송되지 않는다.
 -->
@@ -26,7 +26,7 @@
   import FileDrop from '../../frame/FileDrop.svelte';
   import { onFrameFiles } from '../../frame/drop';
   import { requestShowTool } from '../../frame/parent';
-  import { isPasswordError, openPdf, type OpenedPdf } from './pdfjs';
+  import { isPasswordError, isSigned, openPdf, type OpenedPdf } from './pdfjs';
 
   interface Props {
     /** 새 PDF를 열었을 때. 도구는 여기서 화면 상태를 처음으로 되돌린다 */
@@ -35,9 +35,11 @@
     onclose?: () => void;
     /** 연 PDF로 그리는 도구 화면 */
     children: Snippet<[LoadedPdf]>;
+    /** 고친 PDF를 저장하는 도구. 전자 서명된 PDF면 저장한 파일에서 서명이 깨진다고 알린다 */
+    saves?: boolean;
   }
 
-  let { onload, onclose, children }: Props = $props();
+  let { onload, onclose, children, saves = false }: Props = $props();
 
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
@@ -48,6 +50,7 @@
   let wrongPassword = $state(false);
   let opened: OpenedPdf | undefined;
   let loaded: LoadedPdf | undefined = $state.raw();
+  let signed = $state(false);
 
   async function open(file: File) {
     await close();
@@ -66,6 +69,11 @@
       onload(loaded);
       phase = 'ready';
       requestShowTool();
+      if (saves) {
+        const current = loaded;
+        const value = await isSigned(current.doc);
+        if (loaded === current) signed = value;
+      }
     } catch (error) {
       if (isPasswordError(error)) {
         wrongPassword = withPassword !== undefined;
@@ -82,6 +90,7 @@
     await opened?.close();
     opened = undefined;
     loaded = undefined;
+    signed = false;
     bytes = undefined;
     wrongPassword = false;
     phase = 'idle';
@@ -102,6 +111,9 @@
       <span class="meta">{t.pdf.pages(loaded.doc.numPages)}</span>
       <button type="button" class="text" onclick={close}>{t.pdf.otherFile}</button>
     </div>
+    {#if signed}
+      <p class="signed" role="note">{t.pdf.signed}</p>
+    {/if}
     {@render children(loaded)}
   {:else if phase === 'loading'}
     <p class="status" role="status">{t.pdf.opening}</p>
@@ -174,6 +186,14 @@
     font-weight: 600;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+  .signed {
+    flex: none;
+    margin: 0;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--color-line);
+    font-size: 13px;
+    font-weight: 600;
   }
   .filebar .meta {
     flex: 1;
