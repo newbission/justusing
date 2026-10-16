@@ -96,6 +96,13 @@
     pdf = loaded;
   }
 
+  /** 다른 파일을 고르려고 닫으면 하던 꺼내기를 버리고 결과·미리보기를 지운다 */
+  function onclose() {
+    pdf = undefined;
+    clear();
+    read = { kind: 'idle' };
+  }
+
   async function allowed() {
     const entitlement = await canUse('pdf/extract-images');
     if (!entitlement.allowed) {
@@ -128,7 +135,7 @@
   }
 </script>
 
-<SinglePdfTool {onload}>
+<SinglePdfTool {onload} {onclose}>
   {#snippet children()}
     <ActionBar label={t.bar}>
       {#snippet text()}
