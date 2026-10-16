@@ -1376,3 +1376,87 @@ test('큰 도면 쪽은 좌표 단위(UserUnit)를 그대로 옮긴다', async (
   expect(result.getSize()).toEqual({ width: 10000, height: 5000 });
   expect((result.node.get(PDFName.of('UserUnit')) as PDFNumber).asNumber()).toBe(3);
 });
+
+test('공백 없이 띄워 놓은 조각 사이는 띄어 쓴 말로 찾는다', async ({ page }) => {
+  // "John"은 쪽에, "Smith"는 묶음 그림 안에서 공백 하나쯤 떨어진 자리에 공백 글자 없이 찍는다
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const helvetica = await source.embedFont(StandardFonts.Helvetica);
+  const added = source.addPage([400, 200]);
+  const x = 20 + helvetica.widthOfTextAtSize('John', 12) + 3.5;
+  const form = context.register(
+    context.stream(`BT /F1 12 Tf ${x} 100 Td (Smith) Tj ET`, {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 400, 200],
+    }),
+  );
+  added.node.set(
+    PDFName.of('Resources'),
+    context.obj({ Font: { F1: helvetica.ref }, XObject: { Fm: form } }),
+  );
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /F1 12 Tf 20 100 Td (John) Tj ET /Fm Do')),
+  );
+  const frame = await openRedact(page, {
+    name: 'gap.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByLabel('찾아서 가리기').fill('John Smith');
+  await frame.getByRole('button', { name: '모두 찾아 가리기' }).click();
+  await expect(frame.getByText('1곳을 찾아 가렸습니다.')).toBeVisible();
+});
+
+test('배열 색공간 안 프로필의 XMP는 빼고, 별색 이름과 같은 이름의 색공간 자원은 남기지 않는다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const profile = context.register(
+    context.flateStream(new Uint8Array(200), {
+      N: 3,
+      Metadata: context.register(
+        context.stream('<x:xmpmeta>ICC-XMP-SECRET</x:xmpmeta>', {
+          Type: 'Metadata',
+          Subtype: 'XML',
+        }),
+      ),
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      ColorSpace: {
+        CS1: ['ICCBased', profile],
+        CS2: [
+          'Separation',
+          'PatientName',
+          'DeviceCMYK',
+          { FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: [0, 0, 0, 1], N: 1 },
+        ],
+        PatientName: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }],
+      },
+    }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream('/CS1 cs 1 0 0 sc 0 0 50 50 re f /CS2 cs 1 sc 60 60 50 50 re f'),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'separation.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('ICC-XMP-SECRET');
+  const result = await PDFDocument.load(bytes);
+  const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
+  expect(spaces.has(PDFName.of('CS2'))).toBe(true);
+  expect(spaces.has(PDFName.of('PatientName'))).toBe(false);
+});
