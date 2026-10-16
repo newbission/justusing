@@ -141,23 +141,29 @@ export async function redact(
     source,
     source.getPages().filter((_, index) => !rasters.has(index)),
   );
+  // 옮길 쪽을 먼저 정리한 뒤 한 번에 복사한다. 쪽마다 따로 복사하면 같이 쓰는 글꼴·그림이 쪽 수만큼 복제된다
+  const kept: number[] = [];
   for (const [index, page] of source.getPages().entries()) {
-    const jpg = rasters.get(index);
-    if (jpg) {
-      // 보이는 크기(pt) 그대로 그림 한 장짜리 쪽
-      const unit = userUnit(page);
-      const view = viewSize(page);
-      const width = view.width * unit;
-      const height = view.height * unit;
-      const image = await out.embedJpg(jpg);
-      out.addPage([width, height]).drawImage(image, { x: 0, y: 0, width, height });
-      continue;
-    }
+    if (rasters.has(index)) continue;
     flattenAnnotations(page);
     for (const key of DROP) page.node.delete(PDFName.of(key));
     prunePage(page);
-    const [copied] = await out.copyPages(source, [index]);
-    out.addPage(copied!);
+    kept.push(index);
+  }
+  const copied = await out.copyPages(source, kept);
+  for (const [index, page] of source.getPages().entries()) {
+    const jpg = rasters.get(index);
+    if (!jpg) {
+      out.addPage(copied[kept.indexOf(index)]!);
+      continue;
+    }
+    // 보이는 크기(pt) 그대로 그림 한 장짜리 쪽
+    const unit = userUnit(page);
+    const view = viewSize(page);
+    const width = view.width * unit;
+    const height = view.height * unit;
+    const image = await out.embedJpg(jpg);
+    out.addPage([width, height]).drawImage(image, { x: 0, y: 0, width, height });
   }
   return out;
 }
