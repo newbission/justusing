@@ -138,12 +138,14 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
   const dict = context.lookup(context.trailerInfo.Info);
   if (clear) {
     if (dict instanceof PDFDict) for (const key of dict.keys()) dict.delete(key);
-    // 쪽·그림·글꼴 등에 붙은 XMP에도 작성자·회사 이름이 들어 있을 수 있다.
+    // 쪽·그림·글꼴 등에 붙은 XMP와 앱 데이터에도 작성자·회사 이름이 들어 있을 수 있다.
     // 객체 안에 바로 들어 있는 사전·배열(쪽의 자원 목록 등)까지 들어가 지운다
+    const hidden = [metadata, PDFName.of('PieceInfo')];
     const strip = (object: unknown) => {
       if (object instanceof PDFStream) strip(object.dict);
       else if (object instanceof PDFDict) {
-        object.delete(metadata);
+        // 앱 데이터(/PieceInfo)에도 고친 날짜·회사 이름 같은 앱별 정보가 들어 있다
+        for (const key of hidden) object.delete(key);
         for (const value of object.values()) strip(value);
       } else if (object instanceof PDFArray) {
         for (const value of object.asArray()) strip(value);
