@@ -590,6 +590,29 @@ test('JPEG 2000은 형식에 맞는 확장자로 꺼내고, 장치 색공간이 
   const jpxBytes = new Uint8Array(64);
   jpxBytes.set([0, 0, 0, 12, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a]);
   jpxBytes.set([0, 0, 0, 20, ...Buffer.from('ftypjpx ')], 12);
+  // 머리 상자(jp2h) 안 색 정보(colr): 방법 1, sRGB(16)
+  jpxBytes.set(
+    [
+      0,
+      0,
+      0,
+      23,
+      ...Buffer.from('jp2h'),
+      0,
+      0,
+      0,
+      15,
+      ...Buffer.from('colr'),
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      16,
+    ],
+    32,
+  );
   const jpx = (extra: Record<string, unknown>) =>
     context.register(
       context.stream(jpxBytes, {
@@ -912,4 +935,113 @@ test('무늬가 그리는 사진도 꺼내고, 장치 색공간 JPG의 안쪽 �
   const jpg = Buffer.from(entries['pattern_p1_2.jpg']!);
   expect(jpg.toString('latin1')).not.toContain('ICC_PROFILE');
   expect(jpg).toEqual(photo);
+});
+
+test('도장 주석과 Type3 글자 모양 안의 사진도 꺼내고, 파일 안 색이 다른 JPEG 2000과 값 범위가 다른 ICC JPG는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (value: number) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(value), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+      }),
+    );
+  // 도장 주석의 모양 안 사진
+  const stamp = context.register(
+    context.stream('q 64 0 0 64 0 0 cm /Im Do Q', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 64, 64],
+      Resources: { XObject: { Im: gray(10) } },
+    }),
+  );
+  // Type3 글자 모양 안 사진
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 1000, 1000],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('1000 0 d0 q 1000 0 0 1000 0 0 cm /Im Do Q')),
+      },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a'] },
+      FirstChar: 97,
+      LastChar: 97,
+      Widths: [1000],
+      Resources: { XObject: { Im: gray(20) } },
+    }),
+  );
+  // 파일 안 색 정보가 ICC(방법 2)인 JPEG 2000을 장치 RGB로 쓴다
+  const jpxBytes = new Uint8Array(64);
+  jpxBytes.set([0, 0, 0, 12, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a]);
+  jpxBytes.set([0, 0, 0, 20, ...Buffer.from('ftypjp2 ')], 12);
+  jpxBytes.set(
+    [0, 0, 0, 20, ...Buffer.from('jp2h'), 0, 0, 0, 12, ...Buffer.from('colr'), 2, 0, 0, 0],
+    32,
+  );
+  const jpx = context.register(
+    context.stream(jpxBytes, {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      Filter: 'JPXDecode',
+      ColorSpace: 'DeviceRGB',
+    }),
+  );
+  // 값 범위가 0~1이 아닌 ICC 프로필의 JPG
+  const rangedJpg = context.register(
+    context.stream(await readFile(fixture('photo.jpg')), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      Filter: 'DCTDecode',
+      ColorSpace: [
+        'ICCBased',
+        context.register(
+          context.flateStream(new Uint8Array(200), { N: 3, Range: [0, 1, 0.2, 0.8, 0, 1] }),
+        ),
+      ],
+    }),
+  );
+  const added = doc.addPage([600, 800]);
+  added.node.set(
+    PDFName.of('Resources'),
+    context.obj({ Font: { T3: type3 }, XObject: { J: jpx, R: rangedJpg } }),
+  );
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('/J Do /R Do BT /T3 64 Tf 100 100 Td (a) Tj ET')),
+  );
+  added.node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Stamp',
+        Rect: [300, 300, 364, 364],
+        AP: { N: stamp },
+      }),
+    ]),
+  );
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'hidden-places.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
