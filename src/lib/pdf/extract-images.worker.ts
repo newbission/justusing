@@ -365,18 +365,61 @@ function streamText(stream: PDFStream): string {
   return text;
 }
 
+const WHITESPACE = /[\0\t\n\f\r ]/;
+const DELIMITER = /[()<>[\]{}/%]/;
+
 /**
  * 쪽 내용에 바로 써 넣은 그림(BI … ID … EI) 중 짧은 변이 minSide 이상인 것의 수.
- * 이런 그림은 따로 된 객체가 아니라 꺼내지 않고, 꺼내지 못한 수로 알린다
+ * 이런 그림은 따로 된 객체가 아니라 꺼내지 않고, 꺼내지 못한 수로 알린다.
+ * 글자열 (…)·주석 %…·그림 바이트 안의 BI는 세지 않도록 토큰 단위로 훑는다
  */
 function countInline(streams: PDFStream[], minSide: number): number {
   let count = 0;
   for (const stream of streams) {
-    for (const match of streamText(stream).matchAll(/\bBI\b([\s\S]*?)\bID\b/g)) {
-      const head = match[1]!;
+    const text = streamText(stream);
+    let i = 0;
+    while (i < text.length) {
+      const char = text[i]!;
+      if (char === '(') {
+        // 글자열: 괄호 짝과 \ 이스케이프를 따라 건너뛴다
+        let depth = 1;
+        for (i++; i < text.length && depth > 0; i++) {
+          if (text[i] === '\\') i++;
+          else if (text[i] === '(') depth++;
+          else if (text[i] === ')') depth--;
+        }
+        continue;
+      }
+      if (char === '%') {
+        while (i < text.length && text[i] !== '\n' && text[i] !== '\r') i++;
+        continue;
+      }
+      if (char === '<') {
+        // << 는 사전의 시작, < 하나는 16진 글자열
+        i = text[i + 1] === '<' ? i + 2 : text.indexOf('>', i) + 1 || text.length;
+        continue;
+      }
+      if (WHITESPACE.test(char) || DELIMITER.test(char)) {
+        i++;
+        continue;
+      }
+      // 일반 토큰
+      let end = i;
+      while (end < text.length && !WHITESPACE.test(text[end]!) && !DELIMITER.test(text[end]!))
+        end++;
+      const token = text.slice(i, end);
+      i = end;
+      if (token !== 'BI') continue;
+      // BI 뒤 사전에서 크기를 읽고, ID 뒤 그림 바이트는 공백+EI+공백까지 건너뛴다
+      const id = /\sID[\0\t\n\f\r ]/.exec(text.slice(i));
+      if (!id) break;
+      const head = text.slice(i, i + id.index);
       const width = Number(/\/(?:W|Width)\s+(\d+)/.exec(head)?.[1] ?? 0);
       const height = Number(/\/(?:H|Height)\s+(\d+)/.exec(head)?.[1] ?? 0);
       if (Math.min(width, height) >= minSide) count++;
+      const dataStart = i + id.index + id[0].length;
+      const ei = /[\0\t\n\f\r ]EI(?=[\0\t\n\f\r ]|$)/.exec(text.slice(dataStart));
+      i = ei ? dataStart + ei.index + ei[0].length : text.length;
     }
   }
   return count;
