@@ -19,7 +19,7 @@ Some chat apps do not preview PDFs, and they can be awkward to open on a phone. 
 4. Choose the format (JPG or PNG) and quality, then click "Convert to images".
 5. Click "Download". One image downloads as an image; several come as one ZIP file.
 
-Images are named with page numbers, like `name_01.jpg` and `name_02.jpg`.
+Images are named with page numbers, like `name_1.jpg` and `name_2.jpg`. With 10 or more pages the numbers are zero-padded, like `name_01.jpg`, so they sort in order.
 
 ## JPG or PNG?
 
