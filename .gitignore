@@ -34,3 +34,7 @@ playwright-report/
 
 # 글꼴 원본 받아 둔 곳 (scripts/fonts/build_fonts.py)
 .cache/
+
+# 문서 inbox: 사용자에게 보여 줄 글은 올리지 않는다 (README만)
+docs/inbox/*
+!docs/inbox/README.md
