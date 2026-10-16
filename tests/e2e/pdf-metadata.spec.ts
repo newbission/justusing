@@ -6,7 +6,7 @@
 import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { PDFDict, PDFDocument, PDFHexString, PDFName, PDFString } from '@cantoo/pdf-lib';
+import { PDFArray, PDFDict, PDFDocument, PDFHexString, PDFName, PDFString } from '@cantoo/pdf-lib';
 import { expectLocalOnly } from './local-only';
 
 const infoOf = (doc: PDFDocument) => doc.context.lookup(doc.context.trailerInfo.Info) as PDFDict;
@@ -70,9 +70,7 @@ async function infoPdf() {
       }),
     }),
   );
-  (
-    doc.getPage(0).node.lookup(PDFName.of('Annots')) as unknown as { push: (v: unknown) => void }
-  ).push(sigField);
+  doc.getPage(0).node.lookup(PDFName.of('Annots'), PDFArray).push(sigField);
   doc.catalog.set(
     PDFName.of('SpiderInfo'),
     doc.context.obj({ V: 1.1, Note: PDFString.of('Spider Secret') }),
