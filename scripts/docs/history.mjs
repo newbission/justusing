@@ -117,13 +117,15 @@ function plain(text) {
 
 /** PR의 리뷰 지적(Codex)과 처리 답글. 스레드는 개수 상한 없이 끝 쪽까지 받는다 */
 function findings(number) {
-  const query = `query($endCursor:String){repository(owner:"newbission",name:"justusing"){pullRequest(number:${number}){reviewThreads(first:100,after:$endCursor){pageInfo{hasNextPage endCursor} nodes{isResolved comments(first:2){nodes{body createdAt author{login}}}}}}}}`;
+  const query = `query($endCursor:String){repository(owner:"newbission",name:"justusing"){pullRequest(number:${number}){reviewThreads(first:100,after:$endCursor){pageInfo{hasNextPage endCursor} nodes{isResolved first:comments(first:1){nodes{body createdAt}} last:comments(last:1){totalCount nodes{body}}}}}}}`;
   const pages = JSON.parse(
     run('gh', ['api', 'graphql', '--paginate', '--slurp', '-f', `query=${query}`]),
   );
   const threads = pages.flatMap((page) => page.data.repository.pullRequest.reviewThreads.nodes);
   return threads.map((thread) => {
-    const [finding, reply] = thread.comments.nodes;
+    // 지적은 첫 댓글, 처리는 마지막 댓글 (중간에 질문·보충이 끼어도 마지막 처리 내용을 적는다)
+    const finding = thread.first.nodes[0];
+    const reply = thread.last.totalCount > 1 ? thread.last.nodes[0] : undefined;
     const body = finding?.body ?? '';
     const priority = /(P[0-3]) Badge/.exec(body)?.[1] ?? '';
     const title = (body.split('\n')[0] ?? '')
