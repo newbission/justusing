@@ -1534,3 +1534,31 @@ test('합자·자모로 나눈 한글·줄 안 띄움 공백처럼 생김새만 
     await frame.getByLabel('찾아서 가리기').fill('');
   }
 });
+
+test('바로 써 넣은 색 목록 그림이 기본으로 부르는 색공간을 남긴다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({ ColorSpace: { CS1: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }] } }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream(
+        'q 50 0 0 50 10 10 cm BI /W 1 /H 1 /BPC 8 /CS [/I /CS1 0 <FF0000>] ID \0 EI Q',
+      ),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'inline-indexed.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const result = await PDFDocument.load(bytes);
+  const spaces = result.getPage(1).node.Resources()!.lookup(PDFName.of('ColorSpace'), PDFDict);
+  expect(spaces.has(PDFName.of('CS1'))).toBe(true);
+});
