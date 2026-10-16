@@ -124,6 +124,27 @@ test('가린 자리를 글자 도구로 누르면 그 위에 새 글자 상자�
   await expect(frame.getByText('넣은 것 2개')).toBeVisible();
 });
 
+test('키보드만으로 사각형을 넣고 크기를 바꾼다', async ({ page }) => {
+  const frame = await openTool(page);
+  await frame.getByText('흰색으로 가리기').click();
+  await frame.getByRole('button', { name: '가운데에 가리기 넣기' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(frame.getByText('넣은 것 1개')).toBeVisible();
+
+  // 새로 넣은 사각형에 포커스가 간다. Alt+화살표로 넓히고 화살표로 옮긴다
+  const box = frame.getByRole('button', { name: '흰색 가리기' });
+  await expect(box).toBeFocused();
+  const before = (await box.boundingBox())!;
+  await page.keyboard.press('Alt+ArrowRight');
+  await page.keyboard.press('Shift+ArrowUp');
+  const after = (await box.boundingBox())!;
+  expect(after.width).toBeGreaterThan(before.width);
+  expect(after.y).toBeLessThan(before.y);
+
+  const { bytes } = await download(page, frame);
+  expect((await firstPage(bytes)).fills).toBeGreaterThanOrEqual(1);
+});
+
 test('글자를 넣었는데 글꼴이 없으면 받으라고 알린다', async ({ page }) => {
   const frame = await openTool(page);
   const point = await at(frame, 0.3, 0.3);
