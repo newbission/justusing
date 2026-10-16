@@ -397,12 +397,14 @@ const WHITESPACE = /[\0\t\n\f\r ]/;
 const DELIMITER = /[()<>[\]{}/%]/;
 
 /**
- * 쪽 내용에 바로 써 넣은 그림(BI … ID … EI) 중 짧은 변이 minSide 이상인 것의 수.
- * 이런 그림은 따로 된 객체가 아니라 꺼내지 않고, 꺼내지 못한 수로 알린다.
- * 글자열 (…)·주석 %…·그림 바이트 안의 BI는 세지 않도록 토큰 단위로 훑는다
+ * 내용 스트림을 토큰 단위로 훑어 /이름 Do로 그리는 자원 이름과, 바로 써 넣은 그림(BI … ID … EI) 중
+ * 짧은 변이 minSide 이상인 것의 수를 센다. 바로 써 넣은 그림은 따로 된 객체가 아니라 꺼내지 않고,
+ * 꺼내지 못한 수로 알린다. 글자열 (…)·주석 %…·그림 바이트 안의 BI·Do는 세지 않는다
  */
-function countInline(streams: PDFStream[], minSide: number): number {
+function scanContent(streams: PDFStream[], minSide: number): { inline: number; drawn: string[] } {
   let count = 0;
+  const drawn: string[] = [];
+  let lastName = '';
   for (const stream of streams) {
     const text = streamText(stream);
     let i = 0;
@@ -427,6 +429,18 @@ function countInline(streams: PDFStream[], minSide: number): number {
         i = text[i + 1] === '<' ? i + 2 : text.indexOf('>', i) + 1 || text.length;
         continue;
       }
+      if (char === '/') {
+        let end = i + 1;
+        while (end < text.length && !WHITESPACE.test(text[end]!) && !DELIMITER.test(text[end]!))
+          end++;
+        lastName = text
+          .slice(i + 1, end)
+          .replace(/#([0-9a-fA-F]{2})/g, (_, hex: string) =>
+            String.fromCharCode(parseInt(hex, 16)),
+          );
+        i = end;
+        continue;
+      }
       if (WHITESPACE.test(char) || DELIMITER.test(char)) {
         i++;
         continue;
@@ -437,6 +451,7 @@ function countInline(streams: PDFStream[], minSide: number): number {
         end++;
       const token = text.slice(i, end);
       i = end;
+      if (token === 'Do' && lastName) drawn.push(lastName);
       if (token !== 'BI') continue;
       // BI 뒤 사전에서 크기를 읽고, ID 뒤 그림 바이트는 공백+EI+공백까지 건너뛴다
       const id = /\sID[\0\t\n\f\r ]/.exec(text.slice(i));
@@ -450,11 +465,11 @@ function countInline(streams: PDFStream[], minSide: number): number {
       i = ei ? dataStart + ei.index + ei[0].length : text.length;
     }
   }
-  return count;
+  return { inline: count, drawn };
 }
 
 /** 쪽마다 그 쪽(과 쪽 안의 묶음 그림)이 쓰는 사진. 같은 사진은 처음 나온 쪽에만 */
-function collect(doc: PDFDocument) {
+function collect(doc: PDFDocument, minSide: number) {
   const seen = new Set<PDFRef>();
   const visitedForms = new Set<PDFRef>();
   /** resources: 그 사진을 부른 자원 목록 (색공간 이름을 풀려고) */
@@ -464,12 +479,15 @@ function collect(doc: PDFDocument) {
     page: number;
     resources: PDFDict | undefined;
   }[] = [];
-  /** 쪽과 묶음 그림의 내용 (바로 써 넣은 그림을 세려고) */
-  const contents: PDFStream[] = [];
-  const walk = (resources: PDFDict | undefined, page: number) => {
+  let inline = 0;
+  /** 내용이 실제로 그리는(Do) 것만 따라간다. 자원 목록에만 있고 그리지 않는 사진은 꺼내지 않는다 */
+  const visit = (streams: PDFStream[], resources: PDFDict | undefined, page: number) => {
+    const scanned = scanContent(streams, minSide);
+    inline += scanned.inline;
     const xobjects = resources?.lookup(name('XObject'));
     if (!(xobjects instanceof PDFDict)) return;
-    for (const [, value] of xobjects.entries()) {
+    for (const drawn of new Set(scanned.drawn)) {
+      const value = xobjects.get(name(drawn));
       if (!(value instanceof PDFRef)) continue;
       const object = doc.context.lookup(value);
       if (!(object instanceof PDFStream)) continue;
@@ -482,8 +500,9 @@ function collect(doc: PDFDocument) {
         found.push({ ref: value, stream: object, page, resources });
       } else if (subtype === name('Form') && !visitedForms.has(value)) {
         visitedForms.add(value);
-        contents.push(object);
-        walk(object.dict.lookup(name('Resources')) as PDFDict | undefined, page);
+        // 자원 목록이 없는 묶음 그림은 부른 쪽의 자원을 물려받는다 (예전 방식)
+        const own = object.dict.lookup(name('Resources'));
+        visit([object], own instanceof PDFDict ? own : resources, page);
       }
     }
   };
@@ -491,10 +510,13 @@ function collect(doc: PDFDocument) {
     const value = doc.context.lookup(page.node.get(name('Contents')));
     const streams =
       value instanceof PDFArray ? value.asArray().map((item) => doc.context.lookup(item)) : [value];
-    contents.push(...streams.filter((item): item is PDFStream => item instanceof PDFStream));
-    walk(page.node.Resources(), index);
+    visit(
+      streams.filter((item): item is PDFStream => item instanceof PDFStream),
+      page.node.Resources(),
+      index,
+    );
   });
-  return { found, contents };
+  return { found, inline };
 }
 
 addEventListener('message', async (event: MessageEvent<ExtractRequest>) => {
@@ -503,13 +525,13 @@ addEventListener('message', async (event: MessageEvent<ExtractRequest>) => {
     postMessage(response, { transfer });
   try {
     const doc = await PDFDocument.load(bytes, { password: password ?? '' });
-    const collected = collect(doc);
+    const collected = collect(doc, minSide);
     const found = collected.found.filter(({ stream }) => {
       const width = numberOf(stream.dict, 'Width') ?? 0;
       const height = numberOf(stream.dict, 'Height') ?? 0;
       return Math.min(width, height) >= minSide;
     });
-    let failed = countInline(collected.contents, minSide);
+    let failed = collected.inline;
     for (const [index, { stream, page, resources }] of found.entries()) {
       let image: Awaited<ReturnType<typeof extract>>;
       try {
