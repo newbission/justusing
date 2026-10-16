@@ -27,7 +27,7 @@ export default defineContent({
       },
       {
         q: '작성한 양식이나 서명, 메모도 들어가나요?',
-        a: '인쇄할 때 나오는 모양 그대로 들어갑니다. 입력 칸의 값·서명·도장처럼 인쇄되는 것은 쪽에 그려 넣고, 화면에서만 보이는 버튼이나 메모 창은 뺍니다. 입력값의 모양이 파일에 저장되어 있지 않은 한글 양식은 옮길 수 없다고 알려 드립니다. 그럴 때는 PDF 보기 프로그램에서 "인쇄 → PDF로 저장"으로 한 번 저장한 뒤 다시 해 보세요.',
+        a: '인쇄할 때 나오는 모양 그대로 들어갑니다. 입력 칸의 값·서명·도장처럼 인쇄되는 것은 쪽에 그려 넣고, 화면에서만 보이는 버튼이나 메모 창은 뺍니다. 형광펜·밑줄·취소선은 모양이 저장되어 있지 않아도 다시 그려 넣습니다. 그 밖에 모양이 저장되어 있지 않은 주석이나 한글 입력값이 있으면 옮길 수 없다고 알려 드립니다. 그럴 때는 PDF 보기 프로그램에서 "인쇄 → PDF로 저장"으로 한 번 저장한 뒤 다시 해 보세요.',
       },
       {
         q: '쪽 순서를 바꾸고 싶어요.',
@@ -61,7 +61,7 @@ export default defineContent({
       },
       {
         q: 'Are filled-in forms, signatures and comments included?',
-        a: 'They are included the way they look when printed. Form entries, signatures and stamps that print are drawn onto the page, while screen-only buttons and comment pop-ups are left out. If a form entry has no saved appearance and uses characters the built-in font lacks, you will be told it cannot be moved. In that case, save the PDF once with "Print → Save as PDF" in your PDF viewer and try again.',
+        a: 'They are included the way they look when printed. Form entries, signatures and stamps that print are drawn onto the page, while screen-only buttons and comment pop-ups are left out. Highlights, underlines and strikeouts are redrawn even without a saved appearance. If another comment has no saved appearance, or a form entry without one uses characters the built-in font lacks, you will be told it cannot be moved. In that case, save the PDF once with "Print → Save as PDF" in your PDF viewer and try again.',
       },
       {
         q: 'I want to change the page order.',

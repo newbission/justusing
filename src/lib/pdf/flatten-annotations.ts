@@ -23,7 +23,7 @@ import {
   type PDFField,
   type PDFPage,
 } from '@cantoo/pdf-lib';
-import { UNRENDERED_FORM } from './modify-errors';
+import { UNRENDERED_ANNOTATION } from './modify-errors';
 
 /** /F 플래그: 숨김(2), 인쇄(4) */
 const HIDDEN = 2;
@@ -37,8 +37,11 @@ function numbers(value: unknown, count: number): number[] | undefined {
   return out.every(Number.isFinite) ? out : undefined;
 }
 
-/** 주석이 지금 보이는 모양 (/AP /N, 상태가 여럿이면 /AS로 고른 것) */
-function normalAppearance(annot: PDFDict): PDFRef | undefined {
+/**
+ * 주석이 지금 보이는 모양 (/AP /N, 상태가 여럿이면 /AS로 고른 것).
+ * 모양이 아예 없으면 undefined, 지금 상태에 그릴 모양이 없으면(꺼진 체크 상자 등) 'empty'
+ */
+function normalAppearance(annot: PDFDict): PDFRef | 'empty' | undefined {
   const lookup = annot.context.lookup.bind(annot.context);
   const ap = lookup(annot.get(PDFName.of('AP')));
   if (!(ap instanceof PDFDict)) return undefined;
@@ -46,13 +49,80 @@ function normalAppearance(annot: PDFDict): PDFRef | undefined {
   const resolved = lookup(normal);
   if (resolved instanceof PDFDict && !(resolved instanceof PDFStream)) {
     const state = annot.get(PDFName.of('AS'));
-    if (!(state instanceof PDFName)) return undefined;
-    normal = resolved.get(state);
+    normal = state instanceof PDFName ? resolved.get(state) : undefined;
+    if (normal === undefined) return 'empty';
   }
   if (normal instanceof PDFRef) return lookup(normal) instanceof PDFStream ? normal : undefined;
   // 직접 들어 있는 스트림은 참조로 등록해야 쪽 자원에서 부를 수 있다
   if (normal instanceof PDFStream) return annot.context.register(normal);
   return undefined;
+}
+
+const MARKUP = ['Highlight', 'Underline', 'StrikeOut', 'Squiggly'];
+
+/** 주석 색 (/C: 회색 1개, RGB 3개, CMYK 4개) → 채우기 연산자 */
+function fillColor(annot: PDFDict, fallback: string): string {
+  const value = annot.context.lookup(annot.get(PDFName.of('C')));
+  const parts = value instanceof PDFArray ? value.asArray() : [];
+  const c = parts.map((item) => (item instanceof PDFNumber ? item.asNumber() : NaN));
+  if (!c.every(Number.isFinite)) return fallback;
+  if (c.length === 1) return `${c[0]} g`;
+  if (c.length === 3) return `${c.join(' ')} rg`;
+  if (c.length === 4) return `${c.join(' ')} k`;
+  return fallback;
+}
+
+/**
+ * 모양 없이 저장된 글자 표시 주석(형광펜·밑줄·취소선)은 보기 프로그램이 /QuadPoints로 그린다.
+ * 같은 방식으로 모양을 만든다. 쪽 좌표 그대로 그리도록 BBox를 Rect와 같게 둔다
+ */
+function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
+  const subtype = annot.get(PDFName.of('Subtype'));
+  if (!(subtype instanceof PDFName) || !MARKUP.includes(subtype.decodeText())) return undefined;
+  const context = annot.context;
+  const quads = context.lookup(annot.get(PDFName.of('QuadPoints')));
+  const values = quads instanceof PDFArray ? quads.asArray() : [];
+  const points = values.map((item) => (item instanceof PDFNumber ? item.asNumber() : NaN));
+  if (points.length === 0 || points.length % 8 !== 0 || !points.every(Number.isFinite)) {
+    return undefined;
+  }
+  const kind = subtype.decodeText();
+  const highlight = kind === 'Highlight';
+  const opacity = context.lookup(annot.get(PDFName.of('CA')));
+  const alpha = opacity instanceof PDFNumber ? opacity.asNumber() : 1;
+  const ops = ['q', '/GS0 gs', fillColor(annot, highlight ? '1 1 0 rg' : '0 0 0 rg')];
+  for (let i = 0; i < points.length; i += 8) {
+    const xs = [points[i]!, points[i + 2]!, points[i + 4]!, points[i + 6]!];
+    const ys = [points[i + 1]!, points[i + 3]!, points[i + 5]!, points[i + 7]!];
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    const height = y1 - y0;
+    // 형광펜은 줄 전체, 밑줄은 아래쪽, 취소선은 가운데에 줄 높이의 7% 굵기로
+    const line = Math.max(0.5, height * 0.07);
+    const y = highlight
+      ? y0
+      : kind === 'StrikeOut'
+        ? y0 + height / 2 - line / 2
+        : y0 + height * 0.1;
+    ops.push(`${x0} ${y} ${x1 - x0} ${highlight ? height : line} re f`);
+  }
+  ops.push('Q');
+  const stream = context.stream(ops.join('\n'), {
+    Type: 'XObject',
+    Subtype: 'Form',
+    BBox: rect,
+    Resources: {
+      // 형광펜은 곱하기로 섞어 밑의 글자가 비치게 한다
+      ExtGState: { GS0: { Type: 'ExtGState', BM: highlight ? 'Multiply' : 'Normal', ca: alpha } },
+    },
+  });
+  return context.register(stream);
+}
+
+/** 위젯이 인쇄되는지 (/F의 인쇄 플래그, 숨김이 아님) */
+function printable(dict: PDFDict): boolean {
+  const flags = dict.context.lookup(dict.get(PDFName.of('F')));
+  const value = flags instanceof PDFNumber ? flags.asNumber() : 0;
+  return (value & PRINT) !== 0 && (value & HIDDEN) === 0;
 }
 
 /** 입력 칸이 모양으로 그릴 글자 */
@@ -85,11 +155,11 @@ export function renderMissingFormAppearances(doc: PDFDocument): void {
       [...text].some((char) => !/[\r\n]/.test(char) && !supported.has(char.codePointAt(0)!)),
     ),
   );
-  if (unsupported) throw new Error(UNRENDERED_FORM);
+  if (unsupported) throw new Error(UNRENDERED_ANNOTATION);
   try {
     form.updateFieldAppearances(font);
   } catch {
-    throw new Error(UNRENDERED_FORM);
+    throw new Error(UNRENDERED_ANNOTATION);
   }
 }
 
@@ -105,16 +175,17 @@ export function flattenAnnotations(page: PDFPage): boolean {
     const annot = context.lookup(entry);
     if (!(annot instanceof PDFDict)) continue;
     if (annot.get(PDFName.of('Subtype')) === PDFName.of('Popup')) continue;
-    const flags = context.lookup(annot.get(PDFName.of('F')));
-    const flagValue = flags instanceof PDFNumber ? flags.asNumber() : 0;
     // 종이에 찍을 결과라 인쇄할 때 나오는 주석만 넣는다 (화면 전용 버튼·메모는 빼고, 인쇄 전용은 넣는다)
-    if (!(flagValue & PRINT) || flagValue & HIDDEN) continue;
+    if (!printable(annot)) continue;
     const rect = numbers(context.lookup(annot.get(PDFName.of('Rect'))), 4);
-    const appearance = normalAppearance(annot);
-    if (!rect || !appearance) continue;
+    const normal = normalAppearance(annot);
+    if (normal === 'empty') continue;
+    const appearance = normal ?? (rect && markupAppearance(annot, rect));
+    // 인쇄되는데 모양을 만들 수 없는 주석은 조용히 빼지 않고 알린다
+    if (!rect || !appearance) throw new Error(UNRENDERED_ANNOTATION);
     const stream = context.lookup(appearance) as PDFStream;
     const bbox = numbers(context.lookup(stream.dict.get(PDFName.of('BBox'))), 4);
-    if (!bbox) continue;
+    if (!bbox) throw new Error(UNRENDERED_ANNOTATION);
     const matrix = (numbers(context.lookup(stream.dict.get(PDFName.of('Matrix'))), 6) ?? [
       1, 0, 0, 1, 0, 0,
     ]) as Matrix;

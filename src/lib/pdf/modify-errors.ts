@@ -1,4 +1,4 @@
 /** 고치기 워커가 알리는 오류 (화면이 알아보고 알맞은 안내를 띄운다). 워커와 화면이 같이 쓰므로 가볍게 둔다 */
 
-/** 양식 입력값 중 모양을 만들 수 없는 것이 있다 (모양 없이 저장된 한글 입력값 등) */
-export const UNRENDERED_FORM = 'unrendered-form';
+/** 인쇄되는 주석·양식 입력값 중 모양을 만들 수 없는 것이 있다 (모양 없이 저장된 한글 입력값 등) */
+export const UNRENDERED_ANNOTATION = 'unrendered-annotation';
