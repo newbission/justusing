@@ -1,5 +1,7 @@
 # PDF 압축 (`pdf/compress`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/compress/` (영어 `/en/pdf/compress/`)
 - 상태: live (2026-10-15 배포, PR #33)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

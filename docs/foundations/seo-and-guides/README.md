@@ -1,5 +1,7 @@
 # 검색과 가이드 글 (seo-and-guides)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 범위: 사이트맵·robots, `<head>` 검색 정보(설명·canonical·hreflang·Open Graph·소유 확인), 구조화 데이터(JSON-LD),
   가이드 글(`/guide/`), 글 페이지(소개·이용약관·문의. 개인정보처리방침은 [광고와 통계](../ads-and-analytics/README.md))
 - 상태: live. 네이버 소유 확인(PR #6), 글 페이지(PR #10), 구조화 데이터(PR #16), 가이드 첫 6편(PR #37, 2026-10-15)

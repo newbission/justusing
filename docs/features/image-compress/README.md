@@ -1,5 +1,7 @@
 # 이미지 압축 (`image/compress`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/image/compress/` (영어 `/en/image/compress/`)
 - 상태: live (PR #36, 2026-10-15 병합)
 - 관련 문서: [히스토리](./history.md), [이미지 공통](../../foundations/image-common/README.md),

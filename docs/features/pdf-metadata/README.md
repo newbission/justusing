@@ -1,5 +1,7 @@
 # PDF 문서 정보 고치기 (`pdf/metadata`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/metadata/` (영어 `/en/pdf/metadata/`)
 - 상태: PR #61 리뷰 중 (브랜치 `feat/pdf-metadata`, 아직 dev에 병합 전)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

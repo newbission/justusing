@@ -1,5 +1,7 @@
 # PDF 자르기 (`pdf/crop`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/crop/` (영어 `/en/pdf/crop/`)
 - 상태: live. PR #32(이미지 넣기·서명 넣기·자르기, 2026-10-15 병합)로 들어가 main 배포 커밋 `502e41e`에 담겼다
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

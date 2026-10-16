@@ -1,5 +1,7 @@
 # PDF 이미지 넣기 (`pdf/add-image`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/add-image/` (영어 `/en/pdf/add-image/`)
 - 상태: live (2026-10-15 배포, PR #32로 dev 병합)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),

@@ -1,5 +1,7 @@
 # pdf-ocr — 검증·오류·수정 히스토리
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 ## 요약
 
 - 2026-10-15 엔진으로 Tesseract(`tesseract.js-core` SIMD LSTM)와 `tessdata_best` 정수판 한국어·영어를 골랐다 (모두 Apache-2.0).

@@ -1,5 +1,7 @@
 # PDF 보기 (`pdf/view`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/view/` (영어 `/en/pdf/view/`), 격리 frame `/pdf/view/frame/`
 - 상태: live (2026-10-10 `218e87f`에서 공개로 바꿈, 2026-10-11 첫 배포에 들어감)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../../foundations/frame-isolation/README.md),

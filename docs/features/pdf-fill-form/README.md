@@ -1,5 +1,7 @@
 # PDF 양식 채우기 (`pdf/fill-form`)
 
+쓴 날 2026-10-16 · 고친 날 2026-10-16
+
 - 주소: `/pdf/fill-form/` (영어 `/en/pdf/fill-form/`)
 - 상태: `status: 'live'`로 PR #60이 dev에 병합됨 (2026-10-16). **main 배포 전** (main에 아직 없다)
 - 관련 문서: [히스토리](./history.md), [글꼴과 데이터 보관](../../foundations/fonts-and-data/README.md),
