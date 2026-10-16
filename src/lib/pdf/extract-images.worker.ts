@@ -864,6 +864,53 @@ function glyphNames(font: PDFDict): Map<number, string> {
 }
 
 /**
+ * 볼 때 저절로 적용되는 규칙(/AS, 사건 /View)이 끄는 층. 보는 프로그램이 이 규칙대로 그리므로 그 층 안의 사진은 보이지 않는다:
+ * - 보기(/View /ViewState /OFF)
+ * - 확대 배율(/Zoom /min·/max): 100%에서 꺼지는 범위
+ * - 언어(/Language)·사람(/User): 보는 사람의 환경에 따라 정해져 알 수 없으므로 꺼진 것으로 본다
+ *   (가리기 도구와 같은 판단. 숨겨 둔 사진을 꺼내 주지 않는 쪽을 고른다)
+ */
+function autoHiddenLayers(config: unknown): Set<PDFDict> {
+  const hidden = new Set<PDFDict>();
+  if (!(config instanceof PDFDict)) return hidden;
+  const context = config.context;
+  const listOf = (value: unknown) => {
+    const resolved = context.lookup(value as PDFObject);
+    return resolved instanceof PDFArray
+      ? resolved.asArray().map((item) => context.lookup(item))
+      : [];
+  };
+  for (const rule of listOf(config.get(name('AS')))) {
+    if (!(rule instanceof PDFDict) || rule.get(name('Event')) !== name('View')) continue;
+    const categories = listOf(rule.get(name('Category')));
+    for (const layer of listOf(rule.get(name('OCGs')))) {
+      if (!(layer instanceof PDFDict)) continue;
+      const usage = layer.lookup(name('Usage'));
+      if (!(usage instanceof PDFDict)) continue;
+      const entry = (category: string) => {
+        if (!categories.includes(name(category))) return undefined;
+        const value = usage.lookup(name(category));
+        return value instanceof PDFDict ? value : undefined;
+      };
+      const view = entry('View');
+      const zoom = entry('Zoom');
+      const min = numberOf(zoom, 'min') ?? 0;
+      const max = numberOf(zoom, 'max') ?? Infinity;
+      if (
+        view?.get(name('ViewState')) === name('OFF') ||
+        min > 1 ||
+        max <= 1 ||
+        entry('Language') ||
+        entry('User')
+      ) {
+        hidden.add(layer);
+      }
+    }
+  }
+  return hidden;
+}
+
+/**
  * 원본 기본 보이기 설정(/OCProperties /D)으로 꺼진 층인지 알려 주는 함수.
  * 층(OCG)과 층 조합(OCMD, /P AnyOn·AllOn·AnyOff·AllOff)을 받는다. 층이 없으면 늘 보인다
  */
@@ -878,8 +925,10 @@ function hiddenLayers(doc: PDFDocument): (oc: unknown) => boolean {
   const baseOff = config instanceof PDFDict && config.get(name('BaseState')) === name('OFF');
   const on = list('ON');
   const off = list('OFF');
+  const autoOff = autoHiddenLayers(config);
   const groupHidden = (group: unknown) =>
-    baseOff ? !on.includes(group as PDFObject) : off.includes(group as PDFObject);
+    (baseOff ? !on.includes(group as PDFObject) : off.includes(group as PDFObject)) ||
+    autoOff.has(group as PDFDict);
   return (oc) => {
     const dict = context.lookup(oc as PDFObject);
     if (!(dict instanceof PDFDict)) return false;
