@@ -705,3 +705,52 @@ test('자원 목록의 기본 색공간(/DefaultRGB 등)이 장치 색공간을 
   const bytes = await readFile(await (await event).path());
   expect(bytes.toString('latin1')).toContain('ICC_PROFILE\0');
 });
+
+test('회색 ICC 프로필 사진은 프로필을 넣은 회색 PNG로 꺼낸다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const profile = new Uint8Array(300).map((_, i) => (i * 17) % 251);
+  const gray = context.register(
+    context.flateStream(
+      new Uint8Array(64 * 64).map((_, i) => i % 256),
+      {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: ['ICCBased', context.register(context.flateStream(profile, { N: 1 }))],
+        BitsPerComponent: 8,
+      },
+    ),
+  );
+  const added = doc.addPage([300, 300]);
+  const name = added.node.newXObject('Image', gray);
+  added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'gray-icc.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  const png = await readFile(await (await event).path());
+  // IHDR의 색 종류 0(회색), iCCP 조각이 있다
+  expect(png[25]).toBe(0);
+  expect(png.toString('latin1')).toContain('iCCP');
+  const pixel = await page.evaluate(async (base64) => {
+    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+    const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/png' }), {
+      colorSpaceConversion: 'none',
+    });
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    return [bitmap.width, ...context.getImageData(5, 0, 1, 1).data];
+  }, png.toString('base64'));
+  expect(pixel[0]).toBe(64);
+  expect(pixel[1]).toBe(5);
+});
