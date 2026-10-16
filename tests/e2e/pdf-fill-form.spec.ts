@@ -217,3 +217,49 @@ test('직접 적을 수 있는 선택 상자에는 선택지에 없는 글자도
     'Research Lab',
   ]);
 });
+
+test('암호 칸은 적은 글자를 가려 보여 준다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 200]);
+  const pin = doc.getForm().createTextField('pin');
+  pin.enablePassword();
+  pin.addToPage(added, { x: 20, y: 100, width: 120, height: 24 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'pin.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByLabel('pin')).toHaveAttribute('type', 'password');
+});
+
+test('굳힐 때 모양을 다시 만들어야 하는 기존 한글 값이 있으면 글꼴을 고르게 한다', async ({
+  page,
+}) => {
+  // 이미 적힌 한글 값(모양 없음)이 있는 칸과, 빈 칸 하나
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 200]);
+  const form = doc.getForm();
+  const name = form.createTextField('name');
+  name.addToPage(added, { x: 20, y: 120, width: 200, height: 24 });
+  name.setText('홍길동');
+  for (const widget of name.acroField.getWidgets()) widget.dict.delete(PDFName.of('AP'));
+  form.createTextField('note').addToPage(added, { x: 20, y: 60, width: 200, height: 24 });
+  await page.goto('/pdf/fill-form/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'old.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save({ updateFieldAppearances: false })),
+  });
+  await frame.getByLabel('note').fill('ok');
+  await frame.getByLabel('칸을 글자로 굳히기', { exact: false }).check();
+  await frame.getByRole('button', { name: '양식 저장' }).click();
+  // 기본 글꼴에 없는 기존 값 때문에 글꼴을 고르게 한다
+  await frame.getByRole('button', { name: '기본 고딕 받기' }).click();
+  const { bytes } = await download(page, frame);
+  const saved = await getDocument({ data: bytes.slice() }).promise;
+  const content = await (await saved.getPage(1)).getTextContent();
+  expect(content.items.map((item) => ('str' in item ? item.str : '')).join('')).toContain('홍길동');
+});
