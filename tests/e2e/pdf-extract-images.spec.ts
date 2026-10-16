@@ -754,3 +754,78 @@ test('회색 ICC 프로필 사진은 프로필을 넣은 회색 PNG로 꺼낸다
   expect(pixel[0]).toBe(64);
   expect(pixel[1]).toBe(5);
 });
+
+test('색 목록보다 큰 값은 마지막 색으로 보고, 쪽마다 다른 이름 색공간으로 부른 같은 사진은 따로 꺼낸다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  // 64×64, 값 0·1·2·200이 번갈아 나온다. 색 목록은 빨강·파랑 둘(hival 1)
+  const indexed = context.register(
+    context.flateStream(
+      new Uint8Array(64 * 64).map((_, i) => [0, 1, 2, 200][i % 4]!),
+      {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: ['Indexed', 'DeviceRGB', 1, PDFHexString.of('FF00000000FF')],
+        BitsPerComponent: 8,
+      },
+    ),
+  );
+  const shared = context.register(
+    context.flateStream(new Uint8Array(64 * 64).fill(100), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'CS0',
+      BitsPerComponent: 8,
+    }),
+  );
+  const first = doc.addPage([300, 300]);
+  const second = doc.addPage([300, 300]);
+  for (const [added, refs, space] of [
+    [first, [indexed, shared], 'DeviceGray'],
+    [
+      second,
+      [shared],
+      ['ICCBased', context.register(context.flateStream(new Uint8Array(200), { N: 1 }))],
+    ],
+  ] as const) {
+    for (const ref of refs) {
+      const name = added.node.newXObject('Image', ref);
+      added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+    }
+    (added.node.Resources() as unknown as { set: (k: PDFName, v: unknown) => void }).set(
+      PDFName.of('ColorSpace'),
+      context.obj({ CS0: space as never }),
+    );
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'indexed.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 3개 · /)).toBeVisible();
+  await expect(frame.getByText('2쪽 · 64×64 · PNG', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '사진 1 받기' }).click();
+  const png = await readFile(await (await event).path());
+  const pixels = await page.evaluate(async (base64) => {
+    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+    const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    return [...context.getImageData(0, 0, 4, 1).data];
+  }, png.toString('base64'));
+  // 0 빨강, 1 파랑, 2와 200은 마지막 색(파랑)
+  expect(pixels.slice(0, 3)).toEqual([255, 0, 0]);
+  expect(pixels.slice(8, 11)).toEqual([0, 0, 255]);
+  expect(pixels.slice(12, 15)).toEqual([0, 0, 255]);
+});
