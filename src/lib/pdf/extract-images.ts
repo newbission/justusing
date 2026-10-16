@@ -10,7 +10,7 @@ export interface ExtractedImage {
   page: number;
   /** 꺼낸 순서 (0부터) */
   index: number;
-  ext: 'jpg' | 'png' | 'jp2';
+  ext: 'jpg' | 'png' | 'jp2' | 'jpx' | 'j2k';
   bytes: Uint8Array;
   width: number;
   height: number;

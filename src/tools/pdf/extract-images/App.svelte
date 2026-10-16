@@ -22,7 +22,13 @@
 
   /** "아주 작은 그림 빼기"를 켰을 때 짧은 변의 최소 화소 */
   const SMALL = 50;
-  const TYPES = { jpg: 'image/jpeg', png: 'image/png', jp2: 'image/jp2' } as const;
+  const TYPES = {
+    jpg: 'image/jpeg',
+    png: 'image/png',
+    jp2: 'image/jp2',
+    jpx: 'image/jpx',
+    j2k: 'image/j2c',
+  } as const;
 
   type Shown = ExtractedImage & { url?: string; name: string };
 
@@ -73,7 +79,7 @@
               ...image,
               // 미리보기는 브라우저가 그릴 수 있는 것만
               url:
-                image.ext === 'jp2'
+                image.ext !== 'jpg' && image.ext !== 'png'
                   ? undefined
                   : URL.createObjectURL(
                       new Blob([image.bytes as BlobPart], { type: TYPES[image.ext] }),
