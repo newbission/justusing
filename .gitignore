@@ -30,3 +30,6 @@ playwright-report/
 
 # wrangler 로컬 실행 캐시
 .wrangler/
+
+# 글꼴 원본 받아 둔 곳 (scripts/fonts/build_fonts.py)
+.cache/
