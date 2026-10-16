@@ -42,11 +42,16 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
   let depth = 0;
   let borders = 0;
   let inner = 0;
+  let strokes = 0;
   fnArray.forEach((fn, i) => {
     const args = argsArray[i];
     if (fn === OPS.constructPath) {
       if (depth === 0) borders++;
-      else inner++;
+      else {
+        inner++;
+        // 경로를 칠하는지 긋는지 (pdf.js는 마지막 인자에 그리기 연산자를 담는다)
+        if ((args as unknown[])[0] === OPS.stroke) strokes++;
+      }
     } else if (fn === OPS.save) stack.push(ctm);
     else if (fn === OPS.restore) ctm = stack.pop() ?? ctm;
     else if (fn === OPS.transform) ctm = then(args as Matrix, ctm);
@@ -77,7 +82,7 @@ async function placedPages(bytes: Uint8Array, sheet: number) {
       ctm = stack.pop() ?? ctm;
     }
   });
-  return { placed, borders, inner };
+  return { placed, borders, inner, strokes };
 }
 
 async function openNUp(page: Page) {
@@ -286,6 +291,17 @@ test('모양 없이 저장된 형광펜은 다시 그려 넣고, 그릴 수 없�
   const { placed, inner } = await placedPages(bytes, 1);
   expect(placed).toHaveLength(1);
   expect(inner).toBe(1);
+
+  // 물결 밑줄은 꺾은선으로 그린다 (직선 사각형이 아니라)
+  await frame.getByRole('button', { name: '다른 파일' }).click();
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'squiggly.pdf',
+    mimeType: 'application/pdf',
+    buffer: await annotationWithoutAppearance('Squiggly'),
+  });
+  await frame.getByRole('button', { name: '모아찍기' }).click();
+  const squiggly = await download(page, frame);
+  expect((await placedPages(squiggly.bytes, 1)).strokes).toBeGreaterThanOrEqual(1);
 
   await frame.getByRole('button', { name: '다른 파일' }).click();
   await frame.locator('input[type=file]').setInputFiles({
