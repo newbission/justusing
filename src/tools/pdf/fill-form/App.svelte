@@ -25,6 +25,8 @@
   interface Field {
     key: string;
     name: string;
+    /** 화면 읽기 프로그램에 읽어 줄 이름 (같은 이름 상자가 여럿이면 값을 붙인다) */
+    label: string;
     page: number;
     /** 화면에 보이는 쪽 기준 비율 (왼쪽 위가 0) */
     x: number;
@@ -37,8 +39,8 @@
     maxLength?: number;
     /** 체크 상자·라디오 단추가 켜졌을 때의 값 */
     onValue?: string;
-    /** 선택 상자·목록의 보이는 글자 */
-    options: string[];
+    /** 선택 상자·목록의 항목: 내보내는 값과 보이는 글자 */
+    options: { value: string; label: string }[];
     multiple: boolean;
   }
 
@@ -82,17 +84,40 @@
     ),
   );
   const changedCount = $derived(Object.keys(changed).length);
-  /** Latin-1 밖의 글자(한글 등)는 기본 글꼴에 없다 */
-  const typedNonLatin = $derived(
-    Object.values(changed).some((value) =>
-      [typeof value === 'string' ? value : Array.isArray(value) ? value.join('') : ''].some(
-        (text) => [...text].some((char) => char.codePointAt(0)! > 0xff),
-      ),
-    ),
+  /** 저장할 때 모양으로 그릴 글자: 바뀐 글자 칸과, 바뀐 선택 칸의 보이는 글자 (목록은 선택지 전체) */
+  const drawnText = $derived(
+    Object.entries(changed)
+      .flatMap(([name, value]) => {
+        if (value.kind === 'text') return [value.text];
+        if (value.kind !== 'choice') return [];
+        const field = fields.find((candidate) => candidate.name === name);
+        if (!field) return [];
+        return field.kind === 'list'
+          ? field.options.map((option) => option.label)
+          : value.values.map(
+              (item) => field.options.find((option) => option.value === item)?.label ?? item,
+            );
+      })
+      .join(''),
   );
+  /** Latin-1 밖의 글자(한글 등)는 기본 글꼴에 없다 */
+  const typedNonLatin = $derived([...drawnText].some((char) => char.codePointAt(0)! > 0xff));
   const needsFont = $derived(typedNonLatin || fontRequired);
   const signature = $derived(JSON.stringify([changed, flatten, needsFont ? font?.id : '']));
   const pageFields = $derived(fields.filter((field) => field.page === pageIndex));
+
+  const textOf = (name: string) => {
+    const value = values[name];
+    return value?.kind === 'text' ? value.text : '';
+  };
+  const onOf = (name: string) => {
+    const value = values[name];
+    return value?.kind === 'check' ? value.on : '';
+  };
+  const choiceOf = (name: string) => {
+    const value = values[name];
+    return value?.kind === 'choice' ? value.values : [];
+  };
 
   type Run =
     | { kind: 'idle' }
@@ -131,12 +156,14 @@
                 : a.combo
                   ? 'select'
                   : 'list';
-        const options = (a.options ?? []).map((option) => option.displayValue);
-        const display = (value: string) =>
-          a.options?.find((option) => option.exportValue === value)?.displayValue ?? value;
+        const options = (a.options ?? []).map((option) => ({
+          value: option.exportValue,
+          label: option.displayValue,
+        }));
         found.push({
           key: `${number}-${i}`,
           name: a.fieldName,
+          label: a.fieldName,
           page: number - 1,
           x: Math.min(x1!, x2!) / viewport.width,
           y: Math.min(y1!, y2!) / viewport.height,
@@ -153,23 +180,24 @@
         });
         if (a.fieldName in start) continue;
         const raw = a.fieldValue;
+        const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
         start[a.fieldName] =
-          kind === 'checkbox'
-            ? typeof raw === 'string' && raw !== '' && raw !== 'Off'
-            : kind === 'radio'
-              ? typeof raw === 'string' && raw !== 'Off'
-                ? raw
-                : ''
-              : kind === 'list'
-                ? (Array.isArray(raw) ? raw : raw ? [raw] : []).map(display)
-                : kind === 'select'
-                  ? display(Array.isArray(raw) ? (raw[0] ?? '') : (raw ?? ''))
-                  : Array.isArray(raw)
-                    ? raw.join('')
-                    : (raw ?? '');
+          kind === 'checkbox' || kind === 'radio'
+            ? { kind: 'check', on: typeof raw === 'string' && raw !== 'Off' ? raw : '' }
+            : kind === 'text'
+              ? { kind: 'text', text: list.join('') }
+              : { kind: 'choice', values: list };
       }
       page.cleanup();
       if (pdf !== source) return;
+    }
+    // 같은 이름에 켜는 값이 다른 체크 상자·라디오는 값을 붙여 구분한다
+    for (const field of found) {
+      if (field.kind !== 'checkbox' && field.kind !== 'radio') continue;
+      const siblings = found.filter((other) => other.name === field.name);
+      if (field.kind === 'radio' || new Set(siblings.map((other) => other.onValue)).size > 1) {
+        field.label = `${field.name}: ${field.onValue}`;
+      }
     }
     fields = found;
     initial = structuredClone(start);
@@ -299,7 +327,8 @@
                       maxlength={field.maxLength}
                       readonly={field.readOnly}
                       bind:value={
-                        () => values[field.name] as string, (value) => (values[field.name] = value)
+                        () => textOf(field.name),
+                        (text) => (values[field.name] = { kind: 'text', text })
                       }></textarea>
                   {:else if field.kind === 'text'}
                     <input
@@ -308,39 +337,46 @@
                       maxlength={field.maxLength}
                       readonly={field.readOnly}
                       bind:value={
-                        () => values[field.name] as string, (value) => (values[field.name] = value)
+                        () => textOf(field.name),
+                        (text) => (values[field.name] = { kind: 'text', text })
                       }
                     />
                   {:else if field.kind === 'checkbox'}
                     <input
                       type="checkbox"
-                      aria-label={field.name}
+                      aria-label={field.label}
                       disabled={field.readOnly}
-                      bind:checked={
-                        () => values[field.name] as boolean, (value) => (values[field.name] = value)
-                      }
+                      checked={onOf(field.name) !== '' && onOf(field.name) === field.onValue}
+                      onchange={(event) =>
+                        (values[field.name] = {
+                          kind: 'check',
+                          on: event.currentTarget.checked ? (field.onValue ?? '') : '',
+                        })}
                     />
                   {:else if field.kind === 'radio'}
                     <input
                       type="radio"
                       name={`radio-${field.name}`}
-                      aria-label={`${field.name}: ${field.onValue}`}
+                      aria-label={field.label}
                       disabled={field.readOnly}
                       value={field.onValue}
-                      checked={values[field.name] === field.onValue}
-                      onchange={() => (values[field.name] = field.onValue ?? '')}
+                      checked={onOf(field.name) !== '' && onOf(field.name) === field.onValue}
+                      onchange={() =>
+                        (values[field.name] = { kind: 'check', on: field.onValue ?? '' })}
                     />
                   {:else if field.kind === 'select'}
                     <select
                       aria-label={field.name}
                       disabled={field.readOnly}
                       bind:value={
-                        () => values[field.name] as string, (value) => (values[field.name] = value)
+                        () => choiceOf(field.name)[0] ?? '',
+                        (value) =>
+                          (values[field.name] = { kind: 'choice', values: value ? [value] : [] })
                       }
                     >
                       <option value="">{t.none}</option>
-                      {#each field.options as option (option)}
-                        <option value={option}>{option}</option>
+                      {#each field.options as option (option.value)}
+                        <option value={option.value}>{option.label}</option>
                       {/each}
                     </select>
                   {:else if field.multiple}
@@ -349,12 +385,12 @@
                       multiple
                       disabled={field.readOnly}
                       bind:value={
-                        () => values[field.name] as string[],
-                        (value) => (values[field.name] = value)
+                        () => choiceOf(field.name),
+                        (value) => (values[field.name] = { kind: 'choice', values: value })
                       }
                     >
-                      {#each field.options as option (option)}
-                        <option value={option}>{option}</option>
+                      {#each field.options as option (option.value)}
+                        <option value={option.value}>{option.label}</option>
                       {/each}
                     </select>
                   {:else}
@@ -364,12 +400,13 @@
                       size={Math.max(2, Math.min(field.options.length, 6))}
                       disabled={field.readOnly}
                       bind:value={
-                        () => (values[field.name] as string[])[0] ?? '',
-                        (value) => (values[field.name] = value ? [value] : [])
+                        () => choiceOf(field.name)[0] ?? '',
+                        (value) =>
+                          (values[field.name] = { kind: 'choice', values: value ? [value] : [] })
                       }
                     >
-                      {#each field.options as option (option)}
-                        <option value={option}>{option}</option>
+                      {#each field.options as option (option.value)}
+                        <option value={option.value}>{option.label}</option>
                       {/each}
                     </select>
                   {/if}
