@@ -13,6 +13,7 @@
  */
 import {
   PDFArray,
+  PDFBool,
   PDFDict,
   PDFDocument,
   PDFName,
@@ -22,6 +23,7 @@ import {
   decodePDFRawStream,
   type PDFObject,
   type PDFPage,
+  type PDFRef,
 } from '@cantoo/pdf-lib';
 import { GS_FONT, contentUsage, type FormLookup, type ResourceUse } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
@@ -340,6 +342,57 @@ function finishType3(pruning: Pruning) {
   }
 }
 
+/** 보이기 층(OCG)에 원본 기본 설정의 켜짐·꺼짐을 잠시 적어 두는 표시 (복사한 뒤 지운다) */
+const LAYER_STATE = PDFName.of('JustusingLayerOff');
+
+/**
+ * 원본의 기본 보이기 설정(/OCProperties /D)에서 꺼 둔 층을 표시한다.
+ * 새 PDF에는 문서 전체 설정이 없어, 옮기지 않으면 꺼 두었던 층(숨긴 내용)이 켜진 채로 보인다
+ */
+function markLayerStates(source: PDFDocument) {
+  const context = source.context;
+  const properties = context.lookup(source.catalog.get(PDFName.of('OCProperties')));
+  if (!(properties instanceof PDFDict)) return;
+  const config = context.lookup(properties.get(PDFName.of('D')));
+  const refs = (key: string) => {
+    const list =
+      config instanceof PDFDict ? context.lookup(config.get(PDFName.of(key))) : undefined;
+    return list instanceof PDFArray ? list.asArray().map((item) => context.lookup(item)) : [];
+  };
+  const baseOff =
+    config instanceof PDFDict && config.get(PDFName.of('BaseState')) === PDFName.of('OFF');
+  const on = refs('ON');
+  const off = refs('OFF');
+  const layers = context.lookup(properties.get(PDFName.of('OCGs')));
+  if (!(layers instanceof PDFArray)) return;
+  for (const item of layers.asArray()) {
+    const layer = context.lookup(item);
+    if (!(layer instanceof PDFDict)) continue;
+    const hidden = baseOff ? !on.includes(layer) : off.includes(layer);
+    if (hidden) layer.set(LAYER_STATE, PDFBool.True);
+  }
+}
+
+/** 새 PDF로 옮겨진 층들로 보이기 설정을 만들고, 꺼 둔 층은 꺼 둔다 */
+function copyLayerStates(out: PDFDocument) {
+  const context = out.context;
+  const layers: PDFRef[] = [];
+  const hidden: PDFRef[] = [];
+  for (const [ref, object] of context.enumerateIndirectObjects()) {
+    if (!(object instanceof PDFDict) || object.get(PDFName.of('Type')) !== PDFName.of('OCG')) {
+      continue;
+    }
+    layers.push(ref);
+    if (object.has(LAYER_STATE)) hidden.push(ref);
+    object.delete(LAYER_STATE);
+  }
+  if (layers.length === 0) return;
+  out.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({ OCGs: layers, D: { BaseState: 'ON', OFF: hidden, Order: layers } }),
+  );
+}
+
 /** 쪽의 자원 목록을 쪽 내용 기준으로 정리한다 */
 function prunePage(page: PDFPage, pruning: Pruning) {
   const context = page.doc.context;
@@ -383,7 +436,9 @@ export async function redact(
   // 남길 쪽에서 그리기에 필요한 항목만 남긴다 (XMP·첨부 파일·앱 데이터·대체 그림·바깥 파일 연결 등은
   // 화면에 보이지 않지만 가린 쪽의 자료를 가리킬 수 있다)
   for (const index of kept) keepRenderingOnly(source.getPage(index).node);
+  markLayerStates(source);
   const copied = await out.copyPages(source, kept);
+  copyLayerStates(out);
   for (const [index, page] of source.getPages().entries()) {
     const jpg = rasters.get(index);
     if (!jpg) {
