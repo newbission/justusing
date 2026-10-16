@@ -49,6 +49,30 @@ const DESCENT = 0.3;
 
 /** 글자 폭을 재는 칸 (글꼴 크기 100px로 재고 비율만 쓴다) */
 let ruler: OffscreenCanvasRenderingContext2D | undefined;
+/** 글꼴별로 잰 글자 폭 (같은 글자를 다시 재지 않게) */
+const measured = new Map<string, Map<string, number>>();
+
+/**
+ * 글자 조각의 앞에서부터 i번째 글자(UTF-16 단위)까지의 폭. 글자마다 한 번씩만 재므로
+ * 조각이 길고 찾은 곳이 많아도 조각 길이에 비례하는 만큼만 잰다
+ */
+function prefixWidths(str: string, family: string): Float64Array {
+  ruler ??= new OffscreenCanvas(1, 1).getContext('2d')!;
+  ruler.font = `100px ${family}`;
+  let widths = measured.get(family);
+  if (!widths) measured.set(family, (widths = new Map()));
+  const prefix = new Float64Array(str.length + 1);
+  for (let i = 0; i < str.length;) {
+    const char = String.fromCodePoint(str.codePointAt(i)!);
+    let width = widths.get(char);
+    if (width === undefined) widths.set(char, (width = ruler.measureText(char).width));
+    prefix[i + 1] = prefix[i]! + width;
+    // 두 단위로 된 글자(이모지 등)의 뒤쪽 단위는 폭이 없다
+    if (char.length === 2) prefix[i + 2] = prefix[i + 1]!;
+    i += char.length;
+  }
+  return prefix;
+}
 
 /**
  * 한 글자 조각(폭 width) 안에서 at번째부터 length글자가 차지하는 구간 [시작, 끝].
@@ -56,18 +80,17 @@ let ruler: OffscreenCanvasRenderingContext2D | undefined;
  * 실제 글꼴과 폭이 다를 수 있어, 조각 끝에서 멀수록 넓게 여유를 둔다 (덜 가리는 것보다 더 가리는 편이 낫다)
  */
 function matchSpan(
-  str: string,
+  prefix: Float64Array,
   at: number,
   length: number,
   width: number,
   height: number,
-  family: string,
 ): [number, number] {
-  ruler ??= new OffscreenCanvas(1, 1).getContext('2d')!;
-  ruler.font = `100px ${family}`;
-  const total = ruler.measureText(str).width;
+  const count = prefix.length - 1;
+  const total = prefix[count]!;
+  // 소문자로 바꾸며 길이가 달라진 글자(İ 등)가 있어도 조각 안에 머물게 한다
   const ratio = (end: number) =>
-    total > 0 ? ruler!.measureText(str.slice(0, end)).width / total : end / str.length;
+    Math.min(1, total > 0 ? prefix[Math.min(end, count)]! / total : end / count);
   const start = width * ratio(at);
   const end = width * ratio(at + length);
   const margin = (edge: number) => height * 0.25 + Math.min(edge, width - edge) * 0.25;
@@ -99,8 +122,11 @@ export async function findText(doc: PDFDocumentProxy, term: string): Promise<Red
       const top = [c! / up, d! / up];
       const height = item.height || up;
       const family = content.styles[item.fontName]?.fontFamily ?? 'sans-serif';
+      let prefix: Float64Array | undefined;
       for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + 1)) {
-        const [s0, s1] = matchSpan(item.str, at, needle.length, item.width, height, family);
+        // 찾은 조각에서만, 조각마다 한 번 잰다
+        prefix ??= prefixWidths(item.str, family);
+        const [s0, s1] = matchSpan(prefix, at, needle.length, item.width, height);
         const corners = [s0, s1].flatMap((s) =>
           [-height * DESCENT, height].map((t) =>
             viewport.convertToViewportPoint(
