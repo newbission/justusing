@@ -570,7 +570,8 @@ function scanContent(streams: PDFStream[], minSide: number): { inline: number; d
 /** 쪽마다 그 쪽(과 쪽 안의 묶음 그림)이 쓰는 사진. 같은 사진은 처음 나온 쪽에만 */
 function collect(doc: PDFDocument, minSide: number) {
   const seen = new Set<PDFRef>();
-  const visitedForms = new Set<PDFRef>();
+  /** 훑은 묶음 그림. 자원 목록이 없는 것은 부른 쪽의 자원에 따라 그리는 사진이 달라 자원별로 센다 */
+  const visitedForms = new Map<PDFRef, Set<PDFDict | undefined>>();
   /** resources: 그 사진을 부른 자원 목록 (색공간 이름을 풀려고) */
   const found: {
     ref: PDFRef;
@@ -580,9 +581,14 @@ function collect(doc: PDFDocument, minSide: number) {
   }[] = [];
   let inline = 0;
   /** 내용이 실제로 그리는(Do) 것만 따라간다. 자원 목록에만 있고 그리지 않는 사진은 꺼내지 않는다 */
-  const visit = (streams: PDFStream[], resources: PDFDict | undefined, page: number) => {
+  const visit = (
+    streams: PDFStream[],
+    resources: PDFDict | undefined,
+    page: number,
+    countInline = true,
+  ) => {
     const scanned = scanContent(streams, minSide);
-    inline += scanned.inline;
+    if (countInline) inline += scanned.inline;
     const xobjects = resources?.lookup(name('XObject'));
     if (!(xobjects instanceof PDFDict)) return;
     for (const drawn of new Set(scanned.drawn)) {
@@ -597,11 +603,17 @@ function collect(doc: PDFDocument, minSide: number) {
         if (seen.has(value) || !(object instanceof PDFRawStream)) continue;
         seen.add(value);
         found.push({ ref: value, stream: object, page, resources });
-      } else if (subtype === name('Form') && !visitedForms.has(value)) {
-        visitedForms.add(value);
+      } else if (subtype === name('Form')) {
         // 자원 목록이 없는 묶음 그림은 부른 쪽의 자원을 물려받는다 (예전 방식)
         const own = object.dict.lookup(name('Resources'));
-        visit([object], own instanceof PDFDict ? own : resources, page);
+        const used = own instanceof PDFDict ? own : resources;
+        const visits = visitedForms.get(value) ?? new Set();
+        if (visits.has(used)) continue;
+        // 바로 써 넣은 그림은 묶음 그림 안에 있으므로 처음 한 번만 센다
+        const first = visits.size === 0;
+        visits.add(used);
+        visitedForms.set(value, visits);
+        visit([object], used, page, first);
       }
     }
   };
