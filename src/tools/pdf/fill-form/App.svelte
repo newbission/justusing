@@ -13,7 +13,8 @@
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
   import FontPicker, { type SelectedFont } from '../../../lib/fonts/FontPicker.svelte';
-  import { fillForm, type FormValues } from '../../../lib/pdf/fill-form';
+  import { SvelteMap } from 'svelte/reactivity';
+  import { fillForm, type FieldValue, type FormValues } from '../../../lib/pdf/fill-form';
   import PageSheet from '../../../lib/pdf/PageSheet.svelte';
   import SinglePdfTool, { type LoadedPdf } from '../../../lib/pdf/SinglePdfTool.svelte';
   import { MissingGlyphsError } from '../../../lib/pdf/text-pdf';
@@ -79,8 +80,12 @@
 
   let pdf: LoadedPdf | undefined = $state.raw();
   let fields: Field[] = $state.raw([]);
-  let values: FormValues = $state({});
-  let initial: FormValues = {};
+  /**
+   * 칸 이름 → 값. 이름이 __proto__·constructor 같은 PDF도 있어 일반 객체가 아니라 Map에 둔다
+   * (일반 객체는 그런 이름을 이미 있는 것으로 보거나 값을 넣지 못한다)
+   */
+  const values = new SvelteMap<string, FieldValue>();
+  let initial = new Map<string, FieldValue>();
   let reading = $state(false);
   let pageIndex = $state(0);
   let view = $state({ width: 0, height: 0 });
@@ -91,9 +96,7 @@
 
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   const changed = $derived(
-    Object.fromEntries(
-      Object.entries(values).filter(([name, value]) => !same(value, initial[name])),
-    ),
+    Object.fromEntries([...values].filter(([name, value]) => !same(value, initial.get(name)))),
   );
   const changedCount = $derived(Object.keys(changed).length);
   /**
@@ -123,11 +126,11 @@
   const pageFields = $derived(fields.filter((field) => field.page === pageIndex));
 
   const textOf = (name: string) => {
-    const value = values[name];
+    const value = values.get(name);
     return value?.kind === 'text' ? value.text : '';
   };
   const onOf = (name: string) => {
-    const value = values[name];
+    const value = values.get(name);
     return value?.kind === 'check' ? value.on : '';
   };
   /** 선택 상자: 내보내는 값 → 보이는 글자, 적은 글자 → 내보내는 값 (선택지에 없으면 적은 그대로) */
@@ -136,7 +139,7 @@
   const valueOf = (field: Field, label: string) =>
     field.options.find((option) => option.label === label)?.value ?? label;
   const choiceOf = (name: string) => {
-    const value = values[name];
+    const value = values.get(name);
     return value?.kind === 'choice' ? value.values : [];
   };
 
@@ -157,7 +160,7 @@
   async function readFields(source: LoadedPdf) {
     reading = true;
     const found: Field[] = [];
-    const start: FormValues = {};
+    const start = new Map<string, FieldValue>();
     for (let number = 1; number <= source.doc.numPages; number++) {
       const page = await source.doc.getPage(number);
       const viewport = page.getViewport({ scale: 1 });
@@ -202,15 +205,17 @@
           password: kind === 'text' && ((a.fieldFlags ?? 0) & FLAG_PASSWORD) !== 0,
           toggleOff: kind === 'radio' && ((a.fieldFlags ?? 0) & FLAG_NO_TOGGLE_TO_OFF) === 0,
         });
-        if (a.fieldName in start) continue;
+        if (start.has(a.fieldName)) continue;
         const raw = a.fieldValue;
         const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
-        start[a.fieldName] =
+        start.set(
+          a.fieldName,
           kind === 'checkbox' || kind === 'radio'
             ? { kind: 'check', on: typeof raw === 'string' && raw !== 'Off' ? raw : '' }
             : kind === 'text'
               ? { kind: 'text', text: list.join('') }
-              : { kind: 'choice', values: list };
+              : { kind: 'choice', values: list },
+        );
       }
       page.cleanup();
       if (pdf !== source) return;
@@ -225,7 +230,8 @@
     }
     fields = found;
     initial = structuredClone(start);
-    values = start;
+    values.clear();
+    for (const [name, value] of start) values.set(name, value);
     reading = false;
     // 칸이 있는 첫 쪽부터 보여 준다
     if (found.length > 0) pageIndex = found[0]!.page;
@@ -234,8 +240,8 @@
   function onload(loaded: LoadedPdf) {
     pdf = loaded;
     fields = [];
-    values = {};
-    initial = {};
+    values.clear();
+    initial = new Map();
     pageIndex = 0;
     flatten = false;
     fontRequired = false;
@@ -255,7 +261,8 @@
     run = { kind: 'working' };
     try {
       const bytes = await fillForm(source, {
-        values: $state.snapshot(changed) as FormValues,
+        // 이름이 __proto__인 칸도 그대로 옮기도록 구조 복제로 넘긴다
+        values: structuredClone(changed) as FormValues,
         font: needsFont && font ? (font.files[400] ?? Object.values(font.files)[0]) : undefined,
         flatten,
       });
@@ -352,7 +359,7 @@
                       readonly={field.readOnly}
                       bind:value={
                         () => textOf(field.name),
-                        (text) => (values[field.name] = { kind: 'text', text })
+                        (text) => values.set(field.name, { kind: 'text', text })
                       }></textarea>
                   {:else if field.kind === 'text'}
                     <input
@@ -362,7 +369,7 @@
                       readonly={field.readOnly}
                       bind:value={
                         () => textOf(field.name),
-                        (text) => (values[field.name] = { kind: 'text', text })
+                        (text) => values.set(field.name, { kind: 'text', text })
                       }
                     />
                   {:else if field.kind === 'checkbox'}
@@ -372,7 +379,7 @@
                       disabled={field.readOnly}
                       checked={onOf(field.name) !== '' && onOf(field.name) === field.onValue}
                       onchange={(event) =>
-                        (values[field.name] = {
+                        values.set(field.name, {
                           kind: 'check',
                           on: event.currentTarget.checked ? (field.onValue ?? '') : '',
                         })}
@@ -386,11 +393,11 @@
                       value={field.onValue}
                       checked={onOf(field.name) !== '' && onOf(field.name) === field.onValue}
                       onchange={() =>
-                        (values[field.name] = { kind: 'check', on: field.onValue ?? '' })}
+                        values.set(field.name, { kind: 'check', on: field.onValue ?? '' })}
                       onclick={() => {
                         // 이미 고른 단추를 다시 누르면 고르지 않은 상태로 (PDF가 허용할 때)
                         if (field.toggleOff && onOf(field.name) === field.onValue) {
-                          values[field.name] = { kind: 'check', on: '' };
+                          values.set(field.name, { kind: 'check', on: '' });
                         }
                       }}
                     />
@@ -404,7 +411,7 @@
                       bind:value={
                         () => labelOf(field, choiceOf(field.name)[0] ?? ''),
                         (text) =>
-                          (values[field.name] = {
+                          values.set(field.name, {
                             kind: 'choice',
                             values: text ? [valueOf(field, text)] : [],
                           })
@@ -422,7 +429,7 @@
                       bind:value={
                         () => choiceOf(field.name)[0] ?? '',
                         (value) =>
-                          (values[field.name] = { kind: 'choice', values: value ? [value] : [] })
+                          values.set(field.name, { kind: 'choice', values: value ? [value] : [] })
                       }
                     >
                       <option value="">{t.none}</option>
@@ -437,7 +444,7 @@
                       disabled={field.readOnly}
                       bind:value={
                         () => choiceOf(field.name),
-                        (value) => (values[field.name] = { kind: 'choice', values: value })
+                        (value) => values.set(field.name, { kind: 'choice', values: value })
                       }
                     >
                       {#each field.options as option (option.value)}
@@ -453,7 +460,7 @@
                       bind:value={
                         () => choiceOf(field.name)[0] ?? '',
                         (value) =>
-                          (values[field.name] = { kind: 'choice', values: value ? [value] : [] })
+                          values.set(field.name, { kind: 'choice', values: value ? [value] : [] })
                       }
                     >
                       {#each field.options as option (option.value)}
