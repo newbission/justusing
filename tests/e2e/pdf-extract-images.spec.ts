@@ -402,3 +402,64 @@ test('그리지 않고 자원 목록에만 있는 사진은 꺼내지 않고, De
   await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
   await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
+
+test('ICC 색공간을 정한 JPG는 프로필을 넣어 꺼내고, 보정 색공간 JPG는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const photo = await readFile(fixture('photo.jpg'));
+  const profile = new Uint8Array(70000).map((_, i) => (i * 7) % 251);
+  const iccJpg = context.register(
+    context.stream(photo, {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      Filter: 'DCTDecode',
+      ColorSpace: ['ICCBased', context.register(context.flateStream(profile, { N: 3 }))],
+    }),
+  );
+  const calJpg = context.register(
+    context.stream(photo, {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      Filter: 'DCTDecode',
+      ColorSpace: ['CalRGB', { WhitePoint: [0.9505, 1, 1.089] }],
+    }),
+  );
+  const added = doc.addPage([600, 800]);
+  for (const ref of [iccJpg, calJpg]) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'icc.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  const bytes = new Uint8Array(await readFile(await (await event).path()));
+  expect(bytes.subarray(0, 2)).toEqual(new Uint8Array([0xff, 0xd8]));
+  // 프로필이 APP2 조각 둘(65519바이트씩)로 나뉘어 그대로 들어 있다
+  const text = Buffer.from(bytes).toString('latin1');
+  expect(text.split('ICC_PROFILE\0').length - 1).toBe(2);
+  const first = text.indexOf('ICC_PROFILE\0') + 14;
+  expect(Buffer.from(bytes.subarray(first, first + 100))).toEqual(
+    Buffer.from(profile.subarray(0, 100)),
+  );
+  // 그림 자료는 원본 그대로 뒤에 붙어 있다
+  expect(Buffer.from(bytes.subarray(bytes.length - 1000))).toEqual(
+    photo.subarray(photo.length - 1000),
+  );
+});
