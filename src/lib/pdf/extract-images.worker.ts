@@ -20,6 +20,7 @@ import {
   PDFString,
   PDFHexString,
   decodePDFRawStream,
+  type PDFObject,
 } from '@cantoo/pdf-lib';
 import type { ExtractRequest, ExtractResponse, ExtractedImage } from './extract-images';
 import { inflate, unpredict } from './image-pixels';
@@ -49,6 +50,20 @@ type Colors =
   | { components: 1 | 3; icc?: Uint8Array }
   | { components: 1; palette: Uint8Array; paletteColors: 1 | 3; icc?: Uint8Array };
 
+/** 장치 색공간 이름 → 자원 목록에 그 대신 쓰라고 정한 기본 색공간(/DefaultRGB 등) */
+function defaultSpace(device: string, resources: PDFDict | undefined): PDFObject | undefined {
+  const key = {
+    DeviceGray: 'DefaultGray',
+    G: 'DefaultGray',
+    DeviceRGB: 'DefaultRGB',
+    RGB: 'DefaultRGB',
+    DeviceCMYK: 'DefaultCMYK',
+    CMYK: 'DefaultCMYK',
+  }[device];
+  const named = resources?.lookup(name('ColorSpace'));
+  return key && named instanceof PDFDict ? named.get(name(key)) : undefined;
+}
+
 /**
  * 기본 색공간의 성분 수 (회색 1, RGB 3)와 ICC 프로필. 보정 색공간(CalRGB·CalGray)처럼
  * 색을 바꿔야 하는데 바꿀 수 없는 것은 undefined (꺼내지 못한 것으로 센다)
@@ -63,6 +78,11 @@ function baseSpace(
   const resolved = lookup(space as PDFRef);
   if (resolved instanceof PDFName) {
     const value = resolved.decodeText();
+    // 자원 목록의 /DefaultGray·/DefaultRGB가 있으면 장치 색공간 대신 그것으로 그린다
+    const fallback = defaultSpace(value, resources);
+    if (fallback !== undefined && depth < 4) {
+      return baseSpace(fallback, dict, resources, depth + 1);
+    }
     if (value === 'DeviceGray' || value === 'G') return { n: 1 };
     if (value === 'DeviceRGB' || value === 'RGB') return { n: 3 };
     // 자원 목록(/ColorSpace)에 정의한 이름 (예: /CS0). 잘못 서로 가리켜도 끝나게 깊이를 제한한다
@@ -349,9 +369,14 @@ function jpegSpace(
 ): { icc?: Uint8Array } | undefined {
   let space = dict.lookup(name('ColorSpace'));
   const named = resources?.lookup(name('ColorSpace'));
-  for (let depth = 0; space instanceof PDFName && named instanceof PDFDict && depth < 4; depth++) {
-    if (!named.has(space)) break;
-    space = named.lookup(space);
+  for (let depth = 0; space instanceof PDFName && depth < 4; depth++) {
+    // 자원 목록의 이름, 또는 장치 색공간 대신 쓰라고 정한 기본 색공간(/DefaultRGB 등)
+    const next =
+      named instanceof PDFDict && named.has(space)
+        ? named.get(space)
+        : defaultSpace(space.decodeText(), resources);
+    if (next === undefined) break;
+    space = dict.context.lookup(next);
   }
   if (space === undefined) return {};
   if (space instanceof PDFName) {
