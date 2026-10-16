@@ -150,7 +150,11 @@ export function renderMissingFormAppearances(doc: PDFDocument): void {
   const font = doc.embedStandardFont(StandardFonts.Helvetica);
   // 기본 글꼴에 없는 글자는 pdf-lib가 오류 없이 빼 버리므로 먼저 확인한다
   const supported = new Set(font.getCharacterSet());
-  const unsupported = missing.some((field) =>
+  // 인쇄되지 않는 입력 칸은 결과에 들어가지 않으므로 따지지 않는다
+  const printed = missing.filter((field) =>
+    field.acroField.getWidgets().some((widget) => printable(widget.dict)),
+  );
+  const unsupported = printed.some((field) =>
     fieldText(field).some((text) =>
       [...text].some((char) => !/[\r\n]/.test(char) && !supported.has(char.codePointAt(0)!)),
     ),
