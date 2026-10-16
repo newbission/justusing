@@ -219,7 +219,7 @@ function formText(doc: PDFDocument, job: Extract<TextJob, { kind: 'fill-form' }>
     }
   }
   for (const field of form.getFields()) {
-    if (field.getName() in job.values || !field.needsAppearancesUpdate()) continue;
+    if (Object.hasOwn(job.values, field.getName()) || !field.needsAppearancesUpdate()) continue;
     texts.push(...shownText(field));
   }
   return texts.join('');
@@ -243,7 +243,7 @@ function fillFields(
   // 그린다 (목록은 보이는 글자로 고른 줄을 표시한다). 읽기 전용 칸도 모양은 다시 만든다
   for (const field of form.getFields()) {
     if (!(field instanceof PDFDropdown || field instanceof PDFOptionList)) continue;
-    if (field.getName() in job.values || !field.needsAppearancesUpdate()) continue;
+    if (Object.hasOwn(job.values, field.getName()) || !field.needsAppearancesUpdate()) continue;
     const values = field.getSelected();
     const shown = values.map((item) => displayOf(field, item));
     if (shown.length === 0 || shown.every((item, i) => item === values[i])) continue;
@@ -283,7 +283,7 @@ function fillFields(
   const secrets: { field: PDFTextField; text: string }[] = [];
   for (const field of form.getFields()) {
     if (!(field instanceof PDFTextField) || !field.isPassword()) continue;
-    if (!(field.getName() in job.values) && !field.needsAppearancesUpdate()) continue;
+    if (!Object.hasOwn(job.values, field.getName()) && !field.needsAppearancesUpdate()) continue;
     const text = field.getText() ?? '';
     secrets.push({ field, text });
     field.setText(masked(text));
