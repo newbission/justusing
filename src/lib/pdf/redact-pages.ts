@@ -22,7 +22,7 @@ import {
   type PDFObject,
   type PDFPage,
 } from '@cantoo/pdf-lib';
-import { contentUsage, type FormLookup, type ResourceUse } from './content-usage';
+import { GS_FONT, contentUsage, type FormLookup, type ResourceUse } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { userUnit, viewSize } from './page-geometry';
 
@@ -77,7 +77,20 @@ function pruneResources(
   const context = holder.context;
   // 묶음 그림은 부른 자리에서 이어서 훑는다. 자원 목록이 없는 것은 그 목록을 물려받고(예전 방식),
   // 있는 것도 부른 자리의 글꼴로 찍은 글자는 그 글꼴의 것이다
-  const usage = contentUsage(streams.map(streamText), formsIn(resources));
+  const states = context.lookup(resources.get(PDFName.of('ExtGState')));
+  /** 그래픽 상태가 /Font [글꼴 크기]로 고른 글꼴 */
+  const stateFont = (name: string) => {
+    const state =
+      states instanceof PDFDict ? context.lookup(states.get(PDFName.of(name))) : undefined;
+    const font =
+      state instanceof PDFDict ? context.lookup(state.get(PDFName.of('Font'))) : undefined;
+    return font instanceof PDFArray ? context.lookup(font.get(0)) : undefined;
+  };
+  const usage = contentUsage(
+    streams.map(streamText),
+    formsIn(resources),
+    (name) => stateFont(name) instanceof PDFDict,
+  );
   usedThroughNames(resources, usage.resources);
   const own = context.obj({});
   for (const [key, value] of resources.entries()) {
@@ -101,9 +114,12 @@ function pruneResources(
   holder.set(PDFName.of('Resources'), own);
   // Type3 글꼴로 찍은 글자 코드를 모은다
   const fonts = context.lookup(resources.get(PDFName.of('Font')));
-  if (!(fonts instanceof PDFDict)) return;
   for (const { font, codes } of usage.text) {
-    const dict = context.lookup(fonts.get(PDFName.of(font)));
+    const dict = font.startsWith(GS_FONT)
+      ? stateFont(font.slice(GS_FONT.length))
+      : fonts instanceof PDFDict
+        ? context.lookup(fonts.get(PDFName.of(font)))
+        : undefined;
     const codesOf = dict instanceof PDFDict ? pruning.type3.get(dict) : undefined;
     for (const code of codes) codesOf?.add(code);
   }
@@ -177,6 +193,9 @@ function pruneNested(object: unknown, pruning: Pruning) {
   if (object instanceof PDFStream && (own || dict.has(PDFName.of('PatternType')))) {
     pruneResources(dict, own, [object], pruning);
   }
+  // 그래픽 상태가 /Font [글꼴 크기]로 고르는 글꼴 (Type3이면 찍은 글자 모양만 남긴다)
+  const stateFont = context.lookup(dict.get(PDFName.of('Font')));
+  if (stateFont instanceof PDFArray) pruneNested(context.lookup(stateFont.get(0)), pruning);
   // 투명 마스크(ExtGState /SMask /G)의 그림
   const softMask = context.lookup(dict.get(PDFName.of('SMask')));
   if (softMask instanceof PDFDict)

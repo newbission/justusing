@@ -134,6 +134,9 @@ const LAST_NAME: Record<string, string> = {
  * 이름 → 묶음 그림. key: 그 묶음 그림 객체(서로 부르는지 알아보려고), text: 내용,
  * own: 자기 자원 목록이 있음, forms: 그 안에서 부르는 이름을 찾는 곳 (자기 자원 목록이 있을 때)
  */
+/** 그래픽 상태(/GS1 gs)의 /Font로 고른 글꼴을 글꼴 이름 대신 적는 표시 (GS_FONT + 상태 이름) */
+export const GS_FONT = '\0gs:';
+
 export type FormLookup = (
   name: string,
 ) => { key: object; text: string; own: boolean; forms?: FormLookup } | undefined;
@@ -141,6 +144,7 @@ export type FormLookup = (
 /**
  * 내용 스트림에서 부른 자원과, 글꼴별로 찍은 글자 코드를 모은다.
  * form(이름): 그 이름이 묶음 그림이면 내용(text)과, 자기 자원 목록이 있는지(own).
+ * gsFont(이름): 그 그래픽 상태가 /Font로 글꼴을 고르는지. 고르면 그 뒤 찍은 글자는 GS_FONT + 이름의 것으로 센다.
  * 묶음 그림은 부른 자리의 그래픽 상태(글꼴 포함)를 물려받으므로 부른 자리에서 이어서 훑는다.
  * 자기 자원 목록이 있으면 그 안의 이름은 이 목록의 것이 아니라서, 물려받은 글꼴로 찍은 글자만 센다
  * (그 묶음 그림이 부르는 자원은 따로 정리한다)
@@ -148,6 +152,7 @@ export type FormLookup = (
 export function contentUsage(
   texts: string[],
   form?: FormLookup,
+  gsFont?: (name: string) => boolean,
 ): { resources: ResourceUse; text: TextUse[] } {
   const resources: ResourceUse = new Map();
   const use = (kind: string, name: string) => {
@@ -158,12 +163,12 @@ export function contentUsage(
   /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
   let font = '';
   const saved: string[] = [];
+  /** 지금 훑는 중인 묶음 그림들 */
+  const path = new Set<object>();
   /**
    * foreign: 자기 자원 목록이 있는 묶음 그림 안 (이름이 다른 목록을 가리켜 이 목록의 자원으로 세지 않는다).
    * forms: 지금 내용에서 부르는 묶음 그림 이름을 찾는 곳
    */
-  /** 지금 훑는 중인 묶음 그림들 */
-  const path = new Set<object>();
   const scan = (tokens: Token[], foreign: boolean, forms: FormLookup | undefined) => {
     let operands: Token[] = [];
     let inInlineImage = false;
@@ -189,6 +194,9 @@ export function contentUsage(
         // 다른 목록의 글꼴로 바꾸면 이 목록에서는 알 수 없는 글꼴이다
         font = foreign ? '' : names[0].value;
         if (!foreign) use('Font', font);
+      } else if (op === 'gs' && last?.kind === 'name' && !foreign && gsFont?.(last.value)) {
+        use('ExtGState', last.value);
+        font = GS_FONT + last.value;
       } else if (op === 'q') {
         saved.push(font);
       } else if (op === 'Q') {
