@@ -203,6 +203,16 @@ function usedThroughNames(resources: PDFDict, used: ResourceUse) {
       if (pattern instanceof PDFDict) addSpace(context.lookup(pattern.get(PDFName.of('Shading'))));
     }
   }
+  // 색공간 정의가 다른 이름 색공간을 부르면(/CS1 [/Indexed /CS2 …]) 그것도 남긴다.
+  // 저절로 쓰이는 기본 색공간의 정의도 따라간다
+  const defined = context.lookup(resources.get(PDFName.of('ColorSpace')));
+  if (defined instanceof PDFDict) {
+    for (const name of DEFAULT_SPACES) if (defined.has(PDFName.of(name))) spaces.add(name);
+    for (let size = -1; size !== spaces.size;) {
+      size = spaces.size;
+      for (const name of [...spaces]) namesIn(defined.get(PDFName.of(name)));
+    }
+  }
   used.set('ColorSpace', spaces);
 }
 
