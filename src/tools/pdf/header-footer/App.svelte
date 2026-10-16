@@ -53,12 +53,14 @@
 
   const hasText = $derived(header.trim() !== '' || footer.trim() !== '');
   const blocker = $derived(!hasText ? t.needText : !font ? t.needFont : undefined);
+  /** 글꼴 바이트만 따로 둔다. 글자를 칠 때마다 미리보기 글꼴을 다시 불러오지 않게 */
+  const fontBytes = $derived(font ? (font.files[400] ?? Object.values(font.files)[0]) : undefined);
   const options = $derived<HeaderFooterOptions | undefined>(
-    font && hasText
+    fontBytes && hasText
       ? {
           header: { text: header.trim(), align: headerAlign },
           footer: { text: footer.trim(), align: footerAlign },
-          font: font.files[400] ?? Object.values(font.files)[0]!,
+          font: fontBytes,
           size: SIZE_PT[size],
           color: COLORS[tint],
           skipFirst,
@@ -137,7 +139,7 @@
   });
 
   $effect(() => {
-    const bytes = options?.font;
+    const bytes = fontBytes;
     if (!bytes) return;
     const name = `header-${familyId++}`;
     const face = new FontFace(name, bytes.slice());
