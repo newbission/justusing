@@ -23,6 +23,7 @@ import {
   type PDFObject,
 } from '@cantoo/pdf-lib';
 import type { ExtractRequest, ExtractResponse, ExtractedImage } from './extract-images';
+import { inlineImageDict, tokenize, type Token } from './content-tokens';
 import { inflate, unpredict } from './image-pixels';
 
 const name = (value: string) => PDFName.of(value);
@@ -676,92 +677,83 @@ function streamText(stream: PDFStream): string {
   return text;
 }
 
-const WHITESPACE = /[\0\t\n\f\r ]/;
-const DELIMITER = /[()<>[\]{}/%]/;
+/** 내용에서 찾은 것들 */
+interface Scanned {
+  /** 바로 써 넣은 그림(BI … ID … EI) 중 짧은 변이 minSide 이상인 것의 수 (따로 된 객체가 아니라 꺼내지 않는다) */
+  inline: number;
+  /** /이름 Do로 그린 것 */
+  drawn: string[];
+  /** /이름 scn으로 칠한 무늬 */
+  patterns: string[];
+  /** 글꼴 이름 → 그 글꼴로 찍은 글자 코드 (Type3 글꼴에서 실제로 그린 글자 모양만 따라가려고) */
+  glyphs: Map<string, Set<number>>;
+}
 
 /**
- * 내용 스트림을 토큰 단위로 훑어 /이름 Do로 그리는 자원 이름과, 바로 써 넣은 그림(BI … ID … EI) 중
- * 짧은 변이 minSide 이상인 것의 수를 센다. 바로 써 넣은 그림은 따로 된 객체가 아니라 꺼내지 않고,
- * 꺼내지 못한 수로 알린다. 글자열 (…)·주석 %…·그림 바이트 안의 BI·Do는 세지 않는다
+ * 내용 스트림을 토큰으로 훑어 화면에 그리는 것을 모은다 (글자열·그림 바이트 안의 글자는 읽지 않는다).
+ * hidden(이름): 표시 내용 /OC /이름 BDC의 보이기 층이 꺼져 있으면 true. 꺼진 층 안에서 그리는 것은 세지 않는다
  */
 function scanContent(
   streams: PDFStream[],
   minSide: number,
-): { inline: number; drawn: string[]; patterns: string[]; fonts: string[] } {
-  let count = 0;
-  const drawn: string[] = [];
-  const patterns: string[] = [];
-  const fonts: string[] = [];
-  let lastName = '';
-  for (const stream of streams) {
-    const text = streamText(stream);
-    let i = 0;
-    while (i < text.length) {
-      const char = text[i]!;
-      if (char === '(') {
-        // 글자열: 괄호 짝과 \ 이스케이프를 따라 건너뛴다
-        let depth = 1;
-        for (i++; i < text.length && depth > 0; i++) {
-          if (text[i] === '\\') i++;
-          else if (text[i] === '(') depth++;
-          else if (text[i] === ')') depth--;
-        }
-        continue;
-      }
-      if (char === '%') {
-        while (i < text.length && text[i] !== '\n' && text[i] !== '\r') i++;
-        continue;
-      }
-      if (char === '<') {
-        // << 는 사전의 시작, < 하나는 16진 글자열
-        i = text[i + 1] === '<' ? i + 2 : text.indexOf('>', i) + 1 || text.length;
-        continue;
-      }
-      if (char === '/') {
-        let end = i + 1;
-        while (end < text.length && !WHITESPACE.test(text[end]!) && !DELIMITER.test(text[end]!))
-          end++;
-        lastName = text
-          .slice(i + 1, end)
-          .replace(/#([0-9a-fA-F]{2})/g, (_, hex: string) =>
-            String.fromCharCode(parseInt(hex, 16)),
-          );
-        i = end;
-        continue;
-      }
-      if (WHITESPACE.test(char) || DELIMITER.test(char)) {
-        i++;
-        continue;
-      }
-      // 일반 토큰
-      let end = i;
-      while (end < text.length && !WHITESPACE.test(text[end]!) && !DELIMITER.test(text[end]!))
-        end++;
-      const token = text.slice(i, end);
-      i = end;
-      // 숫자는 피연산자라 앞의 이름을 그대로 둔다 (/F1 12 Tf)
-      if (/^[+-]?(\d+\.?\d*|\.\d+)$/.test(token)) continue;
-      if (token === 'Do' && lastName) drawn.push(lastName);
-      // 무늬로 칠하기 (/P1 scn): 바둑무늬 무늬는 안에서 사진을 그릴 수 있다
-      if ((token === 'scn' || token === 'SCN') && lastName) patterns.push(lastName);
-      // 글꼴 고르기 (/F1 12 Tf): Type3 글꼴은 글자 모양 안에서 사진을 그릴 수 있다
-      if (token === 'Tf' && lastName) fonts.push(lastName);
-      // 이름은 바로 뒤 연산자의 피연산자일 때만 쓴다
-      lastName = '';
-      if (token !== 'BI') continue;
-      // BI 뒤 사전에서 크기를 읽고, ID 뒤 그림 바이트는 공백+EI+공백까지 건너뛴다
-      const id = /\sID[\0\t\n\f\r ]/.exec(text.slice(i));
-      if (!id) break;
-      const head = text.slice(i, i + id.index);
-      const width = Number(/\/(?:W|Width)\s+(\d+)/.exec(head)?.[1] ?? 0);
-      const height = Number(/\/(?:H|Height)\s+(\d+)/.exec(head)?.[1] ?? 0);
-      if (Math.min(width, height) >= minSide) count++;
-      const dataStart = i + id.index + id[0].length;
-      const ei = /[\0\t\n\f\r ]EI(?=[\0\t\n\f\r ]|$)/.exec(text.slice(dataStart));
-      i = ei ? dataStart + ei.index + ei[0].length : text.length;
+  hidden: (name: string) => boolean,
+): Scanned {
+  const scanned: Scanned = { inline: 0, drawn: [], patterns: [], glyphs: new Map() };
+  let operands: Token[] = [];
+  let inInlineImage = false;
+  /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
+  let font = '';
+  const saved: string[] = [];
+  /** 표시 내용(BDC·BMC … EMC)마다 꺼진 층인지 */
+  const marks: boolean[] = [];
+  // 쪽의 내용 스트림 여러 개는 이어서 하나로 실행된다
+  for (const token of streams.flatMap((stream) => tokenize(streamText(stream)))) {
+    if (token.kind !== 'op') {
+      operands.push(token);
+      continue;
     }
+    const op = token.value;
+    const last = operands.at(-1);
+    const lastName = last?.kind === 'name' ? last.value : '';
+    const visible = !marks.includes(true);
+    if (op === 'BI') {
+      inInlineImage = true;
+    } else if (op === 'ID' && inInlineImage) {
+      const dict = inlineImageDict([...operands, token]);
+      const width = Number(dict.get('W') ?? dict.get('Width') ?? 0);
+      const height = Number(dict.get('H') ?? dict.get('Height') ?? 0);
+      if (visible && Math.min(width, height) >= minSide) scanned.inline++;
+      inInlineImage = false;
+    } else if (op === 'q') {
+      saved.push(font);
+    } else if (op === 'Q') {
+      font = saved.pop() ?? font;
+    } else if (op === 'Tf') {
+      const first = operands.find((operand) => operand.kind === 'name');
+      if (first?.kind === 'name') font = first.value;
+    } else if (op === 'Tj' || op === "'" || op === '"' || op === 'TJ') {
+      if (visible && font) {
+        const codes = scanned.glyphs.get(font) ?? new Set<number>();
+        for (const operand of operands) {
+          if (operand.kind === 'string') for (const code of operand.bytes) codes.add(code);
+        }
+        scanned.glyphs.set(font, codes);
+      }
+    } else if (op === 'Do') {
+      if (visible && lastName) scanned.drawn.push(lastName);
+    } else if (op === 'scn' || op === 'SCN') {
+      if (visible && lastName) scanned.patterns.push(lastName);
+    } else if (op === 'BDC') {
+      const tag = operands.find((operand) => operand.kind === 'name');
+      marks.push(tag?.kind === 'name' && tag.value === 'OC' && !!lastName && hidden(lastName));
+    } else if (op === 'BMC') {
+      marks.push(false);
+    } else if (op === 'EMC') {
+      marks.pop();
+    }
+    if (!inInlineImage) operands = [];
   }
-  return { inline: count, drawn, patterns, fonts };
+  return scanned;
 }
 
 /**
@@ -788,6 +780,62 @@ function spaceKey(dict: PDFDict, resources: PDFDict | undefined): string {
 }
 
 /** 쪽마다 그 쪽(과 쪽 안의 묶음 그림)이 쓰는 사진. 같은 사진은 처음 나온 쪽에만 */
+/** Type3 글꼴의 글자 코드 → 글자 모양 이름 (/Encoding /Differences) */
+function glyphNames(font: PDFDict): Map<number, string> {
+  const names = new Map<number, string>();
+  const encoding = font.lookup(name('Encoding'));
+  const differences =
+    encoding instanceof PDFDict ? encoding.lookup(name('Differences')) : undefined;
+  if (!(differences instanceof PDFArray)) return names;
+  let code = 0;
+  for (const item of differences.asArray()) {
+    const value = font.context.lookup(item);
+    if (value instanceof PDFNumber) code = value.asNumber();
+    else if (value instanceof PDFName) names.set(code++, value.decodeText());
+  }
+  return names;
+}
+
+/**
+ * 원본 기본 보이기 설정(/OCProperties /D)으로 꺼진 층인지 알려 주는 함수.
+ * 층(OCG)과 층 조합(OCMD, /P AnyOn·AllOn·AnyOff·AllOff)을 받는다. 층이 없으면 늘 보인다
+ */
+function hiddenLayers(doc: PDFDocument): (oc: unknown) => boolean {
+  const context = doc.context;
+  const properties = doc.catalog.lookup(name('OCProperties'));
+  const config = properties instanceof PDFDict ? properties.lookup(name('D')) : undefined;
+  const list = (key: string) => {
+    const value = config instanceof PDFDict ? config.lookup(name(key)) : undefined;
+    return value instanceof PDFArray ? value.asArray().map((item) => context.lookup(item)) : [];
+  };
+  const baseOff = config instanceof PDFDict && config.get(name('BaseState')) === name('OFF');
+  const on = list('ON');
+  const off = list('OFF');
+  const groupHidden = (group: unknown) =>
+    baseOff ? !on.includes(group as PDFObject) : off.includes(group as PDFObject);
+  return (oc) => {
+    const dict = context.lookup(oc as PDFObject);
+    if (!(dict instanceof PDFDict)) return false;
+    const type = dict.get(name('Type'));
+    if (type === name('OCG')) return groupHidden(dict);
+    if (type !== name('OCMD')) return false;
+    const members = dict.lookup(name('OCGs'));
+    const groups =
+      members instanceof PDFArray
+        ? members.asArray().map((item) => context.lookup(item))
+        : members instanceof PDFDict
+          ? [members]
+          : [];
+    if (groups.length === 0) return false;
+    const visible = groups.map((group) => !groupHidden(group));
+    const policy = dict.get(name('P'));
+    if (policy === name('AllOn')) return !visible.every(Boolean);
+    if (policy === name('AnyOff')) return visible.every(Boolean);
+    if (policy === name('AllOff')) return visible.some(Boolean);
+    return !visible.some(Boolean);
+  };
+}
+
 function collect(doc: PDFDocument, minSide: number) {
   /** 꺼낸 사진: 같은 사진도 부른 쪽의 자원에 따라 색이 달라지면(이름 색공간·기본 색공간) 따로 센다 */
   const seen = new Set<string>();
@@ -801,14 +849,21 @@ function collect(doc: PDFDocument, minSide: number) {
     resources: PDFDict | undefined;
   }[] = [];
   let inline = 0;
-  /** 내용이 실제로 그리는(Do) 것만 따라간다. 자원 목록에만 있고 그리지 않는 사진은 꺼내지 않는다 */
+  const layerHidden = hiddenLayers(doc);
+  /**
+   * 화면에 실제로 그리는 것만 따라간다: 자원 목록에만 있고 그리지 않는 사진, 꺼진 보이기 층 안의 것,
+   * 숨긴 주석, 찍지 않은 Type3 글자 모양 안의 사진은 꺼내지 않는다
+   */
   const visit = (
     streams: PDFStream[],
     resources: PDFDict | undefined,
     page: number,
     countInline = true,
   ) => {
-    const scanned = scanContent(streams, minSide);
+    const properties = resources?.lookup(name('Properties'));
+    const scanned = scanContent(streams, minSide, (prop) =>
+      properties instanceof PDFDict ? layerHidden(properties.get(name(prop))) : false,
+    );
     if (countInline) inline += scanned.inline;
     // 칠한 바둑무늬 무늬(PatternType 1)의 내용도 훑는다 (무늬는 자기 자원 목록을 쓴다)
     const patterns = resources?.lookup(name('Pattern'));
@@ -826,20 +881,21 @@ function collect(doc: PDFDocument, minSide: number) {
       if (key) visitedForms.set(key, visits);
       visit([pattern], usedResources, page, first);
     }
-    // 고른 Type3 글꼴의 글자 모양(CharProcs)도 훑는다 (글꼴의 자원 목록, 없으면 부른 쪽 것)
+    // Type3 글꼴로 찍은 글자의 모양(CharProcs) 안도 훑는다 (글꼴의 자원 목록, 없으면 부른 쪽 것)
     const fontDict = resources?.lookup(name('Font'));
-    for (const used of new Set(scanned.fonts)) {
-      const value = fontDict instanceof PDFDict ? fontDict.get(name(used)) : undefined;
-      const font = doc.context.lookup(value);
+    for (const [used, codes] of scanned.glyphs) {
+      const font = fontDict instanceof PDFDict ? fontDict.lookup(name(used)) : undefined;
       if (!(font instanceof PDFDict) || font.lookup(name('Subtype')) !== name('Type3')) continue;
       const procs = font.lookup(name('CharProcs'));
-      if (!(procs instanceof PDFDict) || !(value instanceof PDFRef)) continue;
+      if (!(procs instanceof PDFDict)) continue;
       const own = font.lookup(name('Resources'));
-      const glyphs = procs
-        .values()
-        .map((item) => doc.context.lookup(item))
-        .filter((item): item is PDFStream => item instanceof PDFStream);
-      enter(value, glyphs, own instanceof PDFDict ? own : resources, page);
+      const names = glyphNames(font);
+      for (const glyph of new Set([...codes].map((code) => names.get(code)))) {
+        const value = glyph ? procs.get(name(glyph)) : undefined;
+        const stream = doc.context.lookup(value);
+        if (!(value instanceof PDFRef) || !(stream instanceof PDFStream)) continue;
+        enter(value, [stream], own instanceof PDFDict ? own : resources, page);
+      }
     }
     const xobjects = resources?.lookup(name('XObject'));
     if (!(xobjects instanceof PDFDict)) return;
@@ -848,6 +904,8 @@ function collect(doc: PDFDocument, minSide: number) {
       if (!(value instanceof PDFRef)) continue;
       const object = doc.context.lookup(value);
       if (!(object instanceof PDFStream)) continue;
+      // 꺼진 보이기 층에 딸린 사진·묶음 그림
+      if (layerHidden(object.dict.get(name('OC')))) continue;
       const subtype = object.dict.lookup(name('Subtype'));
       if (subtype === name('Image')) {
         // 글자 모양 가림(ImageMask)은 사진이 아니다
@@ -894,8 +952,9 @@ function collect(doc: PDFDocument, minSide: number) {
     for (const item of annots.asArray()) {
       const annot = doc.context.lookup(item);
       if (!(annot instanceof PDFDict) || annot.lookup(name('Subtype')) === name('Popup')) continue;
+      // 숨김(2)·화면에 보이지 않음(32) 주석, 꺼진 보이기 층의 주석
       const flags = numberOf(annot, 'F') ?? 0;
-      if (flags & 2) continue;
+      if (flags & (2 | 32) || layerHidden(annot.get(name('OC')))) continue;
       const appearances = annot.lookup(name('AP'));
       if (!(appearances instanceof PDFDict)) continue;
       let normal = appearances.get(name('N'));
