@@ -146,6 +146,15 @@ test('같이 쓰던 자원과 링크를 타고 가린 쪽의 내용이 딸려 �
     }),
   );
   second.node.set(PDFName.of('Annots'), context.obj([link]));
+  // 2쪽에 딸린 첨부 파일 (PDF 2.0 /AF)
+  const attached = context.register(
+    context.obj({
+      Type: 'Filespec',
+      F: 'secret.txt',
+      EF: { F: context.register(context.stream('SECRET-ATTACHMENT', { Type: 'EmbeddedFile' })) },
+    }),
+  );
+  second.node.set(PDFName.of('AF'), context.obj([attached]));
 
   const frame = await openRedact(page, {
     name: 'shared.pdf',
@@ -154,7 +163,8 @@ test('같이 쓰던 자원과 링크를 타고 가린 쪽의 내용이 딸려 �
   await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
   await expect(frame.getByText('가릴 곳 1개 (1쪽)')).toBeVisible();
 
-  const { doc } = await allStreams((await download(page, frame)).bytes);
+  const { doc, text } = await allStreams((await download(page, frame)).bytes);
+  expect(text).not.toContain('SECRET-ATTACHMENT');
   const sizes = [...doc.context.enumerateIndirectObjects()]
     .map(([, object]) => object)
     .filter((object): object is PDFRawStream => object instanceof PDFRawStream)
