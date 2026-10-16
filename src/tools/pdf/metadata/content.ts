@@ -22,6 +22,10 @@ export default defineContent({
         a: '아니요. 문서 정보만 바꾸고 쪽 내용은 그대로 둡니다. 본문의 이름·번호를 지우려면 "PDF 가리기"를 쓰세요.',
       },
       {
+        q: '암호가 걸린 PDF도 되나요?',
+        a: '네. 암호를 입력해 열고 문서 정보를 고칠 수 있습니다. 다만 저장한 파일에서는 암호와 인쇄·복사 제한이 풀립니다(화면에도 알려 드립니다). 보호가 필요하면 저장한 뒤 "PDF 암호 걸기"로 다시 거세요.',
+      },
+      {
         q: '저장했는데 다른 프로그램에서 예전 제목이 보여요.',
         a: 'PDF에는 문서 정보가 두 곳(Info와 XMP)에 들어 있을 수 있습니다. 이 도구는 예전 값이 남지 않게 XMP를 지우고 Info에 적습니다. 그래도 예전 제목이 보이면 그 프로그램이 파일 이름이나 저장해 둔 기록을 보여 주는 것일 수 있습니다. XMP에만 있던 저작권 정보와 PDF/A 표시도 함께 지워지므로, 보관용 PDF/A 파일이라면 원본을 따로 남겨 두세요.',
       },
@@ -46,6 +50,10 @@ export default defineContent({
       {
         q: 'Does the content change?',
         a: 'No. Only the document info changes; the pages stay as they are. To remove names or numbers from the pages, use "Redact PDF".',
+      },
+      {
+        q: 'Does it work with password-protected PDFs?',
+        a: 'Yes. Enter the password to open it and edit the document info. The saved file no longer has the password or print/copy restrictions (the tool tells you this too). If you need protection, add it again with "Protect PDF" after saving.',
       },
       {
         q: 'Another app still shows the old title.',
