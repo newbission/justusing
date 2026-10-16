@@ -829,3 +829,87 @@ test('색 목록보다 큰 값은 마지막 색으로 보고, 쪽마다 다른 �
   expect(pixels.slice(8, 11)).toEqual([0, 0, 255]);
   expect(pixels.slice(12, 15)).toEqual([0, 0, 255]);
 });
+
+test('무늬가 그리는 사진도 꺼내고, 장치 색공간 JPG의 안쪽 프로필은 빼고, 번호는 꺼낸 것만 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (extra: Record<string, unknown> = {}) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(90), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+        ...extra,
+      }),
+    );
+  // 값 범위가 0~1이 아닌 ICC 사진 (못 꺼냄) — 먼저 그려서 번호가 비지 않는지 본다
+  const ranged = gray({
+    ColorSpace: [
+      'ICCBased',
+      context.register(context.flateStream(new Uint8Array(200), { N: 1, Range: [0.2, 0.8] })),
+    ],
+  });
+  // 안에 ICC 프로필(APP2)이 든 JPG를 장치 RGB로 쓴다
+  const photo = await readFile(fixture('photo.jpg'));
+  const app2 = Buffer.concat([
+    Buffer.from([0xff, 0xe2, 0x00, 0x20]),
+    Buffer.from('ICC_PROFILE\0'),
+    Buffer.from([1, 1]),
+    Buffer.alloc(16, 7),
+  ]);
+  const tagged = context.register(
+    context.stream(Buffer.concat([photo.subarray(0, 2), app2, photo.subarray(2)]), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      ColorSpace: 'DeviceRGB',
+      Filter: 'DCTDecode',
+    }),
+  );
+  // 바둑무늬 무늬 안에서만 그리는 사진
+  const pattern = context.register(
+    context.stream('q 64 0 0 64 0 0 cm /Im Do Q', {
+      Type: 'Pattern',
+      PatternType: 1,
+      PaintType: 1,
+      TilingType: 1,
+      BBox: [0, 0, 64, 64],
+      XStep: 64,
+      YStep: 64,
+      Resources: { XObject: { Im: gray() } },
+    }),
+  );
+  const added = doc.addPage([600, 800]);
+  added.node.set(
+    PDFName.of('Resources'),
+    context.obj({ XObject: { R: ranged, T: tagged }, Pattern: { P1: pattern } }),
+  );
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('/R Do /T Do /Pattern cs /P1 scn 0 0 200 200 re f')),
+  );
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'pattern.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '모두 받기 (ZIP)' }).click();
+  const entries = unzipSync(new Uint8Array(await readFile(await (await event).path())));
+  expect(Object.keys(entries).sort()).toEqual(['pattern_p1_1.png', 'pattern_p1_2.jpg']);
+  const jpg = Buffer.from(entries['pattern_p1_2.jpg']!);
+  expect(jpg.toString('latin1')).not.toContain('ICC_PROFILE');
+  expect(jpg).toEqual(photo);
+});
