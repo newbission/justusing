@@ -18,9 +18,9 @@ import {
   type PDFPage,
 } from '@cantoo/pdf-lib';
 
-/** /F 플래그: 숨김(2), 화면에 안 보임(32) */
+/** /F 플래그: 숨김(2), 인쇄(4) */
 const HIDDEN = 2;
-const NO_VIEW = 32;
+const PRINT = 4;
 
 type Matrix = [number, number, number, number, number, number];
 
@@ -62,7 +62,8 @@ export function flattenAnnotations(page: PDFPage): boolean {
     if (annot.get(PDFName.of('Subtype')) === PDFName.of('Popup')) continue;
     const flags = context.lookup(annot.get(PDFName.of('F')));
     const flagValue = flags instanceof PDFNumber ? flags.asNumber() : 0;
-    if (flagValue & (HIDDEN | NO_VIEW)) continue;
+    // 종이에 찍을 결과라 인쇄할 때 나오는 주석만 넣는다 (화면 전용 버튼·메모는 빼고, 인쇄 전용은 넣는다)
+    if (!(flagValue & PRINT) || flagValue & HIDDEN) continue;
     const rect = numbers(context.lookup(annot.get(PDFName.of('Rect'))), 4);
     const appearance = normalAppearance(annot);
     if (!rect || !appearance) continue;
