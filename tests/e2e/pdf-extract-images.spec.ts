@@ -1550,6 +1550,82 @@ test('칠할 때만 무늬 안 사진을 세고, 보이지 않는 글자·그래
   await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
 
+test('켜는 자동 규칙과 사용 정보·쓰임에 따라 층을 판단하고, 꺼낸 JPG의 EXIF 방향은 그대로(1)로 바꾼다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (value: number, extra: Record<string, unknown> = {}) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(value), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+        ...extra,
+      }),
+    );
+  const layer = (title: string, extra: Record<string, unknown> = {}) =>
+    context.register(context.obj({ Type: 'OCG', Name: PDFHexString.fromText(title), ...extra }));
+  // 기본은 꺼짐이지만 규칙이 켬
+  const ruleOn = layer('Rule on', { Usage: { View: { ViewState: 'ON' } } });
+  // 규칙 없이 사용 정보로 꺼짐
+  const usageOff = layer('Usage off', { Usage: { View: { ViewState: 'OFF' } } });
+  // 꺼져 있지만 쓰임이 Design이라 보기에는 상관없음
+  const design = layer('Design', { Intent: 'Design' });
+  doc.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({
+      OCGs: [ruleOn, usageOff, design],
+      D: {
+        OFF: [ruleOn, design],
+        AS: [{ Event: 'View', OCGs: [ruleOn], Category: ['View'] }],
+      },
+    }),
+  );
+  // 방향 6(돌려 보기)이 적힌 EXIF
+  const photo = await readFile(fixture('photo.jpg'));
+  const exif = Buffer.from([
+    ...Buffer.from('Exif\0\0'),
+    ...[0x4d, 0x4d, 0, 0x2a, 0, 0, 0, 8],
+    ...[0, 1, 0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, 6, 0, 0],
+    ...[0, 0, 0, 0],
+  ]);
+  const tagged = Buffer.concat([
+    photo.subarray(0, 2),
+    Buffer.from([0xff, 0xe1, 0, exif.length + 2]),
+    exif,
+    photo.subarray(2),
+  ]);
+  const jpg = context.register(
+    context.stream(tagged, {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      ColorSpace: 'DeviceRGB',
+      Filter: 'DCTDecode',
+    }),
+  );
+  drawAll(doc, [
+    jpg,
+    gray(21, { OC: ruleOn }),
+    gray(22, { OC: usageOff }),
+    gray(23, { OC: design }),
+  ]);
+  const frame = await openPdf(page, 'layers2.pdf', doc);
+  // JPG, 규칙이 켠 층, 쓰임이 다른 층 (사용 정보로 꺼진 층은 빼고)
+  await expect(frame.getByText(/^사진 3개 · /)).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '사진 1 받기' }).click();
+  const bytes = await readFile(await (await event).path());
+  const at = bytes.indexOf(Buffer.from([0x01, 0x12, 0, 3]));
+  expect(bytes.readUInt16BE(at + 8)).toBe(1);
+});
+
 test('반투명 화소의 색을 깎지 않고 PNG로 꺼낸다', async ({ page }) => {
   const { inflateSync } = await import('node:zlib');
   const doc = await PDFDocument.create();
