@@ -23,7 +23,7 @@ export default defineContent({
       },
       {
         q: 'PDF 안 사진의 촬영 위치도 지우나요?',
-        a: '네. "문서 정보 모두 지우기"를 고르면 JPEG 사진에 들어 있는 촬영 정보(위치·카메라·촬영 시각 등 EXIF)와 사진 설명(XMP·IPTC)을 지웁니다. 사진은 다시 압축하지 않아 화질이 그대로입니다. JPEG 2000 사진, 쪽 내용에 바로 써 넣은 작은 그림, 첨부 파일 내용 안의 정보는 고치지 않습니다.',
+        a: '네. "문서 정보 모두 지우기"를 고르면 JPEG 사진에 들어 있는 촬영 정보(위치·카메라·촬영 시각 등 EXIF)와 사진 설명(XMP·IPTC)을 지웁니다. 사진은 다시 압축하지 않아 화질이 그대로입니다. JPEG 2000 사진, 쪽 내용에 바로 써 넣은 작은 그림, 다른 압축을 한 번 더 씌운 JPEG(드묾), 첨부 파일 내용 안의 정보는 고치지 않습니다.',
       },
       {
         q: '모두 지워도 남는 정보가 있나요?',
@@ -61,7 +61,7 @@ export default defineContent({
       },
       {
         q: 'Does it remove the location from photos in the PDF?',
-        a: 'Yes. With "Remove all document info", it removes shooting details stored in JPEG photos (location, camera, time and other EXIF data) and photo descriptions (XMP, IPTC). Photos are not recompressed, so the quality stays the same. Information inside JPEG 2000 photos, small images written directly into page content, and attached files is not changed.',
+        a: 'Yes. With "Remove all document info", it removes shooting details stored in JPEG photos (location, camera, time and other EXIF data) and photo descriptions (XMP, IPTC). Photos are not recompressed, so the quality stays the same. Information inside JPEG 2000 photos, small images written directly into page content, JPEGs wrapped in another compression (rare), and attached files is not changed.',
       },
       {
         q: 'Is anything left after removing everything?',
