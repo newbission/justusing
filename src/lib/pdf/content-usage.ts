@@ -108,6 +108,13 @@ export function contentUsage(
   /** 지금 훑는 중인 묶음 그림들 */
   const path = new Set<object>();
   /**
+   * 이미 훑은 (묶음 그림, 물려받은 글꼴, 다른 목록 안인지). 같은 상태로 다시 부르면 결과가 같아 건너뛴다
+   * (기호 하나를 수천 번 찍거나 묶음 그림이 겹겹이 서로를 여러 번 부르는 파일이 느려지지 않게)
+   */
+  const done = new Set<string>();
+  const ids = new Map<object, number>();
+  const tokenCache = new Map<object, Token[]>();
+  /**
    * foreign: 자기 자원 목록이 있는 묶음 그림 안 (이름이 다른 목록을 가리켜 이 목록의 자원으로 세지 않는다).
    * forms: 지금 내용에서 부르는 묶음 그림 이름을 찾는 곳
    */
@@ -192,12 +199,17 @@ export function contentUsage(
         // 묶음 그림 안에서 다시 부르는 묶음 그림도 그 자리의 글꼴 상태로 이어서 훑는다
         const inner = op === 'Do' ? forms?.(last.value) : undefined;
         // 지금 훑는 중인 묶음 그림을 다시 부르면(잘못된 파일) 그만둔다. 깊이 자체는 제한하지 않는다
-        if (inner && !path.has(inner.key)) {
+        const id = inner ? (ids.get(inner.key) ?? ids.set(inner.key, ids.size).get(inner.key)!) : 0;
+        const state = `${id}|${font}|${foreign || inner?.own}`;
+        if (inner && !path.has(inner.key) && !done.has(state)) {
+          done.add(state);
           path.add(inner.key);
           // 묶음 그림은 앞뒤로 q/Q를 한 것처럼 실행된다 (안에서 Q를 더 해도 바깥 상태는 그대로)
           const outer = { font, saved: [...saved] };
+          let innerTokens = tokenCache.get(inner.key);
+          if (!innerTokens) tokenCache.set(inner.key, (innerTokens = tokenize(inner.text)));
           scan(
-            tokenize(inner.text),
+            innerTokens,
             foreign || inner.own,
             inner.own ? inner.forms : forms,
             inner.own ? inner.gsFont : gsFonts,

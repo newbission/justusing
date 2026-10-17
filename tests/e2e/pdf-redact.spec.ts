@@ -2269,3 +2269,29 @@ test('같이 쓰는 내용이 사슬처럼 이어져도 가린 내용과 상관�
   expect(texts[2]).toContain('DDDD');
   expect(texts[3]).toBe('');
 });
+
+test('묶음 그림이 겹겹이 서로를 여러 번 불러도 금방 끝난다', async ({ page }) => {
+  test.setTimeout(30_000);
+  const source = await PDFDocument.create();
+  const context = source.context;
+  let inner = context.register(
+    context.stream('0 0 1 1 re f', { Type: 'XObject', Subtype: 'Form', BBox: [0, 0, 1, 1] }),
+  );
+  // 30단, 단마다 아래 단을 두 번 부른다 (그대로 훑으면 2^30번)
+  for (let level = 0; level < 30; level++) {
+    inner = context.register(
+      context.stream('/F Do /F Do', {
+        Type: 'XObject',
+        Subtype: 'Form',
+        BBox: [0, 0, 1, 1],
+        Resources: { XObject: { F: inner } },
+      }),
+    );
+  }
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ XObject: { Top: inner } }));
+  second.node.set(PDFName.of('Contents'), context.register(context.stream('/Top Do')));
+  const bytes = await redactFirst(page, 'deep-forms.pdf', source);
+  expect((await PDFDocument.load(bytes)).getPageCount()).toBe(2);
+});
