@@ -24,7 +24,7 @@ import {
   decodePDFRawStream,
   type PDFObject,
   type PDFPage,
-  type PDFRef,
+  PDFRef,
 } from '@cantoo/pdf-lib';
 import {
   GS_FONT,
@@ -34,6 +34,7 @@ import {
   type ResourceUse,
 } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
+import { SHARED_CONTENT } from './modify-errors';
 import { userUnit, viewSize } from './page-geometry';
 import { keepRenderingOnly } from './rendering-only';
 
@@ -487,8 +488,23 @@ export async function redact(
   source: PDFDocument,
   pages: { index: number; jpg: Uint8Array }[],
 ): Promise<PDFDocument> {
-  const out = await PDFDocument.create();
   const rasters = new Map(pages.map((page) => [page.index, page.jpg]));
+  // 가린 쪽과 내용 스트림을 같이 쓰는 남길 쪽은 그 스트림에 가린 글자가 있어 옮길 수 없다 (보이는 영역만 달라
+  // 남길 쪽에서는 화면 밖일 수 있다). 그 쪽도 그림으로 그려 달라고 알린다
+  const sources = source.getPages();
+  const contentRefs = (index: number) => {
+    const contents = sources[index]!.node.get(PDFName.of('Contents'));
+    const list = source.context.lookup(contents);
+    return [contents, ...(list instanceof PDFArray ? list.asArray() : [])].filter(
+      (item): item is PDFRef => item instanceof PDFRef,
+    );
+  };
+  const redacted = new Set([...rasters.keys()].flatMap(contentRefs));
+  const shared = sources
+    .map((_, index) => index)
+    .filter((index) => !rasters.has(index) && contentRefs(index).some((ref) => redacted.has(ref)));
+  if (shared.length > 0) throw new Error(SHARED_CONTENT + shared.join(','));
+  const out = await PDFDocument.create();
   // 양식 입력값은 쪽에 그려 넣어야 옮겨진다 (모양이 없으면 먼저 만든다). 그림으로 바꾸는 쪽의 칸은 옮기지 않는다
   renderMissingFormAppearances(
     source,

@@ -1935,6 +1935,33 @@ test('압축한 바로 써 넣은 그림 안의 가짜 EI 뒤를 연산자로 �
   expect(text).not.toContain('JPEG-SECRET');
 });
 
+test('가린 쪽과 내용 스트림을 같이 쓰는 쪽도 그림으로 바꿔 가린 글자가 남지 않는다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const font = await source.embedFont(StandardFonts.Helvetica);
+  const content = context.register(
+    context.stream('BT /F1 12 Tf 10 180 Td (SHAREDSECRET) Tj ET 0 0 1 rg 20 20 50 50 re f'),
+  );
+  for (let i = 0; i < 2; i++) {
+    const added = source.addPage([200, 200]);
+    added.node.set(PDFName.of('Resources'), context.obj({ Font: { F1: font.ref } }));
+    added.node.set(PDFName.of('Contents'), content);
+  }
+  // 둘째 쪽은 보이는 영역이 아래쪽뿐이라 글자가 화면 밖이다
+  source.getPage(1).node.set(PDFName.of('CropBox'), context.obj([0, 0, 100, 100]));
+  const frame = await openRedact(page, {
+    name: 'shared-content.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('SHAREDSECRET');
+  expect(await pageTexts(bytes)).toEqual(['', '']);
+});
+
 test('인쇄할 때 저절로 끄는 층도 결과에서 꺼 두고, 층 조합의 보이기 식(/VE)은 층과 함께 옮긴다', async ({
   page,
 }) => {
