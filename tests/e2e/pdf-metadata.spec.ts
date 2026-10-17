@@ -501,3 +501,49 @@ test('모두 지우기는 PDF 안 JPEG 사진의 촬영 정보도 지우고, 사
   expect(text).toContain(latin(photo.subarray(2, 20)));
   expect(text).toContain(latin(photo.subarray(20)));
 });
+
+test('모두 지우기는 pdfTeX가 넣은 그림 정보·층 설정을 만든 프로그램·웹 기록도 지운다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const form = context.register(
+    context.stream('0 0 1 1 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 1, 1],
+      'PTEX.FileName': PDFString.of('/Users/hong/thesis/figure-secret.pdf'),
+      'PTEX.InfoDict': context.obj({ Author: PDFString.of('Ptex Author Hong') }),
+    }),
+  );
+  const added = doc.addPage([200, 200]);
+  added.node.set(PDFName.of('Resources'), context.obj({ XObject: { Fig: form } }));
+  added.node.set(PDFName.of('Contents'), context.register(context.stream('/Fig Do')));
+  const layer = context.register(context.obj({ Type: 'OCG', Name: PDFString.of('Layer 1') }));
+  doc.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({ OCGs: [layer], D: { Creator: PDFString.of('Layer App Secret') } }),
+  );
+  doc.catalog.set(
+    PDFName.of('Names'),
+    context.obj({ URLS: { Names: [PDFString.of('https://intranet.example/secret'), layer] } }),
+  );
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'thesis.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
+  const { text } = await download(page, frame);
+  for (const secret of [
+    'figure-secret.pdf',
+    'Ptex Author Hong',
+    'Layer App Secret',
+    'intranet.example',
+  ]) {
+    expect(text).not.toContain(secret);
+  }
+  expect(text).toContain('Layer 1');
+});
