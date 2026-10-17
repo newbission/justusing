@@ -546,6 +546,40 @@ function jpegWithIcc(jpeg: Uint8Array, icc: Uint8Array | undefined): Uint8Array 
   return out;
 }
 
+/**
+ * JPG 안 EXIF의 방향 값(0x0112)을 1(그대로)로 바꾼 사본. PDF는 이 값을 무시하고 화소 그대로 그리는데, 내려받은
+ * 파일을 보는 프로그램은 따라서 돌려 보여 준다 (휴대폰 사진을 그대로 넣은 PDF). 없거나 읽지 못하면 그대로
+ */
+function uprightJpeg(jpeg: Uint8Array): Uint8Array {
+  try {
+    const view = new DataView(jpeg.buffer, jpeg.byteOffset, jpeg.byteLength);
+    for (let at = 2; at + 4 <= jpeg.length && jpeg[at] === 0xff;) {
+      const marker = jpeg[at + 1]!;
+      if (marker === 0xda) break;
+      const length = view.getUint16(at + 2);
+      if (marker === 0xe1 && view.getUint32(at + 4) === 0x45786966 /* 'Exif' */) {
+        const tiff = at + 10;
+        const little = view.getUint16(tiff) === 0x4949;
+        const ifd = tiff + view.getUint32(tiff + 4, little);
+        const count = view.getUint16(ifd, little);
+        for (let i = 0; i < count; i++) {
+          const entry = ifd + 2 + i * 12;
+          if (view.getUint16(entry, little) !== 0x0112) continue;
+          if (view.getUint16(entry + 8, little) === 1) return jpeg;
+          const copy = jpeg.slice();
+          new DataView(copy.buffer).setUint16(entry + 8, 1, little);
+          return copy;
+        }
+        return jpeg;
+      }
+      at += 2 + length;
+    }
+  } catch {
+    // 망가진 EXIF는 그대로 둔다
+  }
+  return jpeg;
+}
+
 /** /Decode가 없거나 모든 성분이 [0 1](바꾸지 않음)이면 true */
 function plainDecode(dict: PDFDict): boolean {
   const decode = dict.lookup(name('Decode'));
@@ -699,7 +733,8 @@ async function extract(
     }
     // 구조를 읽지 못하는 JPG는 꺼내지 못한 것으로 본다. 원본 그대로 내면 PDF가 쓰지 않는 파일 안 프로필을
     // 보기 프로그램이 다시 써서 색이 달라질 수 있다
-    const bytes = jpegWithIcc(stream.contents, space.icc);
+    const withProfile = jpegWithIcc(stream.contents, space.icc);
+    const bytes = withProfile && uprightJpeg(withProfile);
     return bytes ? { ext: 'jpg', bytes, width, height } : undefined;
   }
   if (list.length === 1 && last === 'JPXDecode') {
