@@ -87,27 +87,50 @@ function pruneResources(
   const scan = (texts: string[]) =>
     contentUsage(texts, formsIn(resources), (name) => stateFont(name) instanceof PDFDict);
   const usage = scan(streams.map(streamText));
-  // 투명 마스크(/SMask /G)의 묶음 그림이 자원 목록 없이 이 목록을 물려받으면 그 내용도 이 목록 기준으로 센다
+  const merge = (inner: ReturnType<typeof scan>) => {
+    for (const [kind, names] of inner.resources) {
+      const set = usage.resources.get(kind) ?? new Set<string>();
+      for (const item of names) set.add(item);
+      usage.resources.set(kind, set);
+    }
+    usage.text.push(...inner.text);
+  };
+  // 자원 목록 없이 이 목록을 물려받는 내용도 이 목록 기준으로 센다 (새로 센 것이 또 부를 수 있어 늘지 않을 때까지):
+  // - 투명 마스크(/SMask /G)의 묶음 그림
+  // - 자원 목록이 없는 Type3 글꼴의 글자 모양 (찍은 글자만)
   const states = context.lookup(resources.get(PDFName.of('ExtGState')));
-  const masked = new Set<PDFStream>();
-  for (let grew = true; grew && states instanceof PDFDict;) {
+  const fonts = context.lookup(resources.get(PDFName.of('Font')));
+  const inherited = new Set<PDFStream>();
+  for (let grew = true; grew;) {
     grew = false;
     for (const name of usage.resources.get('ExtGState') ?? []) {
-      const state = context.lookup(states.get(PDFName.of(name)));
+      const state =
+        states instanceof PDFDict ? context.lookup(states.get(PDFName.of(name))) : undefined;
       const mask =
         state instanceof PDFDict ? context.lookup(state.get(PDFName.of('SMask'))) : undefined;
       const group = mask instanceof PDFDict ? context.lookup(mask.get(PDFName.of('G'))) : undefined;
-      if (!(group instanceof PDFStream) || masked.has(group)) continue;
+      if (!(group instanceof PDFStream) || inherited.has(group)) continue;
       if (group.dict.has(PDFName.of('Resources'))) continue;
-      masked.add(group);
-      const inner = scan([streamText(group)]);
-      for (const [kind, names] of inner.resources) {
-        const set = usage.resources.get(kind) ?? new Set<string>();
-        for (const item of names) set.add(item);
-        usage.resources.set(kind, set);
-      }
-      usage.text.push(...inner.text);
+      inherited.add(group);
+      merge(scan([streamText(group)]));
       grew = true;
+    }
+    for (const { font, codes } of [...usage.text]) {
+      const dict = font.startsWith(GS_FONT)
+        ? stateFont(font.slice(GS_FONT.length))
+        : fonts instanceof PDFDict
+          ? context.lookup(fonts.get(PDFName.of(font)))
+          : undefined;
+      if (!(dict instanceof PDFDict) || dict.get(PDFName.of('Subtype')) !== PDFName.of('Type3')) {
+        continue;
+      }
+      if (dict.has(PDFName.of('Resources'))) continue;
+      for (const glyph of type3Glyphs(dict, codes)) {
+        if (inherited.has(glyph)) continue;
+        inherited.add(glyph);
+        merge(scan([streamText(glyph)]));
+        grew = true;
+      }
     }
   }
   usedThroughNames(holder, resources, usage.resources);
@@ -131,7 +154,6 @@ function pruneResources(
   }
   holder.set(PDFName.of('Resources'), own);
   // Type3 글꼴로 찍은 글자 코드를 모은다
-  const fonts = context.lookup(resources.get(PDFName.of('Font')));
   for (const { font, codes } of usage.text) {
     const dict = font.startsWith(GS_FONT)
       ? stateFont(font.slice(GS_FONT.length))
@@ -347,6 +369,22 @@ function glyphNames(font: PDFDict): { names: Map<number, string>; known: boolean
 }
 
 /** Type3 글꼴마다 남길 쪽에서 찍은 글자의 모양(CharProcs)만 남기고, 그 모양들이 부르는 자원만 남긴다 */
+/** Type3 글꼴에서 그 코드들로 찍는 글자 모양 스트림 (기본 인코딩을 모르는데 표에 없는 코드가 있으면 모두) */
+function type3Glyphs(font: PDFDict, codes: Iterable<number>): PDFStream[] {
+  const context = font.context;
+  const procs = context.lookup(font.get(PDFName.of('CharProcs')));
+  if (!(procs instanceof PDFDict)) return [];
+  const { names, known } = glyphNames(font);
+  const list = [...codes];
+  const used =
+    !known && list.some((code) => !names.has(code))
+      ? procs.keys().map((key) => key.decodeText())
+      : list.map((code) => names.get(code)).filter((name): name is string => !!name);
+  return [...new Set(used)]
+    .map((name) => context.lookup(procs.get(PDFName.of(name))))
+    .filter((glyph): glyph is PDFStream => glyph instanceof PDFStream);
+}
+
 function finishType3(pruning: Pruning) {
   for (const [font, codes] of pruning.type3) {
     const context = font.context;
