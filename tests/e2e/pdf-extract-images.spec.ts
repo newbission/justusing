@@ -1467,6 +1467,91 @@ test('바로 써 넣은 마스크(/IM true)는 사진이 아니라 못 꺼낸 �
   await expect(frame.getByText('흑백 팩스·CMYK', { exact: false })).toHaveCount(0);
 });
 
+test('칠할 때만 무늬 안 사진을 세고, 보이지 않는 글자·그래픽 상태로 고른 Type3 글자를 따르며, 투명 CMYK JPG는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const gray = (value: number) =>
+    context.register(
+      context.flateStream(new Uint8Array(64 * 64).fill(value), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ColorSpace: 'DeviceGray',
+        BitsPerComponent: 8,
+      }),
+    );
+  const pattern = (value: number) =>
+    context.register(
+      context.stream('q 64 0 0 64 0 0 cm /Im Do Q', {
+        Type: 'Pattern',
+        PatternType: 1,
+        PaintType: 1,
+        TilingType: 1,
+        BBox: [0, 0, 64, 64],
+        XStep: 64,
+        YStep: 64,
+        Resources: { XObject: { Im: gray(value) } },
+      }),
+    );
+  const glyphFont = (value: number) =>
+    context.register(
+      context.obj({
+        Type: 'Font',
+        Subtype: 'Type3',
+        FontBBox: [0, 0, 1000, 1000],
+        FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+        CharProcs: {
+          a: context.register(context.stream('1000 0 d0 q 1000 0 0 1000 0 0 cm /G Do Q')),
+        },
+        Encoding: { Type: 'Encoding', Differences: [97, 'a'] },
+        FirstChar: 97,
+        LastChar: 97,
+        Widths: [1000],
+        Resources: { XObject: { G: gray(value) } },
+      }),
+    );
+  const cmyk = context.register(
+    context.stream(await readFile(fixture('photo.jpg')), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1200,
+      Height: 900,
+      BitsPerComponent: 8,
+      Filter: 'DCTDecode',
+      ColorSpace: 'DeviceCMYK',
+      SMask: gray(255),
+    }),
+  );
+  const added = doc.addPage([600, 800]);
+  added.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      // P1: 고르기만 하고 칠하지 않음, P2: 칠함
+      Pattern: { P1: pattern(11), P2: pattern(12) },
+      // T1: 보이지 않는 글자(3 Tr)로만 찍음, T2: 그래픽 상태로 고르고 찍음
+      Font: { T1: glyphFont(13) },
+      ExtGState: { GS2: { Font: [glyphFont(14), 12] } },
+      XObject: { C: cmyk },
+    }),
+  );
+  added.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream(
+        '/Pattern cs /P1 scn 0 g 0 0 10 10 re f /Pattern cs /P2 scn 20 20 10 10 re f ' +
+          'BT 3 Tr /T1 12 Tf (a) Tj ET BT 0 Tr /GS2 gs (a) Tj ET /C Do',
+      ),
+    ),
+  );
+  const frame = await openPdf(page, 'state.pdf', doc);
+  // 칠한 무늬(P2)와 그래픽 상태로 고른 글자(T2) 안의 사진만
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
+
 test('반투명 화소의 색을 깎지 않고 PNG로 꺼낸다', async ({ page }) => {
   const { inflateSync } = await import('node:zlib');
   const doc = await PDFDocument.create();
