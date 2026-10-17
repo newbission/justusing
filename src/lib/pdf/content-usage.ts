@@ -48,12 +48,9 @@ const DEVICE_COLOR_OPS: Record<string, string> = {
   k: 'DefaultCMYK',
   K: 'DefaultCMYK',
 };
-/**
- * 지금 색으로 칠하는 연산자. 처음 색은 장치 회색이라 색을 고르지 않고 칠하면 /DefaultGray로 그린다
- * (색을 골랐는지 따라가지 않고, 칠하면 쓴 것으로 센다). 그림(Do·BI)은 자기 색공간으로 그려 넣지 않는다.
- * 지금 색으로 칠하는 마스크 그림은 따로 센다 (바로 써 넣은 것은 여기서, 묶음 그림은 사전을 보는 쪽에서)
- */
-const PAINTS = new Set(['f', 'F', 'f*', 'B', 'B*', 'b', 'b*', 'S', 's', 'Tj', 'TJ', "'", '"']);
+/** 칠하는·선을 긋는 연산자 (글자는 그리기 방식에 따라 따로) */
+const FILLS = new Set(['f', 'F', 'f*', 'B', 'B*', 'b', 'b*']);
+const STROKES = new Set(['S', 's', 'B', 'B*', 'b', 'b*']);
 
 /**
  * 색공간 이름이 부르는 자원 목록(/ColorSpace)의 이름 (inline: 바로 써 넣은 그림 안의 이름).
@@ -105,6 +102,12 @@ export function contentUsage(
   /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
   let font = '';
   const saved: string[] = [];
+  /**
+   * 칠하기·선 색이 장치 회색인지와 글자 그리기 방식(Tr). 처음 색은 둘 다 장치 회색이다 (q/Q로 저장·복원).
+   * 장치 회색으로 칠할 때만 /DefaultGray를 쓴 것으로 센다
+   */
+  let paint = { fillGray: true, strokeGray: true, render: 0 };
+  const savedPaint: (typeof paint)[] = [];
   /** 지금 훑는 중인 묶음 그림들 */
   const path = new Set<object>();
   /**
@@ -137,10 +140,26 @@ export function contentUsage(
       // 자원을 부르는 이름은 연산자 바로 앞의 피연산자다 (/OC << /Type … >> BDC의 사전 안 이름은 아니다)
       const last = operands.at(-1);
       const op = token.value;
-      if (!foreign) {
-        const device = DEVICE_COLOR_OPS[op];
-        if (device) use('ColorSpace', device);
-        if (PAINTS.has(op)) use('ColorSpace', 'DefaultGray');
+      const device = DEVICE_COLOR_OPS[op];
+      if (device) {
+        if (!foreign) use('ColorSpace', device);
+        const gray = device === 'DefaultGray';
+        if (op === op.toLowerCase()) paint.fillGray = gray;
+        else paint.strokeGray = gray;
+      } else if ((op === 'cs' || op === 'CS') && last?.kind === 'name') {
+        const gray = last.value === 'DeviceGray';
+        if (op === 'cs') paint.fillGray = gray;
+        else paint.strokeGray = gray;
+      } else if (op === 'Tr' && last?.kind === 'other') {
+        paint.render = Number(last.text) || 0;
+      }
+      const isText = op === 'Tj' || op === 'TJ' || op === "'" || op === '"';
+      // 글자 그리기 방식: 0·4 칠하기, 1·5 선, 2·6 둘 다, 3·7 그리지 않음
+      const mode = paint.render % 4;
+      const fills = FILLS.has(op) || (isText && (mode === 0 || mode === 2));
+      const strokes = STROKES.has(op) || (isText && (mode === 1 || mode === 2));
+      if (!foreign && ((fills && paint.fillGray) || (strokes && paint.strokeGray))) {
+        use('ColorSpace', 'DefaultGray');
       }
       if (op === 'BI') {
         inInlineImage = true;
@@ -158,7 +177,8 @@ export function contentUsage(
             operands[index + 1]?.kind === 'other' &&
             (operands[index + 1] as { text?: string }).text === 'true',
         );
-        if (mask && !foreign) use('ColorSpace', 'DefaultGray');
+        // 마스크는 지금 칠하기 색으로 칠한다
+        if (mask && !foreign && paint.fillGray) use('ColorSpace', 'DefaultGray');
         if (at !== -1 && !foreign) {
           const space = (name: string) => {
             const resource = spaceResource(name, true);
@@ -185,8 +205,10 @@ export function contentUsage(
         }
       } else if (op === 'q') {
         saved.push(font);
+        savedPaint.push({ ...paint });
       } else if (op === 'Q') {
         font = saved.pop() ?? font;
+        paint = savedPaint.pop() ?? paint;
       } else if (op === 'Tj' || op === "'" || op === '"' || op === 'TJ') {
         const codes = operands.flatMap((operand) =>
           operand.kind === 'string' ? operand.bytes : [],
@@ -205,7 +227,12 @@ export function contentUsage(
           done.add(state);
           path.add(inner.key);
           // 묶음 그림은 앞뒤로 q/Q를 한 것처럼 실행된다 (안에서 Q를 더 해도 바깥 상태는 그대로)
-          const outer = { font, saved: [...saved] };
+          const outer = {
+            font,
+            saved: [...saved],
+            paint: { ...paint },
+            savedPaint: [...savedPaint],
+          };
           let innerTokens = tokenCache.get(inner.key);
           if (!innerTokens) tokenCache.set(inner.key, (innerTokens = tokenize(inner.text)));
           scan(
@@ -217,6 +244,8 @@ export function contentUsage(
           path.delete(inner.key);
           font = outer.font;
           saved.splice(0, saved.length, ...outer.saved);
+          paint = outer.paint;
+          savedPaint.splice(0, savedPaint.length, ...outer.savedPaint);
         }
       }
       if (!inInlineImage) operands = [];
