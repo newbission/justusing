@@ -49,26 +49,11 @@ const DEVICE_COLOR_OPS: Record<string, string> = {
   K: 'DefaultCMYK',
 };
 /**
- * 칠하는 연산자. 처음 색은 장치 회색이라 색을 고르지 않고 칠하면 /DefaultGray로 그린다
- * (색을 골랐는지 따라가지 않고, 칠하면 쓴 것으로 센다)
+ * 지금 색으로 칠하는 연산자. 처음 색은 장치 회색이라 색을 고르지 않고 칠하면 /DefaultGray로 그린다
+ * (색을 골랐는지 따라가지 않고, 칠하면 쓴 것으로 센다). 그림(Do·BI)은 자기 색공간으로 그려 넣지 않는다.
+ * 지금 색으로 칠하는 마스크 그림은 따로 센다 (바로 써 넣은 것은 여기서, 묶음 그림은 사전을 보는 쪽에서)
  */
-const PAINTS = new Set([
-  'f',
-  'F',
-  'f*',
-  'B',
-  'B*',
-  'b',
-  'b*',
-  'S',
-  's',
-  'Tj',
-  'TJ',
-  "'",
-  '"',
-  'Do',
-  'ID',
-]);
+const PAINTS = new Set(['f', 'F', 'f*', 'B', 'B*', 'b', 'b*', 'S', 's', 'Tj', 'TJ', "'", '"']);
 
 /**
  * 색공간 이름이 부르는 자원 목록(/ColorSpace)의 이름 (inline: 바로 써 넣은 그림 안의 이름).
@@ -159,6 +144,14 @@ export function contentUsage(
             operand.kind === 'name' && (operand.value === 'CS' || operand.value === 'ColorSpace'),
         );
         const value = operands[at + 1];
+        const mask = operands.some(
+          (operand, index) =>
+            operand.kind === 'name' &&
+            (operand.value === 'IM' || operand.value === 'ImageMask') &&
+            operands[index + 1]?.kind === 'other' &&
+            (operands[index + 1] as { text?: string }).text === 'true',
+        );
+        if (mask && !foreign) use('ColorSpace', 'DefaultGray');
         if (at !== -1 && !foreign) {
           const space = (name: string) => {
             const resource = spaceResource(name, true);
