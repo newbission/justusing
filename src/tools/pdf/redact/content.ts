@@ -24,7 +24,7 @@ export default defineContent({
       },
       {
         q: '결과에서 빠지는 것이 있나요?',
-        a: '가린 글자가 다른 곳으로 새지 않도록 책갈피, 링크, 양식(입력 칸), 문서 정보(제목·작성자 등), 첨부 파일은 넣지 않습니다. 양식에 적힌 값과 메모·서명처럼 인쇄되는 주석은 보이는 모습 그대로 쪽에 그려 넣습니다.',
+        a: '가린 글자가 다른 곳으로 새지 않도록 책갈피, 링크, 양식(입력 칸), 문서 정보(제목·작성자 등), 첨부 파일은 넣지 않습니다. 양식에 적힌 값과 메모·서명처럼 인쇄되는 주석은 보이는 모습 그대로 쪽에 그려 넣습니다. 다만 가리지 않은 쪽과 같이 쓰는 그림·묶음 그림(로고, 머리글, 워터마크 등)과 글꼴은 그대로 옮깁니다. 그 안의 내용을 가려야 한다면 그것이 나오는 쪽을 모두 가리세요. 글꼴 파일에는 가린 쪽에서 쓴 글자 모양이 남을 수 있습니다(글자의 순서·자리는 남지 않습니다).',
       },
       {
         q: '파일이 커졌어요.',
@@ -55,7 +55,7 @@ export default defineContent({
       },
       {
         q: 'Is anything left out of the result?',
-        a: 'So that redacted text does not leak elsewhere, bookmarks, links, form fields, document information (title, author and so on) and attachments are not kept. Filled-in form values and printable comments or signatures are drawn onto the page as they look.',
+        a: 'So that redacted text does not leak elsewhere, bookmarks, links, form fields, document information (title, author and so on) and attachments are not kept. Filled-in form values and printable comments or signatures are drawn onto the page as they look. Images, form objects (logos, headers, watermarks and so on) and fonts shared with unredacted pages are kept as they are. If something inside them must be redacted, redact every page where it appears. Font files may still contain the shapes of characters used on redacted pages (their order and position are not kept).',
       },
       {
         q: 'The file got bigger.',
