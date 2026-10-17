@@ -387,9 +387,9 @@ function hiddenLayers(source: PDFDocument): Set<PDFDict> {
 }
 
 /**
- * 볼 때 저절로 적용되는 규칙(/AS, 사건 /View)이 끌 수 있는 층. 결과에는 층의 사용 정보(/Usage)를 옮기지 않아
+ * 볼 때·인쇄할 때 저절로 적용되는 규칙(/AS, 사건 /View·/Print)이 끌 수 있는 층. 결과에는 층의 사용 정보(/Usage)를 옮기지 않아
  * 규칙이 사라지므로, 원본에서 꺼질 수 있던 층은 꺼 둔다:
- * - 보기(/View /ViewState /OFF)
+ * - 보기(/View /ViewState /OFF), 인쇄(/Print /PrintState /OFF)
  * - 확대 배율(/Zoom /min·/max): 100%에서 꺼지는 범위
  * - 언어(/Language)·사람(/User): 보는 사람의 환경에 따라 정해져 알 수 없으므로, 규칙이 걸려 있으면 꺼 둔다
  *   (숨겨 둔 내용이 켜진 채로 보이는 것보다 낫다. 층은 남아 있어 보기 프로그램에서 다시 켤 수 있다)
@@ -409,8 +409,15 @@ function autoHiddenLayers(config: unknown): Set<PDFDict> {
     return resolved instanceof PDFNumber ? resolved.asNumber() : undefined;
   };
   for (const rule of list(config.get(PDFName.of('AS')))) {
-    if (!(rule instanceof PDFDict) || rule.get(PDFName.of('Event')) !== PDFName.of('View'))
+    // 보기(/View)와 인쇄(/Print) 규칙. 미리보기와 결과 그림은 인쇄 모습으로 그리므로 인쇄 때 꺼지는 층도
+    // 사용자가 보지 못한 채 저장된다 (내보내기 /Export는 그리는 모습과 상관없다)
+    const event = rule instanceof PDFDict ? rule.get(PDFName.of('Event')) : undefined;
+    if (
+      !(rule instanceof PDFDict) ||
+      (event !== PDFName.of('View') && event !== PDFName.of('Print'))
+    ) {
       continue;
+    }
     const categories = list(rule.get(PDFName.of('Category')));
     for (const layer of list(rule.get(PDFName.of('OCGs')))) {
       if (!(layer instanceof PDFDict)) continue;
@@ -422,11 +429,13 @@ function autoHiddenLayers(config: unknown): Set<PDFDict> {
         return value instanceof PDFDict ? value : undefined;
       };
       const view = entry('View');
+      const print = entry('Print');
       const zoom = entry('Zoom');
       const min = zoom ? (number(zoom.get(PDFName.of('min'))) ?? 0) : 0;
       const max = zoom ? (number(zoom.get(PDFName.of('max'))) ?? Infinity) : Infinity;
       if (
         view?.get(PDFName.of('ViewState')) === PDFName.of('OFF') ||
+        print?.get(PDFName.of('PrintState')) === PDFName.of('OFF') ||
         min > 1 ||
         max <= 1 ||
         entry('Language') ||
