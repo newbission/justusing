@@ -78,14 +78,15 @@ function commits() {
     '--remotes=origin',
     '--no-merges',
     '--date=short',
-    '--format=%h%x09%ad%x09%s',
+    '--format=%h%x09%ad%x09%aI%x09%s',
   ]);
   const seen = new Set();
   const list = [];
   for (const line of out.trim().split('\n')) {
-    const [hash, date, subject] = line.split('\t');
-    // 같은 내용이 여러 브랜치에(리베이스로) 있으면 제목·날짜로 하나만
-    const key = `${date} ${subject}`;
+    const [hash, date, authored, subject] = line.split('\t');
+    // 리베이스로 여러 브랜치에 생긴 같은 커밋은 처음 쓴 시각(초까지)과 제목이 같아 하나만 둔다.
+    // 같은 날 같은 제목으로 따로 만든 커밋은 쓴 시각이 달라 둘 다 남는다
+    const key = `${authored} ${subject}`;
     if (seen.has(key)) continue;
     seen.add(key);
     const match = /^([a-z]+)(?:\(([^)]*)\))?: (.*)$/.exec(subject);
