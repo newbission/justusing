@@ -146,8 +146,11 @@ function runLengthEnd(text: string, start: number): number | undefined {
   return undefined;
 }
 
-/** LZW 자료의 끝(EOD 부호 257이 든 바이트 뒤) 자리. 부호 길이는 9~12비트로 늘어난다 (/EarlyChange 기본값 1) */
-function lzwEnd(text: string, start: number): number | undefined {
+/**
+ * LZW 자료의 끝(EOD 부호 257이 든 바이트 뒤) 자리. 부호 길이는 9~12비트로 늘어난다.
+ * early: /EarlyChange (1이면 표가 차기 한 부호 앞에서, 0이면 찰 때 길어진다)
+ */
+function lzwEnd(text: string, start: number, early: number): number | undefined {
   let bit = 0;
   let width = 9;
   let next = 258;
@@ -170,7 +173,7 @@ function lzwEnd(text: string, start: number): number | undefined {
     // 첫 부호 뒤로는 부호마다 표에 하나가 더해지고, 표가 차면 부호가 길어진다
     if (previous) next++;
     previous = true;
-    if (next + 1 >= 1 << width && width < 12) width++;
+    if (next + early >= 1 << width && width < 12) width++;
   }
   return undefined;
 }
@@ -246,7 +249,8 @@ function inlineImageEnd(text: string, start: number, dict: Map<string, string>):
         ? jpegEnd(text, start)
         : only === 'RL'
           ? runLengthEnd(text, start)
-          : lzwEnd(text, start);
+          : // 압축 설정(/DP << /EarlyChange 0 >>)의 값은 사전 읽기가 안쪽 이름까지 모은다
+            lzwEnd(text, start, number('EarlyChange') ?? 1);
     const after = end === undefined ? undefined : endsAt(end);
     if (after !== undefined) return after;
   }
