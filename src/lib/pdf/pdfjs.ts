@@ -4,6 +4,7 @@
  */
 import * as pdfjs from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?worker&url';
+import scanWorkerUrl from './signature-scan.worker.ts?worker&url';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { createWorker } from '../worker';
 
@@ -43,19 +44,33 @@ export async function isSigned(doc: PDFDocumentProxy, bytes?: Uint8Array): Promi
   } catch {
     // 바이트로 본다
   }
-  return bytes !== undefined && hasByteRange(bytes);
+  if (bytes === undefined) return false;
+  try {
+    return await hasByteRange(bytes);
+  } catch {
+    // 워커를 띄우지 못하면 알 수 없는 것으로 (파일 열기는 막지 않는다)
+    return false;
+  }
 }
 
-/** 바이트 안에 "/ByteRange" 다음에 "[" 가 오는 자리가 있는지 (서명 값 사전) */
-function hasByteRange(bytes: Uint8Array): boolean {
-  const key = [0x2f, 0x42, 0x79, 0x74, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65];
-  for (let at = bytes.indexOf(key[0]!); at !== -1; at = bytes.indexOf(key[0]!, at + 1)) {
-    if (!key.every((byte, i) => bytes[at + i] === byte)) continue;
-    let next = at + key.length;
-    while (bytes[next] === 0x20 || bytes[next] === 0x0a || bytes[next] === 0x0d) next++;
-    if (bytes[next] === 0x5b) return true;
-  }
-  return false;
+let scanWorker: Promise<Worker> | undefined;
+let scanId = 0;
+
+/** 서명 값 사전(/ByteRange [)이 바이트 안에 있는지. 큰 파일도 화면이 멈추지 않게 워커에서 찾는다 */
+async function hasByteRange(bytes: Uint8Array): Promise<boolean> {
+  const worker = await (scanWorker ??= createWorker(scanWorkerUrl));
+  const id = ++scanId;
+  // 원본은 결과를 만들 때 써야 해서 복사본을 넘긴다
+  const copy = bytes.slice();
+  return new Promise((resolve) => {
+    const listen = (event: MessageEvent<{ id: number; found: boolean }>) => {
+      if (event.data.id !== id) return;
+      worker.removeEventListener('message', listen);
+      resolve(event.data.found);
+    };
+    worker.addEventListener('message', listen);
+    worker.postMessage({ id, bytes: copy }, [copy.buffer]);
+  });
 }
 
 export interface OpenedPdf {
