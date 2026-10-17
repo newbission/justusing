@@ -352,18 +352,22 @@ async function withIcc(png: Uint8Array, icc: Uint8Array): Promise<Uint8Array> {
   return out;
 }
 
-/** 회색(+투명도) PNG를 직접 만든다 (canvas는 늘 RGB로 저장해 회색 ICC 프로필을 넣을 수 없다) */
-async function grayPng(pixels: ImageData): Promise<Uint8Array> {
+/**
+ * PNG를 직접 만든다 (회색·RGB, 투명도가 있으면 알파 채널). canvas를 거치지 않는다: canvas는 반투명 화소를
+ * 알파를 곱해 저장해 색이 깎이고(무손실이 아님), 늘 RGB로 저장해 회색 ICC 프로필을 넣을 수 없다
+ */
+async function directPng(pixels: ImageData, gray: boolean): Promise<Uint8Array> {
   const { width, height, data } = pixels;
   let opaque = true;
   for (let i = 3; i < data.length; i += 4) if (data[i] !== 255) opaque = false;
-  const channels = opaque ? 1 : 2;
+  const colors = gray ? 1 : 3;
+  const channels = colors + (opaque ? 0 : 1);
   const raw = new Uint8Array((width * channels + 1) * height);
   for (let y = 0, at = 0; y < height; y++) {
     raw[at++] = 0; // 줄마다 필터 없음
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4;
-      raw[at++] = data[i]!;
+      for (let c = 0; c < colors; c++) raw[at++] = data[i + c]!;
       if (!opaque) raw[at++] = data[i + 3]!;
     }
   }
@@ -385,8 +389,8 @@ async function grayPng(pixels: ImageData): Promise<Uint8Array> {
   const view = new DataView(header.buffer);
   view.setUint32(0, width);
   view.setUint32(4, height);
-  // 8비트, 색 종류 0(회색) 또는 4(회색+투명도)
-  header.set([8, opaque ? 0 : 4, 0, 0, 0], 8);
+  // 8비트, 색 종류 0(회색)·4(회색+투명도)·2(RGB)·6(RGB+투명도)
+  header.set([8, (gray ? 0 : 2) + (opaque ? 0 : 4), 0, 0, 0], 8);
   const parts = [
     new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     chunk('IHDR', header),
@@ -402,19 +406,10 @@ async function grayPng(pixels: ImageData): Promise<Uint8Array> {
   return out;
 }
 
-/** 화소를 PNG로. ICC 프로필이 있으면 넣는다 (회색이면 회색 PNG로 만들어 회색 프로필을 넣는다) */
+/** 화소를 PNG로. ICC 프로필이 있으면 넣는다 */
 async function encodePng(pixels: ImageData, icc: Uint8Array | undefined, gray: boolean) {
-  if (!icc) return png(pixels);
-  return withIcc(gray ? await grayPng(pixels) : await png(pixels), icc);
-}
-
-async function png(image: ImageData | ImageBitmap): Promise<Uint8Array> {
-  const canvas = new OffscreenCanvas(image.width, image.height);
-  const context = canvas.getContext('2d')!;
-  if (image instanceof ImageData) context.putImageData(image, 0, 0);
-  else context.drawImage(image, 0, 0);
-  const blob = await canvas.convertToBlob({ type: 'image/png' });
-  return new Uint8Array(await blob.arrayBuffer());
+  const png = await directPng(pixels, gray);
+  return icc ? withIcc(png, icc) : png;
 }
 
 /** JPG에 투명도(SMask)나 색 키 투명(/Mask 배열)을 합친 화소 */
