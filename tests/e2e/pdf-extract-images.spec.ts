@@ -1466,3 +1466,46 @@ test('바로 써 넣은 마스크(/IM true)는 사진이 아니라 못 꺼낸 �
   await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
   await expect(frame.getByText('흑백 팩스·CMYK', { exact: false })).toHaveCount(0);
 });
+
+test('반투명 화소의 색을 깎지 않고 PNG로 꺼낸다', async ({ page }) => {
+  const { inflateSync } = await import('node:zlib');
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const rgb = new Uint8Array(64 * 64 * 3);
+  for (let i = 0; i < rgb.length; i += 3) rgb.set([200, 100, 50], i);
+  const picture = context.register(
+    context.flateStream(rgb, {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 64,
+      Height: 64,
+      ColorSpace: 'DeviceRGB',
+      BitsPerComponent: 8,
+      SMask: context.register(
+        context.flateStream(new Uint8Array(64 * 64).fill(10), {
+          Type: 'XObject',
+          Subtype: 'Image',
+          Width: 64,
+          Height: 64,
+          ColorSpace: 'DeviceGray',
+          BitsPerComponent: 8,
+        }),
+      ),
+    }),
+  );
+  drawAll(doc, [picture]);
+  const frame = await openPdf(page, 'alpha.pdf', doc);
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  const png = await readFile(await (await event).path());
+  // IDAT 자료를 풀어 첫 화소를 본다 (줄 앞 필터 1바이트 뒤 RGBA)
+  const chunks: Buffer[] = [];
+  for (let at = 8; at < png.length;) {
+    const length = png.readUInt32BE(at);
+    if (png.toString('latin1', at + 4, at + 8) === 'IDAT')
+      chunks.push(png.subarray(at + 8, at + 8 + length));
+    at += 12 + length;
+  }
+  const raw = inflateSync(Buffer.concat(chunks));
+  expect([...raw.subarray(0, 5)]).toEqual([0, 200, 100, 50, 10]);
+});
