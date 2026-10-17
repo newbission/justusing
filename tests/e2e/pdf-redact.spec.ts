@@ -2105,3 +2105,40 @@ test('알려진 기본 인코딩의 Type3 글자는 찍은 모양만 남기고, 
   expect(text).not.toContain('TYPE3-B-SECRET');
   expect(text).not.toContain('GRAY-DEFAULT-SECRET');
 });
+
+/** 남길 쪽 정리 시험용 PDF를 가리고(첫 쪽 가운데 상자) 결과 바이트를 돌려준다 */
+async function redactFirst(page: Page, name: string, source: PDFDocument) {
+  const frame = await openRedact(page, { name, buffer: Buffer.from(await source.save()) });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  return (await download(page, frame)).bytes;
+}
+
+test('그릴 수 없는 그림이 여러 자리에서 불려도 정리하지 않은 채 옮기지 않는다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const font = await source.embedFont(StandardFonts.Helvetica);
+  const first = source.addPage([200, 200]);
+  first.node.set(PDFName.of('Resources'), context.obj({ Font: { F1: font.ref } }));
+  first.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /F1 12 Tf 10 10 Td (PAGEONESECRET) Tj ET')),
+  );
+  // 그릴 수 없는 종류(/PS)의 그림이 가린 쪽 사전을 가리킨다
+  const ps = context.register(context.stream('', { Type: 'XObject', Subtype: 'PS', X: first.ref }));
+  const form = context.register(
+    context.stream('/Ps Do', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 10, 10],
+      Resources: { XObject: { Ps: ps } },
+    }),
+  );
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ XObject: { Ps: ps, Fm: form } }));
+  second.node.set(PDFName.of('Contents'), context.register(context.stream('/Ps Do /Fm Do')));
+  const bytes = await redactFirst(page, 'ps-xobject.pdf', source);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('PAGEONESECRET');
+});
