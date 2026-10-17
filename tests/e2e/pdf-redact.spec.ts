@@ -2169,3 +2169,103 @@ test('규칙 없이 사용 정보만으로 인쇄 때 꺼지는 층도 결과에
     ['Screen only', false],
   ]);
 });
+
+test('자원 목록이 없는 Type3 글자 모양이 쓰는 그림을 남기고, 같이 쓰는 내용 목록에 다른 쪽 주석을 그리지 않는다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const picture = context.register(
+    context.flateStream(new Uint8Array(16).fill(80), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 4,
+      Height: 4,
+      BitsPerComponent: 8,
+      ColorSpace: 'DeviceGray',
+    }),
+  );
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 1000, 1000],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('1000 0 d0 q 1000 0 0 1000 0 0 cm /Im Do Q')),
+      },
+      Encoding: { Type: 'Encoding', Differences: [97, 'a'] },
+      FirstChar: 97,
+      LastChar: 97,
+      Widths: [1000],
+    }),
+  );
+  source.addPage([200, 200]);
+  // 둘째·셋째 쪽은 내용 목록(배열) 하나를 같이 쓴다. 둘째 쪽에만 인쇄되는 주석
+  const shared = context.register(
+    context.obj([context.register(context.stream('BT /T3 12 Tf 10 10 Td (a) Tj ET'))]),
+  );
+  for (let i = 0; i < 2; i++) {
+    const added = source.addPage([200, 200]);
+    added.node.set(
+      PDFName.of('Resources'),
+      context.obj({ Font: { T3: type3 }, XObject: { Im: picture } }),
+    );
+    added.node.set(PDFName.of('Contents'), shared);
+  }
+  const look = context.register(
+    context.stream('0 0 1 rg 0 0 10 10 re f', {
+      Type: 'XObject',
+      Subtype: 'Form',
+      BBox: [0, 0, 10, 10],
+    }),
+  );
+  source.getPage(1).node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Square',
+        Rect: [100, 100, 110, 110],
+        F: 4,
+        AP: { N: look },
+      }),
+    ]),
+  );
+  const bytes = await redactFirst(page, 'type3-inherit.pdf', source);
+  const result = await PDFDocument.load(bytes);
+  const images = result.getPage(1).node.Resources()!.lookup(PDFName.of('XObject'), PDFDict);
+  expect(images.has(PDFName.of('Im'))).toBe(true);
+  const { OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const pdf = await getDocument({ data: bytes.slice() }).promise;
+  const forms = async (n: number) =>
+    (await (await pdf.getPage(n)).getOperatorList()).fnArray.filter(
+      (fn) => fn === OPS.paintFormXObjectBegin,
+    ).length;
+  expect(await forms(2)).toBe(1);
+  expect(await forms(3)).toBe(0);
+});
+
+test('같이 쓰는 내용이 사슬처럼 이어져도 가린 내용과 상관없는 쪽은 글자로 남기고, 내용이 깨진 쪽은 그림으로 바꾼다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const font = await source.embedFont(StandardFonts.Helvetica);
+  const part = (text: string) =>
+    context.register(context.stream(`BT /F1 12 Tf 10 ${20 + text.length} Td (${text}) Tj ET`));
+  const [a, b, c, d] = ['AAAA', 'BBBB', 'CCCC', 'DDDD'].map(part);
+  const broken = context.register(context.stream('this is not flate', { Filter: 'FlateDecode' }));
+  for (const list of [[a, b], [b, c], [c, d], [broken]]) {
+    const added = source.addPage([200, 200]);
+    added.node.set(PDFName.of('Resources'), context.obj({ Font: { F1: font.ref } }));
+    added.node.set(PDFName.of('Contents'), context.obj(list));
+  }
+  const bytes = await redactFirst(page, 'chain.pdf', source);
+  const texts = await pageTexts(bytes);
+  expect(texts).toHaveLength(4);
+  expect(texts[0]).toBe('');
+  expect(texts[1]).toBe('');
+  expect(texts[2]).toContain('DDDD');
+  expect(texts[3]).toBe('');
+});

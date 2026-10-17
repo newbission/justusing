@@ -4,7 +4,7 @@
 export const UNRENDERED_ANNOTATION = 'unrendered-annotation';
 
 /**
- * 남길 쪽이 가린 쪽과 내용 스트림을 같이 쓴다 (뒤에 쉼표로 이은 쪽 번호, 0부터). 그 스트림에 가린 글자가 있어
- * 그대로 옮기면 남는다. 화면이 그 쪽도 그림으로 그려 다시 맡긴다
+ * 남길 쪽 중 그대로 옮길 수 없는 쪽 (뒤에 쉼표로 이은 쪽 번호, 0부터): 가린 쪽과 같은 스트림(내용·묶음 그림·그림)을
+ * 쓰거나, 내용을 읽지 못해 무엇을 쓰는지 알 수 없는 쪽. 화면이 그 쪽도 그림으로 그려 다시 맡긴다
  */
 export const SHARED_CONTENT = 'shared-content:';

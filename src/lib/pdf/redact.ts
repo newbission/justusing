@@ -38,20 +38,26 @@ export async function redactPdf(
 ): Promise<Uint8Array> {
   const byPage = new Map<number, RedactBox[]>();
   for (const box of boxes) byPage.set(box.page, [...(byPage.get(box.page) ?? []), box]);
-  const pages: { index: number; jpg: Uint8Array }[] = [];
+  const pages: { index: number; jpg: Uint8Array; plain?: boolean }[] = [];
   for (const [index, pageBoxes] of [...byPage].sort(([a], [b]) => a - b)) {
     pages.push({ index, jpg: await paintPage(source.doc, index, pageBoxes) });
     onPage?.(pages.length, byPage.size);
   }
-  try {
-    return await modifyPdf(source, { kind: 'redact', pages });
-  } catch (error) {
-    // 가린 쪽과 내용을 같이 쓰는 쪽이 있으면 그 쪽도 (가릴 자리 없이) 그림으로 그려 다시 만든다
-    if (!(error instanceof Error) || !error.message.startsWith(SHARED_CONTENT)) throw error;
-    const shared = error.message.slice(SHARED_CONTENT.length).split(',').map(Number);
-    for (const index of shared) pages.push({ index, jpg: await paintPage(source.doc, index, []) });
-    pages.sort((a, b) => a.index - b.index);
-    return modifyPdf(source, { kind: 'redact', pages });
+  // 워커가 그대로 옮길 수 없는 쪽(가린 쪽과 내용을 같이 씀, 내용이 손상됨)을 알리면 그 쪽도 가릴 자리 없이
+  // 그림으로 그려 다시 만든다. 그런 쪽은 가린 내용이 없어 더 늘어나지 않지만, 혹시 몰라 쪽 수만큼만 되풀이한다
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await modifyPdf(source, { kind: 'redact', pages });
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.startsWith(SHARED_CONTENT)) throw error;
+      if (attempt >= source.doc.numPages) throw error;
+      const unsafe = error.message.slice(SHARED_CONTENT.length).split(',').map(Number);
+      for (const index of unsafe) {
+        if (pages.some((page) => page.index === index)) continue;
+        pages.push({ index, jpg: await paintPage(source.doc, index, []), plain: true });
+      }
+      pages.sort((a, b) => a.index - b.index);
+    }
   }
 }
 
