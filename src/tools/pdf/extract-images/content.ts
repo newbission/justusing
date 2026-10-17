@@ -18,7 +18,7 @@ export default defineContent({
       },
       {
         q: '꺼내지 못한 그림이 있다고 나옵니다.',
-        a: '스캔본에 쓰이는 흑백 팩스 형식(CCITT·JBIG2), 인쇄용 CMYK 화소, 16비트 같은 특수한 형식은 꺼내지 못합니다. 그런 쪽은 "PDF를 이미지로"로 쪽 전체를 그림으로 받으세요. JPEG 2000 사진은 원본 그대로 .jp2(파일 형식에 따라 .jpx·.j2k)로 꺼내지만, 브라우저에서는 미리 볼 수 없습니다.',
+        a: '스캔본에 쓰이는 흑백 팩스 형식(CCITT·JBIG2), 인쇄용 CMYK 화소와 투명도가 붙은 CMYK JPG, 16비트, Lab·별색 같은 특수한 색공간, 쪽 내용에 바로 써 넣은 그림은 꺼내지 못합니다. 그런 쪽은 "PDF를 이미지로"로 쪽 전체를 그림으로 받으세요. JPEG 2000 사진은 PDF에서와 같게 보일 때만 원본 그대로 .jp2(파일 형식에 따라 .jpx·.j2k)로 꺼내며, 브라우저에서는 미리 볼 수 없습니다.',
       },
       {
         q: '같은 사진이 여러 쪽에 있으면 어떻게 되나요?',
@@ -47,7 +47,7 @@ export default defineContent({
       },
       {
         q: 'It says some images could not be extracted.',
-        a: 'Special formats such as black-and-white fax (CCITT, JBIG2) used in scans, CMYK pixels for print, and 16-bit images cannot be extracted. For those pages, use "PDF to Image" to save the whole page. JPEG 2000 images are extracted as original .jp2 files (or .jpx/.j2k, depending on the format), but browsers cannot preview them.',
+        a: 'Black-and-white fax formats (CCITT, JBIG2) used in scans, CMYK pixels for print and CMYK JPGs with transparency, 16-bit images, special color spaces such as Lab or spot colors, and images written directly into the page content cannot be extracted. For those pages, use "PDF to Image" to save the whole page. JPEG 2000 images are extracted as original .jp2 files (or .jpx/.j2k, depending on the format) only when they would look the same as in the PDF, and browsers cannot preview them.',
       },
       {
         q: 'What if the same image is on many pages?',

@@ -142,9 +142,7 @@ test('JPG는 원본 그대로, 그 밖은 PNG로 꺼내고 같은 사진은 한 
 
   // 작은 그림은 빼고, 팩스 그림은 꺼내지 못한 것으로 센다
   await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
-  await expect(
-    frame.getByText('1개는 흑백 팩스·CMYK 같은 특수한 형식', { exact: false }),
-  ).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK 화소', { exact: false })).toBeVisible();
   await expect(frame.getByText('1쪽 · 1200×900 · JPG', { exact: false })).toBeVisible();
   await expect(frame.getByText('1쪽 · ', { exact: false })).toHaveCount(2);
 
