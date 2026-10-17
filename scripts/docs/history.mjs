@@ -64,7 +64,8 @@ const DOCS = {
     scopes: ['seo', 'guide', 'about', 'terms'],
     prs: [6, 10, 16, 37],
   },
-  'foundations/process': { scopes: [], prs: [1, 2, 4, 5] },
+  // 영역 없는 커밋(docs:·chore:·ci: 등, 규칙·작업 방식·문서 체계)은 여기에 모은다
+  'foundations/process': { scopes: [''], prs: [1, 2, 4, 5, 62] },
 };
 
 const run = (command, args) =>
