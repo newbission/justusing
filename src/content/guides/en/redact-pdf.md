@@ -29,7 +29,7 @@ Before sending a document, you often need to hide an ID number or an account num
 
 - **Redacted pages become images.** They look the same, but their other text can no longer be selected or searched. To make them searchable again, run the result through [OCR PDF](/en/pdf/ocr/). The redacted areas are painted black, so they are not read back.
 - **Other pages stay as they were.** Their text can still be selected and searched. In the rare case that a page shares its content with a redacted page, it becomes an image too so the redacted text does not remain.
-- **Document-level information is dropped.** Bookmarks, links, form fields, document information (title, author and so on) and attachments could leak redacted content, so they are not kept. Filled-in form values and printable signatures or comments are drawn onto the page as they look.
+- **Document-level information is dropped.** Bookmarks, links, form fields, document information (title, author and so on) and attachments could leak redacted content, so they are not kept. Filled-in form values and printable signatures or comments are drawn onto the page as they look. Images, form objects (logos, headers, watermarks and so on) and fonts shared with unredacted pages are kept as they are. If something inside them must be redacted, redact every page where it appears. Font files may still contain the shapes of characters used on redacted pages (their order and position are not kept).
 - **The file may get bigger**, because redacted pages are stored as images. Shrink it with [Compress PDF](/en/pdf/compress/) if needed.
 
 ## Isn't "White out" the same thing?
