@@ -547,3 +547,19 @@ test('모두 지우기는 pdfTeX가 넣은 그림 정보·층 설정을 만든 �
   }
   expect(text).toContain('Layer 1');
 });
+
+test('/SigFlags 없이 서명한 PDF도 서명이 깨진다고 알린다', async ({ page }) => {
+  const signed = await PDFDocument.load(await signedPdf());
+  const form = signed.catalog.lookup(PDFName.of('AcroForm'), PDFDict);
+  form.delete(PDFName.of('SigFlags'));
+  // 서명 프로그램은 서명 값 사전을 압축 묶음 밖에 쓴다 (나중에 /Contents를 채우려고)
+  const bytes = await signed.save({ useObjectStreams: false, updateFieldAppearances: false });
+  await page.goto('/pdf/rotate/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'contract.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(bytes),
+  });
+  await expect(frame.getByText('전자 서명된 PDF입니다', { exact: false })).toBeVisible();
+});
