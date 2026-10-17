@@ -10,7 +10,7 @@ export default defineContent({
     faq: [
       {
         q: '스캔한 PDF에서도 글자를 뽑을 수 있나요?',
-        a: '아니요. 스캔한 PDF는 글자가 그림으로 들어 있어 뽑을 글자가 없습니다. 그림 속 글자를 읽는 기능(OCR)은 아직 없습니다.',
+        a: '아니요. 스캔한 PDF는 글자가 그림으로 들어 있어 뽑을 글자가 없습니다. 그림 속 글자는 "PDF 글자 인식 (OCR)"으로 먼저 읽어 글자층을 넣은 뒤 뽑으세요.',
       },
       {
         q: '표나 여러 단으로 된 문서는 어떻게 나오나요?',
@@ -31,7 +31,7 @@ export default defineContent({
     faq: [
       {
         q: 'Can I extract text from a scanned PDF?',
-        a: 'No. In a scanned PDF the text is part of an image, so there is no text to extract. Reading text from images (OCR) is not available yet.',
+        a: 'No. In a scanned PDF the text is part of an image, so there is no text to extract. Run "OCR PDF" first to read the text in the images and add a text layer, then extract it.',
       },
       {
         q: 'What happens with tables or multi-column documents?',

@@ -19,7 +19,7 @@ export default defineContent({
       },
       {
         q: '이미지 파일 이름은 어떻게 붙나요?',
-        a: '"원래이름_01.jpg"처럼 원래 파일 이름 뒤에 쪽 번호가 붙습니다. 여러 장이면 "원래이름_이미지.zip" 하나로 묶어서 받고, 한 장이면 이미지로 바로 받습니다.',
+        a: '"원래이름_1.jpg"처럼 원래 파일 이름 뒤에 쪽 번호가 붙습니다. 10쪽 이상이면 "_01"처럼 자릿수를 맞춰 이름 순서대로 놓입니다. 여러 장이면 "원래이름_이미지.zip" 하나로 묶어서 받고, 한 장이면 이미지로 바로 받습니다.',
       },
       {
         q: '암호가 걸린 PDF도 이미지로 만들 수 있나요?',
@@ -49,7 +49,7 @@ export default defineContent({
       },
       {
         q: 'How are the image files named?',
-        a: 'Each image gets the original file name plus its page number, like "name_01.jpg". Several images come as one "name_images.zip", and a single image downloads directly.',
+        a: 'Each image gets the original file name plus its page number, like "name_1.jpg". With 10 or more pages the numbers are zero-padded, like "_01", so they sort in order. Several images come as one "name_images.zip", and a single image downloads directly.',
       },
       {
         q: 'Can I convert a password-protected PDF?',
