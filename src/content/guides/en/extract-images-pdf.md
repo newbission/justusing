@@ -39,8 +39,8 @@ PDFs often contain many tiny images, like bullets, lines and icons. By default, 
 ## When images cannot be extracted
 
 - **Black-and-white scans**: scanners often store pages in fax formats (CCITT, JBIG2), which cannot be extracted. Use [PDF to Image](/en/pdf/to-image/) to save the whole page instead.
-- **CMYK print images** and 16-bit images cannot be extracted either. The tool tells you how many were skipped.
-- **JPEG 2000** images are extracted as original .jp2 files (or .jpx/.j2k, depending on the format), but browsers cannot preview them. Open them in an image editor.
+- **Print images stored as CMYK pixels** (not JPG), CMYK JPGs with transparency, 16-bit images, images in special color spaces (Lab, spot colors and so on) and images written directly into the page content cannot be extracted either. CMYK JPG photos are extracted as they are. The tool tells you how many were skipped.
+- **JPEG 2000** images are extracted as original .jp2 files (or .jpx/.j2k, depending on the format) only when they would look the same as in the PDF. If the PDF sets their colors or transparency separately, they are counted as skipped. Browsers cannot preview them, so open them in an image editor.
 - **Drawn graphics** such as charts, diagrams and parts of logos are made of lines and shapes, not photos, so there is no image to extract.
 
 ## Why isn't anything uploaded?
