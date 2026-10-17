@@ -355,23 +355,26 @@ class Sanitizer {
     }
     if (object instanceof PDFArray) return this.array(object, role);
     if (!(object instanceof PDFDict) && !(object instanceof PDFStream)) return false;
+    const dict = object instanceof PDFStream ? object.dict : object;
+    // 그 자리에 올 수 없는 모양인지 먼저 정한다. 정리하지 못한 객체를 '본 적 있음'으로 적어 두면, 다음에 같은
+    // 자리로 만났을 때 정리하지 않은 채로 남기게 된다
+    if (typeof role !== 'string' && object instanceof PDFStream) return false;
+    const keys =
+      typeof role === 'string' ? this.keysFor(role, dict, object instanceof PDFStream) : undefined;
+    if (typeof role === 'string' && !keys) return false;
     const key = typeof role === 'string' ? role : `map:${JSON.stringify(role.map)}`;
     const done = this.seen.get(object) ?? new Set<string>();
     if (done.has(key)) return true;
     done.add(key);
     this.seen.set(object, done);
-    const dict = object instanceof PDFStream ? object.dict : object;
     if (typeof role !== 'string') {
-      if (object instanceof PDFStream) return false;
       for (const [name, item] of dict.entries()) {
         if (!this.clean(item, role.map)) dict.delete(name);
       }
       return true;
     }
-    const keys = this.keysFor(role, dict, object instanceof PDFStream);
-    if (!keys) return false;
     for (const [name, item] of dict.entries()) {
-      const child = keys[name.decodeText()];
+      const child = keys![name.decodeText()];
       if (child === undefined || !this.clean(item, child)) dict.delete(name);
     }
     return true;
