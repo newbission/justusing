@@ -33,14 +33,29 @@ export function isPasswordError(error: unknown): boolean {
 
 /**
  * 인증서로 전자 서명된 PDF인지. 우리 도구는 파일을 새로 써서 저장하므로 고친 파일에서는 서명이 깨진다.
- * 서명 칸만 있고 서명하지 않은 PDF는 아니다. 읽지 못하면 서명이 없다고 본다
+ * 서명 칸만 있고 서명하지 않은 PDF는 아니다. pdf.js는 /SigFlags가 없거나 서명 칸이 양식 목록(/Fields) 밖에 있으면
+ * 서명을 찾지 못해, 원본 바이트에 서명 값의 /ByteRange가 있는지도 본다 (압축 묶음 안에 있으면 못 찾는다).
+ * 읽지 못하면 서명이 없다고 본다
  */
-export async function isSigned(doc: PDFDocumentProxy): Promise<boolean> {
+export async function isSigned(doc: PDFDocumentProxy, bytes?: Uint8Array): Promise<boolean> {
   try {
-    return ((await doc.getSignatures())?.length ?? 0) > 0;
+    if (((await doc.getSignatures())?.length ?? 0) > 0) return true;
   } catch {
-    return false;
+    // 바이트로 본다
   }
+  return bytes !== undefined && hasByteRange(bytes);
+}
+
+/** 바이트 안에 "/ByteRange" 다음에 "[" 가 오는 자리가 있는지 (서명 값 사전) */
+function hasByteRange(bytes: Uint8Array): boolean {
+  const key = [0x2f, 0x42, 0x79, 0x74, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65];
+  for (let at = bytes.indexOf(key[0]!); at !== -1; at = bytes.indexOf(key[0]!, at + 1)) {
+    if (!key.every((byte, i) => bytes[at + i] === byte)) continue;
+    let next = at + key.length;
+    while (bytes[next] === 0x20 || bytes[next] === 0x0a || bytes[next] === 0x0d) next++;
+    if (bytes[next] === 0x5b) return true;
+  }
+  return false;
 }
 
 export interface OpenedPdf {
