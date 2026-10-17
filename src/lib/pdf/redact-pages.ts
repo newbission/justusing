@@ -397,27 +397,31 @@ function hiddenLayers(source: PDFDocument): Set<PDFDict> {
   const off = refs('OFF');
   const layers = context.lookup(properties.get(PDFName.of('OCGs')));
   if (!(layers instanceof PDFArray)) return hiddenSet;
-  const autoOff = autoHiddenLayers(config);
+  // 볼 때와 인쇄할 때 저절로 적용되는 규칙을 기본 설정 위에 덮는다. 미리보기·결과 그림은 인쇄 모습이고 결과
+  // 파일은 보기로 열리므로, 둘 중 하나에서라도 꺼지는 층은 꺼 둔다 (내보내기 /Export는 그리는 모습과 상관없다)
+  const view = autoLayerStates(config, 'View');
+  const print = autoLayerStates(config, 'Print');
   for (const item of layers.asArray()) {
     const layer = context.lookup(item);
     if (!(layer instanceof PDFDict)) continue;
-    const hidden = baseOff ? !on.includes(layer) : off.includes(layer);
-    if (hidden || autoOff.has(layer)) hiddenSet.add(layer);
+    const shown = baseOff ? on.includes(layer) : !off.includes(layer);
+    if (!(view.get(layer) ?? shown) || !(print.get(layer) ?? shown)) hiddenSet.add(layer);
   }
   return hiddenSet;
 }
 
 /**
- * 볼 때·인쇄할 때 저절로 적용되는 규칙(/AS, 사건 /View·/Print)이 끌 수 있는 층. 결과에는 층의 사용 정보(/Usage)를 옮기지 않아
- * 규칙이 사라지므로, 원본에서 꺼질 수 있던 층은 꺼 둔다:
- * - 보기(/View /ViewState /OFF), 인쇄(/Print /PrintState /OFF)
- * - 확대 배율(/Zoom /min·/max): 100%에서 꺼지는 범위
- * - 언어(/Language)·사람(/User): 보는 사람의 환경에 따라 정해져 알 수 없으므로, 규칙이 걸려 있으면 꺼 둔다
+ * 볼 때·인쇄할 때 저절로 적용되는 규칙(/AS)이 정하는 층의 켜짐(true)·꺼짐(false). event: /View 또는 /Print.
+ * 규칙은 차례로 적용되어 뒤의 것이 앞을 덮는다. 규칙이 보는 항목(Category) 중 하나라도 끄면 꺼지고, 모두 켜면 켜진다:
+ * - 보기(/View /ViewState), 인쇄(/Print /PrintState)
+ * - 확대 배율(/Zoom /min·/max): 100%에서 범위 안이면 켜짐
+ * - 언어(/Language)·사람(/User): 보는 사람의 환경에 따라 정해져 알 수 없으므로 꺼짐으로 본다
  *   (숨겨 둔 내용이 켜진 채로 보이는 것보다 낫다. 층은 남아 있어 보기 프로그램에서 다시 켤 수 있다)
+ * 규칙이 없는 층은 들어 있지 않다 (기본 설정을 따른다)
  */
-function autoHiddenLayers(config: unknown): Set<PDFDict> {
-  const hidden = new Set<PDFDict>();
-  if (!(config instanceof PDFDict)) return hidden;
+function autoLayerStates(config: unknown, event: 'View' | 'Print'): Map<PDFDict, boolean> {
+  const states = new Map<PDFDict, boolean>();
+  if (!(config instanceof PDFDict)) return states;
   const context = config.context;
   const list = (value: unknown) => {
     const resolved = context.lookup(value as PDFObject);
@@ -430,15 +434,7 @@ function autoHiddenLayers(config: unknown): Set<PDFDict> {
     return resolved instanceof PDFNumber ? resolved.asNumber() : undefined;
   };
   for (const rule of list(config.get(PDFName.of('AS')))) {
-    // 보기(/View)와 인쇄(/Print) 규칙. 미리보기와 결과 그림은 인쇄 모습으로 그리므로 인쇄 때 꺼지는 층도
-    // 사용자가 보지 못한 채 저장된다 (내보내기 /Export는 그리는 모습과 상관없다)
-    const event = rule instanceof PDFDict ? rule.get(PDFName.of('Event')) : undefined;
-    if (
-      !(rule instanceof PDFDict) ||
-      (event !== PDFName.of('View') && event !== PDFName.of('Print'))
-    ) {
-      continue;
-    }
+    if (!(rule instanceof PDFDict) || rule.get(PDFName.of('Event')) !== PDFName.of(event)) continue;
     const categories = list(rule.get(PDFName.of('Category')));
     for (const layer of list(rule.get(PDFName.of('OCGs')))) {
       if (!(layer instanceof PDFDict)) continue;
@@ -449,24 +445,23 @@ function autoHiddenLayers(config: unknown): Set<PDFDict> {
         const value = context.lookup(usage.get(PDFName.of(category)));
         return value instanceof PDFDict ? value : undefined;
       };
+      /** 항목마다 켜짐·꺼짐 (그 항목이 없으면 빼고) */
+      const verdicts: boolean[] = [];
       const view = entry('View');
+      if (view) verdicts.push(view.get(PDFName.of('ViewState')) !== PDFName.of('OFF'));
       const print = entry('Print');
+      if (print) verdicts.push(print.get(PDFName.of('PrintState')) !== PDFName.of('OFF'));
       const zoom = entry('Zoom');
-      const min = zoom ? (number(zoom.get(PDFName.of('min'))) ?? 0) : 0;
-      const max = zoom ? (number(zoom.get(PDFName.of('max'))) ?? Infinity) : Infinity;
-      if (
-        view?.get(PDFName.of('ViewState')) === PDFName.of('OFF') ||
-        print?.get(PDFName.of('PrintState')) === PDFName.of('OFF') ||
-        min > 1 ||
-        max <= 1 ||
-        entry('Language') ||
-        entry('User')
-      ) {
-        hidden.add(layer);
+      if (zoom) {
+        const min = number(zoom.get(PDFName.of('min'))) ?? 0;
+        const max = number(zoom.get(PDFName.of('max'))) ?? Infinity;
+        verdicts.push(min <= 1 && 1 < max);
       }
+      if (entry('Language') || entry('User')) verdicts.push(false);
+      if (verdicts.length > 0) states.set(layer, verdicts.every(Boolean));
     }
   }
-  return hidden;
+  return states;
 }
 
 /** 새 PDF로 옮겨진 층들로 보이기 설정을 만들고, 꺼 둔 층은 꺼 둔다 */
