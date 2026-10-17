@@ -848,6 +848,15 @@ function scanContent(
   return scanned;
 }
 
+/** 그래픽 상태로 고른 글꼴을 글꼴 이름 대신 적는 표시 (GS_FONT + 상태 이름) */
+const GS_FONT = '\0gs:';
+/** 칠하기·선 색을 무늬가 아닌 것으로 바꾸는 연산자 (cs·CS는 무늬 색공간이어도 아직 무늬를 고르지 않은 것) */
+const FILL_COLOR = new Set(['cs', 'sc', 'g', 'rg', 'k']);
+const STROKE_COLOR = new Set(['CS', 'SC', 'G', 'RG', 'K']);
+/** 칠하는·선을 긋는 연산자 */
+const FILL_OPS = new Set(['f', 'F', 'f*', 'B', 'B*', 'b', 'b*']);
+const STROKE_OPS = new Set(['S', 's', 'B', 'B*', 'b', 'b*']);
+
 /**
  * 사진의 색공간이 부른 쪽의 자원 목록에 따라 어떻게 풀리는지를 나타내는 글자.
  * 자원 목록과 상관없는 사진은 늘 같은 글자라 여러 쪽에서 불러도 한 번만 꺼낸다
@@ -888,25 +897,18 @@ function glyphNames(font: PDFDict): Map<number, string> {
   return names;
 }
 
-/** 그래픽 상태로 고른 글꼴을 글꼴 이름 대신 적는 표시 (GS_FONT + 상태 이름) */
-const GS_FONT = '\0gs:';
-/** 칠하기·선 색을 무늬가 아닌 것으로 바꾸는 연산자 (cs·CS는 무늬 색공간이어도 아직 무늬를 고르지 않은 것) */
-const FILL_COLOR = new Set(['cs', 'sc', 'g', 'rg', 'k']);
-const STROKE_COLOR = new Set(['CS', 'SC', 'G', 'RG', 'K']);
-/** 칠하는·선을 긋는 연산자 */
-const FILL_OPS = new Set(['f', 'F', 'f*', 'B', 'B*', 'b', 'b*']);
-const STROKE_OPS = new Set(['S', 's', 'B', 'B*', 'b', 'b*']);
-
 /**
- * 볼 때 저절로 적용되는 규칙(/AS, 사건 /View)이 끄는 층. 보는 프로그램이 이 규칙대로 그리므로 그 층 안의 사진은 보이지 않는다:
- * - 보기(/View /ViewState /OFF)
- * - 확대 배율(/Zoom /min·/max): 100%에서 꺼지는 범위
- * - 언어(/Language)·사람(/User): 보는 사람의 환경에 따라 정해져 알 수 없으므로 꺼진 것으로 본다
- *   (가리기 도구와 같은 판단. 숨겨 둔 사진을 꺼내 주지 않는 쪽을 고른다)
+ * 볼 때 저절로 적용되는 규칙(/AS, 사건 /View)이 정하는 층의 켜짐(true)·꺼짐(false). 규칙은 차례로 적용되어
+ * 뒤의 것이 앞을 덮는다. 규칙이 보는 항목 중 하나라도 끄면 꺼지고 모두 켜면 켜진다 (가리기 도구와 같은 판단):
+ * - 보기(/View /ViewState)
+ * - 확대 배율(/Zoom /min·/max): 100%에서 범위 안이면 켜짐
+ * - 언어(/Language)·사람(/User): 보는 사람의 환경에 따라 정해져 알 수 없으므로 꺼짐으로 본다
+ *   (숨겨 둔 사진을 꺼내 주지 않는 쪽을 고른다)
+ * 규칙이 없는 층은 들어 있지 않다 (기본 설정을 따른다)
  */
-function autoHiddenLayers(config: unknown): Set<PDFDict> {
-  const hidden = new Set<PDFDict>();
-  if (!(config instanceof PDFDict)) return hidden;
+function autoLayerStates(config: unknown): Map<PDFDict, boolean> {
+  const states = new Map<PDFDict, boolean>();
+  if (!(config instanceof PDFDict)) return states;
   const context = config.context;
   const listOf = (value: unknown) => {
     const resolved = context.lookup(value as PDFObject);
@@ -926,22 +928,17 @@ function autoHiddenLayers(config: unknown): Set<PDFDict> {
         const value = usage.lookup(name(category));
         return value instanceof PDFDict ? value : undefined;
       };
+      const verdicts: boolean[] = [];
       const view = entry('View');
+      if (view) verdicts.push(view.get(name('ViewState')) !== name('OFF'));
       const zoom = entry('Zoom');
-      const min = numberOf(zoom, 'min') ?? 0;
-      const max = numberOf(zoom, 'max') ?? Infinity;
-      if (
-        view?.get(name('ViewState')) === name('OFF') ||
-        min > 1 ||
-        max <= 1 ||
-        entry('Language') ||
-        entry('User')
-      ) {
-        hidden.add(layer);
-      }
+      if (zoom)
+        verdicts.push((numberOf(zoom, 'min') ?? 0) <= 1 && 1 < (numberOf(zoom, 'max') ?? Infinity));
+      if (entry('Language') || entry('User')) verdicts.push(false);
+      if (verdicts.length > 0) states.set(layer, verdicts.every(Boolean));
     }
   }
-  return hidden;
+  return states;
 }
 
 /**
@@ -959,10 +956,32 @@ function hiddenLayers(doc: PDFDocument): (oc: unknown) => boolean {
   const baseOff = config instanceof PDFDict && config.get(name('BaseState')) === name('OFF');
   const on = list('ON');
   const off = list('OFF');
-  const autoOff = autoHiddenLayers(config);
-  const groupHidden = (group: unknown) =>
-    (baseOff ? !on.includes(group as PDFObject) : off.includes(group as PDFObject)) ||
-    autoOff.has(group as PDFDict);
+  const auto = autoLayerStates(config);
+  /** 이름 하나나 이름 배열로 적은 쓰임(/Intent). 없으면 /View */
+  const intents = (value: unknown) => {
+    const resolved = context.lookup(value as PDFObject);
+    const list = resolved instanceof PDFArray ? resolved.asArray() : resolved ? [resolved] : [];
+    const names = list.filter((item): item is PDFName => item instanceof PDFName);
+    return names.length > 0 ? names : [name('View')];
+  };
+  const configIntents = intents(config instanceof PDFDict ? config.get(name('Intent')) : undefined);
+  const groupHidden = (group: unknown) => {
+    if (!(group instanceof PDFDict)) return false;
+    // 층의 쓰임이 설정의 쓰임과 겹치지 않으면 그 층은 보이기에 상관없다 (/All은 모두와 겹친다)
+    const layerIntents = intents(group.get(name('Intent')));
+    const all = name('All');
+    const relevant =
+      configIntents.includes(all) ||
+      layerIntents.includes(all) ||
+      layerIntents.some((intent) => configIntents.includes(intent));
+    if (!relevant) return false;
+    const shown = baseOff ? on.includes(group) : !off.includes(group);
+    // 규칙(/AS)이 없어도 보기 프로그램(pdf.js 등)은 층의 사용 정보로 볼 때 끈다
+    const usage = group.lookup(name('Usage'));
+    const view = usage instanceof PDFDict ? usage.lookup(name('View')) : undefined;
+    if (view instanceof PDFDict && view.get(name('ViewState')) === name('OFF')) return true;
+    return !(auto.get(group) ?? shown);
+  };
   return (oc) => {
     const dict = context.lookup(oc as PDFObject);
     if (!(dict instanceof PDFDict)) return false;
