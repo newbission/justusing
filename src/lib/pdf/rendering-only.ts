@@ -50,6 +50,8 @@ type Role =
   | 'icc'
   | 'process'
   | 'properties'
+  /** 층 조합의 보이기 식(/VE): [/And|/Or|/Not 층 또는 다시 식 …] */
+  | 'visibility'
   | { map: Role };
 
 type Keys = Record<string, Role>;
@@ -324,7 +326,7 @@ const OPTIONAL_CONTENT: Keys = {
   Intent: 'value',
   OCGs: 'properties',
   P: 'value',
-  VE: 'value',
+  VE: 'visibility',
 };
 
 const isPlain = (object: PDFObject | undefined) =>
@@ -461,6 +463,9 @@ class Sanitizer {
         return ICC;
       case 'process':
         return PROCESS;
+      case 'visibility':
+        // 식 안의 사전은 층(OCG)만 올 수 있다 (연산자 이름과 안쪽 식은 배열·이름이라 여기 오지 않는다)
+        return dict.get(PDFName.of('Type')) === PDFName.of('OCG') ? OPTIONAL_CONTENT : undefined;
       case 'properties': {
         const type = dict.get(PDFName.of('Type'));
         if (type === PDFName.of('OCG') || type === PDFName.of('OCMD')) return OPTIONAL_CONTENT;
