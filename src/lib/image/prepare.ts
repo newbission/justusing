@@ -120,7 +120,9 @@ export async function toEmbeddable(file: Blob): Promise<EmbeddableImage> {
   if (isJpeg(bytes)) {
     if (jpegOrientation(bytes) === 1) {
       // 원본 그대로 넣되, 받는 사람에게 갈 필요 없는 촬영 정보(위치·카메라 등)는 뗀다
-      const clean = stripJpegMetadata(bytes) ?? bytes;
+      const clean = stripJpegMetadata(bytes);
+      // 구조를 읽지 못해 정보를 떼지 못하면 다시 그려 저장한다 (촬영 정보가 남지 않게)
+      if (!clean) return redraw(file, 'image/jpeg');
       return { kind: 'jpg', bytes: clean, ...(await readImageInfo(file)) };
     }
     return redraw(file, 'image/jpeg');

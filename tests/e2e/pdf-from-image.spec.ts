@@ -166,3 +166,24 @@ test('만드는 동안의 요청에는 파일이 기기 밖으로 나가는 것�
 
   expectLocalOnly(page, requests, baseURL!);
 });
+
+test('조각 사이에 군더더기 바이트가 있는 JPG도 촬영 정보를 빼고 넣는다', async ({ page }) => {
+  const photo = await readFile(fixture('small.jpg'));
+  const body = Buffer.from('Exif\0\0MM\0*\0\0\0\x08\0\0GPS-SECRET-JEJU', 'latin1');
+  const tagged = Buffer.concat([
+    photo.subarray(0, 2),
+    Buffer.from([0xff, 0xe1, 0, body.length + 2]),
+    body,
+    // 조각 사이 0 채움
+    Buffer.from([0, 0, 0]),
+    photo.subarray(2),
+  ]);
+  await page.goto('/pdf/from-image/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'padded.jpg', mimeType: 'image/jpeg', buffer: tagged });
+  await frame.getByRole('button', { name: 'PDF 만들기' }).click();
+  const { bytes } = await download(page, frame);
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('GPS-SECRET-JEJU');
+});
