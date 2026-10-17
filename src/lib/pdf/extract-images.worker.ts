@@ -762,15 +762,24 @@ function scanContent(
   streams: PDFStream[],
   minSide: number,
   hidden: (name: string) => boolean,
+  /** 그래픽 상태(/GS1 gs)가 /Font로 고른 글꼴이 있는지 */
+  stateFont: (name: string) => boolean = () => false,
 ): Scanned {
   const scanned: Scanned = { inline: 0, drawn: [], patterns: [], glyphs: new Map() };
   let operands: Token[] = [];
   let inInlineImage = false;
-  /** 글꼴은 그래픽 상태라 q/Q로 저장·복원된다 */
-  let font = '';
-  const saved: string[] = [];
+  /**
+   * 그래픽 상태 (q/Q로 저장·복원): 글꼴(gs로 고른 것은 GS_FONT + 상태 이름), 글자 그리기 방식(Tr),
+   * 지금 칠하기·선 무늬 이름 (무늬 색공간이 아니면 '')
+   */
+  let state = { font: '', render: 0, fill: '', stroke: '' };
+  const saved: (typeof state)[] = [];
   /** 표시 내용(BDC·BMC … EMC)마다 꺼진 층인지 */
   const marks: boolean[] = [];
+  const paint = (fill: boolean, stroke: boolean) => {
+    if (fill && state.fill) scanned.patterns.push(state.fill);
+    if (stroke && state.stroke) scanned.patterns.push(state.stroke);
+  };
   // 쪽의 내용 스트림 여러 개는 이어서 하나로 실행된다
   for (const token of streams.flatMap((stream) => tokenize(streamText(stream)))) {
     if (token.kind !== 'op') {
@@ -792,24 +801,40 @@ function scanContent(
       if (visible && !mask && Math.min(width, height) >= minSide) scanned.inline++;
       inInlineImage = false;
     } else if (op === 'q') {
-      saved.push(font);
+      saved.push({ ...state });
     } else if (op === 'Q') {
-      font = saved.pop() ?? font;
+      state = saved.pop() ?? state;
     } else if (op === 'Tf') {
       const first = operands.find((operand) => operand.kind === 'name');
-      if (first?.kind === 'name') font = first.value;
+      if (first?.kind === 'name') state.font = first.value;
+    } else if (op === 'gs') {
+      if (lastName && stateFont(lastName)) state.font = GS_FONT + lastName;
+    } else if (op === 'Tr') {
+      state.render = last?.kind === 'other' ? Number(last.text) : 0;
     } else if (op === 'Tj' || op === "'" || op === '"' || op === 'TJ') {
-      if (visible && font) {
-        const codes = scanned.glyphs.get(font) ?? new Set<number>();
+      // 3: 보이지 않는 글자, 7: 잘라 낼 모양으로만 쓴다 (둘 다 그리지 않는다)
+      const drawn = state.render !== 3 && state.render !== 7;
+      if (visible && drawn && state.font) {
+        const codes = scanned.glyphs.get(state.font) ?? new Set<number>();
         for (const operand of operands) {
           if (operand.kind === 'string') for (const code of operand.bytes) codes.add(code);
         }
-        scanned.glyphs.set(font, codes);
+        scanned.glyphs.set(state.font, codes);
+        const mode = state.render % 4;
+        paint(mode === 0 || mode === 2, mode === 1 || mode === 2);
       }
     } else if (op === 'Do') {
       if (visible && lastName) scanned.drawn.push(lastName);
     } else if (op === 'scn' || op === 'SCN') {
-      if (visible && lastName) scanned.patterns.push(lastName);
+      // 무늬 색공간에서 이름을 주면 무늬를 고른 것이다. 실제로 칠할 때 센다
+      if (op === 'scn') state.fill = lastName;
+      else state.stroke = lastName;
+    } else if (FILL_COLOR.has(op)) {
+      state.fill = '';
+    } else if (STROKE_COLOR.has(op)) {
+      state.stroke = '';
+    } else if (FILL_OPS.has(op) || STROKE_OPS.has(op)) {
+      if (visible) paint(FILL_OPS.has(op), STROKE_OPS.has(op));
     } else if (op === 'BDC') {
       const tag = operands.find((operand) => operand.kind === 'name');
       marks.push(tag?.kind === 'name' && tag.value === 'OC' && !!lastName && hidden(lastName));
@@ -862,6 +887,15 @@ function glyphNames(font: PDFDict): Map<number, string> {
   }
   return names;
 }
+
+/** 그래픽 상태로 고른 글꼴을 글꼴 이름 대신 적는 표시 (GS_FONT + 상태 이름) */
+const GS_FONT = '\0gs:';
+/** 칠하기·선 색을 무늬가 아닌 것으로 바꾸는 연산자 (cs·CS는 무늬 색공간이어도 아직 무늬를 고르지 않은 것) */
+const FILL_COLOR = new Set(['cs', 'sc', 'g', 'rg', 'k']);
+const STROKE_COLOR = new Set(['CS', 'SC', 'G', 'RG', 'K']);
+/** 칠하는·선을 긋는 연산자 */
+const FILL_OPS = new Set(['f', 'F', 'f*', 'B', 'B*', 'b', 'b*']);
+const STROKE_OPS = new Set(['S', 's', 'B', 'B*', 'b', 'b*']);
 
 /**
  * 볼 때 저절로 적용되는 규칙(/AS, 사건 /View)이 끄는 층. 보는 프로그램이 이 규칙대로 그리므로 그 층 안의 사진은 보이지 않는다:
@@ -992,8 +1026,18 @@ function collect(doc: PDFDocument, minSide: number) {
     countInline = true,
   ) => {
     const properties = resources?.lookup(name('Properties'));
-    const scanned = scanContent(streams, minSide, (prop) =>
-      properties instanceof PDFDict ? layerHidden(properties.get(name(prop))) : false,
+    const states = resources?.lookup(name('ExtGState'));
+    /** 그래픽 상태가 /Font [글꼴 크기]로 고른 글꼴 */
+    const fontOfState = (state: string) => {
+      const entry = states instanceof PDFDict ? states.lookup(name(state)) : undefined;
+      const font = entry instanceof PDFDict ? entry.lookup(name('Font')) : undefined;
+      return font instanceof PDFArray ? font.lookup(0) : undefined;
+    };
+    const scanned = scanContent(
+      streams,
+      minSide,
+      (prop) => (properties instanceof PDFDict ? layerHidden(properties.get(name(prop))) : false),
+      (state) => fontOfState(state) instanceof PDFDict,
     );
     if (countInline) inline += scanned.inline;
     // 칠한 바둑무늬 무늬(PatternType 1)의 내용도 훑는다 (무늬는 자기 자원 목록을 쓴다)
@@ -1015,7 +1059,11 @@ function collect(doc: PDFDocument, minSide: number) {
     // Type3 글꼴로 찍은 글자의 모양(CharProcs) 안도 훑는다 (글꼴의 자원 목록, 없으면 부른 쪽 것)
     const fontDict = resources?.lookup(name('Font'));
     for (const [used, codes] of scanned.glyphs) {
-      const font = fontDict instanceof PDFDict ? fontDict.lookup(name(used)) : undefined;
+      const font = used.startsWith(GS_FONT)
+        ? fontOfState(used.slice(GS_FONT.length))
+        : fontDict instanceof PDFDict
+          ? fontDict.lookup(name(used))
+          : undefined;
       if (!(font instanceof PDFDict) || font.lookup(name('Subtype')) !== name('Type3')) continue;
       const procs = font.lookup(name('CharProcs'));
       if (!(procs instanceof PDFDict)) continue;
