@@ -14,7 +14,7 @@ export default defineContent({
       },
       {
         q: '화질이 떨어지나요?',
-        a: 'JPG로 들어 있는 사진은 파일 안의 바이트를 그대로 꺼내므로 화질이 그대로입니다(PDF가 정한 색 프로필은 JPG에 넣고, 투명도가 붙은 JPG는 PNG로 저장합니다). 그 밖의 사진은 화소를 풀어 PNG(무손실)로 저장합니다. 크기는 PDF에 들어 있는 원래 크기이며, 쪽에서 작게 보이던 사진도 원래 크기로 나옵니다.',
+        a: 'JPG로 들어 있는 사진은 파일 안의 바이트를 그대로 꺼내므로 화질이 그대로입니다(PDF가 정한 색 프로필은 JPG에 넣고, PDF가 쓰지 않는 JPG 안의 색 프로필은 빼며, 방향 값은 PDF에서 보이는 모습대로 "그대로"로 바꿉니다. 투명도가 붙은 JPG는 PNG로 저장합니다). 그 밖의 사진은 화소를 풀어 PNG(무손실)로 저장합니다. 크기는 PDF에 들어 있는 원래 크기이며, 쪽에서 작게 보이던 사진도 원래 크기로 나옵니다.',
       },
       {
         q: '꺼내지 못한 그림이 있다고 나옵니다.',
@@ -43,7 +43,7 @@ export default defineContent({
       },
       {
         q: 'Is the quality reduced?',
-        a: 'Images stored as JPG are extracted byte for byte, so the quality is unchanged (a color profile set by the PDF is added to the JPG, and JPGs with transparency are saved as PNG). Other images are decoded and saved as lossless PNG. You get the size stored in the PDF, even if the image looked small on the page.',
+        a: 'Images stored as JPG are extracted byte for byte, so the quality is unchanged (a color profile set by the PDF is added to the JPG, a profile inside the JPG that the PDF ignores is removed, and the orientation value is reset to "as is" to match the PDF; JPGs with transparency are saved as PNG). Other images are decoded and saved as lossless PNG. You get the size stored in the PDF, even if the image looked small on the page.',
       },
       {
         q: 'It says some images could not be extracted.',
