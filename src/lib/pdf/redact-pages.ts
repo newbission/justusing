@@ -34,7 +34,7 @@ import {
   type ResourceUse,
 } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
-import { SHARED_CONTENT } from './modify-errors';
+import { SHARED_CONTENT, UNRENDERED_ANNOTATION } from './modify-errors';
 import { baseEncoding } from './base-encodings';
 import { userUnit, viewSize } from './page-geometry';
 import { keepRenderingOnly } from './rendering-only';
@@ -544,29 +544,33 @@ function prunePage(page: PDFPage, pruning: Pruning) {
   pruneResources(page.node, page.node.Resources(), streams, pruning);
 }
 
+/** 쪽들의 내용 스트림 (/Contents의 스트림과 배열 안의 스트림) */
+function contentStreams(pages: PDFDict[]): Set<PDFRef> {
+  const found = new Set<PDFRef>();
+  for (const page of pages) {
+    const contents = page.get(PDFName.of('Contents'));
+    const list = page.context.lookup(contents);
+    for (const item of [contents, ...(list instanceof PDFArray ? list.asArray() : [])]) {
+      if (item instanceof PDFRef) found.add(item);
+    }
+  }
+  return found;
+}
+
 /**
  * pages: 가린 쪽 번호(0부터) → 가린 자리를 칠한 JPG. 화면에 보이는 모습(회전·보이는 영역)대로 그린 것
  */
 export async function redact(
   source: PDFDocument,
-  pages: { index: number; jpg: Uint8Array }[],
+  pages: { index: number; jpg: Uint8Array; plain?: boolean }[],
 ): Promise<PDFDocument> {
   const rasters = new Map(pages.map((page) => [page.index, page.jpg]));
-  // 가린 쪽과 내용 스트림을 같이 쓰는 남길 쪽은 그 스트림에 가린 글자가 있어 옮길 수 없다 (보이는 영역만 달라
-  // 남길 쪽에서는 화면 밖일 수 있다). 그 쪽도 그림으로 그려 달라고 알린다
-  const sources = source.getPages();
-  const contentRefs = (index: number) => {
-    const contents = sources[index]!.node.get(PDFName.of('Contents'));
-    const list = source.context.lookup(contents);
-    return [contents, ...(list instanceof PDFArray ? list.asArray() : [])].filter(
-      (item): item is PDFRef => item instanceof PDFRef,
-    );
-  };
-  const redacted = new Set([...rasters.keys()].flatMap(contentRefs));
-  const shared = sources
-    .map((_, index) => index)
-    .filter((index) => !rasters.has(index) && contentRefs(index).some((ref) => redacted.has(ref)));
-  if (shared.length > 0) throw new Error(SHARED_CONTENT + shared.join(','));
+  // 가린 쪽의 내용 스트림: 가린 글자가 들어 있다. 이것을 같이 쓰는 쪽(보이는 영역만 다른 쪽 등)은 그대로 옮길 수 없다.
+  // 같이 쓰는 그림·묶음 그림(로고, 머리글, 워터마크 등)은 거의 모든 쪽이 같이 써서 따지지 않고 FAQ에 밝힌다.
+  // 가리지 않고 안전하려고만 그림으로 바꾸는 쪽(plain)은 가린 내용이 없어 빼고
+  const secret = contentStreams(
+    pages.filter((page) => !page.plain).map((page) => source.getPage(page.index).node),
+  );
   const out = await PDFDocument.create();
   // 양식 입력값은 쪽에 그려 넣어야 옮겨진다 (모양이 없으면 먼저 만든다). 그림으로 바꾸는 쪽의 칸은 옮기지 않는다
   renderMissingFormAppearances(
@@ -576,11 +580,25 @@ export async function redact(
   // 옮길 쪽을 먼저 정리한 뒤 한 번에 복사한다. 쪽마다 따로 복사하면 같이 쓰는 글꼴·그림이 쪽 수만큼 복제된다
   const kept: number[] = [];
   const pruning: Pruning = { visited: new Set(), type3: new Map() };
+  /** 그대로 옮길 수 없어 그림으로 그려 달라고 알릴 쪽 */
+  const unsafe: number[] = [];
   for (const [index, page] of source.getPages().entries()) {
     if (rasters.has(index)) continue;
-    flattenAnnotations(page);
-    prunePage(page, pruning);
-    kept.push(index);
+    try {
+      // 주석을 그려 넣을 때 내용 목록에 스트림을 더하므로, 다른 쪽과 같이 쓰는 목록이면 이 쪽 것으로 떼어 낸다
+      const contents = source.context.lookup(page.node.get(PDFName.of('Contents')));
+      if (contents instanceof PDFArray) {
+        page.node.set(PDFName.of('Contents'), source.context.obj(contents.asArray()));
+      }
+      flattenAnnotations(page);
+      prunePage(page, pruning);
+      kept.push(index);
+    } catch (error) {
+      // 내용 스트림을 풀지 못하는 쪽(손상·지원하지 않는 압축)은 무엇을 쓰는지 알 수 없어 그림으로 바꾼다.
+      // 인쇄 모양을 만들 수 없는 주석은 그대로 알린다
+      if (error instanceof Error && error.message === UNRENDERED_ANNOTATION) throw error;
+      unsafe.push(index);
+    }
   }
   // Type3 글꼴이 글자 모양 안에서 부르는 Type3 글꼴은 거의 없지만, 새로 들어오면 다시 정리한다
   for (let size = -1; size !== pruning.type3.size;) {
@@ -592,6 +610,11 @@ export async function redact(
   // 남길 쪽에서 그리기에 필요한 항목만 남긴다 (XMP·첨부 파일·앱 데이터·대체 그림·바깥 파일 연결 등은
   // 화면에 보이지 않지만 가린 쪽의 자료를 가리킬 수 있다)
   for (const index of kept) keepRenderingOnly(source.getPage(index).node);
+  for (const index of kept) {
+    const own = contentStreams([source.getPage(index).node]);
+    if ([...own].some((ref) => secret.has(ref))) unsafe.push(index);
+  }
+  if (unsafe.length > 0) throw new Error(SHARED_CONTENT + unsafe.sort((a, b) => a - b).join(','));
   // 정리가 모르는 항목을 지우므로 꺼 둔 표시는 정리한 뒤에 붙인다
   for (const layer of hidden) layer.set(LAYER_STATE, PDFBool.True);
   const copied = await out.copyPages(source, kept);
