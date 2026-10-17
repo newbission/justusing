@@ -1668,3 +1668,40 @@ test('반투명 화소의 색을 깎지 않고 PNG로 꺼낸다', async ({ page 
   const raw = inflateSync(Buffer.concat(chunks));
   expect([...raw.subarray(0, 5)]).toEqual([0, 200, 100, 50, 10]);
 });
+
+test('EXIF 앞에 길이 없는 표시(TEM)가 있어도 방향 값을 그대로(1)로 바꾼다', async ({ page }) => {
+  const doc = await PDFDocument.create();
+  const photo = await readFile(fixture('photo.jpg'));
+  const exif = Buffer.from([
+    ...Buffer.from('Exif\0\0'),
+    ...[0x4d, 0x4d, 0, 0x2a, 0, 0, 0, 8],
+    ...[0, 1, 0x01, 0x12, 0, 3, 0, 0, 0, 1, 0, 6, 0, 0],
+    ...[0, 0, 0, 0],
+  ]);
+  const tagged = Buffer.concat([
+    photo.subarray(0, 2),
+    Buffer.from([0xff, 0x01]),
+    Buffer.from([0xff, 0xe1, 0, exif.length + 2]),
+    exif,
+    photo.subarray(2),
+  ]);
+  drawAll(doc, [
+    doc.context.register(
+      doc.context.stream(tagged, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 1200,
+        Height: 900,
+        BitsPerComponent: 8,
+        ColorSpace: 'DeviceRGB',
+        Filter: 'DCTDecode',
+      }),
+    ),
+  ]);
+  const frame = await openPdf(page, 'tem.pdf', doc);
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
+  const bytes = await readFile(await (await event).path());
+  const at = bytes.indexOf(Buffer.from([0x01, 0x12, 0, 3]));
+  expect(bytes.readUInt16BE(at + 8)).toBe(1);
+});
