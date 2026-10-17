@@ -1,9 +1,9 @@
 # PDF 글자 인식 (`pdf/ocr`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 - 주소: `/pdf/ocr/` (영어 `/en/pdf/ocr/`)
-- 상태: dev 병합 (2026-10-16, PR #56), 배포 대기
+- 상태: live (2026-10-17 배포, PR #56)
 - 관련 문서: [히스토리](./history.md), [글꼴·데이터 보관](../../foundations/fonts-and-data/README.md),
   [PDF 공통](../../foundations/pdf-common/README.md), [격리 frame](../../foundations/frame-isolation/README.md),
   [글자 추출](../pdf-extract-text/README.md)
@@ -117,7 +117,7 @@
 - [x] E2E (로컬 처리 약속 포함)
 - [x] 데스크톱·390px 화면 캡처 확인 (PR #56)
 - [x] `status: 'live'` (dev)
-- [ ] 배포(`dev` → `main`) 뒤 실제 주소에서 Safari 확인
+- [ ] 실제 Safari에서 확인 (2026-10-17 배포 뒤 Playwright WebKit으로는 "받은 데이터 다시 쓰기"가 실패. 이미 배포된 워터마크 글꼴도 같아 WebKit 테스트 환경 문제로 본다. 실제 Safari는 아직 확인 못 함)
 - [x] 영어 FAQ의 데이터 크기를 실제(엔진 2.9MB + 영어 3.0MB ≈ 6MB)와 맞춤 (2026-10-16)
 - [x] 글자 추출 도구 FAQ가 이 도구를 안내하도록 고침 (2026-10-16)
 - [ ] 한국어·영어 말고 다른 언어는 없다

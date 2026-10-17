@@ -1,9 +1,9 @@
 # PDF 양식 채우기 (`pdf/fill-form`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 - 주소: `/pdf/fill-form/` (영어 `/en/pdf/fill-form/`)
-- 상태: `status: 'live'`로 PR #60이 dev에 병합됨 (2026-10-16). **main 배포 전** (main에 아직 없다)
+- 상태: live (2026-10-17 배포, PR #60)
 - 관련 문서: [히스토리](./history.md), [글꼴과 데이터 보관](../../foundations/fonts-and-data/README.md),
   [PDF 공통](../../foundations/pdf-common/README.md) (글자 넣기 워커, `PageSheet`),
   칸이 없는 PDF용 [편집](../pdf-edit/README.md), 가이드 `src/content/guides/<언어>/fill-pdf-form.md`
@@ -107,8 +107,7 @@
 - [x] 한·영 문구, 사용법·FAQ, 가이드 글(`fill-pdf-form.md`)
 - [x] E2E (`pdf-fill-form.spec.ts`, 로컬 처리 약속 포함)
 - [x] `status: 'live'`, dev 병합 (PR #60)
-- [ ] main 배포 (dev → main 병합 대기)
-- [ ] `CLAUDE.md` 진행 상황의 "양식(입력 칸) 채우기"가 아직 `[ ]`이다 (배포하면 고친다)
+- [x] main 배포 (2026-10-17), `CLAUDE.md` 진행 상황 `[x]`
 - [ ] 서명 칸(인증서) 채우기는 하지 않음
 
 ## 4. 검증

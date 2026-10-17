@@ -1,9 +1,9 @@
 # PDF 문서 정보 고치기 (`pdf/metadata`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 - 주소: `/pdf/metadata/` (영어 `/en/pdf/metadata/`)
-- 상태: PR #61 리뷰 중 (브랜치 `feat/pdf-metadata`, 아직 dev에 병합 전)
+- 상태: live (2026-10-17 배포, PR #61)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),
   [압축](../pdf-compress/README.md)(`removeUnused`를 같이 씀), [가리기](../pdf-redact/README.md)(FAQ가 가리킴)
 
@@ -99,9 +99,9 @@
 - [x] 암호가 풀린다는 안내 (화면·FAQ)
 - [x] 한·영 문구, 사용법·FAQ, 가이드 글 (`pdf-metadata.md`)
 - [x] E2E (로컬 처리 약속 `expectLocalOnly` 포함)
-- [ ] 전자 서명이 있으면 저장하면 서명이 무효가 된다고 알리기 (리뷰 지적, 남음)
-- [ ] 보이기 층(OCG) `/Usage /CreatorInfo`의 만든 프로그램 정보 지우기 (리뷰 지적, 남음)
-- [ ] PR #61 병합(#58 다음), 배포 확인, `CLAUDE.md` 진행 상황 갱신 (브랜치에서는 추가해 둠)
+- [x] 전자 서명이 있으면 저장하면 서명이 무효가 된다고 알리기 (`isSigned`, 저장하는 도구 모두 `saves`)
+- [x] 보이기 층(OCG) `/Usage /CreatorInfo`의 만든 프로그램 정보 지우기
+- [x] dev 병합(PR #61), 배포 (2026-10-17)
 
 ## 4. 검증
 

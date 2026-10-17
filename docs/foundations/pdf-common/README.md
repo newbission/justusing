@@ -1,6 +1,6 @@
 # PDF 도구 공통 (`src/lib/pdf/`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 - 쓰는 곳: 모든 PDF 도구 (보기·합치기·나누기·회전·정리·변환·가벼운 도구·무거운 도구)
 - 상태: 4단계(2026-10-11)에 시작해 도구마다 넓혔다. 주요 PR #29, #31, #32 (2026-10-15)
@@ -119,12 +119,12 @@ PDF 도구가 같이 쓰는 세 층이다.
 - 새 쪽 위 편집 화면은 `PageSheet` 위에 만든다. 새 PDF 하나 도구는 `SinglePdfTool` 안에 그린다
 - 색은 토큰만: 썸네일 그림자 `--shadow-page`, 새 canvas 배경 `--color-paper` (리뷰 #29·#32)
 
-### 브랜치에만 있는 것 (dev 병합 전, 2026-10-16 기준)
+### 2026-10-17 배포로 들어온 것
 
-- `origin/feat/pdf-redact`: `content-tokens.ts`(내용 스트림 토큰 나누기), `content-usage.ts`, `redact.ts`, `redact-pages.ts`, `rendering-only.ts`
-- `origin/feat/pdf-extract-images`: `content-tokens.ts`, `extract-images.ts` + `.worker.ts`, `image-pixels.ts`(Flate·PNG 예측 풀기)
-- `origin/feat/pdf-metadata`: `remove-unused.ts`(쓰지 않는 객체 지우기, 압축 워커에서 옮김), `modify.ts`에 문서 정보 job
-- 병합되면 이 문서의 파일 표에 옮긴다
+- 가리기(PR #63·#58): `content-tokens.ts`(내용 스트림 토큰 나누기), `content-usage.ts`, `redact.ts`, `redact-pages.ts`, `rendering-only.ts`, `base-encodings.ts`(pdf.js 기본 인코딩 표)
+- 사진 꺼내기(PR #59): `content-tokens.ts`, `extract-images.ts` + `.worker.ts`, `image-pixels.ts`(Flate·PNG 예측 풀기)
+- 문서 정보(PR #61): `remove-unused.ts`(쓰지 않는 객체 지우기, 압축 워커에서 옮김), `modify.ts`에 문서 정보 job
+- 서명 PDF 알림: `pdfjs.ts`의 `isSigned()`(+`signature-scan.worker.ts`로 바이트에서 `/ByteRange` 찾기). `SinglePdfTool`에 `saves`를 주면 열 때 알린다
 
 ## 3. 구현 체크리스트
 
@@ -139,7 +139,7 @@ PDF 도구가 같이 쓰는 세 층이다.
 - [x] 압축 (PDF 워커 + 사진 워커 여러 개, 그만두기)
 - [x] 글자 넣기 워커 (워터마크·머리말·편집·양식, subset, 없는 글자 알림)
 - [x] 모아찍기 주석 평면화
-- [ ] 가리기·사진 꺼내기·문서 정보 공통 모듈 — 각 브랜치 PR(#58·#59·#61) 리뷰 중
+- [x] 가리기·사진 꺼내기·문서 정보 공통 모듈, 서명 PDF 알림 (2026-10-17 배포)
 
 ## 4. 검증과 히스토리
 
