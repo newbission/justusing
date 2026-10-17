@@ -4,6 +4,7 @@
  * 파일은 메모리에서만 다룬다.
  */
 import { modifyPdf } from './modify';
+import { SHARED_CONTENT } from './modify-errors';
 import type { PDFDocumentProxy } from './pdfjs';
 import { encodeBitmap, renderPageBitmap } from './render-image';
 
@@ -42,7 +43,16 @@ export async function redactPdf(
     pages.push({ index, jpg: await paintPage(source.doc, index, pageBoxes) });
     onPage?.(pages.length, byPage.size);
   }
-  return modifyPdf(source, { kind: 'redact', pages });
+  try {
+    return await modifyPdf(source, { kind: 'redact', pages });
+  } catch (error) {
+    // 가린 쪽과 내용을 같이 쓰는 쪽이 있으면 그 쪽도 (가릴 자리 없이) 그림으로 그려 다시 만든다
+    if (!(error instanceof Error) || !error.message.startsWith(SHARED_CONTENT)) throw error;
+    const shared = error.message.slice(SHARED_CONTENT.length).split(',').map(Number);
+    for (const index of shared) pages.push({ index, jpg: await paintPage(source.doc, index, []) });
+    pages.sort((a, b) => a.index - b.index);
+    return modifyPdf(source, { kind: 'redact', pages });
+  }
 }
 
 /** 오른쪽에서 왼쪽으로 쓰는 글자 (히브리어·아랍어·시리아어·타나어 등과 그 표시형) */
