@@ -219,7 +219,8 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
     }
     for (const [, object] of context.enumerateIndirectObjects()) strip(object);
     // 사진(JPEG) 안의 촬영 정보(EXIF·GPS·XMP·IPTC·설명)도 뗀다. 다른 형식으로 압축을 한 번 더 한 JPEG,
-    // JPEG 2000, 첨부 파일 내용은 고치지 않는다 (화면·FAQ에 밝힌다)
+    // JPEG 2000, 쪽 내용에 바로 써 넣은 그림(BI … ID, 내용 스트림을 다시 써야 해 깨뜨릴 수 있다), 첨부 파일 내용은
+    // 고치지 않는다 (FAQ·가이드에 밝힌다)
     for (const [ref, object] of context.enumerateIndirectObjects()) {
       if (!(object instanceof PDFRawStream)) continue;
       const filter = context.lookup(object.dict.get(PDFName.of('Filter')));
