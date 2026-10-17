@@ -2295,3 +2295,52 @@ test('묶음 그림이 겹겹이 서로를 여러 번 불러도 금방 끝난다
   const bytes = await redactFirst(page, 'deep-forms.pdf', source);
   expect((await PDFDocument.load(bytes)).getPageCount()).toBe(2);
 });
+
+test('RGB로만 칠한 쪽은 기본 회색 색공간을 남기지 않고, 이어받는 ToUnicode CMap은 남긴다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const cmap = (body: string, extra: { UseCMap?: ReturnType<typeof context.register> } = {}) =>
+    context.register(
+      context.stream(
+        `/CIDInit /ProcSet findresource begin 12 dict begin begincmap ${body} endcmap end end`,
+        extra,
+      ),
+    );
+  // 바탕 CMap이 A(0x41)를 Z로, 이어받는 CMap은 비어 있다
+  const base = cmap(
+    '1 begincodespacerange <00> <FF> endcodespacerange 1 beginbfchar <41> <005A> endbfchar',
+  );
+  const toUnicode = cmap('1 begincodespacerange <00> <FF> endcodespacerange', { UseCMap: base });
+  const font = context.register(
+    context.obj({ Type: 'Font', Subtype: 'Type1', BaseFont: 'Helvetica', ToUnicode: toUnicode }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      Font: { F1: font },
+      ColorSpace: {
+        DefaultGray: [
+          'ICCBased',
+          context.register(context.stream('ICC RGB-ONLY-GRAY-SECRET', { N: 1 })),
+        ],
+      },
+    }),
+  );
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('1 0 0 rg 0 0 10 10 re f BT /F1 12 Tf 20 20 Td (A) Tj ET')),
+  );
+  const bytes = await redactFirst(page, 'rgb-only.pdf', source);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('RGB-ONLY-GRAY-SECRET');
+  // pdf.js는 스트림으로 이어받는 CMap을 읽지 않아, 결과 구조로 본다 (다른 보기 프로그램은 쓴다)
+  const result = await PDFDocument.load(bytes);
+  const fonts = result.getPage(1).node.Resources()!.lookup(PDFName.of('Font'), PDFDict);
+  const unicode = fonts.lookup(PDFName.of('F1'), PDFDict).lookup(PDFName.of('ToUnicode'));
+  const inherited = (unicode as PDFRawStream).dict.lookup(PDFName.of('UseCMap'));
+  expect(inherited).toBeInstanceOf(PDFRawStream);
+});

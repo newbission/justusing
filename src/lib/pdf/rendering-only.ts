@@ -129,7 +129,8 @@ const FONT: Keys = {
   Widths: 'value',
   FontDescriptor: 'fontDescriptor',
   Encoding: 'encoding',
-  ToUnicode: 'stream',
+  // 글자 → 유니코드 CMap. 다른 CMap을 이어받을 수 있어(/UseCMap) CMap 자리로 정리한다
+  ToUnicode: 'encoding',
   DescendantFonts: 'font',
   CIDSystemInfo: 'cidSystemInfo',
   DW: 'value',
