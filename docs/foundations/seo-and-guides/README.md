@@ -1,6 +1,6 @@
 # 검색과 가이드 글 (seo-and-guides)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 - 범위: 사이트맵·robots, `<head>` 검색 정보(설명·canonical·hreflang·Open Graph·소유 확인), 구조화 데이터(JSON-LD),
   가이드 글(`/guide/`), 글 페이지(소개·이용약관·문의. 개인정보처리방침은 [광고와 통계](../ads-and-analytics/README.md))
@@ -42,26 +42,28 @@
 | `src/components/Header.astro`, `Footer.astro`                           | 머리글·바닥글의 가이드 링크, 바닥글의 글 페이지 링크                                                                                                                            |
 | `public/og.png`                                                         | 링크 미리보기 그림 (`scripts/make-brand-images.mjs`가 만든다)                                                                                                                   |
 
-### 가이드 글 목록 (dev 기준, `order` 순)
+### 가이드 글 목록 (`order` 순)
 
-| order | 주소                | 도구                |
-| ----- | ------------------- | ------------------- |
-| 1     | `compress-pdf`      | `pdf/compress`      |
-| 2     | `compress-image`    | `image/compress`    |
-| 3     | `resize-image`      | `image/resize`      |
-| 4     | `merge-pdf`         | `pdf/merge`         |
-| 5     | `pdf-to-jpg`        | `pdf/to-image`      |
-| 6     | `sign-pdf`          | `pdf/sign`          |
-| 7     | `convert-image`     | `image/convert`     |
-| 8     | `watermark-pdf`     | `pdf/watermark`     |
-| 9     | `header-footer-pdf` | `pdf/header-footer` |
-| 10    | `edit-pdf`          | `pdf/edit`          |
-| 11    | `n-up-pdf`          | `pdf/n-up`          |
-| 12    | `ocr-pdf`           | `pdf/ocr`           |
-| 15    | `fill-pdf-form`     | `pdf/fill-form`     |
+| order | 주소                 | 도구                 |
+| ----- | -------------------- | -------------------- |
+| 1     | `compress-pdf`       | `pdf/compress`       |
+| 2     | `compress-image`     | `image/compress`     |
+| 3     | `resize-image`       | `image/resize`       |
+| 4     | `merge-pdf`          | `pdf/merge`          |
+| 5     | `pdf-to-jpg`         | `pdf/to-image`       |
+| 6     | `sign-pdf`           | `pdf/sign`           |
+| 7     | `convert-image`      | `image/convert`      |
+| 8     | `watermark-pdf`      | `pdf/watermark`      |
+| 9     | `header-footer-pdf`  | `pdf/header-footer`  |
+| 10    | `edit-pdf`           | `pdf/edit`           |
+| 11    | `n-up-pdf`           | `pdf/n-up`           |
+| 12    | `ocr-pdf`            | `pdf/ocr`            |
+| 13    | `redact-pdf`         | `pdf/redact`         |
+| 14    | `extract-images-pdf` | `pdf/extract-images` |
+| 15    | `fill-pdf-form`      | `pdf/fill-form`      |
+| 16    | `pdf-metadata`       | `pdf/metadata`       |
 
-리뷰 중인 브랜치에만 있는 글: `redact-pdf`(feat/pdf-redact), `extract-images-pdf`(feat/pdf-extract-images),
-`pdf-metadata`(feat/pdf-metadata).
+2026-10-17 배포로 `redact-pdf`(가리기), `extract-images-pdf`(사진 꺼내기), `pdf-metadata`(문서 정보)가 더해졌다.
 
 ### 빌드 때 검사 (`src/guides.ts`)
 
@@ -102,7 +104,7 @@
 - [x] 구조화 데이터 5종, `<html>` 안에 두기
 - [x] 소개·방침·약관·문의 (한·영), 바닥글 링크, 사이트맵
 - [x] 가이드 모음·목록·글 페이지, 빌드 때 검사, 도구 페이지 관련 가이드, 머리글·바닥글 링크
-- [x] 가이드 13편 (dev), 3편은 리뷰 중인 브랜치에
+- [x] 가이드 16편 (2026-10-17 배포)
 - [x] 검색 등록: Google Search Console, 네이버 서치어드바이저 + 사이트맵 제출 (2026-10-13, 사용자가 직접)
 - [ ] 가이드가 없는 live 도구: 보기, 글자 추출, 나누기, 회전, 정리, 자르기, 이미지를 PDF로, 쪽 번호, 이미지 넣기,
       암호 해제, 암호 걸기

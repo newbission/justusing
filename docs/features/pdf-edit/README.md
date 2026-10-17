@@ -1,13 +1,13 @@
 # PDF 편집 (`pdf/edit`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 - 주소: `/pdf/edit/` (영어 `/en/pdf/edit/`)
 - 상태: live (2026-10-15 배포, PR #54로 dev 병합 2026-10-16). 2026-10-10에 '준비 중'으로 등록했다가
   MVP에서 빼고, 8단계 글꼴 기반 위에 만들었다
 - 관련 문서: [히스토리](./history.md), [글꼴과 데이터 보관](../../foundations/fonts-and-data/README.md),
   [PDF 공통](../../foundations/pdf-common/README.md) (글자 넣기 워커), 가이드 `src/content/guides/<언어>/edit-pdf.md`,
-  진짜로 지우는 [가리기(영구 삭제)](../pdf-redact/README.md) (PR #58 리뷰 중)
+  진짜로 지우는 [가리기(영구 삭제)](../pdf-redact/README.md)
 
 ## 1. 어떤 기능인지
 
@@ -93,7 +93,7 @@
 - [x] E2E (`pdf-edit.spec.ts`, 로컬 처리 약속 포함)
 - [x] `status: 'live'`, 배포 (2026-10-15)
 - [ ] 원래 글자 직접 고치기는 하지 않는다
-- [ ] 아래 내용을 진짜로 지우기는 별도 도구(pdf-redact, PR #58 리뷰 중)
+- [ ] 아래 내용을 진짜로 지우기는 별도 도구(pdf-redact)
 - [ ] 넣은 것을 되돌리기(undo)는 "마지막 것 지우기"뿐이다
 
 ## 4. 검증

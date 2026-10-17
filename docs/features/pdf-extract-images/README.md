@@ -1,9 +1,9 @@
 # PDF 사진 꺼내기 (`pdf/extract-images`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 - 주소: `/pdf/extract-images/` (영어 `/en/pdf/extract-images/`)
-- 상태: PR #59 리뷰 중 (브랜치 `feat/pdf-extract-images`, 아직 dev에 병합 전)
+- 상태: live (2026-10-17 배포, PR #59)
 - 관련 문서: [히스토리](./history.md), [PDF 공통](../../foundations/pdf-common/README.md),
   [격리 frame](../../foundations/frame-isolation/README.md), [가리기](../pdf-redact/README.md)(같은 토큰 나누기)
 
@@ -101,7 +101,7 @@
 - [x] 꺼내기 전에 `canUse()`, 파일을 닫으면 결과 정리, 꺼낸 것만 번호 매기기
 - [x] 한·영 문구, 사용법·FAQ, 가이드 글 (`extract-images-pdf.md`)
 - [x] E2E (로컬 처리 약속 `expectLocalOnly` 포함)
-- [ ] PR #59 병합, 배포 확인, `CLAUDE.md` 진행 상황 갱신 (브랜치에서는 추가해 둠)
+- [x] dev 병합(PR #59), 배포 (2026-10-17)
 - [ ] 꺼내지 못하는 형식: CCITT·JBIG2, CMYK 화소, 16비트, 보정 색공간, `/Matte`, 바로 써 넣은 그림
 
 ## 4. 검증

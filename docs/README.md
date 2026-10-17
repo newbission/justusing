@@ -1,6 +1,6 @@
 # justusing 문서
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-17
 
 기능마다, 여러 기능이 같이 쓰는 기반마다 폴더가 하나씩 있다. 다른 세션(사람이든 에이전트든)이 이어서 일할 때
 코드와 커밋을 처음부터 다시 읽지 않아도 되게 하는 것이 목적이다.
@@ -54,32 +54,32 @@
 
 PDF
 
-| 폴더                                                | 도구              | 상태                |
-| --------------------------------------------------- | ----------------- | ------------------- |
-| [pdf-view](./features/pdf-view)                     | PDF 보기          | live                |
-| [pdf-merge](./features/pdf-merge)                   | 합치기            | live                |
-| [pdf-split](./features/pdf-split)                   | 나누기            | live                |
-| [pdf-rotate](./features/pdf-rotate)                 | 회전              | live                |
-| [pdf-organize](./features/pdf-organize)             | 정리(순서·삭제)   | live                |
-| [pdf-n-up](./features/pdf-n-up)                     | 모아찍기          | live                |
-| [pdf-crop](./features/pdf-crop)                     | 자르기            | live                |
-| [pdf-to-image](./features/pdf-to-image)             | PDF를 이미지로    | live                |
-| [pdf-from-image](./features/pdf-from-image)         | 이미지를 PDF로    | live                |
-| [pdf-compress](./features/pdf-compress)             | 압축              | live                |
-| [pdf-ocr](./features/pdf-ocr)                       | 글자 인식(OCR)    | live                |
-| [pdf-extract-text](./features/pdf-extract-text)     | 글자 추출         | live                |
-| [pdf-page-numbers](./features/pdf-page-numbers)     | 쪽 번호           | live                |
-| [pdf-watermark](./features/pdf-watermark)           | 워터마크          | live                |
-| [pdf-header-footer](./features/pdf-header-footer)   | 머리말·꼬리말     | live                |
-| [pdf-add-image](./features/pdf-add-image)           | 이미지 넣기       | live                |
-| [pdf-sign](./features/pdf-sign)                     | 서명 넣기         | live                |
-| [pdf-edit](./features/pdf-edit)                     | 편집              | live                |
-| [pdf-fill-form](./features/pdf-fill-form)           | 양식 채우기       | dev 병합, 배포 대기 |
-| [pdf-unlock](./features/pdf-unlock)                 | 암호 해제         | live                |
-| [pdf-protect](./features/pdf-protect)               | 암호 걸기         | live                |
-| [pdf-redact](./features/pdf-redact)                 | 가리기(영구 삭제) | PR #58 리뷰 중      |
-| [pdf-extract-images](./features/pdf-extract-images) | 사진 꺼내기       | PR #59 리뷰 중      |
-| [pdf-metadata](./features/pdf-metadata)             | 문서 정보         | PR #61 리뷰 중      |
+| 폴더                                                | 도구              | 상태 |
+| --------------------------------------------------- | ----------------- | ---- |
+| [pdf-view](./features/pdf-view)                     | PDF 보기          | live |
+| [pdf-merge](./features/pdf-merge)                   | 합치기            | live |
+| [pdf-split](./features/pdf-split)                   | 나누기            | live |
+| [pdf-rotate](./features/pdf-rotate)                 | 회전              | live |
+| [pdf-organize](./features/pdf-organize)             | 정리(순서·삭제)   | live |
+| [pdf-n-up](./features/pdf-n-up)                     | 모아찍기          | live |
+| [pdf-crop](./features/pdf-crop)                     | 자르기            | live |
+| [pdf-to-image](./features/pdf-to-image)             | PDF를 이미지로    | live |
+| [pdf-from-image](./features/pdf-from-image)         | 이미지를 PDF로    | live |
+| [pdf-compress](./features/pdf-compress)             | 압축              | live |
+| [pdf-ocr](./features/pdf-ocr)                       | 글자 인식(OCR)    | live |
+| [pdf-extract-text](./features/pdf-extract-text)     | 글자 추출         | live |
+| [pdf-page-numbers](./features/pdf-page-numbers)     | 쪽 번호           | live |
+| [pdf-watermark](./features/pdf-watermark)           | 워터마크          | live |
+| [pdf-header-footer](./features/pdf-header-footer)   | 머리말·꼬리말     | live |
+| [pdf-add-image](./features/pdf-add-image)           | 이미지 넣기       | live |
+| [pdf-sign](./features/pdf-sign)                     | 서명 넣기         | live |
+| [pdf-edit](./features/pdf-edit)                     | 편집              | live |
+| [pdf-fill-form](./features/pdf-fill-form)           | 양식 채우기       | live |
+| [pdf-unlock](./features/pdf-unlock)                 | 암호 해제         | live |
+| [pdf-protect](./features/pdf-protect)               | 암호 걸기         | live |
+| [pdf-redact](./features/pdf-redact)                 | 가리기(영구 삭제) | live |
+| [pdf-extract-images](./features/pdf-extract-images) | 사진 꺼내기       | live |
+| [pdf-metadata](./features/pdf-metadata)             | 문서 정보         | live |
 
 이미지
 
