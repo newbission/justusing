@@ -690,9 +690,10 @@ async function extract(
     const space = jpegSpace(dict, resources);
     if (!space) return undefined;
     if (alpha || key) {
-      // CMYK 프로필은 PNG에 넣을 수도, 브라우저로 그 색대로 바꿀 수도 없다
-      if (space.icc && components === undefined) return undefined;
-      const pixels = await jpegPixels(stream, alpha, key, components ?? 3);
+      // CMYK(장치 색·프로필 모두)는 PNG에 넣을 수도, 브라우저로 PDF와 같은 색으로 바꿀 수도 없다
+      // (색 키 투명과 같은 판단)
+      if (components === undefined) return undefined;
+      const pixels = await jpegPixels(stream, alpha, key, components);
       const bytes = await encodePng(pixels, space.icc, components === 1);
       return { ext: 'png', bytes, width, height };
     }
