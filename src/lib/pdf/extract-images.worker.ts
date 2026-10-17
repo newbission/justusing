@@ -791,7 +791,9 @@ function scanContent(
       const dict = inlineImageDict([...operands, token]);
       const width = Number(dict.get('W') ?? dict.get('Width') ?? 0);
       const height = Number(dict.get('H') ?? dict.get('Height') ?? 0);
-      if (visible && Math.min(width, height) >= minSide) scanned.inline++;
+      // 마스크(/IM true)는 사진이 아니라 칠할 모양이라 묶음 그림 사진처럼 세지 않는다
+      const mask = (dict.get('IM') ?? dict.get('ImageMask')) === 'true';
+      if (visible && !mask && Math.min(width, height) >= minSide) scanned.inline++;
       inInlineImage = false;
     } else if (op === 'q') {
       saved.push(font);
