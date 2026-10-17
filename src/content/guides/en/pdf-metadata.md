@@ -33,7 +33,7 @@ If a document was made by editing an older one, the title may still name a previ
 
 For documents you send outside, turn on "Remove all document info" before saving. It removes the title and author as well as the apps and dates. The pages do not change.
 
-Phone photos placed in a PDF may still carry where they were taken and camera details (EXIF). These are removed too (JPEG photos, without recompressing them). Information inside JPEG 2000 photos, small images written directly into page content, and attached files stays as it is.
+Phone photos placed in a PDF may still carry where they were taken and camera details (EXIF). These are removed too (JPEG photos, without recompressing them). Information inside JPEG 2000 photos, small images written directly into page content, JPEGs wrapped in another compression (rare), and attached files stays as it is.
 
 What the file needs to work is also kept: attachment names and descriptions, paths in links to other files, information inside XFA forms, and a signature drawn visibly in a signature field (name and date).
 
