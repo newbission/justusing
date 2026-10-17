@@ -1432,22 +1432,37 @@ test('보이기 식(/VE)과 주석 모양의 /OC로 꺼진 사진은 꺼내지 �
       Resources: { XObject: { Im: gray(30) } },
     }),
   );
-  doc
-    .getPage(0)
-    .node.set(
-      PDFName.of('Annots'),
-      context.obj([
-        context.obj({
-          Type: 'Annot',
-          Subtype: 'Stamp',
-          Rect: [300, 300, 364, 364],
-          AP: { N: look },
-        }),
-      ]),
-    );
+  doc.getPage(0).node.set(
+    PDFName.of('Annots'),
+    context.obj([
+      context.obj({
+        Type: 'Annot',
+        Subtype: 'Stamp',
+        Rect: [300, 300, 364, 364],
+        AP: { N: look },
+      }),
+    ]),
+  );
   const frame = await openPdf(page, 've.pdf', doc);
   await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
   const event = page.waitForEvent('download');
   await frame.getByRole('button', { name: '다운로드', exact: true }).first().click();
   expect((await event).suggestedFilename()).toBe('ve_p1_1.jpx');
+});
+
+test('바로 써 넣은 마스크(/IM true)는 사진이 아니라 못 꺼낸 것으로도 세지 않는다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const added = doc.addPage([300, 300]);
+  // 100×100 1비트 마스크: 한 줄 13바이트 × 100줄
+  const content = Buffer.concat([
+    Buffer.from('q 100 0 0 100 0 0 cm BI /W 100 /H 100 /IM true ID ', 'latin1'),
+    Buffer.alloc(1300, 0x55),
+    Buffer.from(' EI Q', 'latin1'),
+  ]);
+  added.node.set(PDFName.of('Contents'), doc.context.register(doc.context.stream(content)));
+  const frame = await openPdf(page, 'mask.pdf', doc);
+  await expect(frame.getByText('꺼낼 사진이 없습니다.')).toBeVisible();
+  await expect(frame.getByText('흑백 팩스·CMYK', { exact: false })).toHaveCount(0);
 });
