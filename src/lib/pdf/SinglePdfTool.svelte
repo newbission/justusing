@@ -52,30 +52,42 @@
   let loaded: LoadedPdf | undefined = $state.raw();
   let signed = $state(false);
 
+  /** 닫거나 새 파일을 열 때마다 늘어난다. 늦게 끝난 예전 열기가 지금 파일을 덮어쓰지 않게 한다 */
+  let generation = 0;
+
   async function open(file: File) {
     await close();
+    const ticket = generation;
+    const read = new Uint8Array(await file.arrayBuffer());
+    if (ticket !== generation) return;
     fileName = file.name;
-    bytes = new Uint8Array(await file.arrayBuffer());
+    bytes = read;
     await load();
   }
 
   async function load(withPassword?: string) {
     if (!bytes) return;
+    const ticket = generation;
+    const source = { name: fileName, bytes };
     phase = 'loading';
     try {
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 복사본을 준다 (원본은 결과를 만들 때 쓴다)
-      const current = await openPdf(bytes.slice(), withPassword);
-      opened = current;
+      const current = await openPdf(source.bytes.slice(), withPassword);
       // 서명 안내를 보기 전에 저장하지 않게, 확인이 끝난 뒤에야 도구 화면(저장 버튼)을 연다
-      const value = saves && (await isSigned(current.doc));
-      // 확인하는 사이에 닫았거나 다른 파일을 열었으면 그만둔다
-      if (opened !== current) return;
+      const value = saves && (await isSigned(current.doc, source.bytes));
+      // 여는 사이에 닫았거나 다른 파일을 열었으면 이 문서는 닫고 그만둔다
+      if (ticket !== generation) {
+        await current.close();
+        return;
+      }
+      opened = current;
       signed = value;
-      loaded = { name: fileName, bytes, password: withPassword, doc: current.doc };
+      loaded = { ...source, password: withPassword, doc: current.doc };
       onload(loaded);
       phase = 'ready';
       requestShowTool();
     } catch (error) {
+      if (ticket !== generation) return;
       if (isPasswordError(error)) {
         wrongPassword = withPassword !== undefined;
         passwordInput = '';
@@ -87,6 +99,7 @@
   }
 
   async function close() {
+    generation++;
     onclose?.();
     await opened?.close();
     opened = undefined;
