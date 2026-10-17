@@ -227,6 +227,9 @@ function usedThroughNames(holder: PDFDict, resources: PDFDict, used: ResourceUse
     const dict = object instanceof PDFStream ? object.dict : object;
     if (!(dict instanceof PDFDict) || depth > 4) return;
     namesIn(dict.get(PDFName.of('ColorSpace')));
+    // 마스크 그림은 지금 색으로 칠한다 (처음 색은 장치 회색)
+    if (depth === 0 && dict.get(PDFName.of('ImageMask')) === PDFBool.True)
+      spaces.add('DefaultGray');
     // 자기 자원 목록이 있는 묶음 그림의 /Group /CS는 그 목록의 이름이다 (이 목록 것이 아니다)
     const group = context.lookup(dict.get(PDFName.of('Group')));
     const inherits = depth === 0 && object === holder ? true : !dict.has(PDFName.of('Resources'));
