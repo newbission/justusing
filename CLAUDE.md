@@ -328,8 +328,21 @@ Co-Authored-By: ...
         글자 넣기 처리는 `src/lib/pdf/text-pdf.ts`(+워커) 하나를 워터마크와 같이 쓴다
   - [x] 편집 (`/pdf/edit/`, 5-4를 여기서 마침): 글자 넣기·흰색 가리기·형광펜, 고르기·옮기기(키보드 포함).
         흰색 가리기는 아래 내용이 남는다고 화면·FAQ·가이드에 밝힌다 (진짜 지우기는 따로)
-  - [ ] OCR (스캔본 글자 인식): 데이터 크기를 밝히고 캐시
-  - [ ] PDF 안의 사진 원본 뽑기, 양식(입력 칸) 채우기
+  - [x] OCR (`/pdf/ocr/`, 2026-10-15): Tesseract(`tesseract.js-core`의 SIMD 엔진 + `tessdata_best` 정수판 한국어·영어).
+        엔진·언어 데이터는 `scripts/copy-ocr-data.mjs`가 node_modules에서 `public/data/ocr/`로 복사하고
+        목록(`src/lib/ocr/catalog.json`, 크기·SHA-256)을 쓴다. 워커(`src/lib/ocr/`)는 데이터를 화면에서 받아 쓰고
+        스스로 받지 않는다. 쪽마다 Tesseract가 만든 투명 글자층 PDF를 원래 쪽 위에 겹친다(`src/lib/pdf/text-layer.ts`)
+  - [x] 가리기 (`/pdf/redact/`, 2026-10-15): 상자 그리기·글자 찾아 가리기. 가린 쪽은 칠한 그림(JPG)으로 바꾸고
+        나머지 쪽만 새 PDF에 옮긴다(`src/lib/pdf/redact-pages.ts`). 원래 PDF를 고치면 pdf-lib가 쓰지 않는
+        객체까지 저장해 가린 내용이 남으므로 고치지 않는다. 옮기는 쪽은 주석을 평면화하고, 같이 쓰던 자원 중
+        안 쓰는 것과 링크·기사 흐름을 끊는다. 책갈피·양식·문서 정보는 넣지 않는다
+  - [x] 사진 꺼내기 (`/pdf/extract-images/`, 2026-10-15): JPG는 원본 바이트 그대로, Flate 8비트 이하 회색·RGB·색 목록
+        (+투명도)은 PNG로, JPX는 .jp2로. 흑백 팩스·CMYK 등은 꺼내지 못한 수로 알린다(`src/lib/pdf/extract-images.worker.ts`)
+  - [x] 양식 채우기 (`/pdf/fill-form/`, 2026-10-15): pdf.js가 알려 주는 입력 칸 자리에 HTML 입력 칸을 겹친다
+        (`PageSheet`의 `hideForms`로 원래 칸 모양은 그리지 않음). 저장은 글자 넣기 워커가 pdf-lib 양식 API로 하고,
+        기본 글꼴에 없는 글자를 적으면 글꼴을 고르게 한다. 굳히기(flatten) 선택
+  - [x] 문서 정보 (`/pdf/metadata/`, 2026-10-15): 제목·작성자·주제·키워드 고치기, 모두 지우기(만든 프로그램·날짜까지).
+        이 작업만 pdf-lib가 열 때 만든 프로그램·고친 날짜를 바꾸지 않게 연다(`updateMetadata: false`). XMP는 지운다
   - 하지 않음: PDF 비교 (2026-10-14 사용자 결정). 서버가 필요한 것: 오피스(워드·엑셀·PPT)→PDF,
     파일 공유·여러 사람 서명, 인증서 전자서명
 - [ ] 9단계: 이미지 도구 (2026-10-15) — 프로그램을 설치하지 않고 쓰는 이미지 도구를 계속 늘린다 (사용자 방향).

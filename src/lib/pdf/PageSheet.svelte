@@ -19,6 +19,10 @@
     view?: { width: number; height: number };
     /** 쪽 위에 보여 줄 안내 글 */
     help: string;
+    /** 입력 칸(양식)을 그리지 않을지. 그 위에 직접 입력 칸을 겹칠 때 (양식 채우기) */
+    hideForms?: boolean;
+    /** 'print': 인쇄할 때 보이는 주석으로 그린다. 결과를 인쇄 모습으로 만드는 도구(가리기)가 미리보기도 같게 */
+    intent?: 'display' | 'print';
     children: Snippet;
   }
 
@@ -27,6 +31,8 @@
     pageIndex = $bindable(),
     view = $bindable({ width: 0, height: 0 }),
     help,
+    hideForms = false,
+    intent = 'display',
     children,
   }: Props = $props();
 
@@ -52,6 +58,9 @@
       task = page.render({
         canvas,
         viewport,
+        // pdf.js AnnotationMode: 1 주석·양식 모두 그림, 2 양식 칸은 빼고 그림
+        annotationMode: hideForms ? 2 : 1,
+        intent,
         transform: ratio === 1 ? undefined : [ratio, 0, 0, ratio, 0, 0],
       });
       task.promise.catch(() => {

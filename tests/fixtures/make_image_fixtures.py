@@ -10,6 +10,7 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 
 - broken.png   이름만 PNG이고 내용은 이미지가 아님
 - photos.pdf   사진이 든 2쪽 PDF (PDF 압축 도구). 1쪽 고화질 JPG, 2쪽 PNG 예측을 건 Flate RGB 사진,
                그리고 어디에서도 쓰지 않는 큰 객체 하나. 쪽마다 글자 "Photo page N"
+- scan.png     글자를 찍은 그림 (글자 인식 도구). 한글 한 줄, 영어 한 줄. Pretendard로 그린다
 """
 import io
 import math
@@ -17,7 +18,7 @@ import os
 import random
 import zlib
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -137,6 +138,14 @@ frames = [Image.new('RGB', (120, 80), color) for color in [(220, 40, 40), (40, 4
 frames[0].save(path('moving.gif'), save_all=True, append_images=frames[1:], duration=200, loop=0)
 Image.new('RGB', (160, 90), (40, 180, 90)).save(path('green.bmp'))
 
+scan = Image.new('L', (1240, 600), 255)
+font = ImageFont.truetype(
+    os.path.join(HERE, '../../node_modules/pretendard/dist/public/static/Pretendard-Regular.otf'), 56)
+draw = ImageDraw.Draw(scan)
+draw.text((80, 120), '다람쥐 헌 쳇바퀴에 타고파', font=font, fill=0)
+draw.text((80, 300), 'The quick brown fox 2026', font=font, fill=0)
+scan.save(path('scan.png'), optimize=True)
+
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
-             'screen.png', 'small.jpg', 'moving.gif', 'green.bmp']:
+             'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png']:
     print(name, os.path.getsize(path(name)), 'bytes')
