@@ -2017,3 +2017,91 @@ test('인쇄할 때 저절로 끄는 층도 결과에서 꺼 두고, 층 조합�
   expect(expression.size()).toBe(3);
   expect(result.context.lookup(expression.get(1))).toBeInstanceOf(PDFDict);
 });
+
+test('알려진 기본 인코딩의 Type3 글자는 찍은 모양만 남기고, 그림만 그린 쪽은 기본 회색 색공간을 남기지 않는다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const gray = (text: string) =>
+    context.register(
+      context.stream(text.repeat(4), {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: text.length,
+        Height: 4,
+        BitsPerComponent: 8,
+        ColorSpace: 'DeviceGray',
+      }),
+    );
+  const type3 = context.register(
+    context.obj({
+      Type: 'Font',
+      Subtype: 'Type3',
+      FontBBox: [0, 0, 1000, 1000],
+      FontMatrix: [0.001, 0, 0, 0.001, 0, 0],
+      CharProcs: {
+        a: context.register(context.stream('1000 0 d0 0 0 500 500 re f')),
+        b: context.register(context.stream('1000 0 d0 q 1000 0 0 1000 0 0 cm /S Do Q')),
+      },
+      // a(97)는 WinAnsi 기본 인코딩으로, b(98)는 Differences로
+      Encoding: { Type: 'Encoding', BaseEncoding: 'WinAnsiEncoding', Differences: [98, 'b'] },
+      FirstChar: 97,
+      LastChar: 98,
+      Widths: [1000, 1000],
+      Resources: { XObject: { S: gray('TYPE3-B-SECRET') } },
+    }),
+  );
+  const rgb = context.register(
+    context.stream(new Uint8Array(3), {
+      Type: 'XObject',
+      Subtype: 'Image',
+      Width: 1,
+      Height: 1,
+      BitsPerComponent: 8,
+      ColorSpace: 'DeviceRGB',
+    }),
+  );
+  const pages = [
+    source.addPage([200, 200]),
+    source.addPage([200, 200]),
+    source.addPage([200, 200]),
+  ];
+  // 가릴 첫 쪽만 b를 찍는다
+  pages[0]!.node.set(PDFName.of('Resources'), context.obj({ Font: { T3: type3 } }));
+  pages[0]!.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /T3 12 Tf 10 10 Td (b) Tj ET')),
+  );
+  pages[1]!.node.set(PDFName.of('Resources'), context.obj({ Font: { T3: type3 } }));
+  pages[1]!.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('BT /T3 12 Tf 10 10 Td (a) Tj ET')),
+  );
+  // 셋째 쪽은 RGB 그림 하나만 그린다. 기본 회색 색공간은 쓰지 않는다
+  pages[2]!.node.set(
+    PDFName.of('Resources'),
+    context.obj({
+      XObject: { Im: rgb },
+      ColorSpace: {
+        DefaultGray: [
+          'ICCBased',
+          context.register(context.stream('ICC GRAY-DEFAULT-SECRET', { N: 1 })),
+        ],
+      },
+    }),
+  );
+  pages[2]!.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('q 50 0 0 50 0 0 cm /Im Do Q')),
+  );
+  const frame = await openRedact(page, {
+    name: 'type3-base.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const { text } = await allStreams(bytes);
+  expect(text).not.toContain('TYPE3-B-SECRET');
+  expect(text).not.toContain('GRAY-DEFAULT-SECRET');
+});

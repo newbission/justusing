@@ -35,6 +35,7 @@ import {
 } from './content-usage';
 import { flattenAnnotations, renderMissingFormAppearances } from './flatten-annotations';
 import { SHARED_CONTENT } from './modify-errors';
+import { baseEncoding } from './base-encodings';
 import { userUnit, viewSize } from './page-geometry';
 import { keepRenderingOnly } from './rendering-only';
 
@@ -311,23 +312,38 @@ function pruneNested(object: unknown, pruning: Pruning) {
   if (mask instanceof PDFStream) pruneNested(mask, pruning);
 }
 
-/** Type3 글꼴의 글자 코드 → 글자 모양 이름 (/Encoding /Differences) */
-function glyphNames(font: PDFDict): Map<number, string> {
+/**
+ * Type3 글꼴의 글자 코드 → 글자 모양 이름. 기본 인코딩(/Encoding 이름이나 /BaseEncoding)을 알면 그 표에
+ * /Differences를 덮어쓴다. known: 기본 인코딩을 알아 모든 코드의 모양을 정할 수 있는지
+ * (기본 인코딩이 없거나 모르면 /Differences에 없는 코드가 어떤 모양인지 알 수 없다)
+ */
+function glyphNames(font: PDFDict): { names: Map<number, string>; known: boolean } {
   const context = font.context;
   const names = new Map<number, string>();
   const encoding = context.lookup(font.get(PDFName.of('Encoding')));
+  const baseName =
+    encoding instanceof PDFName
+      ? encoding
+      : encoding instanceof PDFDict
+        ? context.lookup(encoding.get(PDFName.of('BaseEncoding')))
+        : undefined;
+  const base = baseName instanceof PDFName ? baseEncoding(baseName.decodeText()) : undefined;
+  base?.forEach((glyph, code) => {
+    if (glyph) names.set(code, glyph);
+  });
   const differences =
     encoding instanceof PDFDict
       ? context.lookup(encoding.get(PDFName.of('Differences')))
       : undefined;
-  if (!(differences instanceof PDFArray)) return names;
-  let code = 0;
-  for (const item of differences.asArray()) {
-    const value = context.lookup(item);
-    if (value instanceof PDFNumber) code = value.asNumber();
-    else if (value instanceof PDFName) names.set(code++, value.decodeText());
+  if (differences instanceof PDFArray) {
+    let code = 0;
+    for (const item of differences.asArray()) {
+      const value = context.lookup(item);
+      if (value instanceof PDFNumber) code = value.asNumber();
+      else if (value instanceof PDFName) names.set(code++, value.decodeText());
+    }
   }
-  return names;
+  return { names, known: base !== undefined };
 }
 
 /** Type3 글꼴마다 남길 쪽에서 찍은 글자의 모양(CharProcs)만 남기고, 그 모양들이 부르는 자원만 남긴다 */
@@ -336,12 +352,13 @@ function finishType3(pruning: Pruning) {
     const context = font.context;
     const procs = context.lookup(font.get(PDFName.of('CharProcs')));
     if (!(procs instanceof PDFDict)) continue;
-    const names = glyphNames(font);
-    // 찍은 글자 중 /Differences에 없는 것이 있으면(기본 인코딩 /BaseEncoding을 따르거나 규격 위반)
-    // 어떤 모양을 쓰는지 알 수 없어 모두 남긴다
-    const used = [...codes].some((code) => !names.has(code))
-      ? new Set(procs.keys().map((key) => key.decodeText()))
-      : new Set([...codes].map((code) => names.get(code)).filter(Boolean) as string[]);
+    const { names, known } = glyphNames(font);
+    // 기본 인코딩을 모르는데 찍은 글자 중 /Differences에 없는 것이 있으면 어떤 모양을 쓰는지 알 수 없어
+    // 모두 남긴다 (기본 인코딩을 알면 표에 없는 코드는 그리는 모양이 없다)
+    const used =
+      !known && [...codes].some((code) => !names.has(code))
+        ? new Set(procs.keys().map((key) => key.decodeText()))
+        : new Set([...codes].map((code) => names.get(code)).filter(Boolean) as string[]);
     const kept = context.obj({});
     const streams: PDFStream[] = [];
     for (const [name, item] of procs.entries()) {
