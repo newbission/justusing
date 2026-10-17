@@ -554,7 +554,16 @@ function uprightJpeg(jpeg: Uint8Array): Uint8Array {
   try {
     const view = new DataView(jpeg.buffer, jpeg.byteOffset, jpeg.byteLength);
     for (let at = 2; at + 4 <= jpeg.length && jpeg[at] === 0xff;) {
+      // 표시 앞 채움 바이트(FF FF …)와 길이 없는 표시(TEM, 다시 시작 RST0~7)는 건너뛴다
+      if (jpeg[at + 1] === 0xff) {
+        at++;
+        continue;
+      }
       const marker = jpeg[at + 1]!;
+      if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+        at += 2;
+        continue;
+      }
       if (marker === 0xda) break;
       const length = view.getUint16(at + 2);
       if (marker === 0xe1 && view.getUint32(at + 4) === 0x45786966 /* 'Exif' */) {
