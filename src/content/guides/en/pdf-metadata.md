@@ -35,6 +35,8 @@ For documents you send outside, turn on "Remove all document info" before saving
 
 Phone photos placed in a PDF may still carry where they were taken and camera details (EXIF). These are removed too (JPEG photos, without recompressing them). Information inside JPEG 2000 photos, small images written directly into page content, and attached files stays as it is.
 
+What the file needs to work is also kept: attachment names and descriptions, paths in links to other files, information inside XFA forms, and a signature drawn visibly in a signature field (name and date).
+
 Names and numbers written on the pages are page content, not document info, so this does not remove them. Use [Redact PDF](/en/pdf/redact/) for those.
 
 ## When a good title helps
