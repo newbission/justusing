@@ -149,6 +149,9 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
     //   본문(/Contents·/RC)은 주석의 내용이라 둔다
     // - 기사 흐름(/Thread)의 정보 사전(/I): 제목·작성자 등
     // - 레이어(OCG)의 사용 정보(/Usage): 만든 프로그램(/CreatorInfo), 대상 사람·조직(/User)
+    // - pdfTeX가 넣은 그림 PDF의 정보(/PTEX.*), 보이기 층 설정을 만든 프로그램, 웹에서 받은 기록
+    // 지우지 않는 것(FAQ에 밝힌다): 첨부 파일 이름·설명, 다른 파일로 가는 링크의 경로, XFA 양식 안의 정보,
+    // 보이는 서명 모양 (지우면 파일의 기능이 깨지거나 쪽 내용이다)
     // - 전자 서명: 저장하면 서명은 어차피 깨지므로 서명 값(/V, 서명한 사람의 인증서가 든 사전)과 서명 조건(/SV,
     //   인증서·발급자를 적을 수 있다)을 칸에서 떼어 낸다. 문서에 딸린 서명 정보도 지운다: 서명을 가리키는 권한(/Perms),
     //   장기 검증용 인증서·폐기 목록 저장소(/DSS), 서명 증명(/Legal). 다른 곳에 남은 서명 사전에서도 사람·시각·장소 등을 지운다
@@ -170,10 +173,27 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
       'Contents',
     );
     for (const key of named('Perms', 'DSS', 'Legal')) doc.catalog.delete(key);
+    // 보이기 층 설정을 만든 프로그램(/Creator), 웹에서 받은 쪽의 기록(/Names의 /IDS·/URLS)
+    const layers = context.lookup(doc.catalog.get(PDFName.of('OCProperties')));
+    if (layers instanceof PDFDict) {
+      const configs = context.lookup(layers.get(PDFName.of('Configs')));
+      for (const config of [
+        layers.get(PDFName.of('D')),
+        ...(configs instanceof PDFArray ? configs.asArray() : []),
+      ]) {
+        const dict = context.lookup(config);
+        if (dict instanceof PDFDict) dict.delete(PDFName.of('Creator'));
+      }
+    }
+    const names = context.lookup(doc.catalog.get(PDFName.of('Names')));
+    if (names instanceof PDFDict) for (const key of named('IDS', 'URLS')) names.delete(key);
     const strip = (object: unknown) => {
       if (object instanceof PDFStream) strip(object.dict);
       else if (object instanceof PDFDict) {
         for (const key of hidden) object.delete(key);
+        // pdfTeX가 넣은 그림 PDF의 정보: /PTEX.InfoDict(작성자·날짜), /PTEX.FileName(내 컴퓨터 경로) 등
+        for (const key of object.keys())
+          if (key.decodeText().startsWith('PTEX.')) object.delete(key);
         const type = object.get(PDFName.of('Type'));
         const params = context.lookup(object.get(PDFName.of('Params')));
         if (params instanceof PDFDict) for (const key of fileDates) params.delete(key);
