@@ -1934,3 +1934,59 @@ test('압축한 바로 써 넣은 그림 안의 가짜 EI 뒤를 연산자로 �
   expect(text).not.toContain('FLATE-SECRET');
   expect(text).not.toContain('JPEG-SECRET');
 });
+
+test('인쇄할 때 저절로 끄는 층도 결과에서 꺼 두고, 층 조합의 보이기 식(/VE)은 층과 함께 옮긴다', async ({
+  page,
+}) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const printOff = context.register(
+    context.obj({
+      Type: 'OCG',
+      Name: PDFString.of('Print off'),
+      Usage: { Print: { PrintState: 'OFF' } },
+    }),
+  );
+  const off = context.register(context.obj({ Type: 'OCG', Name: PDFString.of('Off') }));
+  const on = context.register(context.obj({ Type: 'OCG', Name: PDFString.of('On') }));
+  const both = context.register(
+    context.obj({ Type: 'OCMD', OCGs: [off, on], P: 'AnyOn', VE: ['And', on, ['Not', off]] }),
+  );
+  source.catalog.set(
+    PDFName.of('OCProperties'),
+    context.obj({
+      OCGs: [printOff, off, on],
+      D: {
+        BaseState: 'ON',
+        OFF: [off],
+        AS: [{ Event: 'Print', OCGs: [printOff], Category: ['Print'] }],
+      },
+    }),
+  );
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ Properties: { L1: printOff, M1: both } }));
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(
+      context.stream('/OC /L1 BDC 0 0 10 10 re f EMC /OC /M1 BDC 20 20 10 10 re f EMC'),
+    ),
+  );
+  const frame = await openRedact(page, {
+    name: 'print-layers.pdf',
+    buffer: Buffer.from(await source.save()),
+  });
+  await frame.getByRole('button', { name: '가운데에 상자 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const pdf = await getDocument({ data: bytes.slice() }).promise;
+  const config = await pdf.getOptionalContentConfig();
+  const visible = Object.fromEntries([...config].map(([, group]) => [group.name, group.visible]));
+  expect(visible).toEqual({ 'Print off': false, Off: false, On: true });
+  // 층 조합의 식이 층 참조와 함께 남는다
+  const result = await PDFDocument.load(bytes);
+  const properties = result.getPage(1).node.Resources()!.lookup(PDFName.of('Properties'), PDFDict);
+  const combo = properties.lookup(PDFName.of('M1'), PDFDict);
+  const expression = combo.lookup(PDFName.of('VE'), PDFArray);
+  expect(expression.size()).toBe(3);
+  expect(result.context.lookup(expression.get(1))).toBeInstanceOf(PDFDict);
+});
