@@ -405,7 +405,17 @@ function hiddenLayers(source: PDFDocument): Set<PDFDict> {
     const layer = context.lookup(item);
     if (!(layer instanceof PDFDict)) continue;
     const shown = baseOff ? on.includes(layer) : !off.includes(layer);
-    if (!(view.get(layer) ?? shown) || !(print.get(layer) ?? shown)) hiddenSet.add(layer);
+    // 규칙(/AS)이 없어도 보기 프로그램(pdf.js 등)은 층의 사용 정보로 보기·인쇄 때 끈다
+    const usage = context.lookup(layer.get(PDFName.of('Usage')));
+    const state = (category: string, key: string) => {
+      const entry =
+        usage instanceof PDFDict ? context.lookup(usage.get(PDFName.of(category))) : undefined;
+      return entry instanceof PDFDict && entry.get(PDFName.of(key)) === PDFName.of('OFF');
+    };
+    const usageOff = state('View', 'ViewState') || state('Print', 'PrintState');
+    if (usageOff || !(view.get(layer) ?? shown) || !(print.get(layer) ?? shown)) {
+      hiddenSet.add(layer);
+    }
   }
   return hiddenSet;
 }

@@ -2142,3 +2142,30 @@ test('그릴 수 없는 그림이 여러 자리에서 불려도 정리하지 않
   const { text } = await allStreams(bytes);
   expect(text).not.toContain('PAGEONESECRET');
 });
+
+test('규칙 없이 사용 정보만으로 인쇄 때 꺼지는 층도 결과에서 꺼 둔다', async ({ page }) => {
+  const source = await PDFDocument.create();
+  const context = source.context;
+  const layer = context.register(
+    context.obj({
+      Type: 'OCG',
+      Name: PDFString.of('Screen only'),
+      Usage: { Print: { PrintState: 'OFF' } },
+    }),
+  );
+  source.catalog.set(PDFName.of('OCProperties'), context.obj({ OCGs: [layer], D: {} }));
+  source.addPage([200, 200]);
+  const second = source.addPage([200, 200]);
+  second.node.set(PDFName.of('Resources'), context.obj({ Properties: { L1: layer } }));
+  second.node.set(
+    PDFName.of('Contents'),
+    context.register(context.stream('/OC /L1 BDC 0 0 10 10 re f EMC')),
+  );
+  const bytes = await redactFirst(page, 'usage-only.pdf', source);
+  const config = await (
+    await getDocument({ data: bytes.slice() }).promise
+  ).getOptionalContentConfig();
+  expect([...config].map(([, group]) => [group.name, group.visible])).toEqual([
+    ['Screen only', false],
+  ]);
+});
