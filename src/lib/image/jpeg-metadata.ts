@@ -35,7 +35,12 @@ export function stripJpegMetadata(bytes: Uint8Array): Uint8Array | undefined {
   let removed = false;
   let offset = 2;
   while (offset < bytes.length) {
-    if (bytes[offset] !== 0xff) return undefined;
+    // 조각 사이의 군더더기 바이트(0 채움 등)는 디코더도 건너뛴다. 결과에서는 뺀다
+    if (bytes[offset] !== 0xff) {
+      while (offset < bytes.length && bytes[offset] !== 0xff) offset++;
+      removed = true;
+      continue;
+    }
     // 표시 앞의 채움 바이트(FF FF …)는 건너뛴다
     let at = offset;
     while (bytes[at + 1] === 0xff) at++;
