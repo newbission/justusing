@@ -16,7 +16,7 @@ export default defineContent({
       },
       {
         q: '가린 쪽의 다른 글자는 어떻게 되나요?',
-        a: '가린 쪽은 쪽 전체가 그림이 되므로, 그 쪽의 다른 글자도 고르거나 찾을 수 없게 됩니다. 보기에는 그대로입니다. 가리지 않은 쪽은 원래대로 글자를 고르고 찾을 수 있습니다. 가린 쪽에서도 글자를 찾고 싶다면 결과를 "PDF 글자 인식"에 넣으세요.',
+        a: '가린 쪽은 쪽 전체가 그림이 되므로, 그 쪽의 다른 글자도 고르거나 찾을 수 없게 됩니다. 보기에는 그대로입니다. 가리지 않은 쪽은 원래대로 글자를 고르고 찾을 수 있습니다 (드물게 가린 쪽과 내용을 같이 쓰도록 만든 쪽은 가린 글자가 남지 않게 함께 그림이 됩니다). 가린 쪽에서도 글자를 찾고 싶다면 결과를 "PDF 글자 인식"에 넣으세요.',
       },
       {
         q: '"찾아서 가리기"가 못 찾는 글자가 있어요.',
@@ -47,7 +47,7 @@ export default defineContent({
       },
       {
         q: 'What happens to other text on a redacted page?',
-        a: 'A redacted page becomes a single image, so the rest of its text can no longer be selected or searched, though it looks the same. Pages without redactions keep their text. To make redacted pages searchable again, run the result through "OCR PDF".',
+        a: 'A redacted page becomes a single image, so the rest of its text can no longer be selected or searched, though it looks the same. Pages without redactions keep their text (in the rare case that a page shares its content with a redacted page, it becomes an image too so the redacted text does not remain). To make redacted pages searchable again, run the result through "OCR PDF".',
       },
       {
         q: 'Find and redact missed some text.',
