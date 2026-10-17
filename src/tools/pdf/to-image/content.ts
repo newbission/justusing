@@ -27,7 +27,7 @@ export default defineContent({
       },
       {
         q: 'PDF 안에 든 사진만 원래 화질로 뽑을 수 있나요?',
-        a: '아니요. 이 도구는 쪽 전체를 화면에 보이는 그대로 그려 이미지로 만듭니다. 사진만 따로 원본 그대로 뽑는 기능은 아직 없습니다.',
+        a: '아니요. 이 도구는 쪽 전체를 화면에 보이는 그대로 그려 이미지로 만듭니다. 사진만 원본 그대로 뽑으려면 "PDF 사진 꺼내기"를 쓰세요.',
       },
     ],
   },
@@ -57,7 +57,7 @@ export default defineContent({
       },
       {
         q: 'Can I extract just the photos inside a PDF at their original quality?',
-        a: 'No. This tool draws each whole page as it appears on screen and saves it as an image. Extracting the embedded photos as they are is not available yet.',
+        a: 'No. This tool draws each whole page as it appears on screen and saves it as an image. To pull out the embedded photos as they are, use "Extract Images from PDF".',
       },
     ],
   },
