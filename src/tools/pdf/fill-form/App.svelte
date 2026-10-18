@@ -292,7 +292,7 @@
     Math.max(8, Math.min(16, field.height * view.height * (field.multiline ? 0.35 : 0.6)));
 </script>
 
-<SinglePdfTool {onload} saves>
+<SinglePdfTool {onload}>
   {#snippet children({ doc })}
     <ActionBar label={t.bar}>
       {#snippet text()}

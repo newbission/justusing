@@ -19,7 +19,7 @@ export default defineContent({
       },
       {
         q: '화질이 떨어지나요?',
-        a: 'JPG와 PNG는 다시 압축하지 않고 원본 그대로 PDF에 넣습니다. 다만 받는 사람에게 갈 필요 없는 사진 속 촬영 정보(위치·카메라 등 EXIF)와 설명은 빼고 넣습니다. 방향을 바로잡아야 하는 사진과 그 밖의 형식만 다시 저장하며, 이때도 눈에 띄는 화질 차이가 없도록 높은 화질로 저장합니다.',
+        a: 'JPG와 PNG는 다시 압축하지 않고 원본 그대로 PDF에 넣습니다. 방향을 바로잡아야 하는 사진과 그 밖의 형식만 다시 저장하며, 이때도 눈에 띄는 화질 차이가 없도록 높은 화질로 저장합니다.',
       },
       {
         q: '쪽 크기는 어떻게 정해지나요?',
@@ -49,7 +49,7 @@ export default defineContent({
       },
       {
         q: 'Will the image quality drop?',
-        a: 'JPG and PNG files are placed into the PDF as they are, without recompression. Shooting details stored in photos (location, camera and other EXIF data) and descriptions are left out, since recipients do not need them. Only photos that need their orientation fixed and other formats are saved again, at a high quality setting so the difference is not noticeable.',
+        a: 'JPG and PNG files are placed into the PDF as they are, without recompression. Only photos that need their orientation fixed and other formats are saved again, at a high quality setting so the difference is not noticeable.',
       },
       {
         q: 'How is the page size decided?',

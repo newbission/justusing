@@ -190,7 +190,7 @@
   const cssColor = $derived(rgbCss(COLORS[tint], OPACITY[strength]));
 </script>
 
-<SinglePdfTool {onload} saves>
+<SinglePdfTool {onload}>
   {#snippet children({ doc })}
     <ActionBar label={t.bar}>
       {#snippet text()}

@@ -19,7 +19,7 @@ export default defineContent({
       },
       {
         q: '이미지 화질이 떨어지나요?',
-        a: 'JPG와 PNG는 다시 압축하지 않고 원본 그대로 넣습니다. 사진 속 촬영 정보(위치·카메라 등 EXIF)와 설명은 빼고 넣습니다. 휴대폰 사진은 방향을 바로잡기 위해 높은 화질로 다시 저장합니다.',
+        a: 'JPG와 PNG는 다시 압축하지 않고 원본 그대로 넣습니다. 휴대폰 사진은 방향을 바로잡기 위해 높은 화질로 다시 저장합니다.',
       },
       {
         q: '넣은 이미지를 나중에 옮기거나 지울 수 있나요?',
@@ -45,7 +45,7 @@ export default defineContent({
       },
       {
         q: 'Will the image lose quality?',
-        a: 'JPG and PNG files are added as they are, without recompression. Shooting details stored in photos (location, camera and other EXIF data) and descriptions are left out. Phone photos are saved again at high quality to fix their orientation.',
+        a: 'JPG and PNG files are added as they are, without recompression. Phone photos are saved again at high quality to fix their orientation.',
       },
       {
         q: 'Can I move or remove the image later?',

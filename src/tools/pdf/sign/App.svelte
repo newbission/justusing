@@ -42,7 +42,7 @@
   }
 </script>
 
-<SinglePdfTool {onload} saves>
+<SinglePdfTool {onload}>
   {#snippet children()}
     {#if pdf}
       <StampTool

@@ -346,7 +346,7 @@
     `rgb(${color.map((value) => Math.round(value * 255)).join(' ')} / ${alpha})`;
 </script>
 
-<SinglePdfTool {onload} saves>
+<SinglePdfTool {onload}>
   {#snippet children({ doc })}
     <ActionBar label={t.bar}>
       {#snippet text()}

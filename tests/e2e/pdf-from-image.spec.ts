@@ -90,53 +90,6 @@ test('휴대폰 사진의 방향 정보를 읽어 바로 세워 넣는다 (이�
   expect(await pageSizes((await download(page, frame)).bytes)).toEqual([[297, 372]]);
 });
 
-test('JPG는 다시 압축하지 않고 넣되, 촬영 위치 같은 정보 조각은 뺀다', async ({ page }) => {
-  const photo = await readFile(fixture('small.jpg'));
-  const segment = (marker: number, text: string) => {
-    const body = Buffer.from(text, 'latin1');
-    return Buffer.concat([Buffer.from([0xff, marker, 0, body.length + 2]), body]);
-  };
-  const tagged = Buffer.concat([
-    photo.subarray(0, 2),
-    // 큰 끝(MM) TIFF 머리, 첫 IFD는 8바이트 뒤에 항목 0개
-    segment(0xe1, 'Exif\0\0MM\0*\0\0\0\x08\0\0GPS-SECRET-BUSAN'),
-    segment(0xfe, 'COMMENT-SECRET'),
-    photo.subarray(2),
-  ]);
-  await page.goto('/pdf/from-image/');
-  const frame = page.frameLocator('iframe[data-tool-frame]');
-  await frame
-    .locator('input[type=file]')
-    .setInputFiles({ name: 'trip.jpg', mimeType: 'image/jpeg', buffer: tagged });
-  await frame.getByRole('button', { name: 'PDF 만들기' }).click();
-  const { bytes } = await download(page, frame);
-  const text = Buffer.from(bytes).toString('latin1');
-  expect(text).not.toContain('GPS-SECRET-BUSAN');
-  expect(text).not.toContain('COMMENT-SECRET');
-  // 그림 자료는 바이트 그대로
-  expect(text).toContain(photo.subarray(2).toString('latin1'));
-});
-
-test('EXIF가 망가진 사진도 넣는다', async ({ page }) => {
-  const photo = await readFile(fixture('small.jpg'));
-  // 첫 IFD 자리가 파일 밖을 가리킨다
-  const body = Buffer.from('Exif\0\0MM\0*\x7f\xff\xff\xff', 'latin1');
-  const broken = Buffer.concat([
-    photo.subarray(0, 2),
-    Buffer.from([0xff, 0xe1, 0, body.length + 2]),
-    body,
-    photo.subarray(2),
-  ]);
-  await page.goto('/pdf/from-image/');
-  const frame = page.frameLocator('iframe[data-tool-frame]');
-  await frame
-    .locator('input[type=file]')
-    .setInputFiles({ name: 'broken-exif.jpg', mimeType: 'image/jpeg', buffer: broken });
-  await frame.getByRole('button', { name: 'PDF 만들기' }).click();
-  const { bytes } = await download(page, frame);
-  expect(await pageSizes(bytes)).toHaveLength(1);
-});
-
 test('열 수 없는 이미지는 표시하고 빼고 만든다', async ({ page }) => {
   const frame = await openTool(page, ['broken.png']);
   await expect(frame.getByText('열 수 없는 이미지입니다.', { exact: false })).toBeVisible();
@@ -165,25 +118,4 @@ test('만드는 동안의 요청에는 파일이 기기 밖으로 나가는 것�
   await page.waitForLoadState('networkidle');
 
   expectLocalOnly(page, requests, baseURL!);
-});
-
-test('조각 사이에 군더더기 바이트가 있는 JPG도 촬영 정보를 빼고 넣는다', async ({ page }) => {
-  const photo = await readFile(fixture('small.jpg'));
-  const body = Buffer.from('Exif\0\0MM\0*\0\0\0\x08\0\0GPS-SECRET-JEJU', 'latin1');
-  const tagged = Buffer.concat([
-    photo.subarray(0, 2),
-    Buffer.from([0xff, 0xe1, 0, body.length + 2]),
-    body,
-    // 조각 사이 0 채움
-    Buffer.from([0, 0, 0]),
-    photo.subarray(2),
-  ]);
-  await page.goto('/pdf/from-image/');
-  const frame = page.frameLocator('iframe[data-tool-frame]');
-  await frame
-    .locator('input[type=file]')
-    .setInputFiles({ name: 'padded.jpg', mimeType: 'image/jpeg', buffer: tagged });
-  await frame.getByRole('button', { name: 'PDF 만들기' }).click();
-  const { bytes } = await download(page, frame);
-  expect(Buffer.from(bytes).toString('latin1')).not.toContain('GPS-SECRET-JEJU');
 });
