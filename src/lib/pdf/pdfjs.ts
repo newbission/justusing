@@ -35,18 +35,18 @@ export function isPasswordError(error: unknown): boolean {
 /**
  * 인증서로 전자 서명된 PDF인지. 우리 도구는 파일을 새로 써서 저장하므로 고친 파일에서는 서명이 깨진다.
  * 서명 칸만 있고 서명하지 않은 PDF는 아니다. pdf.js는 /SigFlags가 없거나 서명 칸이 양식 목록(/Fields) 밖에 있으면
- * 서명을 찾지 못해, 원본 바이트에 서명 값의 /ByteRange가 있는지도 본다 (압축 묶음 안에 있으면 못 찾는다).
+ * 서명을 찾지 못해, 원본 파일에 서명 값의 /ByteRange가 있는지도 본다 (압축 묶음 안에 있으면 못 찾는다).
  * 읽지 못하면 서명이 없다고 본다
  */
-export async function isSigned(doc: PDFDocumentProxy, bytes?: Uint8Array): Promise<boolean> {
+export async function isSigned(doc: PDFDocumentProxy, file?: Blob): Promise<boolean> {
   try {
     if (((await doc.getSignatures())?.length ?? 0) > 0) return true;
   } catch {
     // 바이트로 본다
   }
-  if (bytes === undefined) return false;
+  if (file === undefined) return false;
   try {
-    return await hasByteRange(bytes);
+    return await hasByteRange(file);
   } catch {
     // 워커를 띄우지 못하면 알 수 없는 것으로 (파일 열기는 막지 않는다)
     return false;
@@ -56,12 +56,13 @@ export async function isSigned(doc: PDFDocumentProxy, bytes?: Uint8Array): Promi
 let scanWorker: Promise<Worker> | undefined;
 let scanId = 0;
 
-/** 서명 값 사전(/ByteRange [)이 바이트 안에 있는지. 큰 파일도 화면이 멈추지 않게 워커에서 찾는다 */
-async function hasByteRange(bytes: Uint8Array): Promise<boolean> {
+/**
+ * 서명 값 사전(/ByteRange [)이 파일 안에 있는지. 큰 파일도 화면이 멈추지 않게 워커에서 찾는다.
+ * 바이트를 복사해 넘기지 않고 파일(Blob)을 넘겨 워커가 직접 읽는다 (화면 스레드에서 큰 복사를 하지 않는다)
+ */
+async function hasByteRange(file: Blob): Promise<boolean> {
   const worker = await (scanWorker ??= createWorker(scanWorkerUrl));
   const id = ++scanId;
-  // 원본은 결과를 만들 때 써야 해서 복사본을 넘긴다
-  const copy = bytes.slice();
   return new Promise((resolve) => {
     const listen = (event: MessageEvent<{ id: number; found: boolean }>) => {
       if (event.data.id !== id) return;
@@ -69,7 +70,7 @@ async function hasByteRange(bytes: Uint8Array): Promise<boolean> {
       resolve(event.data.found);
     };
     worker.addEventListener('message', listen);
-    worker.postMessage({ id, bytes: copy }, [copy.buffer]);
+    worker.postMessage({ id, file });
   });
 }
 
