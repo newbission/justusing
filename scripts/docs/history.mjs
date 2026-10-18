@@ -23,7 +23,7 @@ const REPO = 'newbission/justusing';
 const DOCS = {
   // 기능 (도구)
   'features/pdf-view': { scopes: ['pdf-view'], prs: [77] },
-  'features/pdf-merge': { scopes: ['pdf-merge'], prs: [] },
+  'features/pdf-merge': { scopes: ['pdf-merge'], prs: [61, 77] },
   'features/pdf-split': { scopes: ['pdf-split'], prs: [] },
   'features/pdf-rotate': { scopes: ['pdf-rotate'], prs: [] },
   'features/pdf-organize': { scopes: ['pdf-organize'], prs: [] },
