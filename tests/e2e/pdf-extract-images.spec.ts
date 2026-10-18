@@ -1705,3 +1705,51 @@ test('EXIF 앞에 길이 없는 표시(TEM)가 있어도 방향 값을 그대로
   const at = bytes.indexOf(Buffer.from([0x01, 0x12, 0, 3]));
   expect(bytes.readUInt16BE(at + 8)).toBe(1);
 });
+
+test('기본값과 같은 /Decode 배열은 꺼내고, 값을 뒤집는 /Decode는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const image = (pixels: Uint8Array, dict: Record<string, unknown>) =>
+    context.register(
+      context.flateStream(pixels, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ...dict,
+      }),
+    );
+  const gray = image(new Uint8Array(64 * 64).fill(100), {
+    ColorSpace: 'DeviceGray',
+    BitsPerComponent: 8,
+    Decode: [0, 1],
+  });
+  // 2비트 색 목록의 기본 /Decode는 [0 3]
+  const indexed = image(new Uint8Array(16 * 64).fill(0b00011011), {
+    ColorSpace: ['Indexed', 'DeviceRGB', 3, PDFHexString.of('FF000000FF000000FFFFFFFF')],
+    BitsPerComponent: 2,
+    Decode: [0, 3],
+  });
+  const inverted = image(new Uint8Array(64 * 64).fill(100), {
+    ColorSpace: 'DeviceGray',
+    BitsPerComponent: 8,
+    Decode: [1, 0],
+  });
+  const added = doc.addPage([300, 300]);
+  for (const ref of [gray, indexed, inverted]) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'decode.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
+  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
