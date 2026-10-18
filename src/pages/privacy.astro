@@ -7,7 +7,7 @@ import DocLayout from '../layouts/DocLayout.astro';
 import { contactEmail, siteConfig } from '../site.config';
 
 /** 이 내용이 적용되기 시작한 날. 내용을 바꾸면 함께 바꾼다. */
-const effectiveDate = '2026년 10월 15일';
+const effectiveDate = '2026년 10월 18일';
 ---
 
 <DocLayout
@@ -92,10 +92,12 @@ const effectiveDate = '2026년 10월 15일';
     광고는 도구 화면 바깥에만 있습니다. 도구 화면은 따로 떼어 놓은 격리 공간이라 광고가 파일
     내용이나 파일 이름을 읽을 수 없습니다.
   </p>
-  <p>
-    광고 차단 프로그램이 켜져 있으면 꺼 달라는 안내 창이 뜹니다. 광고를 받아 오지 못했는지만 내
-    기기에서 확인하며, 그 결과는 어디에도 보내지 않습니다.
-  </p>
+  {siteConfig.ads.enabled && siteConfig.ads.adblockNotice && (
+    <p>
+      광고 차단 프로그램이 켜져 있으면 꺼 달라는 안내 창이 뜹니다. 광고를 받아 오지 못했는지만 내
+      기기에서 확인하며, 그 결과는 어디에도 보내지 않습니다.
+    </p>
+  )}
 
   <h2>브라우저에 저장하는 것</h2>
   <p>

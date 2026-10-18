@@ -7,7 +7,7 @@ import DocLayout from '../../layouts/DocLayout.astro';
 import { contactEmail, siteConfig } from '../../site.config';
 
 /** 한국어판과 같은 날로 둔다 */
-const effectiveDate = 'October 15, 2026';
+const effectiveDate = 'October 18, 2026';
 ---
 
 <DocLayout
@@ -94,10 +94,12 @@ const effectiveDate = 'October 15, 2026';
     Ads only appear outside the tool area. The tool area is an isolated space, so ads cannot read
     your file content or file names.
   </p>
-  <p>
-    If an ad blocker is on, a message asks you to turn it off. We only check on your device whether
-    the ads could be loaded, and the result is never sent anywhere.
-  </p>
+  {siteConfig.ads.enabled && siteConfig.ads.adblockNotice && (
+    <p>
+      If an ad blocker is on, a message asks you to turn it off. We only check on your device
+      whether the ads could be loaded, and the result is never sent anywhere.
+    </p>
+  )}
 
   <h2>What we store in your browser</h2>
   <p>
