@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '저장한 WebP가 안 열릴 때',
+        text: '웹에서 저장한 이미지가 WebP라 일부 문서 프로그램이나 오래된 사진 프로그램에 넣지 못할 때 JPG나 PNG로 바꿉니다. 여러 장을 한 번에 바꿀 수 있습니다.',
+      },
+      {
+        title: 'JPG만 받는 제출처',
+        text: '서류 제출 사이트가 JPG만 받는데 가진 것이 PNG 캡처나 다른 형식일 때 JPG로 바꿉니다. PNG의 투명한 부분은 흰색으로 채워집니다.',
+      },
+      {
+        title: '아이폰 사진(HEIC)을 JPG로',
+        text: '아이폰이나 맥의 Safari에서 열면 HEIC 사진을 JPG로 바꿀 수 있습니다. 크롬·엣지는 HEIC를 읽지 못하므로 이때는 Safari에서 쓰세요.',
+      },
+    ],
     howTo: [
       '"이미지 파일 선택" 버튼을 누르거나 바꿀 이미지를 화면으로 끌어다 놓습니다. 여러 장을 한 번에 넣을 수 있습니다.',
       '바꿀 형식(JPG·PNG·WebP)을 고릅니다. 목록에서 이미지마다 "WEBP → JPG"처럼 바뀔 형식을 확인합니다.',
@@ -32,6 +46,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'A saved WebP will not open',
+        text: 'Images saved from the web are often WebP, which some document editors and older photo apps cannot insert. Convert them to JPG or PNG, several at a time.',
+      },
+      {
+        title: 'A site that only takes JPG',
+        text: 'When an upload form accepts only JPG and you have a PNG screenshot or another format, convert it to JPG. Transparent areas are filled with white.',
+      },
+      {
+        title: 'iPhone photos (HEIC) to JPG',
+        text: 'Open this page in Safari on an iPhone or Mac to convert HEIC photos to JPG. Chrome and Edge cannot read HEIC, so use Safari for these.',
+      },
+    ],
     howTo: [
       'Click "Choose image files" or drag the images onto the screen. You can add many at once.',
       'Choose the format to convert to (JPG, PNG or WebP). The list shows each change, such as "WEBP → JPG".',

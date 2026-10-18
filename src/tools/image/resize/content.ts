@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '이력서·원서 사진 규격 맞추기',
+        text: '원서 접수 사이트가 사진을 "300×400 픽셀"처럼 정해 둘 때 그 크기로 맞춥니다. "원래 비율 유지"를 끄면 정확히 그 크기가 되지만, 원래 비율과 다르면 늘어나 보일 수 있습니다.',
+      },
+      {
+        title: '상품 사진 크기 맞추기',
+        text: '쇼핑몰에 올릴 상품 사진 여러 장을 같은 가로 크기로 한 번에 맞춥니다. 크기가 고르면 상세 페이지가 깔끔해 보이고 용량도 줄어듭니다.',
+      },
+      {
+        title: '너무 큰 휴대폰 사진 줄이기',
+        text: '휴대폰으로 찍은 사진은 가로가 4000픽셀이 넘는 경우가 많아 게시판이나 메신저에 올리기에 큽니다. 50%처럼 비율로 줄이면 화면으로 보기에 충분하고 용량은 크게 줄어듭니다.',
+      },
+    ],
     howTo: [
       '"이미지 파일 선택" 버튼을 누르거나 크기를 바꿀 이미지를 화면으로 끌어다 놓습니다. 여러 장을 한 번에 넣을 수 있습니다.',
       '"비율로"를 고르면 원래 크기의 몇 %로 바꿀지 적습니다. "가로·세로 크기로"를 고르면 원하는 픽셀 크기를 적습니다.',
@@ -32,6 +46,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Match a required photo size',
+        text: 'When an application site asks for a photo of exactly, say, 300 × 400 pixels, resize it to that. Turning off "Keep aspect ratio" gives the exact size, but the photo may look stretched if its shape differs.',
+      },
+      {
+        title: 'Make product photos match',
+        text: 'Give all the product photos for an online shop the same width in one go. Matching sizes make the page look tidy and the files smaller.',
+      },
+      {
+        title: 'Shrink huge phone photos',
+        text: 'Phone photos are often over 4000 pixels wide, more than a forum or chat needs. Scaling them to something like 50% keeps them sharp on screen and cuts the file size a lot.',
+      },
+    ],
     howTo: [
       'Click "Choose image files" or drag the images onto the screen. You can add many at once.',
       'Choose "By percentage" and enter a percentage of the original size, or choose "By width and height" and enter the size in pixels.',
