@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '넓은 여백 잘라 내기',
+        text: '여백이 넓은 논문이나 전자책 PDF를 "모든 쪽"으로 잘라 내면 태블릿·휴대폰 화면에서 글자가 더 크게 보입니다.',
+      },
+      {
+        title: '스캔본 가장자리 정리',
+        text: '스캔할 때 함께 찍힌 검은 테두리나 덮개 자국을 잘라 내 깔끔하게 보이게 합니다. 잘라 낸 부분은 보이지 않을 뿐 파일 안에 남습니다.',
+      },
+      {
+        title: '한 쪽에서 필요한 부분만',
+        text: '도면이나 포스터 PDF에서 한 부분만 보여 주고 싶을 때 "이 쪽만"으로 그 영역을 남깁니다. 개인정보를 지워야 한다면 "PDF 가리기 (영구 삭제)"를 쓰세요.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 자를 PDF를 화면으로 끌어다 놓습니다.',
       '쪽 위의 밝은 사각형이 남길 영역입니다. 모서리 동그라미를 끌어 크기를 정하고, 가운데를 끌어 자리를 옮깁니다. 키보드로는 화살표 키를 씁니다. ‹ › 버튼으로 쪽을 바꿉니다.',
@@ -24,6 +38,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Trim wide margins',
+        text: 'Crop a paper or e-book PDF with wide margins using "All pages" so the text looks larger on a tablet or phone.',
+      },
+      {
+        title: 'Clean up scan edges',
+        text: 'Trim away dark borders or lid shadows picked up while scanning so the pages look neat. The trimmed parts are only hidden and stay in the file.',
+      },
+      {
+        title: 'Show only part of a page',
+        text: 'When you want to show just one area of a drawing or poster PDF, keep that area with "This page". To remove personal information, use "Redact PDF" instead.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to crop onto the screen.',
       'The bright rectangle on the page is the area to keep. Drag the corner circles to resize it and the middle to move it. With a keyboard, use the arrow keys. Use the ‹ › buttons to change pages.',

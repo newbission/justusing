@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '누운 채 스캔된 서류 바로잡기',
+        text: '복합기에서 서류가 옆으로 누운 채 저장되었다면 "전체 ↻" 한 번으로 모든 쪽을 바로 세웁니다.',
+      },
+      {
+        title: '몇 쪽만 뒤집힌 문서',
+        text: '양면 스캔이나 사진으로 만든 PDF에서 몇 쪽만 거꾸로 들어갔을 때, 그 쪽만 돌리고 나머지는 그대로 둡니다.',
+      },
+      {
+        title: '가로 표가 든 보고서',
+        text: '세로 문서 사이에 가로로 넣은 표나 도면 쪽을 화면에서 읽기 좋게 돌려 둡니다. 다시 그리지 않고 방향 정보만 바꿔 화질이 그대로입니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 돌릴 PDF를 화면으로 끌어다 놓습니다.',
       '쪽마다 ↺(왼쪽)·↻(오른쪽)를 눌러 90°씩 돌립니다. 모든 쪽을 한꺼번에 돌리려면 위쪽의 "전체 ↺"·"전체 ↻"를 누릅니다.',
@@ -24,6 +38,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Fix a document scanned sideways',
+        text: 'If your scanner saved the pages lying on their side, set every page upright with one click on "All ↻".',
+      },
+      {
+        title: 'A few pages upside down',
+        text: 'When only some pages of a scanned or photographed PDF ended up upside down, rotate just those pages and leave the rest as they are.',
+      },
+      {
+        title: 'Landscape tables in a report',
+        text: 'Turn landscape tables or drawings placed between portrait pages so they are easy to read on screen. Only the orientation setting changes, so quality is not affected.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to rotate onto the page.',
       'Click ↺ (left) or ↻ (right) on a page to rotate it by 90°. To rotate every page at once, use "All ↺" or "All ↻" at the top.',

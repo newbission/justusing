@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '필요한 쪽만 따로 제출',
+        text: '수백 쪽짜리 보고서나 교재에서 제출하거나 공유할 몇 쪽만 골라 새 PDF로 만듭니다. "고른 페이지만"으로 누른 쪽을 모아 파일 하나로 받습니다.',
+      },
+      {
+        title: '한꺼번에 스캔한 서류 나누기',
+        text: '여러 건의 신청서나 영수증을 한 번에 스캔해 파일 하나가 되었을 때, 건마다 범위를 정해 따로 나눕니다. 여러 파일은 ZIP 하나로 받습니다.',
+      },
+      {
+        title: '한 사람에 한 장씩 나누기',
+        text: '전 직원 급여명세서나 학생별 성적표처럼 한 쪽에 한 사람씩 담긴 PDF를 "한 장씩 나누기"로 쪽마다 파일 하나씩 만듭니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 나눌 PDF를 화면으로 끌어다 놓습니다.',
       '나누는 방법을 고릅니다. "범위로 나누기"는 1-3, 4-6, 7처럼 쉼표로 구분한 범위마다 파일 하나를 만들고, "한 장씩 나누기"는 모든 쪽을 따로 만들고, "고른 페이지만"은 누른 페이지만 모아 파일 하나를 만듭니다. 휴대폰에서는 각각 "범위", "한 장씩", "고른 쪽"으로 짧게 보입니다.',
@@ -28,6 +42,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Send only the pages needed',
+        text: 'Pick the few pages you need to submit or share from a long report or textbook and make a new PDF. "Selected pages only" collects the pages you click into one file.',
+      },
+      {
+        title: 'Separate a batch scan',
+        text: 'If you scanned several forms or receipts in one go and ended up with a single file, set a range for each one and split them apart. Several files come as one ZIP.',
+      },
+      {
+        title: 'One page per person',
+        text: 'For a PDF with one person per page, such as payslips or student reports, use "Split every page" to make a separate file for each page.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to split onto the page.',
       'Choose how to split. "Split by range" makes one file for each comma-separated range such as 1-3, 4-6, 7. "Split every page" makes a separate file for each page. "Selected pages only" collects the pages you click into one file. On small screens, these options are labeled "Range", "Each page" and "Selected".',

@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '스캔본의 빈 쪽 빼기',
+        text: '양면 스캔으로 생긴 빈 뒷면이나 잘못 들어간 쪽을 "제외"로 빼고 필요한 쪽만 남긴 새 PDF를 만듭니다.',
+      },
+      {
+        title: '뒤섞인 쪽 순서 바로잡기',
+        text: '종이를 넣는 순서가 틀려 쪽이 뒤바뀐 스캔본이나, 맨 뒤에 붙은 표지를 썸네일을 보며 끌어서 제자리로 옮깁니다.',
+      },
+      {
+        title: '보내기 전에 일부 쪽 빼기',
+        text: '견적서나 보고서를 밖으로 보내기 전에 내부 검토 메모나 부록 쪽을 빼고 보낼 본만 새 PDF로 만듭니다. 원본 파일은 그대로 남습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 정리할 PDF를 화면으로 끌어다 놓습니다.',
       '쪽을 끌어서 옮기거나 ◀ ▶ 버튼으로 순서를 바꿉니다. 쪽 왼쪽 위의 번호가 결과 PDF에서의 순서입니다.',
@@ -28,6 +42,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Drop blank pages from a scan',
+        text: 'Remove the blank backs from a double-sided scan, or pages that slipped in by mistake, with "Exclude" and keep only the pages you need in a new PDF.',
+      },
+      {
+        title: 'Fix a mixed-up page order',
+        text: 'If pages were fed in the wrong order, or the cover ended up at the back, drag them into place while looking at the thumbnails.',
+      },
+      {
+        title: 'Remove pages before sending',
+        text: 'Before sending a quote or report outside your team, leave out internal notes or appendix pages and save just the version to send. Your original file stays as it is.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to organize onto the page.',
       'Drag pages or use the ◀ ▶ buttons to change the order. The number at the top left of each page is its position in the new PDF.',
