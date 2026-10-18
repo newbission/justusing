@@ -83,8 +83,10 @@
 
   /** 목록의 파일 하나를 연다 (보던 파일은 닫는다) */
   async function show(file: ViewFile) {
-    await closeDoc();
+    // 고른 파일을 먼저 정한다. 닫기를 기다린 뒤에 정하면 먼저 고른 파일의 늦은 닫기가 나중 선택을 덮어쓴다
     current = file;
+    await closeDoc();
+    if (current !== file) return;
     await load(file.password);
   }
 
@@ -103,7 +105,12 @@
       opened = result;
       target.password = withPassword;
       const { doc } = opened;
-      pages = await Promise.all(Array.from({ length: doc.numPages }, (_, i) => doc.getPage(i + 1)));
+      const loadedPages = await Promise.all(
+        Array.from({ length: doc.numPages }, (_, i) => doc.getPage(i + 1)),
+      );
+      // 쪽을 읽는 사이 다른 파일을 골랐으면 그 파일 화면을 덮어쓰지 않는다 (이 문서는 그쪽 닫기가 닫는다)
+      if (current !== target) return;
+      pages = loadedPages;
       currentPage = 1;
       fitWidth = true;
       phase = 'ready';
