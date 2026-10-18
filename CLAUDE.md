@@ -98,8 +98,9 @@ python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 �
    - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, title, description } }, related })`
      - `section`: 카테고리 안의 묶음 (`categories.ts`의 `sections` 키). 목록 페이지·홈이 묶음별 소제목으로 나눠 보여준다
      - `icon`: 목록 카드 아이콘. 24×24 칸에 선으로 그린 SVG path의 `d` 값들. 다른 도구와 한눈에 구분되게 그린다
-   - `content.ts`: `defineContent({ ko: { howTo: [...], faq: [{ q, a }] } })` — live 도구는 필수
-     (업로드 여부·광고 안전성 같은 모든 도구 공통 질문은 `src/tools/common-faq.ts`에 있고 자동으로 붙는다)
+   - `content.ts`: `defineContent({ ko: { uses: [{ title, text }], howTo: [...], faq: [{ q, a }] } })` — live 도구는 필수
+     - `uses`: '이럴 때 쓰세요' 실제 상황 3개 (도구마다 다른 내용, 실제로 하는 일만). 페이지가 판에 박혀 보이지 않게 한다 (2026-10-18)
+       (업로드 여부·광고 안전성 같은 모든 도구 공통 질문은 `src/tools/common-faq.ts`에 있고 자동으로 붙는다)
    - `Frame.astro`: 격리 frame 페이지. `FrameLayout` 안에 `App.svelte`를 `mount`한다 (`pdf/view` 참고)
    - `App.svelte`: 실제 도구 UI. 첫 화면은 `src/frame/FileDrop.svelte`를 쓴다
 2. `src/tools/registry.ts`의 `TOOL_IDS`에 `'<카테고리>/<이름>'` 한 줄을 넣는다.
@@ -125,7 +126,7 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
 - 문구 위치:
   - 바깥 페이지 부품: `src/i18n/ui.ts` (`ui(locale)`)
   - 사이트 설명·홈 제목: `site.config.ts`의 `text[locale]`
-  - 도구 이름·설명: 각 도구 `meta.ts`의 `text`, 사용법·FAQ: `content.ts`, 공통 FAQ: `common-faq.ts` — **모든 언어 필수**(빠지면 타입 오류)
+  - 도구 이름·설명: 각 도구 `meta.ts`의 `text`, 쓰임새·사용법·FAQ: `content.ts`, 공통 FAQ: `common-faq.ts` — **모든 언어 필수**(빠지면 타입 오류)
   - 도구 화면(격리 frame) 공통 부품: `src/frame/messages.ts`, 도구별: 도구 폴더의 `messages.ts`.
     frame은 `<html lang>`으로 언어를 읽는다 (`src/frame/locale.ts`의 `pick()`)
 - 영어 라우트(`src/pages/en/`)는 한국어 페이지를 그대로 그리는 얇은 파일이다. 주소 목록은 `src/tools/paths.ts`를 같이 쓴다.
@@ -136,7 +137,7 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   브라우저 첫 언어 → 지원하지 않으면 영어로 보낸다. **검색 로봇과 자동화 브라우저는 보내지 않는다**
   (구글 로봇은 영어 브라우저라 보내면 한국어 페이지가 검색에서 빠진다). E2E는 자동화 브라우저라 이동이 꺼진다
   (`tests/e2e/i18n.spec.ts`가 켜서 확인).
-- 버튼 이름을 바꾸면 그 도구의 사용법(`content.ts`)에 적힌 버튼 이름도 같은 언어로 맞춘다.
+- 버튼 이름을 바꾸면 그 도구의 쓰임새·사용법(`content.ts`)에 적힌 버튼 이름도 같은 언어로 맞춘다.
 
 ### 도구 데이터 보관 (글꼴·OCR 데이터, 2026-10-15)
 
