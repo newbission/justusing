@@ -274,7 +274,7 @@ async function decodePixels(
   // 색 목록은 1·2·4·8비트, 회색·RGB는 8비트만
   if (indexed ? ![1, 2, 4, 8].includes(bits) : bits !== 8) return undefined;
   // 화소 값을 바꾸는 /Decode는 다루지 않는다 (기본값과 같은 배열은 바꾸는 것이 없어 그대로 꺼낸다)
-  if (!plainDecode(dict, indexed ? 2 ** bits - 1 : 1)) return undefined;
+  if (!plainDecode(dict, colors.components, indexed ? 2 ** bits - 1 : 1)) return undefined;
   // 색으로 투명 처리(/Mask 배열)는 알파로 바꾼다. 그림으로 가리는 /Mask는 다루지 않는다
   const colorKey = colorKeyOf(dict, colors.components);
   if (colorKey === UNSUPPORTED) return undefined;
@@ -591,14 +591,24 @@ function uprightJpeg(jpeg: Uint8Array): Uint8Array {
   return jpeg;
 }
 
+/** 장치 색공간이나 ICC 프로필(머리의 색 종류)로 정한 성분 수. 알 수 없으면 undefined */
+function spaceComponents(space: ReturnType<typeof jpegSpace>): number | undefined {
+  if (space?.device) return { gray: 1, rgb: 3, cmyk: 4 }[space.device];
+  const icc = space?.icc;
+  if (!icc || icc.length < 20) return undefined;
+  const kind = String.fromCharCode(...icc.subarray(16, 20));
+  return ({ GRAY: 1, 'RGB ': 3, CMYK: 4 } as Record<string, number>)[kind];
+}
+
 /**
- * /Decode가 없거나 모든 성분이 기본값(바꾸지 않음)이면 true.
- * 기본값은 [0 1], 색 목록(Indexed) 사진은 [0 2^비트-1] (high로 넘긴다)
+ * /Decode가 없거나 성분마다 기본값(바꾸지 않음)이면 true. 배열 길이는 성분 수의 두 배여야 한다
+ * (짧거나 성분 수를 모르면 기본값으로 볼 수 없다). 기본값은 [0 1], 색 목록(Indexed) 사진은 [0 2^비트-1] (high로 넘긴다)
  */
-function plainDecode(dict: PDFDict, high = 1): boolean {
+function plainDecode(dict: PDFDict, components: number | undefined, high = 1): boolean {
   const decode = dict.lookup(name('Decode'));
   if (decode === undefined) return true;
-  if (!(decode instanceof PDFArray)) return false;
+  if (!(decode instanceof PDFArray) || components === undefined) return false;
+  if (decode.size() !== components * 2) return false;
   return decode.asArray().every((item, i) => {
     const value = dict.context.lookup(item);
     return value instanceof PDFNumber && value.asNumber() === (i % 2) * high;
@@ -726,7 +736,7 @@ async function extract(
   const last = list.at(-1);
   if (list.length === 1 && last === 'DCTDecode') {
     // /Decode로 값을 바꿔 보여 주는 JPG(뒤집기 등)는 원본 그대로 내면 PDF에서 보이는 것과 달라진다
-    if (!plainDecode(dict)) return undefined;
+    if (!plainDecode(dict, spaceComponents(jpegSpace(dict, resources)))) return undefined;
     // /ColorTransform으로 JPG 표시와 다르게 색을 바꾸라고 하면 JPG 파일만으로는 그 뜻을 옮길 수 없다
     let parms = dict.lookup(name('DecodeParms'));
     if (parms instanceof PDFArray) parms = parms.lookup(0);
