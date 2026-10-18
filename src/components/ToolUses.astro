@@ -1,0 +1,61 @@
+---
+/**
+ * 도구 페이지의 '이럴 때 쓰세요' 섹션. 이 도구가 필요한 실제 상황을 짧은 글로 보여준다.
+ */
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  name: string;
+  items: { title: string; text: string }[];
+}
+
+const { name, items } = Astro.props;
+const t = ui(localeOf(Astro.url.pathname)).tool;
+---
+
+<section class="uses">
+  <h2>{t.uses(name)}</h2>
+  <ul>
+    {items.map((item) => (
+      <li>
+        <h3>{item.title}</h3>
+        <p>{item.text}</p>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .uses {
+    margin-bottom: 48px;
+  }
+  h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+  }
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  li {
+    padding: 16px 18px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+  h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 15px;
+  }
+</style>

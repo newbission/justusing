@@ -37,8 +37,13 @@ export function defineTool(meta: ToolMeta): ToolMeta {
   return meta;
 }
 
-/** 도구 페이지 아래쪽 글 (사용법·FAQ). 검색 노출과 광고 심사를 위해 충분히 쓴다. */
+/** 도구 페이지 아래쪽 글 (쓰임새·사용법·FAQ). 검색 노출과 광고 심사를 위해 충분히 쓴다. */
 export interface ToolContentText {
+  /**
+   * 이럴 때 쓰세요: 이 도구가 필요한 실제 상황 3개. 도구마다 다른 내용이라 페이지가 틀에 박혀 보이지 않게 한다.
+   * 도구가 실제로 하는 일만 쓴다 (못 하는 일을 할 수 있는 것처럼 쓰지 않는다)
+   */
+  uses?: { title: string; text: string }[];
   /** 사용법 단계. 순서대로 한 단계씩 */
   howTo: string[];
   /** 자주 묻는 질문 */
