@@ -3,13 +3,16 @@
  * 받은 바이트는 이 워커에만 있고 어디로도 보내지 않는다.
  */
 
+/** PDF의 공백 바이트: NUL, 탭, LF, 폼 피드, CR, 스페이스 */
+const WHITESPACE = new Set([0x00, 0x09, 0x0a, 0x0c, 0x0d, 0x20]);
+
 /** "/ByteRange" 다음에 (공백 뒤) "[" 가 오는 자리가 있는지 (서명 값 사전) */
 function hasByteRange(bytes: Uint8Array): boolean {
   const key = [0x2f, 0x42, 0x79, 0x74, 0x65, 0x52, 0x61, 0x6e, 0x67, 0x65];
   for (let at = bytes.indexOf(key[0]!); at !== -1; at = bytes.indexOf(key[0]!, at + 1)) {
     if (!key.every((byte, i) => bytes[at + i] === byte)) continue;
     let next = at + key.length;
-    while (bytes[next] === 0x20 || bytes[next] === 0x0a || bytes[next] === 0x0d) next++;
+    while (WHITESPACE.has(bytes[next]!)) next++;
     if (bytes[next] === 0x5b) return true;
   }
   return false;
