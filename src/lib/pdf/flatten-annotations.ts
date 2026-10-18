@@ -9,8 +9,6 @@ import {
   PDFDropdown,
   PDFName,
   PDFNumber,
-  PDFOperator,
-  PDFOperatorNames,
   PDFOptionList,
   PDFRef,
   PDFStream,
@@ -158,63 +156,6 @@ function markupAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
   return context.register(stream);
 }
 
-/**
- * 모양이 저장되지 않은 링크의 테두리. /BS나 /Border로 굵기를 직접 정한 경우만 그린다
- * (정하지 않은 링크 테두리는 보기 프로그램도 보통 그리지 않는다). 그릴 것이 없으면 undefined
- */
-function linkBorderAppearance(annot: PDFDict, rect: number[]): PDFRef | undefined {
-  const context = annot.context;
-  const style = context.lookup(annot.get(PDFName.of('BS')));
-  // /Border [가로둥글기 세로둥글기 굵기 (점선 배열)]
-  const borderValue = context.lookup(annot.get(PDFName.of('Border')));
-  const border =
-    borderValue instanceof PDFArray && borderValue.size() >= 3
-      ? borderValue.asArray().map((item) => context.lookup(item))
-      : undefined;
-  let width: number | undefined;
-  let kind = 'S';
-  let dash: number[] = [];
-  if (style instanceof PDFDict) {
-    const w = context.lookup(style.get(PDFName.of('W')));
-    width = w instanceof PDFNumber ? w.asNumber() : 1;
-    const s = style.get(PDFName.of('S'));
-    if (s instanceof PDFName) kind = s.decodeText();
-    const d = context.lookup(style.get(PDFName.of('D')));
-    if (kind === 'D') {
-      dash =
-        d instanceof PDFArray
-          ? d.asArray().map((item) => {
-              const value = context.lookup(item);
-              return value instanceof PDFNumber ? value.asNumber() : 3;
-            })
-          : [3];
-    }
-  } else if (border && border[2] instanceof PDFNumber) {
-    width = border[2].asNumber();
-    const pattern = border[3];
-    if (pattern instanceof PDFArray) {
-      dash = pattern.asArray().map((item) => {
-        const value = context.lookup(item);
-        return value instanceof PDFNumber ? value.asNumber() : 3;
-      });
-    }
-  }
-  const color = context.lookup(annot.get(PDFName.of('C')));
-  // 색을 비워 두면(빈 배열) 테두리가 보이지 않는다
-  if (!width || width <= 0 || (color instanceof PDFArray && color.size() === 0)) return undefined;
-  const w = Math.abs(rect[2]! - rect[0]!);
-  const h = Math.abs(rect[3]! - rect[1]!);
-  const stroke = fillColor(annot, '0 g').replace(/(\S+)$/, (op) => op.toUpperCase());
-  const half = width / 2;
-  const shape =
-    kind === 'U'
-      ? `0 ${half} m ${w} ${half} l S`
-      : `${half} ${half} ${w - width} ${h - width} re S`;
-  const content = ['q', stroke, `${width} w`, `[${dash.join(' ')}] 0 d`, shape, 'Q'].join('\n');
-  const stream = context.stream(content, { Type: 'XObject', Subtype: 'Form', BBox: [0, 0, w, h] });
-  return context.register(stream);
-}
-
 /** 위젯이 인쇄되는지 (/F의 인쇄 플래그, 숨김이 아님) */
 function printable(dict: PDFDict): boolean {
   const flags = dict.context.lookup(dict.get(PDFName.of('F')));
@@ -243,38 +184,16 @@ function fieldText(field: PDFField): string[] | undefined {
   return [];
 }
 
-/** 쪽들의 주석 사전 (입력 칸이 어느 쪽에 있는지 보려고) */
-function widgetsOn(pages: PDFPage[]): Set<PDFDict> {
-  const found = new Set<PDFDict>();
-  for (const page of pages) {
-    const annots = page.doc.context.lookup(page.node.get(PDFName.of('Annots')));
-    if (!(annots instanceof PDFArray)) continue;
-    for (const item of annots.asArray()) {
-      const annot = page.doc.context.lookup(item);
-      if (annot instanceof PDFDict) found.add(annot);
-    }
-  }
-  return found;
-}
-
 /**
  * 모양 스트림(/AP) 없이 저장된 양식 입력값은 보기 프로그램이 그때그때 그린다 (NeedAppearances).
  * 평면화하려면 모양이 있어야 하므로 먼저 만든다. 만들 수 없으면(기본 글꼴에 없는 한글 등) 조용히 빼지 않고 알린다.
  */
-export function renderMissingFormAppearances(doc: PDFDocument, pages?: PDFPage[]): void {
+export function renderMissingFormAppearances(doc: PDFDocument): void {
   let form;
   let missing: PDFField[];
   try {
     form = doc.getForm();
-    // pages를 주면 그 쪽들에 있는 칸만 (가리기: 그림으로 바꾸는 쪽의 칸은 옮기지 않는다)
-    const onPages = pages && widgetsOn(pages);
-    missing = form
-      .getFields()
-      .filter((field) => field.needsAppearancesUpdate())
-      .filter(
-        (field) =>
-          !onPages || field.acroField.getWidgets().some((widget) => onPages.has(widget.dict)),
-      );
+    missing = form.getFields().filter((field) => field.needsAppearancesUpdate());
   } catch {
     // 양식 구조를 읽을 수 없으면 있는 모양만 쓴다
     return;
@@ -315,20 +234,13 @@ export function flattenAnnotations(page: PDFPage): boolean {
   for (const entry of annots.asArray()) {
     const annot = context.lookup(entry);
     if (!(annot instanceof PDFDict)) continue;
-    // 메모 창은 종이에 보이는 것이 없다
-    const subtype = annot.get(PDFName.of('Subtype'));
-    if (subtype === PDFName.of('Popup')) continue;
+    if (annot.get(PDFName.of('Subtype')) === PDFName.of('Popup')) continue;
     // 종이에 찍을 결과라 인쇄할 때 나오는 주석만 넣는다 (화면 전용 버튼·메모는 빼고, 인쇄 전용은 넣는다)
     if (!printable(annot)) continue;
     const rect = numbers(context.lookup(annot.get(PDFName.of('Rect'))), 4);
     const normal = normalAppearance(annot);
     if (normal === 'empty') continue;
-    const isLink = subtype === PDFName.of('Link');
-    const appearance =
-      normal ??
-      (rect && (isLink ? linkBorderAppearance(annot, rect) : markupAppearance(annot, rect)));
-    // 모양이 저장되지 않은 링크는 굵기를 정한 테두리만 그리고, 그 밖에는 보이는 것이 없다
-    if (!appearance && isLink) continue;
+    const appearance = normal ?? (rect && markupAppearance(annot, rect));
     // 인쇄되는데 모양을 만들 수 없는 주석은 조용히 빼지 않고 알린다
     if (!rect || !appearance) throw new Error(UNRENDERED_ANNOTATION);
     const stream = context.lookup(appearance) as PDFStream;
@@ -367,27 +279,12 @@ export function flattenAnnotations(page: PDFPage): boolean {
       wrapped = true;
     }
     const name = page.node.newXObject('FlatAnnot', appearance);
-    const draw = [
+    page.pushOperators(
       pushGraphicsState(),
       concatTransformationMatrix(sx, 0, 0, sy, rx0 - x0 * sx, ry0 - y0 * sy),
       drawObject(name),
       popGraphicsState(),
-    ];
-    // 보이기 층(/OC)에 딸린 주석은 그린 것도 같은 층으로 감싼다. 그냥 그리면 꺼진 층의 주석이 보인다
-    const oc = annot.get(PDFName.of('OC'));
-    if (oc) {
-      const resources = page.node.Resources()!;
-      const existing = resources.lookup(PDFName.of('Properties'));
-      const properties = existing instanceof PDFDict ? existing : context.obj({});
-      resources.set(PDFName.of('Properties'), properties);
-      const layer = properties.uniqueKey('FlatOC');
-      properties.set(layer, oc);
-      draw.unshift(
-        PDFOperator.of(PDFOperatorNames.BeginMarkedContentSequence, [PDFName.of('OC'), layer]),
-      );
-      draw.push(PDFOperator.of(PDFOperatorNames.EndMarkedContent));
-    }
-    page.pushOperators(...draw);
+    );
     drawn = true;
   }
   page.node.delete(PDFName.of('Annots'));
