@@ -267,12 +267,14 @@ async function decodePixels(
   const width = numberOf(dict, 'Width');
   const height = numberOf(dict, 'Height');
   const bits = numberOf(dict, 'BitsPerComponent') ?? 8;
-  if (!width || !height || dict.has(name('Decode'))) return undefined;
+  if (!width || !height) return undefined;
   const colors = colorsOf(dict, resources);
   if (!colors) return undefined;
   const indexed = 'palette' in colors;
   // 색 목록은 1·2·4·8비트, 회색·RGB는 8비트만
   if (indexed ? ![1, 2, 4, 8].includes(bits) : bits !== 8) return undefined;
+  // 화소 값을 바꾸는 /Decode는 다루지 않는다 (기본값과 같은 배열은 바꾸는 것이 없어 그대로 꺼낸다)
+  if (!plainDecode(dict, indexed ? 2 ** bits - 1 : 1)) return undefined;
   // 색으로 투명 처리(/Mask 배열)는 알파로 바꾼다. 그림으로 가리는 /Mask는 다루지 않는다
   const colorKey = colorKeyOf(dict, colors.components);
   if (colorKey === UNSUPPORTED) return undefined;
@@ -589,14 +591,17 @@ function uprightJpeg(jpeg: Uint8Array): Uint8Array {
   return jpeg;
 }
 
-/** /Decode가 없거나 모든 성분이 [0 1](바꾸지 않음)이면 true */
-function plainDecode(dict: PDFDict): boolean {
+/**
+ * /Decode가 없거나 모든 성분이 기본값(바꾸지 않음)이면 true.
+ * 기본값은 [0 1], 색 목록(Indexed) 사진은 [0 2^비트-1] (high로 넘긴다)
+ */
+function plainDecode(dict: PDFDict, high = 1): boolean {
   const decode = dict.lookup(name('Decode'));
   if (decode === undefined) return true;
   if (!(decode instanceof PDFArray)) return false;
   return decode.asArray().every((item, i) => {
     const value = dict.context.lookup(item);
-    return value instanceof PDFNumber && value.asNumber() === i % 2;
+    return value instanceof PDFNumber && value.asNumber() === (i % 2) * high;
   });
 }
 
