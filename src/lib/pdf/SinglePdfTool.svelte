@@ -108,7 +108,8 @@
   async function close() {
     generation++;
     onclose?.();
-    await opened?.close();
+    // 상태는 기다리기 전에 비운다. 기다린 뒤에 비우면, 늦게 끝난 닫기가 그사이 연 새 파일의 상태를 지운다
+    const closing = opened;
     opened = undefined;
     loaded = undefined;
     signed = false;
@@ -116,6 +117,7 @@
     picked = undefined;
     wrongPassword = false;
     phase = 'idle';
+    await closing?.close();
   }
 
   // 화면 어디에 놓든 받는다. 처리하는 중에 새 파일을 놓으면 그 파일로 바뀐다.
