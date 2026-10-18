@@ -37,7 +37,7 @@
 
 <details><summary>문서 1개</summary>
 
-- 2026-10-16 `654ea8a` 스캔 PDF FAQ에 OCR 도구 안내로 변경
+- 2026-10-16 `03ae600` 스캔 PDF FAQ에 OCR 도구 안내로 변경
 
 </details>
 
