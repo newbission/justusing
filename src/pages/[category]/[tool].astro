@@ -61,7 +61,7 @@ const siblings = toolsInCategory(tool.category).map((other) => ({
     <ToolUses name={text.name} items={content.uses} />
     <ToolHowTo name={text.name} steps={content.howTo} />
   </Fragment>
-  <ToolFaq slot="faq" items={[...COMMON_FAQ[locale], ...content.faq]} />
+  <ToolFaq slot="faq" items={[...content.faq, ...COMMON_FAQ[locale]]} />
   <Fragment slot="related">
     <ToolGuides toolId={tool.id} />
     <RelatedTools ids={tool.related ?? []} />
