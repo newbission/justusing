@@ -56,6 +56,9 @@ const contentMarks = fixtures.flatMap((name) => {
   );
 });
 
+/** 어느 요청의 주소·본문에도 나오면 안 되는 것 */
+const MARKS = [...fileNames, ...FILE_MARKS, ...contentMarks];
+
 /** 기록한 요청에 파일이 기기 밖으로 나갈 만한 것이 없는지 확인한다 */
 export function expectLocalOnly(page: Page, requests: Request[], baseURL: string) {
   const origin = new URL(baseURL).origin;
@@ -65,9 +68,9 @@ export function expectLocalOnly(page: Page, requests: Request[], baseURL: string
 
     // 본문뿐 아니라 주소(경로·쿼리)에 실어 보내는 것도 막는다
     const sent = `${decodeURIComponent(url.href)}\n${request.postData() ?? ''}`;
-    for (const text of [...fileNames, ...FILE_MARKS, ...contentMarks]) {
-      expect(sent, request.url()).not.toContain(text);
-    }
+    // 요청이 많아 하나씩 expect로 대조하면 느리다. 찾은 것만 expect로 실패를 알린다
+    const found = MARKS.find((text) => sent.includes(text));
+    if (found) expect(sent, request.url()).not.toContain(found);
 
     const fromOuterPage = request.frame() === page.mainFrame();
     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
