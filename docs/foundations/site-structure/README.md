@@ -1,6 +1,6 @@
 # 사이트 구조 (site-structure)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-18
 
 - 범위: 도구 레지스트리·카테고리·묶음, 페이지 라우트, 레이아웃(`BaseLayout`·`ToolLayout`·`DocLayout`·`RailShell`),
   테마(다크 모드), 로고, 사이트 설정, 이용 권한(`canUse`)
@@ -22,35 +22,35 @@
 
 ### 파일
 
-| 파일                                                                                        | 역할                                                                                                                                                          |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/site.config.ts`                                                                        | 사이트명·도메인·언어별 설명/홈 제목·검색 소유 확인값·통계 토큰·광고 설정의 **유일한 출처**. `siteUrl`, `contactEmail`                                         |
-| `src/tools/registry.ts`                                                                     | `TOOL_IDS`(노출 순서) → `tools`, `liveTools`, `getTool()`, `toolsInCategory()`, `sectionsInCategory()`, `visibleCategories`                                   |
-| `src/tools/types.ts`                                                                        | `ToolMeta`(status·text·section·icon·related), `defineTool()`, `ToolContent`(howTo·faq), `defineContent()`                                                     |
-| `src/tools/categories.ts`                                                                   | `CATEGORIES`: 카테고리 이름·설명(언어별)과 묶음(`sections`, 순서 = 화면 순서)                                                                                 |
-| `src/tools/common-faq.ts`                                                                   | 모든 도구 FAQ 맨 앞에 붙는 공통 질문 2개 (업로드 여부, 광고가 있어도 안전한지)                                                                                |
-| `src/tools/paths.ts`                                                                        | `categoryPaths()`, `toolPaths()`: 한국어·영어 라우트가 함께 쓰는 `getStaticPaths`                                                                             |
-| `src/tools/<카테고리>/<이름>/`                                                              | 도구 하나: `meta.ts`, `content.ts`, `Frame.astro`, `App.svelte`, (`messages.ts`)                                                                              |
-| `src/pages/index.astro`                                                                     | 허브: 대표 문구, 가로 배너, 약속 카드(`Promises`), 안전 그림(`SafetyDiagram`), 카테고리별 도구 목록, 본문 광고                                                |
-| `src/pages/[category]/index.astro`                                                          | 카테고리 목록 (`ToolSections`, 묶음별 소제목)                                                                                                                 |
-| `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: `ToolFrame` + 사용법 + FAQ(공통 + 도구) + 관련 가이드 + 관련 도구                                                                                |
-| `src/pages/[category]/[tool]/frame.astro`                                                   | 격리 frame 페이지: 도구 폴더의 `Frame.astro`를 그대로 그린다                                                                                                  |
-| `src/layouts/BaseLayout.astro`                                                              | 모든 바깥 페이지의 `<html>`·`<head>`(제목·설명·canonical·hreflang·OG·소유 확인), 머리글·바닥글, 통계·광고 스크립트, 하단 광고, 광고 차단 안내                 |
-| `src/layouts/ToolLayout.astro`                                                              | 도구 페이지 틀: 브레드크럼 → 제목 → `top-banner` → 도구 칸 → 로컬 처리 안내 → `below-tool` → 사용법 → `in-content` → FAQ → 관련. WebApplication 구조화 데이터 |
-| `src/layouts/DocLayout.astro`                                                               | 글 페이지 틀 (소개·방침·약관·문의·가이드): 위치 표시 → 제목 → 작은 글씨(시행일 등) → 배너 → 본문 → `after` 칸                                                 |
-| `src/components/RailShell.astro`                                                            | 본문 폭·여백 + 넓은 화면(1400px 이상)에서 양옆 160px 세로 광고                                                                                                |
-| `src/components/Header.astro`, `Footer.astro`                                               | 로고·카테고리 메뉴·가이드·언어 바꾸기·테마 버튼 / 글 페이지 링크                                                                                              |
-| `src/components/Breadcrumb.astro`                                                           | 위치 표시 + BreadcrumbList 구조화 데이터, 도구 페이지에서는 같은 카테고리 도구로 넘어가는 메뉴                                                                |
-| `src/components/ToolSections.astro`, `ToolGrid.astro`, `ToolCard.astro`, `ToolIcon.astro`   | 묶음별 목록·카드·아이콘. `soon` 도구는 '준비 중'으로 누를 수 없게                                                                                             |
-| `src/components/ToolHowTo.astro`, `ToolFaq.astro`, `RelatedTools.astro`, `ToolGuides.astro` | 도구 페이지 아래쪽 글                                                                                                                                         |
-| `src/styles/tokens.css`, `global.css`                                                       | 색·글꼴·크기 토큰(라이트·다크), 전역 스타일, 본문 글꼴 Pretendard(글자 범위별 조각)                                                                           |
-| `src/lib/theme.ts`, `components/ThemeInit.astro`, `ThemeToggle.astro`                       | 테마 저장 키(`theme`), 그리기 전 적용(깜빡임 방지), 전환 버튼 + `themechange` 이벤트                                                                          |
-| `src/brand/logo.ts`                                                                         | 로고 모양·색의 유일한 출처 (`MARK`, `WORDMARK`, `markSvg()`, `lockupSvg()`)                                                                                   |
-| `src/components/Logo.astro`, `src/pages/favicon.svg.ts`, `src/pages/brand/[name].svg.ts`    | 머리글 로고, favicon, 내려받기 SVG (`/brand/mark.svg` 등)                                                                                                     |
-| `scripts/make-brand-images.mjs`                                                             | 로고 PNG·ICO(favicon, 홈 화면 아이콘, `og.png`, `/brand/*.png`)를 브라우저로 찍어 다시 만든다 (직접 돌리고 커밋)                                              |
-| `src/lib/entitlement.ts`                                                                    | `canUse(toolId, feature?)`. 지금은 늘 허용                                                                                                                    |
-| `src/integrations/dev-preview.ts`, `src/dev/LayoutPreview.astro`                            | 개발 서버에서만 `/_dev/layout/` (도구 페이지 틀과 광고 자리 보기)                                                                                             |
-| `astro.config.mjs`                                                                          | `site`, `trailingSlash: 'always'`, `security.csp`, 워커 IIFE, 마크다운 코드 색칠 끔                                                                           |
+| 파일                                                                                        | 역할                                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/site.config.ts`                                                                        | 사이트명·도메인·언어별 설명/홈 제목·검색 소유 확인값·통계 토큰·광고 설정의 **유일한 출처**. `siteUrl`, `contactEmail`                                                |
+| `src/tools/registry.ts`                                                                     | `TOOL_IDS`(노출 순서) → `tools`, `liveTools`, `getTool()`, `toolsInCategory()`, `sectionsInCategory()`, `visibleCategories`                                          |
+| `src/tools/types.ts`                                                                        | `ToolMeta`(status·text·section·icon·related), `defineTool()`, `ToolContent`(uses·howTo·faq), `defineContent()`                                                       |
+| `src/tools/categories.ts`                                                                   | `CATEGORIES`: 카테고리 이름·설명(언어별)과 묶음(`sections`, 순서 = 화면 순서)                                                                                        |
+| `src/tools/common-faq.ts`                                                                   | 모든 도구 FAQ 맨 앞에 붙는 공통 질문 2개 (업로드 여부, 광고가 있어도 안전한지)                                                                                       |
+| `src/tools/paths.ts`                                                                        | `categoryPaths()`, `toolPaths()`: 한국어·영어 라우트가 함께 쓰는 `getStaticPaths`                                                                                    |
+| `src/tools/<카테고리>/<이름>/`                                                              | 도구 하나: `meta.ts`, `content.ts`, `Frame.astro`, `App.svelte`, (`messages.ts`)                                                                                     |
+| `src/pages/index.astro`                                                                     | 허브: 대표 문구, 가로 배너, 약속 카드(`Promises`), 안전 그림(`SafetyDiagram`), 카테고리별 도구 목록, 본문 광고                                                       |
+| `src/pages/[category]/index.astro`                                                          | 카테고리 목록 (`ToolSections`, 묶음별 소제목)                                                                                                                        |
+| `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: `ToolFrame` + 쓰임새(`ToolUses`) + 사용법 + FAQ(도구 + 공통) + 관련 가이드 + 관련 도구                                                                  |
+| `src/pages/[category]/[tool]/frame.astro`                                                   | 격리 frame 페이지: 도구 폴더의 `Frame.astro`를 그대로 그린다                                                                                                         |
+| `src/layouts/BaseLayout.astro`                                                              | 모든 바깥 페이지의 `<html>`·`<head>`(제목·설명·canonical·hreflang·OG·소유 확인), 머리글·바닥글, 통계·광고 스크립트, 하단 광고, 광고 차단 안내                        |
+| `src/layouts/ToolLayout.astro`                                                              | 도구 페이지 틀: 브레드크럼 → 제목 → `top-banner` → 도구 칸 → 로컬 처리 안내 → `below-tool` → 쓰임새·사용법 → `in-content` → FAQ → 관련. WebApplication 구조화 데이터 |
+| `src/layouts/DocLayout.astro`                                                               | 글 페이지 틀 (소개·방침·약관·문의·가이드): 위치 표시 → 제목 → 작은 글씨(시행일 등) → 배너 → 본문 → `after` 칸                                                        |
+| `src/components/RailShell.astro`                                                            | 본문 폭·여백 + 넓은 화면(1400px 이상)에서 양옆 160px 세로 광고                                                                                                       |
+| `src/components/Header.astro`, `Footer.astro`                                               | 로고·카테고리 메뉴·가이드·언어 바꾸기·테마 버튼 / 글 페이지 링크                                                                                                     |
+| `src/components/Breadcrumb.astro`                                                           | 위치 표시 + BreadcrumbList 구조화 데이터, 도구 페이지에서는 같은 카테고리 도구로 넘어가는 메뉴                                                                       |
+| `src/components/ToolSections.astro`, `ToolGrid.astro`, `ToolCard.astro`, `ToolIcon.astro`   | 묶음별 목록·카드·아이콘. `soon` 도구는 '준비 중'으로 누를 수 없게                                                                                                    |
+| `src/components/ToolHowTo.astro`, `ToolFaq.astro`, `RelatedTools.astro`, `ToolGuides.astro` | 도구 페이지 아래쪽 글                                                                                                                                                |
+| `src/styles/tokens.css`, `global.css`                                                       | 색·글꼴·크기 토큰(라이트·다크), 전역 스타일, 본문 글꼴 Pretendard(글자 범위별 조각)                                                                                  |
+| `src/lib/theme.ts`, `components/ThemeInit.astro`, `ThemeToggle.astro`                       | 테마 저장 키(`theme`), 그리기 전 적용(깜빡임 방지), 전환 버튼 + `themechange` 이벤트                                                                                 |
+| `src/brand/logo.ts`                                                                         | 로고 모양·색의 유일한 출처 (`MARK`, `WORDMARK`, `markSvg()`, `lockupSvg()`)                                                                                          |
+| `src/components/Logo.astro`, `src/pages/favicon.svg.ts`, `src/pages/brand/[name].svg.ts`    | 머리글 로고, favicon, 내려받기 SVG (`/brand/mark.svg` 등)                                                                                                            |
+| `scripts/make-brand-images.mjs`                                                             | 로고 PNG·ICO(favicon, 홈 화면 아이콘, `og.png`, `/brand/*.png`)를 브라우저로 찍어 다시 만든다 (직접 돌리고 커밋)                                                     |
+| `src/lib/entitlement.ts`                                                                    | `canUse(toolId, feature?)`. 지금은 늘 허용                                                                                                                           |
+| `src/integrations/dev-preview.ts`, `src/dev/LayoutPreview.astro`                            | 개발 서버에서만 `/_dev/layout/` (도구 페이지 틀과 광고 자리 보기)                                                                                                    |
+| `astro.config.mjs`                                                                          | `site`, `trailingSlash: 'always'`, `security.csp`, 워커 IIFE, 마크다운 코드 색칠 끔                                                                                  |
 
 ### 도구 하나가 페이지가 되는 흐름
 
@@ -96,6 +96,10 @@
   지금 배포는 Cloudflare Workers 정적 배포이고, 미리보기는 `wrangler dev`로 한다 (`CLAUDE.md`). `astro.config.mjs`의
   GitHub Pages 주석은 그때 남은 것이다
 
+- **쓰임새 칸과 FAQ 순서** (2026-10-18, 애드센스 첫 심사 거절 뒤): 도구 페이지 27개가 같은 틀(사용법 + 같은 공통 질문으로
+  시작하는 FAQ)이라 '자체 콘텐츠가 거의 없는 페이지'로 보일 수 있었다. 도구마다 실제 상황 3개(`uses`)를 필수로 두고,
+  FAQ는 도구 질문을 먼저 보인다. 그림은 넣지 않는다 (사이트를 가볍게, 그림은 가이드에서만 — 사용자 결정)
+
 ### 주의할 점
 
 - 사이트명·도메인·메일 주소를 코드나 글에 직접 쓰지 않는다. `siteConfig`·`siteUrl`·`contactEmail`을 쓴다
@@ -111,7 +115,7 @@
 - [x] 사이트 설정 한 곳, 색·글꼴·크기 토큰, 전역 스타일
 - [x] 레지스트리·카테고리·타입, 빌드 때 검증(파일·카테고리·content·section·관련 도구)
 - [x] 허브·카테고리·도구·frame 라우트, 브레드크럼(+같은 분류 도구 메뉴)
-- [x] 도구 페이지 틀(사용법·FAQ·공통 FAQ·관련 가이드·관련 도구), 글 페이지 틀
+- [x] 도구 페이지 틀(쓰임새·사용법·FAQ·공통 FAQ·관련 가이드·관련 도구), 글 페이지 틀
 - [x] 묶음별 소제목, 도구 아이콘 (홈·카테고리)
 - [x] 다크 모드: OS 설정 + 전환 버튼 + 깜빡임 방지 + frame에 알리기
 - [x] 본문 글꼴 Pretendard 직접 호스팅
