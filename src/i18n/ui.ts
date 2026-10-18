@@ -33,6 +33,7 @@ const ko = {
   tool: {
     localNote:
       '파일은 이 기기를 떠나지 않습니다. 모든 처리는 브라우저 안에서 이루어지며 서버로 업로드되지 않습니다.',
+    uses: (name: string) => `${name}, 이럴 때 쓰세요`,
     howTo: (name: string) => `${name} 사용법`,
     faq: '자주 묻는 질문',
     related: '관련 도구',
@@ -141,6 +142,7 @@ const en: Ui = {
   tool: {
     localNote:
       'Your files never leave this device. Everything is processed inside your browser and nothing is uploaded to a server.',
+    uses: (name: string) => `When to use ${name}`,
     howTo: (name: string) => `How to use the ${name} tool`,
     faq: 'Frequently asked questions',
     related: 'Related tools',
