@@ -207,7 +207,7 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
         if (type === PDFName.of('OCG') && layerUsage instanceof PDFDict) {
           for (const key of usage) layerUsage.delete(key);
         }
-        if (object.get(PDFName.of('FT')) === PDFName.of('Sig')) {
+        if (fieldType(object) === PDFName.of('Sig')) {
           for (const key of named('V', 'SV')) object.delete(key);
         }
         if (type === PDFName.of('Thread')) clearThreadInfo(object);
@@ -218,6 +218,16 @@ function setDocumentInfo(doc: PDFDocument, info: DocumentInfo, clear: boolean) {
       } else if (object instanceof PDFArray) {
         for (const value of object.asArray()) strip(value);
       }
+    };
+    // 양식 칸의 형식(/FT)은 위 칸(/Parent)에서 물려받을 수 있다 (서명 칸 아래의 위젯이 /V·/SV를 가질 수 있음)
+    const fieldType = (dict: PDFDict) => {
+      let current: unknown = dict;
+      for (let depth = 0; current instanceof PDFDict && depth < 64; depth++) {
+        const type = current.get(PDFName.of('FT'));
+        if (type !== undefined) return type;
+        current = context.lookup(current.get(PDFName.of('Parent')));
+      }
+      return undefined;
     };
     // 기사 흐름(Thread)은 /Type을 적지 않아도 되므로, 문서의 목록(/Threads)과 쪽의 기사 조각(/B → /T)을 따라가서도 지운다
     const clearThreadInfo = (thread: unknown) => {
