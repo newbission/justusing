@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '첨부 용량 제한에 걸릴 때',
+        text: '입사 지원이나 온라인 민원에 사진·증빙 이미지를 올릴 때 "1MB 이하"처럼 용량을 제한하는 곳이 많습니다. 가로·세로는 그대로 두고 용량만 줄여 다시 올려 봅니다.',
+      },
+      {
+        title: '블로그·쇼핑몰 사진 가볍게',
+        text: '블로그 글이나 상품 상세 페이지에 올릴 사진 여러 장을 한 번에 줄입니다. 사진이 가벼우면 페이지가 빨리 열리고, 더 작게 하려면 WebP로 저장할 수 있습니다.',
+      },
+      {
+        title: '화면 캡처를 메일로 보내기',
+        text: '업무 보고나 오류 문의에 붙일 화면 캡처 PNG는 색 수를 줄이면 크게 작아지는 경우가 많습니다. 여러 장은 ZIP 하나로 받아 메일에 첨부합니다.',
+      },
+    ],
     howTo: [
       '"이미지 파일 선택" 버튼을 누르거나 줄일 이미지를 화면으로 끌어다 놓습니다. 여러 장을 한 번에 넣을 수 있습니다.',
       '줄이는 정도를 고릅니다. 잘 모르겠으면 "보통"을 고르세요. 더 작게 만들려면 저장 형식을 "WebP로 바꾸기"로 고릅니다.',
@@ -36,6 +50,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Meet an upload size limit',
+        text: 'Job applications and online forms often limit attachments to something like 1 MB. Shrink the file size while keeping the width and height, then try the upload again.',
+      },
+      {
+        title: 'Lighter photos for a blog or shop',
+        text: 'Compress all the photos for a blog post or product page at once. Lighter images make the page load faster, and saving as WebP makes them smaller still.',
+      },
+      {
+        title: 'Email screenshots',
+        text: 'Screenshots saved as PNG often get much smaller once their colors are reduced. Download several as one ZIP and attach it to a bug report or update.',
+      },
+    ],
     howTo: [
       'Click "Choose image files" or drag the images onto the screen. You can add many at once.',
       'Choose how much to shrink. If you are not sure, choose "Balanced". For even smaller files, choose "Convert to WebP".',
