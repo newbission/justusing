@@ -1742,7 +1742,7 @@ test('EXIF 앞에 길이 없는 표시(TEM)가 있어도 방향 값을 그대로
   expect(bytes.readUInt16BE(at + 8)).toBe(1);
 });
 
-test('기본값과 같은 /Decode 배열은 꺼내고, 값을 뒤집는 /Decode는 못 꺼낸 것으로 센다', async ({
+test('기본값과 같은 /Decode 배열은 꺼내고, 값을 뒤집거나 성분 수와 길이가 다른 /Decode는 못 꺼낸 것으로 센다', async ({
   page,
 }) => {
   const doc = await PDFDocument.create();
@@ -1773,8 +1773,28 @@ test('기본값과 같은 /Decode 배열은 꺼내고, 값을 뒤집는 /Decode�
     BitsPerComponent: 8,
     Decode: [1, 0],
   });
+  // 성분 수(RGB 3)보다 짧은 배열은 기본값으로 볼 수 없다
+  const short = image(new Uint8Array(64 * 64 * 3).fill(100), {
+    ColorSpace: 'DeviceRGB',
+    BitsPerComponent: 8,
+    Decode: [0, 1],
+  });
+  const photo = await readFile(fixture('photo.jpg'));
+  const jpg = (decode: number[]) =>
+    context.register(
+      context.stream(photo, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 1200,
+        Height: 900,
+        BitsPerComponent: 8,
+        ColorSpace: 'DeviceRGB',
+        Filter: 'DCTDecode',
+        Decode: decode,
+      }),
+    );
   const added = doc.addPage([300, 300]);
-  for (const ref of [gray, indexed, inverted]) {
+  for (const ref of [gray, indexed, inverted, short, jpg([0, 1, 0, 1, 0, 1]), jpg([])]) {
     const name = added.node.newXObject('Image', ref);
     added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
   }
@@ -1786,6 +1806,6 @@ test('기본값과 같은 /Decode 배열은 꺼내고, 값을 뒤집는 /Decode�
     mimeType: 'application/pdf',
     buffer: Buffer.from(await doc.save()),
   });
-  await expect(frame.getByText(/^사진 2개 · /)).toBeVisible();
-  await expect(frame.getByText('1개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+  await expect(frame.getByText(/^사진 3개 · /)).toBeVisible();
+  await expect(frame.getByText('3개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
