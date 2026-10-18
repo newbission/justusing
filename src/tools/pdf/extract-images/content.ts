@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '보고서 속 사진 다시 쓰기',
+        text: '받은 보고서·제안서 PDF에 들어 있는 사진을 발표 자료에 다시 써야 할 때 씁니다. JPG 사진은 다시 저장하지 않고 원본 그대로 꺼내 화질이 그대로입니다.',
+      },
+      {
+        title: '카탈로그 사진 한 번에 받기',
+        text: '제품 카탈로그나 행사 안내 PDF에 실린 사진을 하나씩 화면 캡처하지 않고 "모두 받기 (ZIP)"로 한 번에 받습니다.',
+      },
+      {
+        title: '작게 실린 사진을 원래 크기로',
+        text: '쪽에서는 작게 보이던 사진도 PDF에 들어 있는 원래 크기로 꺼냅니다. 화면을 캡처하는 것보다 큰 사진을 얻을 수 있습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 PDF를 화면으로 끌어다 놓습니다.',
       'PDF 안의 사진을 찾아 바로 보여 줍니다. 아이콘·선 같은 아주 작은 그림은 빼고 보여 줍니다.',
@@ -31,6 +45,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Reuse photos from a report',
+        text: 'Use it when you need a photo from a report or proposal PDF for your own slides. JPG photos come out as they are stored, without being saved again, so the quality stays the same.',
+      },
+      {
+        title: 'Get every catalog photo at once',
+        text: 'Instead of taking a screenshot of each photo in a product catalog or event brochure, get them all in one go with "Download all (ZIP)".',
+      },
+      {
+        title: 'Get small photos at full size',
+        text: 'A photo that looks small on the page comes out at the size stored in the PDF, which is often larger than a screenshot would give you.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag a PDF onto the screen.',
       'The images inside the PDF are found and shown right away. Tiny images such as icons and lines are left out.',

@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '설치 없이 받은 PDF 열기',
+        text: 'PDF 프로그램이 없는 회사 공용 PC나 빌린 컴퓨터에서 메일로 받은 견적서·안내문을 열어 봐야 할 때 씁니다. 브라우저만 있으면 바로 열립니다.',
+      },
+      {
+        title: '암호 걸린 명세서 확인',
+        text: '카드 명세서나 급여명세서처럼 암호가 걸린 PDF도 암호를 넣으면 볼 수 있습니다. 다른 파일을 보다 돌아와도 암호를 다시 묻지 않습니다.',
+      },
+      {
+        title: '여러 서류 번갈아 보기',
+        text: '계약서 초안과 수정본, 모집 공고와 제출 양식처럼 함께 봐야 하는 PDF를 한 번에 열어 두고 목록에서 바꿔 가며 확인합니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 PDF 파일을 화면으로 끌어다 놓습니다. 여러 파일을 한 번에 열 수 있습니다.',
       '파일이 열리면 아래로 스크롤하며 페이지를 넘겨 봅니다. 위쪽 ‹ › 버튼으로 한 페이지씩 이동할 수도 있습니다.',
@@ -36,6 +50,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Open a PDF on any computer',
+        text: 'Use it on a shared or borrowed computer with no PDF reader installed, when you need to open a quote or notice you got by email. A browser is all you need.',
+      },
+      {
+        title: 'Check a password-protected statement',
+        text: 'Bank statements and payslips often arrive as password-protected PDFs. Enter the password to read them, and you will not be asked again when you come back from another file.',
+      },
+      {
+        title: 'Keep related documents side by side',
+        text: 'Open a draft and its revision, or a job posting and its application form, at the same time and switch between them from the list.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF files" or drag PDF files onto the page. You can open several files at once.',
       'Once a file opens, scroll down to flip through the pages. You can also use the ‹ › buttons at the top to move one page at a time.',

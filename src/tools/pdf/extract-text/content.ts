@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '문서 내용 옮겨 쓰기',
+        text: '보고서나 공문 PDF의 내용을 워드·한글 문서나 메일에 옮겨 써야 할 때, 글자를 뽑아 필요한 부분만 골라 복사합니다.',
+      },
+      {
+        title: '번역기에 넣을 글 준비',
+        text: '외국어 안내문이나 논문을 번역기에 넣으려면 글자가 필요합니다. 모든 쪽의 글자를 한 번에 뽑아 두고 원하는 만큼 복사해 씁니다.',
+      },
+      {
+        title: '긴 자료를 TXT로 보관',
+        text: '매뉴얼이나 강의 자료 PDF를 TXT로 받아 두면 메모장에서 바로 열리고 검색하기 쉽습니다. 쪽마다 구분 줄이 들어가 원래 몇 쪽이었는지 알 수 있습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 글자를 뽑을 PDF를 화면으로 끌어다 놓습니다.',
       '열자마자 모든 쪽의 글자를 읽어 아래 칸에 보여 줍니다. 필요한 부분만 골라 복사할 수 있습니다.',
@@ -23,6 +37,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Reuse text in another document',
+        text: 'When you need to move content from a report or official letter PDF into a document or an email, extract the text and copy just the part you need.',
+      },
+      {
+        title: 'Prepare text for translation',
+        text: 'A translation tool needs text, not a PDF. Extract the text of every page at once from a foreign-language notice or paper and copy as much as you need.',
+      },
+      {
+        title: 'Keep long material as plain text',
+        text: 'Save a manual or course notes as a TXT file that opens in any text editor and is easy to search. A line marks where each page starts.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to extract text from onto the screen.',
       'The text of every page is read right away and shown in the box below. You can select and copy just the part you need.',
