@@ -124,10 +124,12 @@
 
   /** 보고 있는 문서를 닫는다 (목록은 그대로) */
   async function closeDoc() {
+    // 기다리기 전에 비운다. 기다린 뒤에 비우면, 늦게 끝난 닫기가 그사이 연 새 문서를 잊어 닫지 못한다
+    const closing = opened;
+    opened = undefined;
     pages = [];
     wrongPassword = false;
-    await opened?.close();
-    opened = undefined;
+    await closing?.close();
   }
 
   /** 목록에서 뺀다. 보던 파일이면 다음(없으면 앞) 파일을 열고, 다 빼면 첫 화면으로 */
@@ -142,10 +144,12 @@
 
   /** 목록을 비우고 첫 화면으로 돌아간다 */
   async function reset() {
-    await closeDoc();
+    // 닫기를 기다리는 사이 새로 고른 파일을 지우지 않게, 상태를 먼저 비운다
+    const closing = closeDoc();
     files = [];
     current = undefined;
     phase = 'idle';
+    await closing;
   }
 
   function zoom(direction: 1 | -1) {
