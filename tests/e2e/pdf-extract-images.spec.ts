@@ -1267,6 +1267,42 @@ test('파일 안 투명 채널과 색(sYCC)이 PDF에서 보는 것과 다른 JP
   await expect(frame.getByText('4개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
 
+test('상자 없는 JPEG 2000 코드 스트림은 회색·RGB만 꺼내고 성분 4개는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  // SIZ 표시까지만 있는 코드 스트림: FF4F, FF51, 길이, 능력, 크기·자리 값들, 성분 수(Csiz)
+  const codestream = (components: number) =>
+    new Uint8Array([
+      ...[0xff, 0x4f, 0xff, 0x51, 0, 41, 0, 0],
+      ...[0, 0, 0, 64, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0],
+      ...[0, 0, 0, 64, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0],
+      ...[0, components],
+      ...Array.from({ length: components }, () => [7, 1, 1]).flat(),
+    ]);
+  const jpx = (bytes: Uint8Array, extra: Record<string, unknown>) =>
+    context.register(
+      context.stream(bytes, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        Filter: 'JPXDecode',
+        ...extra,
+      }),
+    );
+  drawAll(doc, [
+    jpx(codestream(3), { ColorSpace: 'DeviceRGB' }),
+    // PDF는 CMYK로 보는데 파일을 보는 프로그램은 RGBA로 읽는다
+    jpx(codestream(4), { ColorSpace: 'DeviceCMYK' }),
+    jpx(codestream(4), {}),
+  ]);
+  const frame = await openPdf(page, 'j2k.pdf', doc);
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
+
 test('표시 앞에 채움 바이트가 있는 JPG도 안쪽 프로필을 빼고 꺼낸다', async ({ page }) => {
   const doc = await PDFDocument.create();
   const context = doc.context;
