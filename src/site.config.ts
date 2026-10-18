@@ -30,6 +30,8 @@ const ads: AdsConfig = {
 export const siteConfig = {
   name: 'justusing',
   domain: 'justus.ing',
+  /** 공개 소스 코드 저장소. 방문자가 파일을 어떻게 다루는지 직접 확인할 수 있게 알린다 */
+  sourceUrl: 'https://github.com/newbission/justusing',
   /** 언어별 사이트 설명(검색 결과·홈)과 홈 화면 큰 제목. 언어 목록은 src/i18n/locales.ts */
   text: {
     ko: {
