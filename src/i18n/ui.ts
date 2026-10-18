@@ -107,7 +107,7 @@ const ko = {
     cannotSeeThrough: '벽 너머를 볼 수 없음',
     adsTitle: '광고는 내 파일을 볼 수 없습니다',
     adsText:
-      '파일을 다루는 도구 화면은 브라우저가 따로 떼어 놓은 잠긴 방입니다. 바깥의 광고는 방 안을 들여다볼 수 없고, 방 안에서도 밖으로 아무것도 보낼 수 없습니다.',
+      '파일을 다루는 도구 화면은 브라우저가 따로 떼어 놓은 잠긴 방입니다. 바깥의 광고는 방 안을 들여다볼 수 없고, 방 안에서는 이 사이트 말고 다른 곳으로 연결할 수 없습니다.',
     more: '직접 확인하는 법 보기',
   },
 };
@@ -216,7 +216,7 @@ const en: Ui = {
     cannotSeeThrough: 'Cannot see through the wall',
     adsTitle: 'Ads cannot see your files',
     adsText:
-      'The tool area that handles your files is a locked room that your browser keeps separate. Ads outside cannot look in, and nothing inside can be sent out.',
+      'The tool area that handles your files is a locked room that your browser keeps separate. Ads outside cannot look in, and the room cannot connect anywhere other than this site.',
     more: 'See how to check it yourself',
   },
 };
