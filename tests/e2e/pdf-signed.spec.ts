@@ -18,7 +18,13 @@ async function open(page: Page, path: string, buffer: Buffer) {
   return frame;
 }
 
-for (const path of ['/pdf/rotate/', '/pdf/watermark/', '/pdf/fill-form/', '/pdf/merge/']) {
+for (const path of [
+  '/pdf/rotate/',
+  '/pdf/watermark/',
+  '/pdf/fill-form/',
+  '/pdf/merge/',
+  '/pdf/redact/',
+]) {
   test(`${path}: 서명된 PDF를 넣으면 서명이 깨진다고 알린다`, async ({ page }) => {
     const frame = await open(page, path, await signedPdf());
     await expect(frame.getByText(NOTE, { exact: false })).toBeVisible();

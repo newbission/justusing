@@ -8,7 +8,6 @@ import {
   PDFDropdown,
   PDFHexString,
   PDFName,
-  PDFNumber,
   PDFOptionList,
   PDFRadioGroup,
   PDFTextField,
@@ -16,13 +15,13 @@ import {
   degrees,
   rgb,
   type PDFFont,
-  type PDFPage,
 } from '@cantoo/pdf-lib';
 import fontkit from '@cantoo/fontkit';
 import type { TextJob, TextRequest, TextResponse } from './text-pdf';
 import { placements } from './watermark-layout';
 import { fillTemplate, fitSize, linePosition } from './header-footer-layout';
-import { normalizedRotation, toPdfPoint, viewSize } from './page-geometry';
+// 쪽 좌표 단위(/UserUnit)가 1이 아니면 pt로 정한 글자 크기·여백을 이 단위로 바꿔야 미리보기와 같아진다
+import { normalizedRotation, toPdfPoint, userUnit, viewSize } from './page-geometry';
 import { BASELINE, HIGHLIGHT, LINE_HEIGHT } from './edit-constants';
 
 /** 글꼴에 없는 글자 (빈칸 제외). PDF에 빈 네모로 찍히므로 넣기 전에 알린다 */
@@ -50,16 +49,6 @@ function usedText(job: TextJob, total: number): string {
     }
   }
   return texts.join('');
-}
-
-/**
- * 쪽의 좌표 단위가 몇 pt인지 (/UserUnit, 없으면 1). 1이 아니면 pt로 정한 글자 크기·여백을 이 단위로 바꿔야
- * 화면 미리보기(pt)와 같은 크기가 된다
- */
-function userUnit(page: PDFPage): number {
-  const value = page.node.lookup(PDFName.of('UserUnit'));
-  const unit = value instanceof PDFNumber ? value.asNumber() : 1;
-  return unit > 0 ? unit : 1;
 }
 
 function drawWatermark(
