@@ -95,7 +95,8 @@ const localOnlyTest = `${siteConfig.sourceUrl}/blob/main/tests/e2e/local-only.ts
     </li>
     <li>
       Inside that space, browser security rules (CSP) block connections to any address other than
-      this site's own files. Even the tool itself cannot send your file anywhere.
+      this site. And this site has no server program that receives or stores files; it only serves
+      files prepared in advance.
     </li>
     <li>File names and contents are never put in addresses, page titles, or visitor statistics.</li>
   </ul>
@@ -131,9 +132,10 @@ const localOnlyTest = `${siteConfig.sourceUrl}/blob/main/tests/e2e/local-only.ts
   <p>
     The source code of this site is public on <a href={siteConfig.sourceUrl}>GitHub</a>, so anyone
     can read it. Every time the site changes, automated tests run the tools in a real browser, and a
-    <a href={localOnlyTest}>request check</a> confirms that no request carried a file name or file
-    content and that the tool area connected nowhere but this site. Changes that fail this check do
-    not reach the site.
+    <a href={localOnlyTest}>request check</a> confirms that no request, including those to this
+    site, carried a test file's name or content in its address or body, and that the tool area made
+    no requests other than downloading files from this site. Changes that fail this check do not
+    reach the site.
   </p>
 
   <h2>What we cannot promise</h2>
