@@ -1,0 +1,159 @@
+---
+/**
+ * 영어 안전한 이유 페이지 (/en/safety/). 한국어판(src/pages/safety.astro)과 같은 내용을 영어로 쓴다.
+ */
+import DocLayout from '../../layouts/DocLayout.astro';
+import { siteConfig } from '../../site.config';
+
+const localOnlyTest = `${siteConfig.sourceUrl}/blob/main/tests/e2e/local-only.ts`;
+---
+
+<DocLayout
+  title="Why your files are safe"
+  description={`How ${siteConfig.name} works without uploading your files, and how to check it yourself in your browser.`}
+>
+  <p>
+    None of the tools on {siteConfig.name} upload your files, because there is no server that
+    processes them at all. This page explains how that works, and how you can check it yourself
+    instead of taking our word for it.
+  </p>
+
+  <h2>How is this different from typical online tools?</h2>
+  <p>
+    Many online PDF and image tools take your file, process it on the company's server, and send the
+    result back. Here, your own browser does the work.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Typical online tools</th>
+        <th>{siteConfig.name}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Where your file goes</th>
+        <td>Uploaded to the company's server</td>
+        <td>Never leaves your device</td>
+      </tr>
+      <tr>
+        <th>Where it is processed</th>
+        <td>The company's server</td>
+        <td>Your browser</td>
+      </tr>
+      <tr>
+        <th>After processing</th>
+        <td>How long it stays depends on the company's policy</td>
+        <td>There is no server for it to stay on</td>
+      </tr>
+      <tr>
+        <th>Waiting time</th>
+        <td>Upload and download time + processing</td>
+        <td>Processing only (depends on your device)</td>
+      </tr>
+      <tr>
+        <th>Sign-up or install</th>
+        <td>Varies by tool</td>
+        <td>Not needed</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>How does it work without a server?</h2>
+  <p>
+    Modern browsers can run programs on their own. When you open a tool page, the program that reads
+    and edits PDFs is downloaded from this site into your browser, and it processes your file in
+    your device's memory. The result is also created inside the browser and saved straight to your
+    downloads.
+  </p>
+  <ul>
+    <li>
+      Tool programs, Korean fonts, and text recognition (OCR) data all come from this site. Nothing
+      is loaded from other companies' servers.
+    </li>
+    <li>
+      Large downloads such as fonts and OCR data show their size before downloading, and are used
+      only after checking that their content has not been changed.
+    </li>
+    <li>
+      Heavy work runs in a separate background thread (Web Worker), so the page does not freeze
+      while it is processing.
+    </li>
+  </ul>
+
+  <h2>Is it safe even with ads?</h2>
+  <p>
+    Ads pay for running the site. Ad scripts can read text on the same page, so the tool area is
+    kept apart from the page.
+  </p>
+  <ul>
+    <li>
+      The tool area, where you choose, preview, process, and download files, runs in an isolated
+      space locked by the browser (a sandboxed iframe). Ads and visitor statistics scripts cannot
+      look inside.
+    </li>
+    <li>
+      Inside that space, browser security rules (CSP) block connections to any address other than
+      this site's own files. Even the tool itself cannot send your file anywhere.
+    </li>
+    <li>File names and contents are never put in addresses, page titles, or visitor statistics.</li>
+  </ul>
+
+  <h2>How to check it yourself</h2>
+  <p>
+    You don't have to take our word for it. Your computer's browser developer tools show every
+    address the page talks to.
+  </p>
+  <ol>
+    <li>
+      Open a tool page (for example, Merge PDF) in Chrome or Edge. Press F12 on Windows or Cmd +
+      Option + I on Mac to open the developer tools.
+    </li>
+    <li>Choose the Network tab at the top. Every request from now on is listed there.</li>
+    <li>
+      Clear the list with the clear button (a circle with a slash), then add a file to the tool,
+      process it, and download the result.
+    </li>
+    <li>
+      Click each new request to see its address. The tool's requests only download tool programs
+      from
+      {siteConfig.domain}, and none of them send out anything the size of your file.
+    </li>
+  </ol>
+  <p>
+    You may also see ad or statistics addresses. Those are called by the page outside the tool and
+    cannot reach your files. In Safari, turn on the developer features in Settings → Advanced to get
+    the same view.
+  </p>
+
+  <h2>The code is public</h2>
+  <p>
+    The source code of this site is public on <a href={siteConfig.sourceUrl}>GitHub</a>, so anyone
+    can read it. Every time the site changes, automated tests run the tools in a real browser, and a
+    <a href={localOnlyTest}>request check</a> confirms that no request carried a file name or file
+    content and that the tool area connected nowhere but this site. Changes that fail this check do
+    not reach the site.
+  </p>
+
+  <h2>What we cannot promise</h2>
+  <p>To be honest, there are cases this site cannot prevent.</p>
+  <ul>
+    <li>
+      Browser extensions can read any page, depending on their permissions. When handling sensitive
+      documents, keep only extensions you trust turned on.
+    </li>
+    <li>
+      Processing uses your device's memory and power. Very large files may take a long time, or may
+      not work on older phones.
+    </li>
+    <li>
+      Tool programs are downloaded from this site as you use them, so you need an internet
+      connection while processing. What is downloaded is the program, not your file.
+    </li>
+    <li>
+      Downloaded results are saved on your device, so keeping them safe from then on depends on your
+      device's security.
+    </li>
+  </ul>
+</DocLayout>
