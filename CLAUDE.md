@@ -418,6 +418,7 @@ Co-Authored-By: ...
     frame이 내용 없는 `activity` 신호를 보낸다 (`src/frame/activity.ts` → `ToolFrame` → `toolactivity` 이벤트)
   - 언제든 닫을 수 있어야 하고(×, 닫기, Esc, 바깥 누르기) 닫아도 하던 일은 그대로 되어야 한다. 창 안에 광고 없음
   - "일부러 기다리게 하는 대기시간은 만들지 않는다"는 규칙의 예외로 사용자가 정했다. 방문자가 줄면 빈도를 낮춘다
+  - 첫 심사 거절 뒤(2026-10-18) 심사 동안은 끈다 (`adblockNotice: false`, '과도한 팝업' 의심). 승인 뒤 다시 켜고 방침 시행일을 고친다
 - 심사 통과 뒤: AdSense에서 광고 단위를 만들어 `ads.slots`에 넣고 `ads.enabled`를 켠다.
   `AdSlot`이 광고 단위를 실제로 그리는 코드(`<ins class="adsbygoogle">`)는 그때 만든다
 - 광고를 켠 뒤 확인: 커서가 광고 iframe 위로 바로 들어와 그 위에 파일을 놓으면 광고 iframe이
