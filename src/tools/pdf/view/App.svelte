@@ -83,8 +83,10 @@
 
   /** 목록의 파일 하나를 연다 (보던 파일은 닫는다) */
   async function show(file: ViewFile) {
-    await closeDoc();
+    // 고른 파일을 먼저 정한다. 닫기를 기다린 뒤에 정하면 먼저 고른 파일의 늦은 닫기가 나중 선택을 덮어쓴다
     current = file;
+    await closeDoc();
+    if (current !== file) return;
     await load(file.password);
   }
 
@@ -103,7 +105,12 @@
       opened = result;
       target.password = withPassword;
       const { doc } = opened;
-      pages = await Promise.all(Array.from({ length: doc.numPages }, (_, i) => doc.getPage(i + 1)));
+      const loadedPages = await Promise.all(
+        Array.from({ length: doc.numPages }, (_, i) => doc.getPage(i + 1)),
+      );
+      // 쪽을 읽는 사이 다른 파일을 골랐으면 그 파일 화면을 덮어쓰지 않는다 (이 문서는 그쪽 닫기가 닫는다)
+      if (current !== target) return;
+      pages = loadedPages;
       currentPage = 1;
       fitWidth = true;
       phase = 'ready';
@@ -124,10 +131,12 @@
 
   /** 보고 있는 문서를 닫는다 (목록은 그대로) */
   async function closeDoc() {
+    // 기다리기 전에 비운다. 기다린 뒤에 비우면, 늦게 끝난 닫기가 그사이 연 새 문서를 잊어 닫지 못한다
+    const closing = opened;
+    opened = undefined;
     pages = [];
     wrongPassword = false;
-    await opened?.close();
-    opened = undefined;
+    await closing?.close();
   }
 
   /** 목록에서 뺀다. 보던 파일이면 다음(없으면 앞) 파일을 열고, 다 빼면 첫 화면으로 */
@@ -142,10 +151,12 @@
 
   /** 목록을 비우고 첫 화면으로 돌아간다 */
   async function reset() {
-    await closeDoc();
+    // 닫기를 기다리는 사이 새로 고른 파일을 지우지 않게, 상태를 먼저 비운다
+    const closing = closeDoc();
     files = [];
     current = undefined;
     phase = 'idle';
+    await closing;
   }
 
   function zoom(direction: 1 | -1) {

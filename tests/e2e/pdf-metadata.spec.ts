@@ -397,6 +397,41 @@ test('서명된 PDF는 서명이 깨진다고 알리고, 모두 지우기는 서
   }
 });
 
+test('모두 지우기는 서명 칸 형식을 위 칸에서 물려받은 위젯의 서명 값·서명 조건도 지운다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.load(await signedPdf());
+  const { context } = doc;
+  const form = doc.catalog.lookup(PDFName.of('AcroForm'), PDFDict);
+  const fields = form.lookup(PDFName.of('Fields'), PDFArray);
+  const widgetRef = fields.get(0);
+  const widget = context.lookup(widgetRef, PDFDict);
+  // 서명 칸 형식(/FT /Sig)은 위 칸에만 적고, 서명 값(/V)과 서명 조건(/SV)은 아래 위젯에 둔다
+  widget.delete(PDFName.of('FT'));
+  widget.set(
+    PDFName.of('SV'),
+    context.obj({ Type: 'SV', Cert: { Subject: [PDFString.of('Seed Cert Oh')] } }),
+  );
+  const parentRef = context.register(
+    context.obj({ FT: 'Sig', T: PDFString.of('sig_parent'), Kids: [widgetRef] }),
+  );
+  widget.set(PDFName.of('Parent'), parentRef);
+  form.set(PDFName.of('Fields'), context.obj([parentRef]));
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'contract.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save({ updateFieldAppearances: false })),
+  });
+  await expect(frame.getByText('전자 서명된 PDF입니다', { exact: false })).toBeVisible();
+  await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
+  const { text } = await download(page, frame);
+  for (const secret of ['Seed Cert Oh', 'Cert Holder Park', 'Signer Secret Kim']) {
+    expect(text).not.toContain(secret);
+  }
+});
+
 test('모두 지우기는 레이어를 만든 프로그램·대상 사람과 문서 부분 정보도 지운다', async ({
   page,
 }) => {
@@ -548,18 +583,32 @@ test('모두 지우기는 pdfTeX가 넣은 그림 정보·층 설정을 만든 �
   expect(text).toContain('Layer 1');
 });
 
-test('/SigFlags 없이 서명한 PDF도 서명이 깨진다고 알린다', async ({ page }) => {
-  const signed = await PDFDocument.load(await signedPdf());
-  const form = signed.catalog.lookup(PDFName.of('AcroForm'), PDFDict);
-  form.delete(PDFName.of('SigFlags'));
-  // 서명 프로그램은 서명 값 사전을 압축 묶음 밖에 쓴다 (나중에 /Contents를 채우려고)
-  const bytes = await signed.save({ useObjectStreams: false, updateFieldAppearances: false });
-  await page.goto('/pdf/rotate/');
-  const frame = page.frameLocator('iframe[data-tool-frame]');
-  await frame.locator('input[type=file]').setInputFiles({
-    name: 'contract.pdf',
-    mimeType: 'application/pdf',
-    buffer: Buffer.from(bytes),
+for (const [label, separator] of [
+  ['스페이스', ' '],
+  ['탭', '\t'],
+  ['폼 피드', '\f'],
+  ['NUL', '\0'],
+] as const) {
+  test(`/SigFlags 없이 서명한 PDF도 서명이 깨진다고 알린다 (/ByteRange 뒤 ${label})`, async ({
+    page,
+  }) => {
+    const signed = await PDFDocument.load(await signedPdf());
+    const form = signed.catalog.lookup(PDFName.of('AcroForm'), PDFDict);
+    form.delete(PDFName.of('SigFlags'));
+    // 서명 프로그램은 서명 값 사전을 압축 묶음 밖에 쓴다 (나중에 /Contents를 채우려고)
+    const saved = await signed.save({ useObjectStreams: false, updateFieldAppearances: false });
+    // 같은 길이로 바꿔 상호 참조 표의 자리는 그대로 둔다
+    const bytes = Buffer.from(
+      Buffer.from(saved).toString('latin1').replace('/ByteRange [', `/ByteRange${separator}[`),
+      'latin1',
+    );
+    await page.goto('/pdf/rotate/');
+    const frame = page.frameLocator('iframe[data-tool-frame]');
+    await frame.locator('input[type=file]').setInputFiles({
+      name: 'contract.pdf',
+      mimeType: 'application/pdf',
+      buffer: bytes,
+    });
+    await expect(frame.getByText('전자 서명된 PDF입니다', { exact: false })).toBeVisible();
   });
-  await expect(frame.getByText('전자 서명된 PDF입니다', { exact: false })).toBeVisible();
-});
+}

@@ -1267,6 +1267,42 @@ test('파일 안 투명 채널과 색(sYCC)이 PDF에서 보는 것과 다른 JP
   await expect(frame.getByText('4개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });
 
+test('상자 없는 JPEG 2000 코드 스트림은 회색·RGB만 꺼내고 성분 4개는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  // SIZ 표시까지만 있는 코드 스트림: FF4F, FF51, 길이, 능력, 크기·자리 값들, 성분 수(Csiz)
+  const codestream = (components: number) =>
+    new Uint8Array([
+      ...[0xff, 0x4f, 0xff, 0x51, 0, 41, 0, 0],
+      ...[0, 0, 0, 64, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0],
+      ...[0, 0, 0, 64, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0, 0],
+      ...[0, components],
+      ...Array.from({ length: components }, () => [7, 1, 1]).flat(),
+    ]);
+  const jpx = (bytes: Uint8Array, extra: Record<string, unknown>) =>
+    context.register(
+      context.stream(bytes, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        Filter: 'JPXDecode',
+        ...extra,
+      }),
+    );
+  drawAll(doc, [
+    jpx(codestream(3), { ColorSpace: 'DeviceRGB' }),
+    // PDF는 CMYK로 보는데 파일을 보는 프로그램은 RGBA로 읽는다
+    jpx(codestream(4), { ColorSpace: 'DeviceCMYK' }),
+    jpx(codestream(4), {}),
+  ]);
+  const frame = await openPdf(page, 'j2k.pdf', doc);
+  await expect(frame.getByText(/^사진 1개 · /)).toBeVisible();
+  await expect(frame.getByText('2개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
+});
+
 test('표시 앞에 채움 바이트가 있는 JPG도 안쪽 프로필을 빼고 꺼낸다', async ({ page }) => {
   const doc = await PDFDocument.create();
   const context = doc.context;
@@ -1704,4 +1740,72 @@ test('EXIF 앞에 길이 없는 표시(TEM)가 있어도 방향 값을 그대로
   const bytes = await readFile(await (await event).path());
   const at = bytes.indexOf(Buffer.from([0x01, 0x12, 0, 3]));
   expect(bytes.readUInt16BE(at + 8)).toBe(1);
+});
+
+test('기본값과 같은 /Decode 배열은 꺼내고, 값을 뒤집거나 성분 수와 길이가 다른 /Decode는 못 꺼낸 것으로 센다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.create();
+  const context = doc.context;
+  const image = (pixels: Uint8Array, dict: Record<string, unknown>) =>
+    context.register(
+      context.flateStream(pixels, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 64,
+        Height: 64,
+        ...dict,
+      }),
+    );
+  const gray = image(new Uint8Array(64 * 64).fill(100), {
+    ColorSpace: 'DeviceGray',
+    BitsPerComponent: 8,
+    Decode: [0, 1],
+  });
+  // 2비트 색 목록의 기본 /Decode는 [0 3]
+  const indexed = image(new Uint8Array(16 * 64).fill(0b00011011), {
+    ColorSpace: ['Indexed', 'DeviceRGB', 3, PDFHexString.of('FF000000FF000000FFFFFFFF')],
+    BitsPerComponent: 2,
+    Decode: [0, 3],
+  });
+  const inverted = image(new Uint8Array(64 * 64).fill(100), {
+    ColorSpace: 'DeviceGray',
+    BitsPerComponent: 8,
+    Decode: [1, 0],
+  });
+  // 성분 수(RGB 3)보다 짧은 배열은 기본값으로 볼 수 없다
+  const short = image(new Uint8Array(64 * 64 * 3).fill(100), {
+    ColorSpace: 'DeviceRGB',
+    BitsPerComponent: 8,
+    Decode: [0, 1],
+  });
+  const photo = await readFile(fixture('photo.jpg'));
+  const jpg = (decode: number[]) =>
+    context.register(
+      context.stream(photo, {
+        Type: 'XObject',
+        Subtype: 'Image',
+        Width: 1200,
+        Height: 900,
+        BitsPerComponent: 8,
+        ColorSpace: 'DeviceRGB',
+        Filter: 'DCTDecode',
+        Decode: decode,
+      }),
+    );
+  const added = doc.addPage([300, 300]);
+  for (const ref of [gray, indexed, inverted, short, jpg([0, 1, 0, 1, 0, 1]), jpg([])]) {
+    const name = added.node.newXObject('Image', ref);
+    added.pushOperators(pushGraphicsState(), drawObject(name), popGraphicsState());
+  }
+
+  await page.goto('/pdf/extract-images/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'decode.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save()),
+  });
+  await expect(frame.getByText(/^사진 3개 · /)).toBeVisible();
+  await expect(frame.getByText('3개는 흑백 팩스·CMYK', { exact: false })).toBeVisible();
 });

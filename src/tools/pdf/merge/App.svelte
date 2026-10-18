@@ -33,6 +33,8 @@
     id: number;
     name: string;
     bytes: Uint8Array;
+    /** 고른 파일. 서명 확인 워커가 바이트 복사 없이 직접 읽는다 */
+    file: File;
     status: 'loading' | 'password' | 'ready' | 'error';
     /** 암호 PDF를 연 암호. 합칠 때 같은 암호로 풀어서 넣는다. */
     password?: string;
@@ -137,6 +139,7 @@
         id: nextId++,
         name: file.name,
         bytes: new Uint8Array(await file.arrayBuffer()),
+        file,
         status: 'loading',
         pageCount: 0,
         pages: [],
@@ -163,7 +166,7 @@
       }));
       item.firstPage = await item.opened.doc.getPage(1);
       // 서명 안내를 보기 전에 합치지 않게, 확인이 끝난 뒤에야 준비된 파일로 센다
-      item.signed = await isSigned(item.opened.doc, item.bytes);
+      item.signed = await isSigned(item.opened.doc, item.file);
       item.status = 'ready';
     } catch (error) {
       if (isPasswordError(error)) {

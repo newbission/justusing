@@ -46,6 +46,8 @@
   let phase: Phase = $state('idle');
   let fileName = '';
   let bytes: Uint8Array | undefined;
+  /** 고른 파일. 서명 확인 워커가 바이트 복사 없이 직접 읽는다 */
+  let picked: File | undefined;
   let passwordInput = $state('');
   let wrongPassword = $state(false);
   let opened: OpenedPdf | undefined;
@@ -56,12 +58,16 @@
   let generation = 0;
 
   async function open(file: File) {
-    await close();
+    // close()가 기다리기 전에 세대를 늘리므로, 기다리기 전에 받아 두어야 열기마다 다른 번호가 된다
+    const closing = close();
     const ticket = generation;
+    await closing;
+    if (ticket !== generation) return;
     const read = new Uint8Array(await file.arrayBuffer());
     if (ticket !== generation) return;
     fileName = file.name;
     bytes = read;
+    picked = file;
     await load();
   }
 
@@ -69,12 +75,13 @@
     if (!bytes) return;
     const ticket = generation;
     const source = { name: fileName, bytes };
+    const file = picked;
     phase = 'loading';
     try {
       // pdf.js는 받은 버퍼를 워커로 넘겨 비워 버리므로 복사본을 준다 (원본은 결과를 만들 때 쓴다)
       const current = await openPdf(source.bytes.slice(), withPassword);
       // 서명 안내를 보기 전에 저장하지 않게, 확인이 끝난 뒤에야 도구 화면(저장 버튼)을 연다
-      const value = saves && (await isSigned(current.doc, source.bytes));
+      const value = saves && (await isSigned(current.doc, file));
       // 여는 사이에 닫았거나 다른 파일을 열었으면 이 문서는 닫고 그만둔다
       if (ticket !== generation) {
         await current.close();
@@ -101,13 +108,16 @@
   async function close() {
     generation++;
     onclose?.();
-    await opened?.close();
+    // 상태는 기다리기 전에 비운다. 기다린 뒤에 비우면, 늦게 끝난 닫기가 그사이 연 새 파일의 상태를 지운다
+    const closing = opened;
     opened = undefined;
     loaded = undefined;
     signed = false;
     bytes = undefined;
+    picked = undefined;
     wrongPassword = false;
     phase = 'idle';
+    await closing?.close();
   }
 
   // 화면 어디에 놓든 받는다. 처리하는 중에 새 파일을 놓으면 그 파일로 바뀐다.
