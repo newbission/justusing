@@ -1,11 +1,12 @@
 /**
- * 글 페이지(소개·개인정보처리방침·이용약관·문의) E2E.
+ * 글 페이지(소개·안전한 이유·개인정보처리방침·이용약관·문의) E2E.
  * 광고 심사가 요구하는 페이지라, 모든 페이지의 바닥글에서 갈 수 있고 사이트맵에 있어야 한다.
  */
 import { expect, test } from './test';
 
 const pages = [
   { name: '소개', path: '/about/' },
+  { name: '파일이 안전한 이유', path: '/safety/' },
   { name: '개인정보처리방침', path: '/privacy/' },
   { name: '이용약관', path: '/terms/' },
   { name: '문의', path: '/contact/' },
