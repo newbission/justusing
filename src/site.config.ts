@@ -19,10 +19,11 @@ interface AdsConfig {
 }
 
 const ads: AdsConfig = {
-  // 심사 중이라 광고 칸(slots)은 아직 비어 있다. 스크립트와 광고 차단 안내만 동작한다.
+  // 심사 중이라 광고 칸(slots)은 아직 비어 있다. 스크립트만 동작한다.
+  // 광고 차단 안내는 심사 중에 끈다: 페이지를 열자마자 뜨는 창이 '과도한 팝업'으로 보일 수 있다 (2026-10-18)
   enabled: true,
   adsenseClient: 'ca-pub-9856578903331156',
-  adblockNotice: true,
+  adblockNotice: false,
   slots: {},
 };
 
