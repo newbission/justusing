@@ -22,7 +22,7 @@ const REPO = 'newbission/justusing';
  */
 const DOCS = {
   // 기능 (도구)
-  'features/pdf-view': { scopes: ['pdf-view'], prs: [] },
+  'features/pdf-view': { scopes: ['pdf-view'], prs: [77] },
   'features/pdf-merge': { scopes: ['pdf-merge'], prs: [] },
   'features/pdf-split': { scopes: ['pdf-split'], prs: [] },
   'features/pdf-rotate': { scopes: ['pdf-rotate'], prs: [] },
@@ -43,15 +43,15 @@ const DOCS = {
   'features/pdf-edit': { scopes: ['pdf-edit'], prs: [54] },
   'features/pdf-ocr': { scopes: ['pdf-ocr'], prs: [56] },
   'features/pdf-fill-form': { scopes: ['pdf-fill-form'], prs: [60] },
-  'features/pdf-redact': { scopes: ['pdf-redact'], prs: [63, 58] },
-  'features/pdf-extract-images': { scopes: ['pdf-extract-images'], prs: [59] },
-  'features/pdf-metadata': { scopes: ['pdf-metadata'], prs: [61] },
+  'features/pdf-redact': { scopes: ['pdf-redact'], prs: [63, 58, 74] },
+  'features/pdf-extract-images': { scopes: ['pdf-extract-images'], prs: [59, 75, 77] },
+  'features/pdf-metadata': { scopes: ['pdf-metadata'], prs: [61, 76, 77] },
   'features/image-compress': { scopes: ['image-compress'], prs: [36] },
   'features/image-resize': { scopes: ['image-resize'], prs: [36] },
   'features/image-convert': { scopes: ['image-convert'], prs: [44] },
   // 기반 (여러 도구·페이지가 같이 쓰는 것)
   'foundations/frame-isolation': { scopes: ['frame'], prs: [40] },
-  'foundations/pdf-common': { scopes: ['pdf'], prs: [] },
+  'foundations/pdf-common': { scopes: ['pdf'], prs: [76, 77] },
   'foundations/image-common': { scopes: ['image'], prs: [] },
   'foundations/fonts-and-data': { scopes: ['font'], prs: [47] },
   'foundations/site-structure': {
@@ -65,7 +65,7 @@ const DOCS = {
     prs: [6, 10, 16, 37],
   },
   // 영역 없는 커밋(docs:·chore:·ci: 등, 규칙·작업 방식·문서 체계)은 여기에 모은다
-  'foundations/process': { scopes: [''], prs: [1, 2, 4, 5, 62] },
+  'foundations/process': { scopes: [''], prs: [1, 2, 4, 5, 62, 71] },
 };
 
 const run = (command, args) =>
