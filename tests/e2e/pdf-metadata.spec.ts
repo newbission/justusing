@@ -397,6 +397,41 @@ test('서명된 PDF는 서명이 깨진다고 알리고, 모두 지우기는 서
   }
 });
 
+test('모두 지우기는 서명 칸 형식을 위 칸에서 물려받은 위젯의 서명 값·서명 조건도 지운다', async ({
+  page,
+}) => {
+  const doc = await PDFDocument.load(await signedPdf());
+  const { context } = doc;
+  const form = doc.catalog.lookup(PDFName.of('AcroForm'), PDFDict);
+  const fields = form.lookup(PDFName.of('Fields'), PDFArray);
+  const widgetRef = fields.get(0);
+  const widget = context.lookup(widgetRef, PDFDict);
+  // 서명 칸 형식(/FT /Sig)은 위 칸에만 적고, 서명 값(/V)과 서명 조건(/SV)은 아래 위젯에 둔다
+  widget.delete(PDFName.of('FT'));
+  widget.set(
+    PDFName.of('SV'),
+    context.obj({ Type: 'SV', Cert: { Subject: [PDFString.of('Seed Cert Oh')] } }),
+  );
+  const parentRef = context.register(
+    context.obj({ FT: 'Sig', T: PDFString.of('sig_parent'), Kids: [widgetRef] }),
+  );
+  widget.set(PDFName.of('Parent'), parentRef);
+  form.set(PDFName.of('Fields'), context.obj([parentRef]));
+  await page.goto('/pdf/metadata/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles({
+    name: 'contract.pdf',
+    mimeType: 'application/pdf',
+    buffer: Buffer.from(await doc.save({ updateFieldAppearances: false })),
+  });
+  await expect(frame.getByText('전자 서명된 PDF입니다', { exact: false })).toBeVisible();
+  await frame.getByLabel('문서 정보 모두 지우기', { exact: false }).check();
+  const { text } = await download(page, frame);
+  for (const secret of ['Seed Cert Oh', 'Cert Holder Park', 'Signer Secret Kim']) {
+    expect(text).not.toContain(secret);
+  }
+});
+
 test('모두 지우기는 레이어를 만든 프로그램·대상 사람과 문서 부분 정보도 지운다', async ({
   page,
 }) => {
