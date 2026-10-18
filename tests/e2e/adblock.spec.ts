@@ -3,8 +3,10 @@
  *
  * 광고 차단 상태는 광고 주소로 가는 요청을 끊어서 만든다 (차단 프로그램·차단 DNS와 같은 결과).
  * 안내 창은 어느 페이지에서나, 도구를 쓸 때마다 뜨지만 언제든 닫을 수 있고 하던 일을 막지 않는다.
+ * 안내 창은 설정(ads.adblockNotice)으로 끌 수 있어, 켜져 있을 때와 꺼져 있을 때를 나눠 확인한다.
  */
 import { fileURLToPath } from 'node:url';
+import { siteConfig } from '../../src/site.config';
 import { AD_HOSTS, expect, test, type Page } from './test';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
@@ -37,73 +39,86 @@ test('광고 차단이 없으면 안내 창이 뜨지 않는다', async ({ page 
   await expect(notice(page)).toBeHidden();
 });
 
-for (const path of ['/', '/pdf/', '/pdf/merge/', '/about/']) {
-  test(`광고 차단이 켜져 있으면 ${path} 에서 안내 창이 뜬다`, async ({ page }) => {
-    await blockAds(page);
-    await page.goto(path);
-    await expect(notice(page)).toBeVisible();
-  });
-}
+test.describe('안내 창을 켰을 때', () => {
+  test.skip(!siteConfig.ads.adblockNotice, '광고 차단 안내가 꺼져 있다');
 
-test('안내 창은 ×, 닫기 버튼, Esc, 바깥 누르기로 닫는다', async ({ page }) => {
-  await blockAds(page);
-  const closers = [
-    () => notice(page).getByRole('button', { name: '닫기' }).first().click(), // 오른쪽 위 ×
-    () => notice(page).getByRole('button', { name: '닫기' }).last().click(),
-    () => page.keyboard.press('Escape'),
-    () => page.mouse.click(5, 5),
-  ];
-  for (const close of closers) {
+  for (const path of ['/', '/pdf/', '/pdf/merge/', '/about/']) {
+    test(`광고 차단이 켜져 있으면 ${path} 에서 안내 창이 뜬다`, async ({ page }) => {
+      await blockAds(page);
+      await page.goto(path);
+      await expect(notice(page)).toBeVisible();
+    });
+  }
+
+  test('안내 창은 ×, 닫기 버튼, Esc, 바깥 누르기로 닫는다', async ({ page }) => {
+    await blockAds(page);
+    const closers = [
+      () => notice(page).getByRole('button', { name: '닫기' }).first().click(), // 오른쪽 위 ×
+      () => notice(page).getByRole('button', { name: '닫기' }).last().click(),
+      () => page.keyboard.press('Escape'),
+      () => page.mouse.click(5, 5),
+    ];
+    for (const close of closers) {
+      await page.goto('/');
+      await expect(notice(page)).toBeVisible();
+      await close();
+      await expect(notice(page)).toBeHidden();
+    }
+  });
+
+  test('도구를 쓸 때마다 다시 뜨고, 닫아도 하던 일은 그대로 된다', async ({ page }) => {
+    await blockAds(page);
+    await page.goto('/pdf/merge/');
+    const frame = page.frameLocator('iframe[data-tool-frame]');
+    const close = async () => {
+      await expect(notice(page)).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(notice(page)).toBeHidden();
+    };
+    await close(); // 페이지를 열 때
+
+    await frame
+      .locator('input[type=file]')
+      .first()
+      .setInputFiles([fixture('three-pages.pdf'), fixture('korean.pdf')]);
+    await close(); // 파일을 고를 때
+
+    await frame.getByRole('button', { name: 'PDF 합치기' }).click();
+    await close(); // 실행할 때
+    await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
+
+    const download = page.waitForEvent('download');
+    await frame.getByRole('button', { name: '다운로드' }).click();
+    expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
+    await close(); // 다운로드할 때
+  });
+
+  test('"껐어요, 새로 고침"은 페이지를 다시 열고, 광고가 받아지면 더는 뜨지 않는다', async ({
+    page,
+  }) => {
+    await blockAds(page);
     await page.goto('/');
     await expect(notice(page)).toBeVisible();
-    await close();
+
+    // 광고 차단을 끈 것처럼 다시 받아지게 한다
+    await page.unroute(AD_HOSTS);
+    await page.route(AD_HOSTS, (route) =>
+      route.fulfill({ contentType: 'text/javascript', body: '' }),
+    );
+    await notice(page).getByRole('button', { name: '껐어요, 새로 고침' }).click();
+    await expect(page.locator(AD_SCRIPT)).toHaveCount(1);
+    await page.waitForTimeout(800);
     await expect(notice(page)).toBeHidden();
-  }
+  });
 });
 
-test('도구를 쓸 때마다 다시 뜨고, 닫아도 하던 일은 그대로 된다', async ({ page }) => {
+test('안내 창을 끄면 광고가 막혀도 뜨지 않는다', async ({ page }) => {
+  test.skip(siteConfig.ads.adblockNotice, '광고 차단 안내가 켜져 있다');
   await blockAds(page);
   await page.goto('/pdf/merge/');
-  const frame = page.frameLocator('iframe[data-tool-frame]');
-  const close = async () => {
-    await expect(notice(page)).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(notice(page)).toBeHidden();
-  };
-  await close(); // 페이지를 열 때
-
-  await frame
-    .locator('input[type=file]')
-    .first()
-    .setInputFiles([fixture('three-pages.pdf'), fixture('korean.pdf')]);
-  await close(); // 파일을 고를 때
-
-  await frame.getByRole('button', { name: 'PDF 합치기' }).click();
-  await close(); // 실행할 때
-  await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
-
-  const download = page.waitForEvent('download');
-  await frame.getByRole('button', { name: '다운로드' }).click();
-  expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
-  await close(); // 다운로드할 때
-});
-
-test('"껐어요, 새로 고침"은 페이지를 다시 열고, 광고가 받아지면 더는 뜨지 않는다', async ({
-  page,
-}) => {
-  await blockAds(page);
-  await page.goto('/');
-  await expect(notice(page)).toBeVisible();
-
-  // 광고 차단을 끈 것처럼 다시 받아지게 한다
-  await page.unroute(AD_HOSTS);
-  await page.route(AD_HOSTS, (route) =>
-    route.fulfill({ contentType: 'text/javascript', body: '' }),
-  );
-  await notice(page).getByRole('button', { name: '껐어요, 새로 고침' }).click();
-  await expect(page.locator(AD_SCRIPT)).toHaveCount(1);
+  // 광고 스크립트 실패와 미끼 칸 검사(0.5초)가 끝난 뒤에도 뜨지 않아야 한다
   await page.waitForTimeout(800);
-  await expect(notice(page)).toBeHidden();
+  await expect(page.locator('[data-adblock-notice]')).toHaveCount(0);
 });
 
 test('도구 frame이 보내는 신호에는 내용이 없다', async ({ page }) => {
