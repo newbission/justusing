@@ -1,6 +1,6 @@
 /**
  * 서명 바이트 찾기 워커. 큰 PDF 전체를 훑어도 화면이 멈추지 않게 따로 돈다 (pdfjs.ts의 isSigned).
- * 받은 바이트는 이 워커에만 있고 어디로도 보내지 않는다.
+ * 받은 파일은 이 워커에서 읽기만 하고 어디로도 보내지 않는다.
  */
 
 /** PDF의 공백 바이트: NUL, 탭, LF, 폼 피드, CR, 스페이스 */
@@ -18,7 +18,11 @@ function hasByteRange(bytes: Uint8Array): boolean {
   return false;
 }
 
-addEventListener('message', (event: MessageEvent<{ id: number; bytes: Uint8Array }>) => {
-  const { id, bytes } = event.data;
-  postMessage({ id, found: hasByteRange(bytes) });
+addEventListener('message', async (event: MessageEvent<{ id: number; file: Blob }>) => {
+  const { id, file } = event.data;
+  try {
+    postMessage({ id, found: hasByteRange(new Uint8Array(await file.arrayBuffer())) });
+  } catch {
+    postMessage({ id, found: false });
+  }
 });
