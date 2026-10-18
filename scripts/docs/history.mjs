@@ -90,9 +90,13 @@ function commits() {
     if (seen.has(key)) continue;
     seen.add(key);
     const match = /^([a-z]+)(?:\(([^)]*)\))?: (.*)$/.exec(subject);
-    if (match) list.push({ hash, date, type: match[1], scope: match[2] ?? '', title: match[3] });
+    if (match) {
+      list.push({ hash, date, authored, type: match[1], scope: match[2] ?? '', title: match[3] });
+    }
   }
-  return list.reverse();
+  // git log는 병합 순서(토폴로지)라, 예전에 쓴 브랜치가 늦게 병합되면 날짜가 뒤섞인다. 쓴 시각 순으로 맞춘다
+  // (같은 시각이면 git log 순서를 지킨다)
+  return list.reverse().sort((a, b) => Date.parse(a.authored) - Date.parse(b.authored));
 }
 
 /** 저장소의 모든 PR. 개수 상한 없이 끝 쪽까지 받는다 (빠진 PR의 기록이 지워지지 않게) */
