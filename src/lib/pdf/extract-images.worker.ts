@@ -632,10 +632,11 @@ function findBox(
 
 /**
  * JPEG 2000 파일 안의 색 정보(colr 상자)가 PDF가 정한 장치 색공간과 같은지.
- * 상자 없는 코드 스트림은 색 정보가 없어 같은 것으로 본다. ICC 프로필이나 다른 색이면 false
+ * 상자 없는 코드 스트림은 색 정보가 없어, 보기 프로그램이 성분 수로 정하는 회색·RGB만 같은 것으로 본다
+ * (CMYK의 성분 4개는 RGBA로 읽힌다). ICC 프로필이나 다른 색이면 false
  */
 function jpxColorMatches(bytes: Uint8Array, device: 'gray' | 'rgb' | 'cmyk'): boolean {
-  if (bytes[0] === 0xff && bytes[1] === 0x4f) return true;
+  if (bytes[0] === 0xff && bytes[1] === 0x4f) return device !== 'cmyk';
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const find = (start: number, end: number, wanted: string) => findBox(bytes, start, end, wanted);
   const header = find(0, bytes.length, 'jp2h');
@@ -668,9 +669,11 @@ function jpxAlphaMatches(
     expected === undefined ? [1, 3, 4].includes(count) : count === expected;
   let alpha: 0 | 1 | 2;
   if (bytes[0] === 0xff && bytes[1] === 0x4f) {
-    // 상자 없는 코드 스트림: 채널 정의가 없다. SIZ의 성분 수(Csiz)만 본다
+    // 상자 없는 코드 스트림: 채널 정의가 없다. SIZ의 성분 수(Csiz)만 본다.
+    // 성분 4개는 PDF가 CMYK로 보지만 파일을 보는 프로그램은 RGBA로 읽어 색·투명이 다르다
     if (bytes[2] !== 0xff || bytes[3] !== 0x51 || bytes.length < 42) return false;
-    if (!plainCount(view.getUint16(40))) return false;
+    const count = view.getUint16(40);
+    if (count === 4 || !plainCount(count)) return false;
     alpha = 0;
   } else {
     const header = findBox(bytes, 0, bytes.length, 'jp2h');
