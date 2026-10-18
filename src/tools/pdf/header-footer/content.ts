@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '보고서에 회사 이름·제목 넣기',
+        text: '외부에 보내는 보고서나 제안서의 쪽마다 위에는 회사 이름이나 문서 제목, 아래에는 쪽 번호를 넣어 정돈된 문서로 만듭니다.',
+      },
+      {
+        title: '과제에 학번·이름 넣기',
+        text: '과제나 시험 답안 PDF의 쪽마다 학번과 이름을 넣어 두면 출력해서 섞여도 누구 것인지 알 수 있습니다. 표지에는 넣지 않게 할 수 있습니다.',
+      },
+      {
+        title: '출력 날짜 남기기',
+        text: '{날짜}를 적으면 오늘 날짜가 쪽마다 들어갑니다. 회의 자료나 견적서처럼 언제 기준의 문서인지 밝혀야 할 때 씁니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 PDF를 화면으로 끌어다 놓습니다.',
       '"머리말 (쪽 위)"과 "꼬리말 (쪽 아래)"에 넣을 글자를 적고, 각각 왼쪽·가운데·오른쪽 정렬을 고릅니다. 하나만 적어도 됩니다.',
@@ -33,6 +47,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Add a company name or title to reports',
+        text: 'Put your company name or the document title at the top of each page and page numbers at the bottom, so a report or proposal looks finished.',
+      },
+      {
+        title: 'Put your name on every page of homework',
+        text: 'Add your name and student ID to each page of an assignment or exam answer, so printed pages can be matched to you even if they get mixed up. You can leave the cover blank.',
+      },
+      {
+        title: 'Record the date on every page',
+        text: "Write {date} and today's date appears on each page. Use it for meeting notes or quotes where readers need to know which date the document reflects.",
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF onto the screen.',
       'Type the text for "Header (top of page)" and "Footer (bottom of page)", and choose left, center or right alignment for each. You can fill in just one.',

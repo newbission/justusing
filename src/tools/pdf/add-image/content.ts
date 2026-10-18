@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '문서에 회사 로고 넣기',
+        text: '견적서나 안내문의 모든 쪽 같은 자리에 회사 로고를 넣습니다. 배경이 투명한 PNG 로고는 아래 글자를 가리지 않습니다.',
+      },
+      {
+        title: '도장 이미지 찍기',
+        text: '도장을 찍어 둔 이미지를 신청서나 확인서의 날인 칸에 맞춰 넣습니다. 끌어서 자리를 옮기고 크기를 칸에 맞출 수 있습니다.',
+      },
+      {
+        title: '빈 곳에 사진 붙이기',
+        text: '이력서 양식의 사진 칸이나 보고서의 빈 자리에 사진 한 장을 넣을 때 씁니다. "이 쪽만"을 고르면 지금 보는 쪽에만 들어갑니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 이미지를 넣을 PDF를 화면으로 끌어다 놓습니다.',
       '"이미지 선택"을 눌러 넣을 이미지를 고릅니다.',
@@ -28,6 +42,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Add your logo to documents',
+        text: 'Put your company logo at the same spot on every page of a quote or notice. A PNG logo with a transparent background does not cover the text underneath.',
+      },
+      {
+        title: 'Place a stamp or seal image',
+        text: 'Place an image of your stamp or seal in the right box on an application or confirmation letter. Drag it into place and resize it to fit.',
+      },
+      {
+        title: 'Insert a photo into a form',
+        text: 'Use it to put a photo into the photo box of a resume template or an empty spot in a report. Choose "This page" to add it to the page you are viewing only.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to add an image to onto the screen.',
       'Click "Choose image" and pick the image to add.',
