@@ -56,8 +56,11 @@
   let generation = 0;
 
   async function open(file: File) {
-    await close();
+    // close()가 기다리기 전에 세대를 늘리므로, 기다리기 전에 받아 두어야 열기마다 다른 번호가 된다
+    const closing = close();
     const ticket = generation;
+    await closing;
+    if (ticket !== generation) return;
     const read = new Uint8Array(await file.arrayBuffer());
     if (ticket !== generation) return;
     fileName = file.name;
