@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '스캔한 서류에서 글자 찾기',
+        text: '스캔해 둔 계약서나 공문은 그림이라 이름이나 금액을 검색해도 찾지 못합니다. 글자를 인식해 두면 PDF 보기 프로그램에서 원하는 낱말로 찾을 수 있습니다.',
+      },
+      {
+        title: '종이 문서 내용을 복사해 쓰기',
+        text: '인쇄물로만 받은 안내문이나 자료의 문장을 보고서에 옮겨야 할 때 다시 타자하지 않고 복사합니다. "TXT 다운로드"로 글자만 따로 받을 수도 있습니다.',
+      },
+      {
+        title: '스캔 자료를 소리 내어 읽기',
+        text: '스캔한 PDF는 화면 읽기 프로그램이 읽지 못합니다. 보이지 않는 글자를 겹쳐 넣으면 쪽 모습은 그대로 두고 소리 내어 읽기로 들을 수 있습니다. 한국어와 영어를 읽습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 스캔한 PDF를 화면으로 끌어다 놓습니다.',
       '인식할 언어(한국어·영어)를 고릅니다.',
@@ -37,6 +51,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Search a scanned document',
+        text: 'A scanned contract or letter is just a picture, so searching for a name or amount finds nothing. After text recognition you can search it for any word in your PDF viewer.',
+      },
+      {
+        title: 'Copy text from paper documents',
+        text: 'When you need a passage from a printed handout or report, copy it instead of retyping it. "Download TXT" gives you the text alone.',
+      },
+      {
+        title: 'Make scans readable aloud',
+        text: 'Screen readers cannot read a scanned PDF. Adding invisible text keeps the page looking the same while read-aloud works. English and Korean are supported.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag your scanned PDF onto the screen.',
       'Choose the languages to recognize (English, Korean).',
