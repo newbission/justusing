@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '메신저로 문서 보여 주기',
+        text: 'PDF를 메신저로 보내면 받는 사람이 파일을 따로 열어야 합니다. 쪽을 JPG로 바꿔 보내면 대화창에서 바로 보입니다.',
+      },
+      {
+        title: '이미지만 받는 곳에 올리기',
+        text: '증빙 서류를 이미지 파일로만 올리게 하는 사이트나 앱이 있습니다. 필요한 쪽만 "선택 추출"로 골라 JPG·PNG로 바꿔 올립니다.',
+      },
+      {
+        title: '발표 자료에 쪽 붙이기',
+        text: '보고서의 한 쪽이나 도표가 있는 쪽을 PPT나 문서에 그림으로 넣어야 할 때 씁니다. 인쇄할 자료라면 "고화질 (300 DPI)"을 고르세요.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 이미지로 만들 PDF를 화면으로 끌어다 놓습니다.',
       '"전체 추출"은 모든 쪽을, "선택 추출"은 누른 쪽만 이미지로 만듭니다. 휴대폰에서는 각각 "전체", "선택"으로 짧게 보입니다.',
@@ -32,6 +46,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Show a document in a chat',
+        text: 'Someone you send a PDF to in a chat app has to open the file separately. Turn the pages into JPGs and they show up right in the conversation.',
+      },
+      {
+        title: 'Upload where only images are accepted',
+        text: 'Some websites and apps only accept image files for supporting documents. Pick the pages you need with "Extract selected" and convert them to JPG or PNG.',
+      },
+      {
+        title: 'Put a page into your slides',
+        text: 'Use it when you need a page of a report, or a page with a chart, as a picture in slides or a document. For printing, choose "High (300 DPI)".',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to convert onto the screen.',
       '"Extract all" turns every page into an image, and "Extract selected" only the pages you click. On small screens, these options are labeled "All" and "Selected".',
