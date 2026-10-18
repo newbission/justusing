@@ -8,7 +8,7 @@
  * 실제 구현과 어긋나는 그림을 그리지 않는다 (도구 격리: ToolFrame.astro, FrameLayout.astro).
  * 그림은 꾸밈이고(aria-hidden), 같은 내용을 아래 글(figcaption)로도 적는다.
  */
-import { localeOf } from '../i18n/locales';
+import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 import { siteConfig } from '../site.config';
 
@@ -19,7 +19,8 @@ interface Props {
 
 const { headingLevel = 2 } = Astro.props;
 const Heading = `h${headingLevel}` as 'h2' | 'h3';
-const t = ui(localeOf(Astro.url.pathname)).safety;
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale).safety;
 ---
 
 <section class="safety" aria-labelledby="safety-title">
@@ -119,9 +120,19 @@ const t = ui(localeOf(Astro.url.pathname)).safety;
       </figcaption>
     </figure>
   </div>
+  <p class="more">
+    <a href={localizePath('/safety/', locale)}>{t.more} →</a>
+  </p>
 </section>
 
 <style>
+  .more {
+    margin: 16px 0 0;
+    font-size: 15px;
+  }
+  .more a {
+    color: var(--color-accent);
+  }
   .title {
     margin: 0 0 16px;
     font-size: 20px;
