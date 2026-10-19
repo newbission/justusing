@@ -49,7 +49,8 @@
     const bytes = result?.(item);
     if (!bytes) return;
     closeCompare();
-    comparing = { item, url: URL.createObjectURL(new Blob([bytes.slice()])) };
+    // 결과를 한 번 더 복사하지 않고 그대로 Blob에 넘긴다 (큰 결과에서 화면이 멈추지 않게)
+    comparing = { item, url: URL.createObjectURL(new Blob([bytes as Uint8Array<ArrayBuffer>])) };
   }
 
   function closeCompare() {
