@@ -33,7 +33,7 @@
 | `src/layouts/ToolLayout.astro`                                          | `WebApplication` (무료, `UtilitiesApplication`, 가격 0)                                                                                                                         |
 | `src/components/ToolFaq.astro`                                          | `FAQPage` (화면의 공통 FAQ + 도구 FAQ와 같은 내용). `<details>`라 JavaScript 없이 열린다                                                                                        |
 | `src/content.config.ts`                                                 | 가이드 모음 스키마: `title`, `description`, `tool`, `published`, `updated?`, `order`                                                                                            |
-| `src/content/guides/<언어>/<주소>.md`                                   | 가이드 글. 지금 dev에 13편 × 2언어                                                                                                                                              |
+| `src/content/guides/<언어>/<주소>.md`                                   | 가이드 글. 지금 dev에 22편 × 2언어                                                                                                                                              |
 | `src/guides.ts`                                                         | `guidesIn()`, `guideSlugs`, `guidePaths()`, `guidesForTool()`, 빌드 때 검사                                                                                                     |
 | `src/pages/guide/index.astro`, `[slug].astro` (+ `src/pages/en/guide/`) | 목록(카드 + 도구 아이콘), 글(위 도구 링크, 본문, 아래 도구 버튼·다른 글, `Article` 구조화 데이터, 작성/수정 날짜)                                                               |
 | `src/components/ToolGuides.astro`                                       | 도구 페이지의 "관련 가이드" (없으면 안 그림)                                                                                                                                    |
@@ -45,26 +45,33 @@
 
 ### 가이드 글 목록 (`order` 순)
 
-| order | 주소                 | 도구                 |
-| ----- | -------------------- | -------------------- |
-| 1     | `compress-pdf`       | `pdf/compress`       |
-| 2     | `compress-image`     | `image/compress`     |
-| 3     | `resize-image`       | `image/resize`       |
-| 4     | `merge-pdf`          | `pdf/merge`          |
-| 5     | `pdf-to-jpg`         | `pdf/to-image`       |
-| 6     | `sign-pdf`           | `pdf/sign`           |
-| 7     | `convert-image`      | `image/convert`      |
-| 8     | `watermark-pdf`      | `pdf/watermark`      |
-| 9     | `header-footer-pdf`  | `pdf/header-footer`  |
-| 10    | `edit-pdf`           | `pdf/edit`           |
-| 11    | `n-up-pdf`           | `pdf/n-up`           |
-| 12    | `ocr-pdf`            | `pdf/ocr`            |
-| 13    | `redact-pdf`         | `pdf/redact`         |
-| 14    | `extract-images-pdf` | `pdf/extract-images` |
-| 15    | `fill-pdf-form`      | `pdf/fill-form`      |
-| 16    | `pdf-metadata`       | `pdf/metadata`       |
+| order | 주소                   | 도구                 |
+| ----- | ---------------------- | -------------------- |
+| 1     | `compress-pdf`         | `pdf/compress`       |
+| 2     | `compress-image`       | `image/compress`     |
+| 3     | `resize-image`         | `image/resize`       |
+| 4     | `merge-pdf`            | `pdf/merge`          |
+| 5     | `pdf-to-jpg`           | `pdf/to-image`       |
+| 6     | `sign-pdf`             | `pdf/sign`           |
+| 7     | `convert-image`        | `image/convert`      |
+| 8     | `watermark-pdf`        | `pdf/watermark`      |
+| 9     | `header-footer-pdf`    | `pdf/header-footer`  |
+| 10    | `edit-pdf`             | `pdf/edit`           |
+| 11    | `n-up-pdf`             | `pdf/n-up`           |
+| 12    | `ocr-pdf`              | `pdf/ocr`            |
+| 13    | `redact-pdf`           | `pdf/redact`         |
+| 14    | `extract-images-pdf`   | `pdf/extract-images` |
+| 15    | `fill-pdf-form`        | `pdf/fill-form`      |
+| 16    | `pdf-metadata`         | `pdf/metadata`       |
+| 17    | `photos-to-pdf`        | `pdf/from-image`     |
+| 18    | `protect-pdf`          | `pdf/protect`        |
+| 19    | `remove-pdf-password`  | `pdf/unlock`         |
+| 20    | `split-pdf`            | `pdf/split`          |
+| 21    | `organize-scanned-pdf` | `pdf/organize`       |
+| 22    | `crop-pdf-margins`     | `pdf/crop`           |
 
 2026-10-17 배포로 `redact-pdf`(가리기), `extract-images-pdf`(사진 꺼내기), `pdf-metadata`(문서 정보)가 더해졌다.
+2026-10-18(애드센스 첫 심사 거절 뒤) 가이드가 없던 도구 가운데 6개에 한국 상황의 쓰임새(휴대폰 사진 서류, 명세서 암호, 제출용 쪽 빼기 등)로 17~22번을 더했다.
 
 ### 빌드 때 검사 (`src/guides.ts`)
 
@@ -109,6 +116,7 @@
 - [x] 소개·방침·약관·문의 (한·영), 바닥글 링크, 사이트맵
 - [x] 가이드 모음·목록·글 페이지, 빌드 때 검사, 도구 페이지 관련 가이드, 머리글·바닥글 링크
 - [x] 가이드 16편 (2026-10-17 배포)
+- [x] 가이드 22편 (2026-10-18, 쓰임새 가이드 6편)
 - [x] 검색 등록: Google Search Console, 네이버 서치어드바이저 + 사이트맵 제출 (2026-10-13, 사용자가 직접)
 - [ ] 가이드가 없는 live 도구: 보기, 글자 추출, 나누기, 회전, 정리, 자르기, 이미지를 PDF로, 쪽 번호, 이미지 넣기,
       암호 해제, 암호 걸기
