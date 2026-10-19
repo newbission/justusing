@@ -131,6 +131,20 @@ export function setupFrameTour() {
     next.textContent = last ? t.finish : t.next;
   }
 
+  /** 도구 화면에 이 글자가 몇 번 나오는지 */
+  function countOf(name: string): number {
+    return (document.getElementById('frame-root')!.textContent ?? '').split(name).length - 1;
+  }
+
+  /** 도구 화면에 글자가 더 나타날 때까지 잠깐 기다린다 (같은 이름의 파일이 이미 있어도 알아챈다) */
+  async function shown(name: string, before: number): Promise<boolean> {
+    for (let waited = 0; waited < 3000; waited += 100) {
+      if (countOf(name) > before) return true;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return false;
+  }
+
   /** 견본을 받지 못했을 때: 단계 이동 대신 다시 받기만 둔다 */
   function failed(on: boolean) {
     previous.hidden = on;
@@ -170,9 +184,22 @@ export function setupFrameTour() {
     }
     if (current !== run) return;
     loading = false;
-    failed(false);
     // 도구 화면은 놓인 파일과 같은 길(onFrameFiles)로 견본을 받는다
+    const before = countOf(files[0]!.name);
     deliverFiles(files);
+    // 도구가 받았는지 본다 (처리 중인 도구는 새 파일을 받지 않는다). 모든 도구가 넣은 파일 이름을 보여 준다
+    if (!(await shown(files[0]!.name, before)) || current !== run) {
+      if (current !== run) return;
+      busy = false;
+      index = -1;
+      count.textContent = '';
+      text.textContent = t.notAccepted;
+      failed(true);
+      panel.hidden = false;
+      document.documentElement.classList.add('touring');
+      return;
+    }
+    failed(false);
     panel.hidden = false;
     document.documentElement.classList.add('touring');
     // 버튼이 나중에 나타나거나(다운로드) 바뀌면 다시 짚는다

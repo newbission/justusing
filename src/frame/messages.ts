@@ -24,6 +24,7 @@ const ko = {
     close: '그만하기',
     retry: '다시 받기',
     failed: '예시 파일을 받지 못했습니다. 인터넷 연결을 확인하고 다시 해 주세요.',
+    notAccepted: '지금은 예시 파일을 넣을 수 없습니다. 하던 처리가 끝난 뒤 다시 받아 주세요.',
   },
   pdf: {
     choose: 'PDF 파일 선택',
@@ -156,6 +157,8 @@ const en: FrameMessages = {
     close: 'Stop',
     retry: 'Try again',
     failed: 'Could not load the sample file. Check your connection and try again.',
+    notAccepted:
+      'The sample file cannot be added right now. Try again when the current task is done.',
   },
   pdf: {
     choose: 'Choose PDF file',
