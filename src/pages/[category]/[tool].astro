@@ -14,6 +14,8 @@ import ToolUses from '../../components/ToolUses.astro';
 import ToolFaq from '../../components/ToolFaq.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import ToolGuides from '../../components/ToolGuides.astro';
+import GuideDialog from '../../components/GuideDialog.astro';
+import TourButton from '../../components/TourButton.astro';
 import { CATEGORIES } from '../../tools/categories';
 import { COMMON_FAQ } from '../../tools/common-faq';
 import { toolsInCategory, type Tool } from '../../tools/registry';
@@ -56,6 +58,10 @@ const siblings = toolsInCategory(tool.category).map((other) => ({
   breadcrumb={breadcrumb}
   {siblings}
 >
+  <div slot="header" class="help">
+    <GuideDialog toolId={tool.id} />
+    <TourButton toolId={tool.id} />
+  </div>
   <ToolFrame slot="tool" src={`${href}frame/`} title={t.tool.frameTitle(text.name)} />
   <Fragment slot="how-to">
     <ToolUses name={text.name} items={content.uses} />
@@ -67,3 +73,16 @@ const siblings = toolsInCategory(tool.category).map((other) => ({
     <RelatedTools ids={tool.related ?? []} />
   </Fragment>
 </ToolLayout>
+
+<style>
+  /* 제목 아래 도움 버튼 줄 (가이드 보기·예시로 따라 하기) */
+  .help {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .help:empty {
+    display: none;
+  }
+</style>

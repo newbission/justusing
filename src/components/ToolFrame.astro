@@ -19,9 +19,11 @@
  * (끄는 동안 바깥 페이지가 아는 것은 '파일을 끌고 있다'는 사실뿐이고 내용은 알 수 없다)
  *
  * frame과 주고받는 메시지 (내용 없이 신호만):
- *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height }
+ *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height },
+ *                 { type: 'tour-start' }(따라 하기, TourButton이 'tourstart' 이벤트로 알림)
  *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
- *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤)
+ *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤),
+ *                 { type: 'tour-ready' }(따라 하기 신호를 받을 준비가 됨)
  *   글꼴 같은 도구 데이터 요청은 src/lib/data-store.ts가 받는다 (우리 사이트 공개 파일만, 사용자 파일 없음)
  */
 interface Props {
@@ -66,6 +68,16 @@ import { ui } from '../i18n/ui';
       frame.contentWindow?.postMessage({ type: 'theme', theme: detail }, '*');
     });
 
+    // 따라 하기 시작. 신호만 보내고 단계 글은 frame이 자기 것을 쓴다 (src/frame/tour.ts).
+    // frame이 아직 준비되지 않았으면(tour-ready 전) 들고 있다가 준비되면 보낸다
+    let tourReady = false;
+    let tourPending = false;
+    const startTour = () => frame.contentWindow?.postMessage({ type: 'tour-start' }, '*');
+    document.addEventListener('tourstart', () => {
+      if (tourReady) startTour();
+      else tourPending = true;
+    });
+
     // 파일을 끌고 들어오면 frame을 화면 전체로 넓힌다.
     // 순서: frame에 알림(지금 크기 전달) → frame이 덮개를 덮고 도구 화면 크기를 고정한 뒤 응답
     //       → 그때 넓힌다. 그래서 넓어지는 동안 도구 화면이 늘어나 보이지 않는다.
@@ -100,6 +112,11 @@ import { ui } from '../i18n/ui';
       // drag-request: 도구 칸 안에서 시작된 끌기 (frame은 이미 덮개를 덮고 고정한 상태)
       if (event.data?.type === 'drag-ready' || event.data?.type === 'drag-request') expand();
       if (event.data?.type === 'drag-end') collapse();
+      if (event.data?.type === 'tour-ready') {
+        tourReady = true;
+        if (tourPending) startTour();
+        tourPending = false;
+      }
       // 파일을 열면 도구 칸 위쪽을 화면 위쪽(16px 여백)에 맞춰 칸이 화면을 꽉 채우게 한다.
       // 부드럽게 움직이면 그동안 버튼이 손 아래에서 움직여 엉뚱한 것을 누를 수 있어 바로 옮긴다.
       // 도구를 쓰는 순간 (내용 없는 신호). 광고 차단 안내가 듣는다

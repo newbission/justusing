@@ -1,6 +1,6 @@
 # 사이트 구조 (site-structure)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-18
+쓴 날 2026-10-16 · 고친 날 2026-10-19
 
 - 범위: 도구 레지스트리·카테고리·묶음, 페이지 라우트, 레이아웃(`BaseLayout`·`ToolLayout`·`DocLayout`·`RailShell`),
   테마(다크 모드), 로고, 사이트 설정, 이용 권한(`canUse`)
@@ -33,7 +33,7 @@
 | `src/tools/<카테고리>/<이름>/`                                                              | 도구 하나: `meta.ts`, `content.ts`, `Frame.astro`, `App.svelte`, (`messages.ts`)                                                                                     |
 | `src/pages/index.astro`                                                                     | 허브: 대표 문구, 가로 배너, 약속 카드(`Promises`), 안전 그림(`SafetyDiagram`), 카테고리별 도구 목록, 본문 광고                                                       |
 | `src/pages/[category]/index.astro`                                                          | 카테고리 목록 (`ToolSections`, 묶음별 소제목)                                                                                                                        |
-| `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: `ToolFrame` + 쓰임새(`ToolUses`) + 사용법 + FAQ(도구 + 공통) + 관련 가이드 + 관련 도구                                                                  |
+| `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: 가이드 보기(`GuideDialog`) + `ToolFrame` + 쓰임새(`ToolUses`) + 사용법 + FAQ(도구 + 공통) + 관련 가이드 + 관련 도구                                     |
 | `src/pages/[category]/[tool]/frame.astro`                                                   | 격리 frame 페이지: 도구 폴더의 `Frame.astro`를 그대로 그린다                                                                                                         |
 | `src/layouts/BaseLayout.astro`                                                              | 모든 바깥 페이지의 `<html>`·`<head>`(제목·설명·canonical·hreflang·OG·소유 확인), 머리글·바닥글, 통계·광고 스크립트, 하단 광고, 광고 차단 안내                        |
 | `src/layouts/ToolLayout.astro`                                                              | 도구 페이지 틀: 브레드크럼 → 제목 → `top-banner` → 도구 칸 → 로컬 처리 안내 → `below-tool` → 쓰임새·사용법 → `in-content` → FAQ → 관련. WebApplication 구조화 데이터 |

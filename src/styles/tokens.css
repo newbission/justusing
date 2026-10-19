@@ -26,8 +26,14 @@
   --color-redact: #000;
   /* 자를 때 버릴 부분을 덮는 어두운 막 (두 테마 같은 색) */
   --color-scrim: rgb(0 0 0 / 0.45);
+  /* 어두운 막(--color-scrim) 위에 얹는 글자 (두 테마 같은 색) */
+  --color-on-scrim: #fff;
+  /* 창(dialog)을 띄울 때 뒤를 가리는 막 */
+  --color-backdrop: rgb(0 0 0 / 0.4);
   /* 종이처럼 보이게 쪽·이미지 썸네일 아래에 까는 그림자 */
   --shadow-page: 0 1px 3px rgb(0 0 0 / 0.2);
+  /* 창(dialog) 그림자 */
+  --shadow-dialog: 0 8px 40px rgb(0 0 0 / 0.24);
 
   /* 글꼴: 본문은 Pretendard(global.css에서 불러옴), 받기 전·못 받으면 시스템 폰트 */
   --font-sans:

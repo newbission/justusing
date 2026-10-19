@@ -62,7 +62,8 @@ const jsonLd = {
   ]}
 >
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
-  <p class="tool-link">
+  <!-- data-dialog-skip: 도구 페이지의 가이드 창에서는 빼는 줄 (이미 그 도구 페이지에 있다) -->
+  <p class="tool-link" data-dialog-skip>
     {t.guide.tryTool}: <a href={toolHref}>{toolName}</a>
   </p>
 

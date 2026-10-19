@@ -57,6 +57,38 @@ test('사진 한 장을 같은 크기의 더 작은 JPG로 줄인다', async ({ 
   expectLocalOnly(page, requests, baseURL!);
 });
 
+test('결과를 원본과 겹쳐 비교하고 목록으로 돌아온다', async ({ page }) => {
+  const frame = await openTool(page, ['photo.jpg']);
+  await expect(frame.getByRole('button', { name: 'photo.jpg 원본과 결과 비교' })).toHaveCount(0);
+  await frame.getByRole('button', { name: '압축하기' }).click();
+  await frame.getByRole('button', { name: 'photo.jpg 원본과 결과 비교' }).click();
+
+  const slider = frame.getByRole('slider', { name: '원본과 결과의 경계', exact: false });
+  await expect(slider).toHaveValue('50');
+  await slider.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(slider).toHaveValue('51');
+  // 결과 이미지가 실제로 그려진다 (blob 주소가 열린다)
+  const images = frame.locator('figure img');
+  await expect(images).toHaveCount(2);
+  for (const image of await images.all()) {
+    await expect
+      .poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth))
+      .toBe(1200);
+  }
+  await frame.getByRole('button', { name: '확대해 보기' }).click();
+  await expect(frame.getByRole('button', { name: '전체 보기' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await frame.getByRole('button', { name: '목록으로' }).click();
+  await expect(frame.getByRole('list', { name: '이미지 목록' })).toBeVisible();
+  // 설정을 바꾸면 결과가 없어져 비교 버튼도 사라진다
+  await frame.getByText('많이', { exact: false }).first().click();
+  await expect(frame.getByRole('button', { name: 'photo.jpg 원본과 결과 비교' })).toHaveCount(0);
+});
+
 test('여러 장은 ZIP 하나로 받고, PNG는 투명을 지킨 채 줄어든다', async ({ page }) => {
   const frame = await openTool(page, ['photo.jpg', 'screen.png']);
   await frame.getByRole('button', { name: '압축하기' }).click();

@@ -8,3 +8,7 @@
 
 /vendor/*
   Access-Control-Allow-Origin: *
+
+# '예시 파일로 해 보기' 견본 (src/frame/samples.ts)
+/samples/*
+  Access-Control-Allow-Origin: *

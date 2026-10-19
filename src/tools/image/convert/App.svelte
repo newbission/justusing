@@ -124,6 +124,10 @@
   busy={working}
   hint={t.hint}
   broken={t.unreadable}
+  result={(item) => {
+    const outcome = outcomeOf(item);
+    return outcome?.state === 'done' ? outcome.bytes : undefined;
+  }}
   onremove={(item) => delete outcomes[item.id]}
 >
   {#snippet bar()}

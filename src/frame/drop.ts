@@ -20,6 +20,27 @@ export function onFrameFiles(handler: (files: File[]) => void): () => void {
   return () => removeEventListener(FILES_EVENT, listener);
 }
 
+/** 놓인 파일처럼 도구 화면에 넘긴다 ('따라 하기'의 견본도 이 길로 넣는다) */
+export function deliverFiles(files: File[]) {
+  dispatchEvent(new CustomEvent(FILES_EVENT, { detail: files }));
+  announceFiles();
+}
+
+const ARRIVED_EVENT = 'framefilesarrived';
+
+/**
+ * 어떤 길로든 파일이 도구에 들어왔다고 알린다 (놓기·파일 고르기 창·견본). 내용은 담지 않는다.
+ * 견본을 받는 중인 곳(FileDrop, 따라 하기)이 듣고, 늦게 온 견본이 방금 넣은 파일을 바꾸지 않게 버린다
+ */
+export function announceFiles() {
+  dispatchEvent(new Event(ARRIVED_EVENT));
+}
+
+export function onFilesArrived(handler: () => void): () => void {
+  addEventListener(ARRIVED_EVENT, handler);
+  return () => removeEventListener(ARRIVED_EVENT, handler);
+}
+
 export function setupFrameDrop() {
   const overlay = document.createElement('div');
   overlay.className = 'frame-drop-overlay';
@@ -107,6 +128,6 @@ export function setupFrameDrop() {
     event.preventDefault();
     const files = [...(event.dataTransfer?.files ?? [])];
     end();
-    if (files.length > 0) dispatchEvent(new CustomEvent(FILES_EVENT, { detail: files }));
+    if (files.length > 0) deliverFiles(files);
   });
 }

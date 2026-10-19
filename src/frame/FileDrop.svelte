@@ -2,10 +2,14 @@
   파일 선택 버튼. 모든 도구가 처음 화면에서 쓰는 공통 부품.
   고른 파일은 onfiles로 넘길 뿐 어디에도 보내지 않는다.
   끌어다 놓기는 frame 전체에서 처리한다 (src/frame/drop.ts, 도구는 onFrameFiles로 받음).
+  견본이 있는 도구는 '예시 파일로 해 보기'로 우리 사이트의 견본 파일을 넣는다 (src/frame/samples.ts).
 -->
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { announceFiles, onFilesArrived } from './drop';
   import { pick } from './locale';
   import { FRAME_MESSAGES } from './messages';
+  import { hasSamples, loadSamples } from './samples';
 
   const t = pick(FRAME_MESSAGES);
   interface Props {
@@ -21,9 +25,47 @@
 
   let { accept, label, multiple = false, hint, onfiles }: Props = $props();
 
+  let sample: 'idle' | 'loading' | 'failed' = $state('idle');
+  /**
+   * 견본을 받는 사이 다른 파일이 들어오면(직접 고르기·놓기·따라 하기) 늘린다.
+   * 늦게 온 견본이 방금 넣은 파일을 바꾸거나 더해지지 않게 한다
+   */
+  let run = 0;
+
+  onMount(() => {
+    const off = onFilesArrived(() => {
+      // 받던 견본은 버리고 다시 누를 수 있게 한다 (들어온 파일을 도구가 받지 않아 이 화면이 남을 수 있다)
+      run++;
+      sample = 'idle';
+    });
+    return () => {
+      run++;
+      off();
+    };
+  });
+
+  async function trySample() {
+    if (sample === 'loading') return;
+    sample = 'loading';
+    const current = ++run;
+    try {
+      const files = await loadSamples();
+      if (current !== run) return;
+      sample = 'idle';
+      onfiles(files);
+      announceFiles();
+    } catch {
+      if (current === run) sample = 'failed';
+    }
+  }
+
   function choose(list: FileList | null | undefined) {
+    run++;
+    sample = 'idle';
     const files = [...(list ?? [])];
-    if (files.length > 0) onfiles(multiple ? files : files.slice(0, 1));
+    if (files.length === 0) return;
+    onfiles(multiple ? files : files.slice(0, 1));
+    announceFiles();
   }
 </script>
 
@@ -45,6 +87,14 @@
   </label>
   {#if hint}
     <p class="hint">{hint}</p>
+  {/if}
+  {#if hasSamples}
+    <button type="button" class="sample" disabled={sample === 'loading'} onclick={trySample}
+      >{sample === 'loading' ? t.drop.sampleLoading : t.drop.sample}</button
+    >
+    {#if sample === 'failed'}
+      <p class="hint" role="alert">{t.drop.sampleFailed}</p>
+    {/if}
   {/if}
 </div>
 
@@ -88,6 +138,20 @@
   .button:has(input:focus-visible) {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+  }
+  .sample {
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    color: var(--color-accent);
+    font-size: 14px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .sample:disabled {
+    color: var(--color-muted);
+    cursor: default;
   }
   .hint {
     margin: 0;

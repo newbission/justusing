@@ -1,6 +1,6 @@
 # 검색과 가이드 글 (seo-and-guides)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-18
+쓴 날 2026-10-16 · 고친 날 2026-10-19
 
 - 범위: 사이트맵·robots, `<head>` 검색 정보(설명·canonical·hreflang·Open Graph·소유 확인), 구조화 데이터(JSON-LD),
   가이드 글(`/guide/`), 글 페이지(소개·안전한 이유·이용약관·문의. 개인정보처리방침은 [광고와 통계](../ads-and-analytics/README.md))
@@ -37,6 +37,7 @@
 | `src/guides.ts`                                                         | `guidesIn()`, `guideSlugs`, `guidePaths()`, `guidesForTool()`, 빌드 때 검사                                                                                                     |
 | `src/pages/guide/index.astro`, `[slug].astro` (+ `src/pages/en/guide/`) | 목록(카드 + 도구 아이콘), 글(위 도구 링크, 본문, 아래 도구 버튼·다른 글, `Article` 구조화 데이터, 작성/수정 날짜)                                                               |
 | `src/components/ToolGuides.astro`                                       | 도구 페이지의 "관련 가이드" (없으면 안 그림)                                                                                                                                    |
+| `src/components/GuideDialog.astro`                                      | 도구 제목 아래 "가이드 보기": 누르면 그 도구의 첫 가이드를 받아 창으로 띄운다 (`data-doc-body` 안만, `data-dialog-skip` 줄은 뺌)                                                |
 | `src/layouts/DocLayout.astro`                                           | 글 페이지 틀 (위치 표시 → 제목 → 작은 글씨 → 배너 → 본문 → `after`)                                                                                                             |
 | `src/pages/about.astro`, `terms.astro`, `contact.astro` (+ `en/`)       | 소개(사이트명·만든 이유·처리 방식·live 도구 목록·무료), 약관(시행일), 문의(`contactEmail`)                                                                                      |
 | `src/pages/safety.astro` (+ `en/`)                                      | 안전한 이유: 보통 온라인 도구와 비교표, 서버 없이 처리하는 원리, 광고 격리, 개발자 도구로 직접 확인하는 법, 공개 코드(`sourceUrl`), 약속할 수 없는 것                           |
@@ -97,6 +98,9 @@
   말로만 하지 않고 방문자가 직접 확인하게 한다. **"인터넷을 끊어도 된다"고 쓰지 않는다**: 도구 프로그램 일부를 쓸 때 받아 와
   파일을 연 뒤 연결을 끊으면 합치기·압축·이미지로·이미지 압축이 모두 멈췄다(2026-10-18 Playwright `setOffline`으로 확인)
 
+- **도구 페이지의 가이드 창** (2026-10-19): 도구를 쓰다 바로 읽게 한다. 글을 도구 페이지 HTML에 미리 넣으면 같은 글이 두 주소에 있어
+  중복 글이 되므로 누를 때 가이드 페이지를 받아 넣는다. 사용자가 누를 때만 열린다 (저절로 뜨는 창은 '과도한 팝업' 위험). 창 안에 광고는 없다
+
 ### 주의할 점
 
 - 가이드는 **모든 언어판을 같은 주소 이름으로** 쓴다. 글 안 링크는 그 언어의 주소로 (영어 글은 `/en/...`)
@@ -124,6 +128,7 @@
 
 ### 자동 테스트
 
+- `tests/e2e/guide-dialog.spec.ts`: 가이드 보기 → 창에 글이 들어옴(페이지 HTML에는 없음), 도구 링크 줄 빠짐, Esc·닫기, 영어
 - `tests/e2e/seo.spec.ts`
   - 홈에 `WebSite`가 있고 이름이 사이트명이다
   - 도구 페이지의 `FAQPage` 질문이 화면의 질문과 같다 (공통 FAQ 포함, 3개 이상)
