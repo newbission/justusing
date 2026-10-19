@@ -1,0 +1,63 @@
+---
+/**
+ * 도구 제목 아래 '예시로 따라 하기'. 누르면 도구 화면(격리 frame)이 견본을 넣고 사용법을 한 단계씩 짚는다.
+ * 견본이 없는 도구는 그리지 않는다. 저절로 시작하지 않는다 (저절로 뜨는 안내는 '과도한 팝업' 위험).
+ * frame에는 내용 없는 신호만 보낸다 (ToolFrame이 'tourstart' 이벤트를 받아 전달, src/frame/tour.ts).
+ */
+import { toolHasSamples } from '../frame/samples';
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  toolId: string;
+}
+
+const t = ui(localeOf(Astro.url.pathname)).guide;
+---
+
+{toolHasSamples(Astro.props.toolId) && (
+  <button type="button" class="tour" data-tour-start>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 5v14l11-7z" />
+    </svg>
+    {t.tour}
+  </button>
+)}
+
+<script>
+  for (const button of document.querySelectorAll('[data-tour-start]')) {
+    button.addEventListener('click', () => document.dispatchEvent(new CustomEvent('tourstart')));
+  }
+</script>
+
+<style>
+  .tour {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: transparent;
+    font-size: 14px;
+    cursor: pointer;
+    transition:
+      background-color 0.12s,
+      border-color 0.12s;
+  }
+  .tour:hover {
+    border-color: var(--color-muted);
+    background: var(--color-hover);
+  }
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+  path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+  }
+</style>
