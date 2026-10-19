@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/rotate', 'pdf/organize'],
+  flow: { from: { kind: 'pdf' }, to: { kind: 'pdf', mark: 'crop' } },
 });

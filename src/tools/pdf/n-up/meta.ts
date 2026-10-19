@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/organize', 'pdf/merge'],
+  flow: { from: { kind: 'pdf', count: 3 }, to: { kind: 'pdf', mark: 'grid' } },
 });

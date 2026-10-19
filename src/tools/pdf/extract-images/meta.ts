@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/to-image', 'pdf/extract-text'],
+  flow: { from: { kind: 'pdf', mark: 'image' }, to: { kind: 'jpg', count: 3 } },
 });

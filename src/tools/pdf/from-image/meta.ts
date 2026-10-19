@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/to-image', 'pdf/merge'],
+  flow: { from: { kind: 'jpg', count: 3 }, to: { kind: 'pdf' } },
 });

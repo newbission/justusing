@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/split', 'pdf/organize'],
+  flow: { from: { kind: 'pdf', count: 3 }, to: { kind: 'pdf' } },
 });

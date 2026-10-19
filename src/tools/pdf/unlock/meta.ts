@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/protect', 'pdf/merge'],
+  flow: { from: { kind: 'pdf', mark: 'lock' }, to: { kind: 'pdf', mark: 'unlock' } },
 });

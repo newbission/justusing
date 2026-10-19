@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/sign', 'pdf/edit'],
+  flow: { from: { kind: 'pdf' }, to: { kind: 'pdf', mark: 'form' } },
 });

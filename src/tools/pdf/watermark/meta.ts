@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/page-numbers', 'pdf/protect'],
+  flow: { from: { kind: 'pdf' }, to: { kind: 'pdf', mark: 'watermark' } },
 });
