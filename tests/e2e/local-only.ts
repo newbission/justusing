@@ -8,6 +8,8 @@
  *   테스트 파일 내용의 일부(base64)도 없어야 한다. 우리 사이트로 가는 GET도 주소에 실어 보낼 수 있다.
  *   예외: '예시 파일로 해 보기'가 받는 우리 견본 파일 주소 그대로 (쿼리 없음, public/samples/에 있는 파일만).
  *   견본 이름(sample-photo.jpg 등)에 테스트 파일 이름이 들어 있을 수 있어서다.
+ *   우리 페이지 주소도 뺀다. 가이드 주소(/guide/photos-to-pdf/)에 테스트 파일 이름이 들어 있고,
+ *   그 주소로 옮겨 가는 요청과 방문 통계가 보내는 페이지 주소에 실린다.
  */
 import { expect, type Page, type Request } from '@playwright/test';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -72,6 +74,15 @@ const MARKS = [...fileNames, ...FILE_MARKS, ...contentMarks];
 /** 기록한 요청에 파일이 기기 밖으로 나갈 만한 것이 없는지 확인한다 */
 export function expectLocalOnly(page: Page, requests: Request[], baseURL: string) {
   const origin = new URL(baseURL).origin;
+  // 이번 테스트에서 연 우리 페이지 주소 (쿼리 없는 것만). 요청에 실린 페이지 주소는 파일 이름으로 보지 않는다
+  const pages = requests
+    .filter((request) => request.isNavigationRequest())
+    .map((request) => new URL(request.url()))
+    .filter((url) => url.origin === origin && url.search === '')
+    .map((url) => decodeURIComponent(url.pathname))
+    .filter((path) => path !== '/')
+    // 긴 주소부터 지운다 (/guide/를 먼저 지우면 /guide/photos-to-pdf/가 남는다)
+    .sort((a, b) => b.length - a.length);
   for (const request of requests) {
     const url = new URL(request.url());
     if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
@@ -84,8 +95,9 @@ export function expectLocalOnly(page: Page, requests: Request[], baseURL: string
       request.method() === 'GET' &&
       SAMPLE_PATHS.has(decodeURIComponent(url.pathname));
     // 요청이 많아 하나씩 expect로 대조하면 느리다. 찾은 것만 expect로 실패를 알린다
-    const found = sample ? undefined : MARKS.find((text) => sent.includes(text));
-    if (found) expect(sent, request.url()).not.toContain(found);
+    const checked = pages.reduce((text, path) => text.replaceAll(path, '/'), sent);
+    const found = sample ? undefined : MARKS.find((text) => checked.includes(text));
+    if (found) expect(checked, request.url()).not.toContain(found);
 
     const fromOuterPage = request.frame() === page.mainFrame();
     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
