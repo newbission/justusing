@@ -137,6 +137,19 @@ test('처리 중이라 도구가 견본을 받지 않으면 넣었다고 안내�
   await expect(tour.getByRole('button', { name: '다음' })).toBeHidden();
 });
 
+test('그만둔 뒤 다시 시작하면 넣어 둔 견본을 그대로 쓴다', async ({ page }) => {
+  await page.goto('/pdf/merge/');
+  const start = page.getByRole('button', { name: '예시로 따라 하기' });
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  const tour = frame.getByRole('region', { name: '따라 하기' });
+  await start.click();
+  await expect(tour).toContainText('따라 하기 1/');
+  await tour.getByRole('button', { name: '그만하기' }).click();
+  await start.click();
+  await expect(tour).toContainText('따라 하기 1/');
+  await expect(frame.getByText('예시-보고서.pdf')).toHaveCount(1);
+});
+
 test('영어 화면은 영어 사용법으로 따라 한다', async ({ page }) => {
   await page.goto('/en/image/compress/');
   await page.getByRole('button', { name: 'Walk through with a sample' }).click();
