@@ -49,6 +49,7 @@ test('창 안에서 견본으로 따라 하고, 마치면 창이 닫히고 원�
 
 test('오른쪽 위 ×·Esc로 닫고, 다시 열면 처음부터 견본 하나로 시작한다', async ({ page }) => {
   const { dialog, frame, card } = await openTour(page, '/pdf/merge/');
+  const historyLength = await page.evaluate(() => history.length);
   await expect(card).toContainText('단계 중 1단계');
   await card.getByRole('button', { name: '다음' }).click();
   await dialog.getByRole('button', { name: '닫기' }).click();
@@ -57,8 +58,12 @@ test('오른쪽 위 ×·Esc로 닫고, 다시 열면 처음부터 견본 하나�
   await page.getByRole('button', { name: '예시로 따라 하기' }).click();
   await expect(card).toContainText('단계 중 1단계');
   await expect(frame.getByText('예시-보고서.pdf')).toHaveCount(1);
+  // 도구 화면 안을 누른 뒤의 Esc도 창을 닫는다
+  await card.getByRole('button', { name: '다음' }).click();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+  // 여닫아도 탭의 뒤로 가기 기록이 쌓이지 않는다
+  expect(await page.evaluate(() => history.length)).toBe(historyLength);
 });
 
 test('견본을 받지 못하면 단계 대신 다시 받기만 둔다', async ({ page }) => {
