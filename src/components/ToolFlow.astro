@@ -1,0 +1,313 @@
+---
+/**
+ * 도구 제목 아래 '넣는 것 → 나오는 것' 작은 그림. 각 도구 meta.ts의 flow로 그린다 (없으면 그리지 않는다).
+ * 글로 읽기 전에 도구가 하는 일을 한눈에 보이게 한다. 뜻은 제목·설명 글이 맡으므로 화면 읽기에서는 뺀다.
+ * 색은 토큰만 쓴다. 종이는 두 테마 모두 흰색(--color-paper), 나오는 쪽 테두리만 초록이다.
+ */
+import type { FlowDoc, FlowMark } from '../tools/types';
+import ToolIcon from './ToolIcon.astro';
+
+interface Props {
+  flow: { from: FlowDoc; to: FlowDoc };
+  /** 화살표 위에 얹는 도구 아이콘 */
+  icon: string[];
+}
+
+const { flow, icon } = Astro.props;
+
+/** 종이 한 장 크기와 겹칠 때 어긋나는 정도 */
+const W = 34;
+const H = 44;
+const STEP = 5;
+const FOLD = 9;
+
+/** 종이 모양 (오른쪽 위 귀퉁이가 접힌 네모) */
+const paper = `M0.5 0.5H${W - FOLD}L${W - 0.5} ${FOLD}V${H - 0.5}H0.5Z`;
+
+/** 종이 위 그림. 종이 칸(0~W, 0~H) 기준 path·도형 */
+function marks(mark: FlowMark): {
+  lines: string[];
+  fills: string[];
+  /** 사진 속 산 (옅게 칠한다) */
+  photo?: string[];
+  accent: string[];
+  texts: [number, number, string][];
+} {
+  const body = ['M6 12h16', 'M6 17h20', 'M6 22h14'];
+  switch (mark) {
+    case 'photo':
+      return {
+        lines: [],
+        fills: [],
+        photo: ['M5 32l7-9 6 6 4-4 7 7v4H5z'],
+        accent: ['M24 13a2.5 2.5 0 1 0 .01 0'],
+        texts: [],
+      };
+    case 'scan':
+      return {
+        lines: ['M6 12h16', 'M6 17h20', 'M6 22h14', 'M6 27h18'],
+        fills: [],
+        accent: [],
+        texts: [],
+      };
+    case 'text':
+      return { lines: body, fills: [], accent: ['M5 15.5h22v3.5H5z'], texts: [] };
+    case 'rotate':
+      return {
+        lines: ['M9 9v16', 'M14 9v20', 'M19 9v13'],
+        fills: [],
+        accent: ['M20 36a7 7 0 1 0-6-11', 'M14 21v4h4'],
+        texts: [],
+      };
+    case 'grid':
+      return {
+        lines: ['M5 6h11v14H5z', 'M18 6h11v14H18z', 'M5 23h11v14H5z', 'M18 23h11v14H18z'],
+        fills: [],
+        accent: [],
+        texts: [],
+      };
+    case 'crop':
+      return { lines: body, fills: [], accent: ['M4 8h22v26H4z'], texts: [] };
+    case 'number':
+      return { lines: body, fills: [], accent: [], texts: [[17, 38, '3']] };
+    case 'watermark':
+      return { lines: body, fills: [], accent: ['M6 36L28 10'], texts: [] };
+    case 'header':
+      return {
+        lines: ['M6 15h20', 'M6 20h16', 'M6 25h18'],
+        fills: [],
+        accent: ['M6 7h12', 'M6 37h20'],
+        texts: [],
+      };
+    case 'image':
+      return { lines: body, fills: [], accent: ['M15 26h12v10H15z'], texts: [] };
+    case 'sign':
+      return {
+        lines: body,
+        fills: [],
+        accent: ['M6 34c3-6 5-6 6-2s3 3 5-2 4-3 5 1 3 2 6-1'],
+        texts: [],
+      };
+    case 'lock':
+      return {
+        lines: [],
+        fills: [],
+        accent: ['M10 21h14v12H10z', 'M13 21v-4a4 4 0 0 1 8 0v4'],
+        texts: [],
+      };
+    case 'unlock':
+      return {
+        lines: [],
+        fills: [],
+        accent: ['M10 21h14v12H10z', 'M13 21v-4a4 4 0 0 1 8 0'],
+        texts: [],
+      };
+    case 'info':
+      return { lines: ['M6 22h20', 'M6 27h14'], fills: [], accent: ['M6 9h10v7H6z'], texts: [] };
+    case 'redact':
+      return {
+        lines: ['M6 12h16', 'M6 27h14'],
+        fills: ['M6 16h20v4H6z', 'M6 21h12v4H6z'],
+        accent: [],
+        texts: [],
+      };
+    case 'edit':
+      return { lines: body, fills: [], accent: ['M5 26h18v5H5z'], texts: [] };
+    case 'form':
+      return {
+        lines: ['M6 10h10', 'M6 21h10'],
+        fills: [],
+        accent: ['M6 13h22v5H6z', 'M6 24h5v5H6z', 'M7 26.5l1.5 1.5 2.5-3'],
+        texts: [],
+      };
+    case 'order':
+      return {
+        lines: body,
+        fills: [],
+        accent: ['M24 26v10', 'M21 33l3 3 3-3', 'M10 36V26', 'M7 29l3-3 3 3'],
+        texts: [],
+      };
+    default:
+      return {
+        lines: ['M6 12h16', 'M6 17h20', 'M6 22h14', 'M6 27h18'],
+        fills: [],
+        accent: [],
+        texts: [],
+      };
+  }
+}
+
+function stack(doc: FlowDoc) {
+  const count = Math.min(3, Math.max(1, doc.count ?? 1));
+  const scale = doc.small ? 0.78 : 1;
+  const width = (W + STEP * (count - 1)) * scale;
+  const height = (H + STEP * (count - 1)) * scale;
+  const drawn = marks(doc.mark ?? (doc.kind === 'jpg' || doc.kind === 'png' ? 'photo' : 'lines'));
+  return { count, scale, width, height, drawn, label: doc.kind.toUpperCase() };
+}
+
+const sides = [
+  { ...stack(flow.from), out: false },
+  { ...stack(flow.to), out: true },
+];
+const BOX_W = W + STEP * 2;
+/** 종이 아래 꼬리표 자리 */
+const LABEL = 12;
+const BOX_H = H + STEP * 2 + LABEL;
+---
+
+<div class="flow" aria-hidden="true">
+  {sides.map((side, index) => (
+    <>
+      {index === 1 && (
+        <span class="arrow">
+          <svg viewBox="0 0 64 16" width="64" height="16">
+            <path d="M2 8h58M54 3l6 5-6 5" />
+          </svg>
+          <span class="icon">
+            <ToolIcon paths={icon} size={18} />
+          </span>
+        </span>
+      )}
+      <svg
+        class:list={['stack', { out: side.out }]}
+        viewBox={`0 0 ${BOX_W} ${BOX_H}`}
+        width={BOX_W}
+        height={BOX_H}
+      >
+        <g
+          transform={`translate(${(BOX_W - side.width) / 2} ${BOX_H - LABEL - side.height}) scale(${side.scale})`}
+        >
+          {Array.from({ length: side.count - 1 }, (_, i) => (
+            <path
+              class="paper back"
+              d={paper}
+              transform={`translate(${STEP * (side.count - 1 - i)} 0)`}
+            />
+          ))}
+          <g transform={`translate(0 ${STEP * (side.count - 1)})`}>
+            <path class="paper" d={paper} />
+            <path class="fold" d={`M${W - FOLD} 0.5V${FOLD}H${W - 0.5}`} />
+            {side.drawn.lines.map((d) => (
+              <path class="line" d={d} />
+            ))}
+            {side.drawn.fills.map((d) => (
+              <path class="fill" d={d} />
+            ))}
+            {(side.drawn.photo ?? []).map((d) => (
+              <path class="photo" d={d} />
+            ))}
+            {side.drawn.accent.map((d) => (
+              <path class="accent" d={d} />
+            ))}
+            {side.drawn.texts.map(([x, y, text]) => (
+              <text class="digit" x={x} y={y}>
+                {text}
+              </text>
+            ))}
+            <text class="label" x={W / 2} y={H + 10}>
+              {side.label}
+            </text>
+          </g>
+        </g>
+      </svg>
+    </>
+  ))}
+</div>
+
+<style>
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 76px;
+    margin-top: 16px;
+    overflow: visible;
+  }
+  .stack {
+    flex: none;
+    overflow: visible;
+  }
+  .paper {
+    fill: var(--color-paper);
+    stroke: var(--color-muted);
+    stroke-width: 1;
+  }
+  .paper.back {
+    opacity: 0.85;
+  }
+  .out .paper:not(.back) {
+    stroke: var(--color-accent);
+    stroke-width: 1.6;
+  }
+  .fold {
+    fill: none;
+    stroke: var(--color-muted);
+    stroke-width: 1;
+  }
+  .out .fold {
+    stroke: var(--color-accent);
+  }
+  .line {
+    fill: none;
+    stroke: var(--color-paper-text);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    opacity: 0.3;
+  }
+  .fill {
+    fill: var(--color-redact);
+  }
+  /* 사진 속 산: 가리기 상자와 헷갈리지 않게 옅게 */
+  .photo {
+    fill: var(--color-paper-text);
+    opacity: 0.35;
+  }
+  .accent {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .digit {
+    fill: var(--color-accent);
+    font-size: 9px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+  .label {
+    fill: var(--color-muted);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-anchor: middle;
+  }
+  .out .label {
+    fill: var(--color-accent);
+  }
+  .arrow {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+  .arrow path {
+    fill: none;
+    stroke: var(--color-muted);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .icon {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--color-line);
+    border-radius: 50%;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+</style>
