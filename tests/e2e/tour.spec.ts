@@ -124,6 +124,19 @@ test('이름 뒤에 바뀌는 말이 붙은 버튼도 짚는다', async ({ page 
   );
 });
 
+test('처리 중이라 도구가 견본을 받지 않으면 넣었다고 안내하지 않는다', async ({ page }) => {
+  await page.goto('/image/compress/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  // 큰 견본 사진 여러 장이라 견본이 오는 동안 처리가 끝나지 않는다
+  const photo = fileURLToPath(new URL('../../public/samples/ko/예시-사진.jpg', import.meta.url));
+  await frame.locator('input[type=file]').setInputFiles(Array.from({ length: 40 }, () => photo));
+  await frame.getByRole('button', { name: '압축하기' }).click();
+  await page.getByRole('button', { name: '예시로 따라 하기' }).click();
+  const tour = frame.getByRole('region', { name: '따라 하기' });
+  await expect(tour).toContainText('지금은 예시 파일을 넣을 수 없습니다');
+  await expect(tour.getByRole('button', { name: '다음' })).toBeHidden();
+});
+
 test('영어 화면은 영어 사용법으로 따라 한다', async ({ page }) => {
   await page.goto('/en/image/compress/');
   await page.getByRole('button', { name: 'Walk through with a sample' }).click();
