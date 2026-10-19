@@ -19,7 +19,8 @@
  * (끄는 동안 바깥 페이지가 아는 것은 '파일을 끌고 있다'는 사실뿐이고 내용은 알 수 없다)
  *
  * frame과 주고받는 메시지 (내용 없이 신호만):
- *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height }
+ *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height },
+ *                 { type: 'tour-start' }(따라 하기, TourButton이 'tourstart' 이벤트로 알림)
  *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
  *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤)
  *   글꼴 같은 도구 데이터 요청은 src/lib/data-store.ts가 받는다 (우리 사이트 공개 파일만, 사용자 파일 없음)
@@ -64,6 +65,11 @@ import { ui } from '../i18n/ui';
     document.addEventListener('themechange', (event) => {
       const detail = (event as CustomEvent<string>).detail;
       frame.contentWindow?.postMessage({ type: 'theme', theme: detail }, '*');
+    });
+
+    // 따라 하기 시작. 신호만 보내고 단계 글은 frame이 자기 것을 쓴다 (src/frame/tour.ts)
+    document.addEventListener('tourstart', () => {
+      frame.contentWindow?.postMessage({ type: 'tour-start' }, '*');
     });
 
     // 파일을 끌고 들어오면 frame을 화면 전체로 넓힌다.

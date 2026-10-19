@@ -85,6 +85,11 @@ const TYPES: Record<string, string> = {
   png: 'image/png',
 };
 
+/** 도구에 견본이 있는지 (바깥 페이지가 빌드 때 '따라 하기' 버튼을 그릴지 정한다) */
+export function toolHasSamples(id: string): boolean {
+  return BY_TOOL[id] !== undefined;
+}
+
 /** 이 frame의 도구 ID (주소 /<카테고리>/<이름>/frame/에서 읽는다) */
 function toolId(): string | undefined {
   if (typeof location === 'undefined') return undefined;

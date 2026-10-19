@@ -59,6 +59,7 @@ const ko = {
     loading: '가이드를 불러오는 중…',
     loadFailed: '가이드를 불러오지 못했습니다. 다시 열어 보거나 아래 링크로 가 주세요.',
     readFull: '가이드 페이지에서 보기',
+    tour: '예시로 따라 하기',
   },
   category: {
     title: (name: string) => `${name} 도구`,
@@ -174,6 +175,7 @@ const en: Ui = {
     loading: 'Loading the guide…',
     loadFailed: 'Could not load the guide. Open it again or use the link below.',
     readFull: 'Open the guide page',
+    tour: 'Walk through with a sample',
   },
   category: {
     title: (name: string) => `${name} tools`,
