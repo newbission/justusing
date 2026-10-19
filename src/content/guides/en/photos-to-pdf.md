@@ -39,11 +39,11 @@ Portrait photos will not end up sideways. The orientation stored in each photo i
 
 ## Choosing page size and margin
 
-| Page size    | When                                                  | Result                                                          |
-| ------------ | ----------------------------------------------------- | --------------------------------------------------------------- |
-| Letter       | Documents for US-style paper, or likely printing      | Every page is Letter size; wide photos get a landscape page     |
-| A4           | Documents for countries that use A4                   | Same as Letter, on A4 paper                                     |
-| Fit to image | The image itself is the work, like art or screenshots | Each page is exactly the size of its image, with no blank edges |
+| Page size    | When                                                  | Result                                                                                                                                          |
+| ------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Letter       | Documents for US-style paper, or likely printing      | Every page is Letter size; wide photos get a landscape page                                                                                     |
+| A4           | Documents for countries that use A4                   | Same as Letter, on A4 paper                                                                                                                     |
+| Fit to image | The image itself is the work, like art or screenshots | Each page follows the size of its image. With "No margin" there are no blank edges; with "Small margin" a border of about half an inch is added |
 
 For photos of documents, choose the **paper size your recipient uses**. Even if the photos differ slightly in size, every page in the PDF will be the same size, which looks tidy and prints correctly. Each photo is centered without changing its proportions, and photos smaller than the paper are not stretched.
 
@@ -51,7 +51,7 @@ For the margin, choose "No margin" or "Small margin" (about half an inch). If th
 
 ## Common problems
 
-**The PDF is too big.** A single phone photo can be several MB, so ten of them can reach tens of MB. To keep quality, this tool places JPG and PNG files into the PDF as they are, without recompressing them. If you hit an upload limit, you have two options:
+**The PDF is too big.** A single phone photo can be several MB, so ten of them can reach tens of MB. To keep quality, this tool avoids recompressing JPG and PNG files where it can. Only photos with an orientation tag (such as portrait phone shots) are turned upright and saved again once at high quality. If you hit an upload limit, you have two options:
 
 - Shrink the finished PDF with [Compress PDF](/en/pdf/compress/). PDFs made from photos often get much smaller. For document photos, start with **Balanced** and check that small text is still readable.
 - Or shrink the photos first with [Resize Image](/en/image/resize/) or [Compress Image](/en/image/compress/), then create the PDF.
