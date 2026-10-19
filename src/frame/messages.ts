@@ -22,6 +22,7 @@ const ko = {
     next: '다음',
     finish: '마치기',
     close: '그만하기',
+    retry: '다시 받기',
     failed: '예시 파일을 받지 못했습니다. 인터넷 연결을 확인하고 다시 해 주세요.',
   },
   pdf: {
@@ -153,6 +154,7 @@ const en: FrameMessages = {
     next: 'Next',
     finish: 'Finish',
     close: 'Stop',
+    retry: 'Try again',
     failed: 'Could not load the sample file. Check your connection and try again.',
   },
   pdf: {
