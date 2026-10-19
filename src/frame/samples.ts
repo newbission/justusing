@@ -100,6 +100,11 @@ function toolId(): string | undefined {
 /** 이 도구에 견본이 있는지 */
 export const hasSamples = BY_TOOL[toolId() ?? ''] !== undefined;
 
+/** 이 도구의 견본 파일 이름 (지금 언어) */
+export function sampleNames(): string[] {
+  return (BY_TOOL[toolId() ?? ''] ?? []).map((key) => NAMES[frameLocale][key]);
+}
+
 /** 이 도구의 견본을 받아 File로 돌려준다 */
 export async function loadSamples(): Promise<File[]> {
   const keys = BY_TOOL[toolId() ?? ''] ?? [];

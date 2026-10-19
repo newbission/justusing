@@ -12,7 +12,7 @@
 import { pick } from './locale';
 import { FRAME_MESSAGES } from './messages';
 import { deliverFiles, onFilesArrived } from './drop';
-import { loadSamples } from './samples';
+import { loadSamples, sampleNames } from './samples';
 
 const TARGET = 'tour-target';
 const t = pick(FRAME_MESSAGES).tour;
@@ -165,6 +165,12 @@ export function setupFrameTour() {
   async function start() {
     if (busy) return;
     busy = true;
+    // 전에 넣은 견본이 아직 도구에 있으면 다시 넣지 않고 그대로 따라 한다 (넣는 도구에서는 겹친다)
+    const names = sampleNames();
+    if (names.length > 0 && names.every((name) => countOf(name) > 0)) {
+      begin();
+      return;
+    }
     const current = ++run;
     loading = true;
     let files: File[];
@@ -199,6 +205,11 @@ export function setupFrameTour() {
       document.documentElement.classList.add('touring');
       return;
     }
+    begin();
+  }
+
+  /** 견본이 도구에 들어간 뒤 단계 안내를 연다 */
+  function begin() {
     failed(false);
     panel.hidden = false;
     document.documentElement.classList.add('touring');
