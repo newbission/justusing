@@ -30,6 +30,8 @@
   --color-on-scrim: #fff;
   /* 창(dialog)을 띄울 때 뒤를 가리는 막 */
   --color-backdrop: rgb(0 0 0 / 0.4);
+  /* 따라 하기에서 누를 곳 밖을 덮는 막 (다크 화면은 바탕이 어두워 더 진하게) */
+  --color-spotlight: light-dark(rgb(0 0 0 / 0.45), rgb(0 0 0 / 0.7));
   /* 종이처럼 보이게 쪽·이미지 썸네일 아래에 까는 그림자 */
   --shadow-page: 0 1px 3px rgb(0 0 0 / 0.2);
   /* 창(dialog) 그림자 */
