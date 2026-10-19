@@ -64,9 +64,11 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
       dialog.addEventListener('close', () => {
         frame.src = 'about:blank';
       });
-      // 마치기 (내용 없는 신호)
+      // 마치기, 도구를 쓰는 순간 (내용 없는 신호). activity는 원래 도구 화면처럼 광고 차단 안내가 듣는다
       addEventListener('message', (event) => {
-        if (event.source === frame.contentWindow && event.data?.type === 'tour-end') dialog.close();
+        if (event.source !== frame.contentWindow) return;
+        if (event.data?.type === 'tour-end') dialog.close();
+        if (event.data?.type === 'activity') document.dispatchEvent(new CustomEvent('toolactivity'));
       });
       document.addEventListener('themechange', (event) => {
         const theme = (event as CustomEvent<string>).detail;
