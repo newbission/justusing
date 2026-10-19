@@ -11,7 +11,8 @@
  * blob URL로 띄운 워커도 이 CSP를 그대로 따른다.
  */
 import '../styles/global.css';
-import { localeOf } from '../i18n/locales';
+import { localeOf, withoutLocale } from '../i18n/locales';
+import { getTool } from '../tools/registry';
 import { siteConfig, siteUrl } from '../site.config';
 
 interface Props {
@@ -20,6 +21,10 @@ interface Props {
 }
 
 const { title } = Astro.props;
+const locale = localeOf(Astro.url.pathname);
+/** 따라 하기 단계: 이 도구의 사용법 (src/frame/tour.ts). 바깥 페이지가 보낸 글은 쓰지 않으려고 빌드 때 넣는다 */
+const [category, name] = withoutLocale(Astro.url.pathname).split('/').filter(Boolean);
+const tourSteps = getTool(`${category}/${name}`)?.content?.[locale].howTo ?? [];
 
 /**
  * 우리 사이트 주소. Safari(WebKit)는 출처 없는 sandbox 문서에서 'self'를 우리 사이트로 보지 않아
@@ -54,7 +59,7 @@ if (csp) {
 ---
 
 <!doctype html>
-<html lang={localeOf(Astro.url.pathname)}>
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -78,7 +83,7 @@ if (csp) {
       })();
     </script>
   </head>
-  <body>
+  <body data-tour={JSON.stringify(tourSteps)}>
     <!-- 파일을 끄는 동안 frame이 화면 전체로 넓어져도 이 안의 도구 화면은 원래 크기로 고정된다 -->
     <div id="frame-root">
       <slot />
@@ -89,9 +94,11 @@ if (csp) {
 <script>
   import { setupFrameActivity } from './activity';
   import { setupFrameDrop } from './drop';
+  import { setupFrameTour } from './tour';
 
   setupFrameDrop();
   setupFrameActivity();
+  setupFrameTour();
 </script>
 
 <style is:global>
@@ -114,6 +121,85 @@ if (csp) {
   .frame-drop-overlay[hidden] {
     display: none;
   }
+  /* 따라 하기 (src/frame/tour.ts): 도구 화면 아래에 단계 막대를 두고, 도구 화면은 그만큼 줄인다 */
+  html.touring body {
+    display: flex;
+    flex-direction: column;
+  }
+  html.touring #frame-root {
+    flex: 1;
+    min-height: 0;
+  }
+  .frame-tour {
+    display: grid;
+    flex: none;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 12px 16px;
+    border-top: 2px solid var(--color-accent);
+    background: var(--color-surface);
+    font-size: 14px;
+  }
+  .frame-tour[hidden] {
+    display: none;
+  }
+  .frame-tour strong {
+    grid-column: 1 / -1;
+    color: var(--color-accent);
+    font-size: 13px;
+  }
+  .frame-tour p {
+    margin: 0;
+    line-height: 1.5;
+  }
+  .frame-tour div {
+    display: flex;
+    gap: 6px;
+  }
+  .frame-tour button {
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: transparent;
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .frame-tour button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .frame-tour button.primary {
+    border-color: var(--color-text);
+    background: var(--color-text);
+    color: var(--color-bg);
+    font-weight: 600;
+  }
+  /* 좁은 화면: 단계 글 아래에 버튼 줄 */
+  @media (max-width: 560px) {
+    .frame-tour {
+      grid-template-columns: 1fr;
+    }
+  }
+  /* 지금 단계에서 누를 것 */
+  .tour-target {
+    outline: 3px solid var(--color-accent) !important;
+    outline-offset: 2px;
+    animation: tour-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes tour-pulse {
+    50% {
+      outline-color: var(--color-accent-soft);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tour-target {
+      animation: none;
+    }
+  }
+
   /* 끌기 신호가 덮개에만 가도록 안쪽 글자는 대상에서 뺀다 (덮개를 떠날 때만 dragleave) */
   .frame-drop-overlay * {
     pointer-events: none;
