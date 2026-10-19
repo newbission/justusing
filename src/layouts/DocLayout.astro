@@ -94,6 +94,14 @@ const breadcrumb = Astro.props.breadcrumb ?? [
   .doc :global(p) {
     margin: 0 0 16px;
   }
+  /* 가이드 그림: 흰 종이 카드라 두 테마에서 같고, 테두리로 바탕과 나눈다 */
+  .doc :global(img) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+  }
   .doc :global(ul),
   .doc :global(ol) {
     margin: 0 0 16px;
