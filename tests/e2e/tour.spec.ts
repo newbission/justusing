@@ -110,6 +110,20 @@ test('견본이 있는 모든 도구에서 따라 하기가 시작된다', async
   }
 });
 
+test('이름 뒤에 바뀌는 말이 붙은 버튼도 짚는다', async ({ page }) => {
+  await page.goto('/image/compress/');
+  await page.getByRole('button', { name: '예시로 따라 하기' }).click();
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  const tour = frame.getByRole('region', { name: '따라 하기' });
+  await tour.getByRole('button', { name: '다음' }).click();
+  await tour.getByRole('button', { name: '다음' }).click();
+  await frame.getByRole('button', { name: '압축하기' }).click();
+  await tour.getByRole('button', { name: '다음' }).click();
+  await expect(frame.getByRole('button', { name: '모두 받기 (ZIP, 2장)' })).toHaveClass(
+    /tour-target/,
+  );
+});
+
 test('영어 화면은 영어 사용법으로 따라 한다', async ({ page }) => {
   await page.goto('/en/image/compress/');
   await page.getByRole('button', { name: 'Walk through with a sample' }).click();
