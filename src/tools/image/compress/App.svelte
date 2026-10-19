@@ -146,7 +146,15 @@
   }
 </script>
 
-<ImageBatchTool {batch} busy={working} onremove={(item) => delete outcomes[item.id]}>
+<ImageBatchTool
+  {batch}
+  busy={working}
+  result={(item) => {
+    const outcome = outcomeOf(item);
+    return outcome?.state === 'done' ? outcome.bytes : undefined;
+  }}
+  onremove={(item) => delete outcomes[item.id]}
+>
   {#snippet bar()}
     <ActionBar label={t.bar}>
       {#snippet text()}
