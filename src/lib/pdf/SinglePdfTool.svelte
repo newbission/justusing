@@ -44,7 +44,8 @@
   type Phase = 'idle' | 'loading' | 'password' | 'ready' | 'error';
 
   let phase: Phase = $state('idle');
-  let fileName = '';
+  /** 고른 파일 이름 (암호 입력 화면에도 보인다) */
+  let fileName = $state('');
   let bytes: Uint8Array | undefined;
   /** 고른 파일. 서명 확인 워커가 바이트 복사 없이 직접 읽는다 */
   let picked: File | undefined;
@@ -144,6 +145,7 @@
   {:else if phase === 'password'}
     <!-- 격리 frame은 form 제출이 막혀 있어(sandbox에 allow-forms 없음) form 대신 직접 처리한다 -->
     <div class="password" role="group" aria-label={t.pdf.passwordGroup}>
+      <p class="file" title={fileName}>{fileName}</p>
       <p>{t.pdf.passwordPrompt}</p>
       <p class="hint">{t.pdf.passwordNote}</p>
       <label>
@@ -289,6 +291,13 @@
   }
   .password p {
     margin: 0;
+  }
+  /* 어느 파일의 암호인지 (여러 번 고르다 헷갈리지 않게) */
+  .password .file {
+    overflow: hidden;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .password .hint {
     color: var(--color-muted);
