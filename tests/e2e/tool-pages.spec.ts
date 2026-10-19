@@ -7,9 +7,16 @@ import { expect, test } from './test';
 /** 사이트맵에 실린 도구 페이지 주소 (예: /pdf/merge/, /en/pdf/merge/) */
 async function toolPaths(request: import('@playwright/test').APIRequestContext) {
   const xml = await (await request.get('/sitemap.xml')).text();
-  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
-    .map((match) => new URL(match[1]!).pathname)
-    .filter((path) => /^(\/en)?\/(pdf|image)\/[^/]+\/$/.test(path));
+  return (
+    [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
+      .map((match) => new URL(match[1]!).pathname)
+      // 도구 주소는 (언어 앞머리를 뺀 뒤) /<카테고리>/<이름>/ 두 단계다. 같은 모양의 가이드 글만 뺀다
+      // (카테고리를 적어 두면 새 카테고리를 놓친다)
+      .filter((path) => {
+        const rest = path.replace(/^\/en(?=\/)/, '');
+        return /^\/[^/]+\/[^/]+\/$/.test(rest) && !rest.startsWith('/guide/');
+      })
+  );
 }
 
 const COMMON_FIRST_QUESTION = {
