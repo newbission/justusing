@@ -137,10 +137,10 @@ const href = guide && localizePath(`/guide/${slugOf(guide)}/`, locale);
     border-radius: var(--radius);
     background: var(--color-surface);
     color: var(--color-text);
-    box-shadow: 0 8px 40px rgb(0 0 0 / 0.24);
+    box-shadow: var(--shadow-dialog);
   }
   dialog::backdrop {
-    background: rgb(0 0 0 / 0.4);
+    background: var(--color-backdrop);
   }
   dialog[open] {
     display: flex;
