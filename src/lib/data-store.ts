@@ -178,9 +178,9 @@ async function get(
   return results;
 }
 
-/** frame이 보내는 데이터 요청에 답한다. 그 frame이 보낸 메시지만 받는다 */
-export function serveData(frame: HTMLIFrameElement) {
-  addEventListener('message', async (event) => {
+/** frame이 보내는 데이터 요청에 답한다. 그 frame이 보낸 메시지만 받는다. 돌려준 함수를 부르면 그만 답한다 */
+export function serveData(frame: HTMLIFrameElement): () => void {
+  const listener = async (event: MessageEvent) => {
     if (event.source !== frame.contentWindow) return;
     const request = event.data as DataRequest;
     if (request?.type !== 'data-status' && request?.type !== 'data-get') return;
@@ -208,5 +208,7 @@ export function serveData(frame: HTMLIFrameElement) {
     } catch {
       reply({ type: 'data-error', id });
     }
-  });
+  };
+  addEventListener('message', listener);
+  return () => removeEventListener('message', listener);
 }
