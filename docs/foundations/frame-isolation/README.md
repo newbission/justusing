@@ -79,6 +79,7 @@
 | 바깥 → frame | `{ type: 'drag-start', width, height }`               | 파일 끌기 시작, 지금 크기                                               |
 | 바깥 → frame | `{ type: 'tour-start' }`                              | 따라 하기 시작. 단계 글은 보내지 않는다 (frame이 자기 것을 쓴다)        |
 | frame → 바깥 | `drag-ready`, `drag-request`, `drag-end`              | 넓혀도 됨 / 칸 안에서 시작된 끌기 / 끝                                  |
+| frame → 바깥 | `tour-ready`                                          | 따라 하기 신호를 받을 준비가 됨. 그전에 누른 것은 바깥이 들고 있다      |
 | frame → 바깥 | `show-tool`                                           | 파일을 열었으니 도구 칸이 화면을 채우게 스크롤해 달라                   |
 | frame → 바깥 | `activity`                                            | 도구를 쓰는 순간 (광고 차단 안내가 `toolactivity`로 듣는다)             |
 | frame ↔ 바깥 | 데이터 요청·응답                                      | 우리 공개 파일 경로만 ([글꼴·데이터 보관](../fonts-and-data/README.md)) |
