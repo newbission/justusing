@@ -24,6 +24,7 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
 npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
+python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow, 먼저 npm install)
 ```
 
 개발 서버에서 `/_dev/layout/` 주소로 도구 페이지 틀과 광고 슬롯 위치를 볼 수 있다 (배포에는 없음).
@@ -104,6 +105,7 @@ python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 �
    - `Frame.astro`: 격리 frame 페이지. `FrameLayout` 안에 `App.svelte`를 `mount`한다 (`pdf/view` 참고)
    - `App.svelte`: 실제 도구 UI. 첫 화면은 `src/frame/FileDrop.svelte`를 쓴다
 2. `src/tools/registry.ts`의 `TOOL_IDS`에 `'<카테고리>/<이름>'` 한 줄을 넣는다.
+   `src/frame/samples.ts`의 `BY_TOOL`에 넣을 견본을 적는다 ('예시 파일로 해 보기', 맞는 견본이 없으면 `make_samples.py`에 더한다).
 3. 다 만들면 `meta.ts`의 `status`를 `'live'`로 바꾸고 `tests/e2e/`에 E2E를 추가한다.
 
 도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
