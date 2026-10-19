@@ -1,0 +1,250 @@
+---
+/**
+ * 도구 제목 아래 '가이드 보기'. 누르면 이 도구의 가이드 글을 창으로 띄운다 (없으면 그리지 않는다).
+ *
+ * 글은 누를 때 가이드 페이지를 받아 본문만 넣는다. 도구 페이지 HTML에 글을 미리 넣으면
+ * 같은 글이 두 주소에 있어 검색엔진에 중복 글로 보이기 때문이다. 창 아래에 원래 글로 가는 링크를 둔다.
+ * 사용자가 누를 때만 열린다 (저절로 뜨는 창은 광고 심사의 '과도한 팝업'으로 보일 수 있다). 창 안에 광고는 없다.
+ */
+import { guidesForTool, slugOf } from '../guides';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  toolId: string;
+}
+
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale).guide;
+const guide = guidesForTool(Astro.props.toolId, locale)[0];
+const href = guide && localizePath(`/guide/${slugOf(guide)}/`, locale);
+---
+
+{guide && (
+  <guide-dialog data-href={href} data-failed={t.loadFailed}>
+    <button type="button" class="open" data-guide-open>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 5a2 2 0 0 1 2-2h6v17H6a2 2 0 0 0-2 2z" />
+        <path d="M20 5a2 2 0 0 0-2-2h-6v17h6a2 2 0 0 1 2 2z" />
+      </svg>
+      {t.openDialog}
+    </button>
+    <dialog aria-labelledby="guide-dialog-title">
+      <div class="head">
+        <h2 id="guide-dialog-title">{guide.data.title}</h2>
+        <button type="button" class="close" data-guide-close aria-label={t.closeDialog}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+      <div class="body" data-guide-body>
+        <p class="status" role="status">
+          {t.loading}
+        </p>
+      </div>
+      <div class="foot">
+        <a href={href}>{t.readFull}</a>
+      </div>
+    </dialog>
+  </guide-dialog>
+)}
+
+<script>
+  class GuideDialog extends HTMLElement {
+    #loaded = false;
+
+    connectedCallback() {
+      const dialog = this.querySelector('dialog')!;
+      this.querySelector('[data-guide-open]')!.addEventListener('click', () => {
+        dialog.showModal();
+        void this.#load();
+      });
+      this.querySelector('[data-guide-close]')!.addEventListener('click', () => dialog.close());
+      // 창 바깥(어두운 부분)을 누르면 닫는다
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+    }
+
+    /** 가이드 페이지를 받아 본문만 옮겨 넣는다. 실패하면 다시 열 때 또 해 본다 */
+    async #load() {
+      if (this.#loaded) return;
+      const body = this.querySelector<HTMLElement>('[data-guide-body]')!;
+      try {
+        const response = await fetch(this.dataset.href!);
+        if (!response.ok) throw new Error(String(response.status));
+        const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+        const article = page.querySelector('[data-doc-body]');
+        if (!article) throw new Error('본문 없음');
+        for (const node of article.querySelectorAll('[data-dialog-skip]')) node.remove();
+        body.replaceChildren(
+          ...[...article.childNodes].map((node) => document.importNode(node, true)),
+        );
+        this.#loaded = true;
+      } catch {
+        const status = document.createElement('p');
+        status.className = 'status';
+        status.setAttribute('role', 'alert');
+        status.textContent = this.dataset.failed!;
+        body.replaceChildren(status);
+      }
+    }
+  }
+
+  customElements.define('guide-dialog', GuideDialog);
+</script>
+
+<style>
+  guide-dialog {
+    display: block;
+    margin-top: 12px;
+  }
+  .open {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: transparent;
+    font-size: 14px;
+    cursor: pointer;
+    transition:
+      background-color 0.12s,
+      border-color 0.12s;
+  }
+  .open:hover {
+    border-color: var(--color-muted);
+    background: var(--color-hover);
+  }
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+  svg path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  dialog {
+    width: min(760px, calc(100vw - 2 * var(--gutter)));
+    height: min(820px, calc(100dvh - 48px));
+    padding: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: 0 8px 40px rgb(0 0 0 / 0.24);
+  }
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.4);
+  }
+  dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  .head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 12px 24px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .close {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+  .close:hover {
+    background: var(--color-hover);
+  }
+  .close svg {
+    width: 20px;
+    height: 20px;
+  }
+  .body {
+    flex: 1;
+    min-height: 0;
+    padding: 20px 24px;
+    overflow: auto;
+    line-height: 1.7;
+  }
+  .status {
+    color: var(--color-muted);
+  }
+  /* 받아 넣은 글은 이 부품이 그린 것이 아니라 :global로 꾸민다 (DocLayout의 글 모양과 맞춘다) */
+  .body :global(h2) {
+    margin: 32px 0 10px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .body :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .body :global(h3) {
+    margin: 20px 0 8px;
+    font-size: 16px;
+  }
+  .body :global(p) {
+    margin: 0 0 14px;
+  }
+  .body :global(ul),
+  .body :global(ol) {
+    margin: 0 0 14px;
+    padding-left: 22px;
+  }
+  .body :global(li) {
+    margin-bottom: 6px;
+  }
+  .body :global(a) {
+    color: var(--color-accent);
+  }
+  .body :global(img) {
+    max-width: 100%;
+    height: auto;
+  }
+  .body :global(table) {
+    width: 100%;
+    margin: 0 0 14px;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .body :global(th),
+  .body :global(td) {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--color-line);
+    text-align: left;
+  }
+  .body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+  }
+  .foot {
+    flex: none;
+    padding: 12px 24px;
+    border-top: 1px solid var(--color-line);
+    font-size: 14px;
+  }
+  .foot a {
+    color: var(--color-accent);
+  }
+</style>
