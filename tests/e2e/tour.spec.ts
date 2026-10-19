@@ -33,6 +33,26 @@ test('따라 하기는 견본을 넣고 단계 글에 적힌 버튼을 짚는다
   await expect(frame.locator('.tour-target')).toHaveCount(0);
 });
 
+test('견본을 받지 못하면 단계 대신 다시 받기만 두고, 여러 번 눌러도 견본은 한 번만 들어간다', async ({
+  page,
+}) => {
+  await page.route('**/samples/**', (route) => route.abort());
+  await page.goto('/pdf/merge/');
+  const start = page.getByRole('button', { name: '예시로 따라 하기' });
+  await start.click();
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  const tour = frame.getByRole('region', { name: '따라 하기' });
+  await expect(tour).toContainText('예시 파일을 받지 못했습니다');
+  await expect(tour.getByRole('button', { name: '다음' })).toBeHidden();
+
+  await page.unroute('**/samples/**');
+  await tour.getByRole('button', { name: '다시 받기' }).click();
+  await expect(tour).toContainText('따라 하기 1/');
+  await start.click();
+  await start.click();
+  await expect(frame.getByText('예시-보고서.pdf')).toHaveCount(1);
+});
+
 test('견본이 있는 모든 도구에서 따라 하기가 시작된다', async ({ page, request }) => {
   test.setTimeout(180_000);
   const xml = await (await request.get('/sitemap.xml')).text();
