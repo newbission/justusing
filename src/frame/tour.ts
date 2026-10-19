@@ -203,7 +203,7 @@ export function setupFrameTour() {
     mark();
   }
 
-  /** 마치기: 창을 닫아 달라고 바깥에 알린다 (내용 없는 신호) */
+  /** 마치기·Esc: 창을 닫아 달라고 바깥에 알린다 (내용 없는 신호) */
   function finish() {
     if (parent !== window) parent.postMessage({ type: 'tour-end' }, '*');
   }
@@ -298,6 +298,11 @@ export function setupFrameTour() {
     },
     true,
   );
+
+  // 도구 화면을 누른 뒤에는 Esc가 이 문서로 와서 바깥 창이 닫히지 않는다. 도구가 쓰지 않은 Esc면 닫아 달라고 알린다
+  addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !event.defaultPrevented) finish();
+  });
 
   // 도구 화면이 파일을 받을 준비를 마친 뒤 시작한다 (도구는 이 스크립트 다음에 붙는다)
   if (document.readyState === 'complete') requestAnimationFrame(() => void start());
