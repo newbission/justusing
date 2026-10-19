@@ -33,7 +33,11 @@
   let run = 0;
 
   onMount(() => {
-    const off = onFilesArrived(() => run++);
+    const off = onFilesArrived(() => {
+      // 받던 견본은 버리고 다시 누를 수 있게 한다 (들어온 파일을 도구가 받지 않아 이 화면이 남을 수 있다)
+      run++;
+      sample = 'idle';
+    });
     return () => {
       run++;
       off();
