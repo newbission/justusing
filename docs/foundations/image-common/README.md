@@ -1,6 +1,6 @@
 # 이미지 도구 공통 (`src/lib/image/`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-19
 
 - 쓰는 곳: [이미지 압축](../../features/image-compress/README.md), [크기 조절](../../features/image-resize/README.md),
   [형식 변환](../../features/image-convert/README.md). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
@@ -15,6 +15,7 @@
 - **목록 화면** `ImageBatchTool`: 파일 고르기, 개수·합계 크기, 추가, 실행 막대 자리, 설정 자리, 이미지 목록(썸네일·이름·설명·빼기)
 - **목록 상태** `ImageBatch`: 넣은 이미지의 형식·크기·썸네일을 들고 있다
 - **처리** `processImage()`: 워커 여러 개가 CPU 수에 맞춰 나눠 처리한다
+- **결과 비교** (2026-10-19): 결과가 있는 줄의 '비교'를 누르면 설정·목록 자리에 원본과 결과를 겹쳐 보여 준다. 가운데 손잡이를 끌거나 아래 막대(방향키)로 경계를 옮기고, '확대해 보기'로 3배로 본다
 - 도구는 설정·실행 막대·줄 설명·받기 버튼만 그린다
 
 하지 않는 것·한계
@@ -29,17 +30,18 @@
 
 ### 파일
 
-| 파일                                         | 역할                                                                                                     |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `src/lib/image/ImageBatchTool.svelte`        | 여러 장 도구의 공통 화면. `bar`·`options`·`meta`·`actions` snippet과 `hint`·`broken`·`onremove`를 받는다 |
-| `src/lib/image/batch.svelte.ts`              | `ImageBatch` 클래스(목록 상태), `BATCH_ACCEPT`, `EXTENSIONS`(형식 → 확장자)                              |
-| `src/lib/image/process.ts`                   | `processImage(file, options, signal?)`, 워커 풀, `ImageProcessError(reason: 'decode' \| 'encode')`       |
-| `src/lib/image/process.worker.ts`            | 바로 세워 읽기 → 절반씩 줄이기 → 저장 (OffscreenCanvas, PNG 색 줄이기는 UPNG)                            |
-| `src/lib/image/upng-globals.ts`              | UPNG.js가 워커에서 찾는 `window`·`pako`를 fflate로 마련한다                                              |
-| `src/lib/image/prepare.ts`                   | `readImageInfo()`(바로 세운 가로·세로), `jpegOrientation()`, `toEmbeddable()`(PDF에 넣을 JPG·PNG 준비)   |
-| `src/lib/image/embed.ts` + `embed.worker.ts` | `embedImage()`: `toEmbeddable`을 워커에서 돌린다 (이미지 넣기·서명 넣기)                                 |
-| `src/lib/zip.ts` + `zip.worker.ts`           | `makeZip()`: 여러 결과를 ZIP 하나로 (워커)                                                               |
-| `src/frame/messages.ts`의 `images`           | 목록 화면 공통 문구 (한·영)                                                                              |
+| 파일                                         | 역할                                                                                                              |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `src/lib/image/ImageBatchTool.svelte`        | 여러 장 도구의 공통 화면. `bar`·`options`·`meta`·`actions` snippet과 `hint`·`broken`·`onremove`·`result`를 받는다 |
+| `src/lib/compare/CompareSlider.svelte`       | 원본·결과를 겹쳐 비교하는 부품. 문구를 넘겨받아 도구 화면·가이드 어디서나 쓴다                                    |
+| `src/lib/image/batch.svelte.ts`              | `ImageBatch` 클래스(목록 상태), `BATCH_ACCEPT`, `EXTENSIONS`(형식 → 확장자)                                       |
+| `src/lib/image/process.ts`                   | `processImage(file, options, signal?)`, 워커 풀, `ImageProcessError(reason: 'decode' \| 'encode')`                |
+| `src/lib/image/process.worker.ts`            | 바로 세워 읽기 → 절반씩 줄이기 → 저장 (OffscreenCanvas, PNG 색 줄이기는 UPNG)                                     |
+| `src/lib/image/upng-globals.ts`              | UPNG.js가 워커에서 찾는 `window`·`pako`를 fflate로 마련한다                                                       |
+| `src/lib/image/prepare.ts`                   | `readImageInfo()`(바로 세운 가로·세로), `jpegOrientation()`, `toEmbeddable()`(PDF에 넣을 JPG·PNG 준비)            |
+| `src/lib/image/embed.ts` + `embed.worker.ts` | `embedImage()`: `toEmbeddable`을 워커에서 돌린다 (이미지 넣기·서명 넣기)                                          |
+| `src/lib/zip.ts` + `zip.worker.ts`           | `makeZip()`: 여러 결과를 ZIP 하나로 (워커)                                                                        |
+| `src/frame/messages.ts`의 `images`           | 목록 화면 공통 문구 (한·영)                                                                                       |
 
 ### 처리 흐름
 
@@ -74,6 +76,8 @@
 - 압축·크기 조절은 다시 저장할 수 있는 세 형식만 받고, 형식 변환만 `anyFormat`으로 브라우저가 읽는 모든 형식을 받는다 (`9a307fc`)
 - 줄 높이(72px)·막대 높이를 고정해 읽는 중·처리 뒤에 목록이 흔들리지 않는다
 - 실행 막대는 목록 위에 둔다. 모바일 하단 고정 광고와 멀게 하려는 것이다
+- 결과 비교는 창(모달)이 아니라 frame 안의 설정·목록 자리를 바꿔 보여 준다. 실행 막대는 그대로 있어 비교하며 바로 받을 수 있고, frame 높이도 바뀌지 않는다
+- 비교는 화면에 겹쳐 그리기만 한다. 두 이미지의 가로·세로가 달라도 같은 칸에 맞추므로 크기 조절 결과도 비교할 수 있다. 확대 중에 끌면 보는 자리가 옮겨지고, 경계는 막대로 옮긴다
 
 ### 주의할 점
 
@@ -83,6 +87,7 @@
 - 도구는 결과를 설정 문자열과 함께 저장하고(`settings`), 설정이 바뀌면 이전 결과를 쓰지 않는다. 새 도구도 같은 방식을 따른다
 - `makeZip()`은 받은 바이트를 워커로 넘겨(transfer) 비운다. 결과를 다시 받을 수 있게 `bytes.slice()` 복사본을 넘긴다.
   같은 이름은 ` (2)`처럼 번호를 붙인다
+- 도구는 `result`에 **지금 설정으로 만든** 결과만 돌려준다 (`outcomeOf`). 설정을 바꾸거나 처리를 시작하면 결과가 없어져 비교 화면이 저절로 닫힌다. 비교용 blob 주소는 닫을 때 해제한다
 - `item.type`은 JPG·PNG·WebP가 아니면 `undefined`다. 원래 형식으로 저장하는 도구(압축·크기 조절)는 `anyFormat`을 켜면 안 된다
 - 격리 frame 규칙(워커는 `createWorker`, `style=""` 금지, form 금지)은 [격리 frame](../frame-isolation/README.md)을 따른다
 
@@ -95,6 +100,7 @@
 - [x] 워커가 죽으면 그 이미지를 실패로 끝내기
 - [x] 공통 목록 화면, 빼면 썸네일·결과 해제
 - [x] 모든 형식 받기 설정(`anyFormat`), 고르기 안내·못 읽은 안내 바꾸기(`hint`·`broken`)
+- [x] 원본과 결과 비교 화면 (`result`, `CompareSlider`)
 - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기)
 - [ ] 배경 제거, 자르기·회전 같은 다음 이미지 도구 (CLAUDE.md 9단계)
 - [ ] 처리 중 그만두기(`signal`)를 도구 화면에서 쓰기 — 지금은 처리 중에 목록을 잠근다
@@ -105,7 +111,7 @@
 
 공통 모듈만 따로 시험하는 E2E는 없다. 세 도구의 E2E가 이 모듈을 거친다.
 
-- `tests/e2e/image-compress.spec.ts`: 같은 크기로 줄이기·로컬 처리, ZIP·PNG 투명 유지, WebP 저장, EXIF 방향, 원본 유지·못 여는 파일
+- `tests/e2e/image-compress.spec.ts`: 같은 크기로 줄이기·로컬 처리, 결과 비교(경계 막대·확대·목록으로·설정 바꾸면 사라짐), ZIP·PNG 투명 유지, WebP 저장, EXIF 방향, 원본 유지·못 여는 파일
 - `tests/e2e/image-resize.spec.ts`: 비율·칸 맞추기·정확한 크기·너무 큰 결과
 - `tests/e2e/image-convert.spec.ts`: PNG→JPG 흰 바탕, GIF·BMP→WebP, JPG→PNG, 읽지 못하는 파일
 - 테스트 파일은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`photo.jpg`, `rotated.jpg`, `screen.png`, `small.jpg`, `broken.png`, `moving.gif`, `green.bmp` 등)
