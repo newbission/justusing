@@ -64,6 +64,8 @@ export function setupFrameTour() {
   if (steps.length === 0) return;
 
   let index = -1;
+  /** 견본을 받는 중이거나 따라 하는 중이면 다시 시작하지 않는다 (견본이 두 번 들어간다) */
+  let busy = false;
   let observer: MutationObserver | undefined;
   let marked: HTMLElement[] = [];
 
@@ -85,8 +87,10 @@ export function setupFrameTour() {
     return element;
   };
   const previous = button(t.previous, () => show(index - 1));
+  const retry = button(t.retry, () => void start(), true);
+  retry.hidden = true;
   const next = button(t.next, () => (index < steps.length - 1 ? show(index + 1) : stop()), true);
-  actions.append(previous, next, button(t.close, stop));
+  actions.append(previous, next, retry, button(t.close, stop));
   panel.append(count, text, actions);
   document.body.append(panel);
 
@@ -119,7 +123,15 @@ export function setupFrameTour() {
     next.textContent = last ? t.finish : t.next;
   }
 
+  /** 견본을 받지 못했을 때: 단계 이동 대신 다시 받기만 둔다 */
+  function failed(on: boolean) {
+    previous.hidden = on;
+    next.hidden = on;
+    retry.hidden = !on;
+  }
+
   function stop() {
+    busy = false;
     observer?.disconnect();
     observer = undefined;
     unmark();
@@ -128,16 +140,22 @@ export function setupFrameTour() {
   }
 
   async function start() {
+    if (busy) return;
+    busy = true;
     let files: File[];
     try {
       files = await loadSamples();
     } catch {
+      busy = false;
+      index = -1;
       count.textContent = '';
       text.textContent = t.failed;
+      failed(true);
       panel.hidden = false;
       document.documentElement.classList.add('touring');
       return;
     }
+    failed(false);
     // 도구 화면은 놓인 파일과 같은 길(onFrameFiles)로 견본을 받는다
     deliverFiles(files);
     panel.hidden = false;
@@ -166,4 +184,6 @@ export function setupFrameTour() {
     if (event.source !== parent || event.data?.type !== 'tour-start') return;
     void start();
   });
+  // 바깥 페이지는 이 신호를 받은 뒤에야 시작 신호를 보낸다 (그전에 누른 것은 바깥이 들고 있다)
+  if (parent !== window) parent.postMessage({ type: 'tour-ready' }, '*');
 }
