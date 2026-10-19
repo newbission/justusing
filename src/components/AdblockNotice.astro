@@ -68,10 +68,10 @@ const t = ui(localeOf(Astro.url.pathname)).adblock;
     border-radius: var(--radius);
     background: var(--color-surface);
     color: var(--color-text);
-    box-shadow: 0 8px 40px rgb(0 0 0 / 0.24);
+    box-shadow: var(--shadow-dialog);
   }
   .adblock::backdrop {
-    background: rgb(0 0 0 / 0.4);
+    background: var(--color-backdrop);
   }
   /* 안쪽 여백은 dialog가 아니라 내용에 둔다 (dialog 자체를 누른 것 = 바깥을 누른 것으로 알아채려고) */
   .adblock[open] {

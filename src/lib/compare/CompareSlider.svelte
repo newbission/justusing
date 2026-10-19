@@ -177,7 +177,7 @@
     padding: 2px 8px;
     border-radius: var(--radius);
     background: var(--color-scrim);
-    color: #fff;
+    color: var(--color-on-scrim);
     font-size: 12px;
     pointer-events: none;
   }
