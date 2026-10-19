@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '찍은 서류 사진을 PDF로',
+        text: '스캐너 없이 휴대폰으로 찍은 신분증 사본, 통장 사본, 영수증을 "PDF로 보내 주세요"라고 할 때 씁니다. 사진 방향 정보를 읽어 눕지 않게 넣습니다.',
+      },
+      {
+        title: '여러 장을 한 문서로',
+        text: '여러 장으로 찍은 계약서나 손으로 쓴 서류를 순서대로 놓고 한 장이 한 쪽인 PDF 하나로 만듭니다. A4를 고르면 인쇄하기 좋은 크기로 맞춰집니다.',
+      },
+      {
+        title: '그림·캡처를 제출용 PDF로',
+        text: '그림 과제, 화면 캡처, 디자인 시안처럼 이미지로 만든 결과물을 PDF로만 받는 곳에 낼 때 씁니다. "이미지에 맞춤"을 고르면 이미지 크기 그대로 한 쪽이 됩니다.',
+      },
+    ],
     howTo: [
       '"이미지 파일 선택" 버튼을 누르거나 PDF로 만들 이미지들을 화면으로 끌어다 놓습니다. 여러 장을 한 번에 고를 수 있고, "이미지 추가"로 더 넣을 수 있습니다.',
       '목록에서 줄을 끌거나 ↑ ↓ 버튼으로 순서를 정합니다. 위에서부터 한 장이 한 쪽이 됩니다. 넣지 않을 이미지는 × 버튼으로 뺍니다.',
@@ -32,6 +46,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Turn document photos into a PDF',
+        text: 'When you need to send a copy of an ID, a bank statement or a receipt as a PDF but have no scanner, take photos with your phone and convert them. Photo orientation is read, so pages are not sideways.',
+      },
+      {
+        title: 'Make one document from several shots',
+        text: 'Put photos of a multi-page contract or handwritten notes in order and turn them into one PDF, one image per page. Choose A4 or Letter to get a page size that prints well.',
+      },
+      {
+        title: 'Submit artwork or screenshots as PDF',
+        text: 'Use it when a class or client only accepts PDF but your work is in images, such as drawings, screenshots or design drafts. "Fit to image" makes each page the exact size of its image.',
+      },
+    ],
     howTo: [
       'Click "Choose image files" or drag the images you want onto the screen. You can pick several at once and add more with "Add images".',
       'Drag rows in the list or use the ↑ ↓ buttons to set the order. Each image becomes one page, from the top. Remove any image you do not want with the × button.',

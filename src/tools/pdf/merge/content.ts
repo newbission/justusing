@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '제출 서류를 한 파일로',
+        text: '주민등록등본, 재직증명서, 원천징수영수증처럼 따로 받은 PDF를 "한 파일로 내 주세요"라는 곳이 많습니다. 내라는 순서대로 맞춰 하나로 합치면 받는 사람도 보기 편합니다.',
+      },
+      {
+        title: '나눠 스캔한 문서를 한 부로',
+        text: '스캐너가 쪽마다 따로 저장했거나 여러 번에 나눠 스캔한 계약서를 원래 순서대로 이어 붙입니다. 잘못 들어간 빈 쪽이나 표지는 빼고 합칠 수 있습니다.',
+      },
+      {
+        title: '과제·포트폴리오 묶기',
+        text: '여러 파일로 만든 과제나 포트폴리오를 파일 하나로 제출해야 할 때 씁니다. 암호가 걸린 PDF도 암호를 넣으면 함께 합칠 수 있습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 합칠 PDF 파일들을 화면으로 끌어다 놓습니다. 여러 개를 한 번에 고를 수 있습니다.',
       '목록에서 순서를 확인합니다. 줄을 끌어서 옮기거나 ↑ ↓ 버튼으로 순서를 바꾸고, 잘못 넣은 파일은 × 로 뺍니다.',
@@ -29,6 +43,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'One file for an application',
+        text: 'Many places ask for all your documents, such as certificates, statements, and forms, in a single file. Put them in the order they ask for and merge them so the reader can go through them easily.',
+      },
+      {
+        title: 'Rejoin a document scanned in parts',
+        text: 'If your scanner saved each page separately, or you scanned a contract in several batches, join the parts back in the original order. You can leave out blank pages or cover sheets as you merge.',
+      },
+      {
+        title: 'Submit assignments or a portfolio',
+        text: 'Use it when work made in several files has to be handed in as one. Password-protected PDFs can be merged too once you enter the password.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF files" or drag the PDF files you want to merge onto the page. You can choose several at once.',
       'Check the order in the list. Drag a row or use the ↑ ↓ buttons to change the order, and remove a file you added by mistake with ×.',

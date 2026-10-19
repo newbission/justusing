@@ -1,9 +1,9 @@
 # 검색과 가이드 글 (seo-and-guides)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-17
+쓴 날 2026-10-16 · 고친 날 2026-10-18
 
 - 범위: 사이트맵·robots, `<head>` 검색 정보(설명·canonical·hreflang·Open Graph·소유 확인), 구조화 데이터(JSON-LD),
-  가이드 글(`/guide/`), 글 페이지(소개·이용약관·문의. 개인정보처리방침은 [광고와 통계](../ads-and-analytics/README.md))
+  가이드 글(`/guide/`), 글 페이지(소개·안전한 이유·이용약관·문의. 개인정보처리방침은 [광고와 통계](../ads-and-analytics/README.md))
 - 상태: live. 네이버 소유 확인(PR #6), 글 페이지(PR #10), 구조화 데이터(PR #16), 가이드 첫 6편(PR #37, 2026-10-15)
 - 관련 문서: [히스토리](./history.md), [사이트 구조](../site-structure/README.md), [다국어](../i18n/README.md),
   [`CLAUDE.md`](../../../CLAUDE.md)의 "가이드 글"·"글 페이지와 방문 통계"·"광고 심사 신청 전에 할 일"
@@ -33,37 +33,45 @@
 | `src/layouts/ToolLayout.astro`                                          | `WebApplication` (무료, `UtilitiesApplication`, 가격 0)                                                                                                                         |
 | `src/components/ToolFaq.astro`                                          | `FAQPage` (화면의 공통 FAQ + 도구 FAQ와 같은 내용). `<details>`라 JavaScript 없이 열린다                                                                                        |
 | `src/content.config.ts`                                                 | 가이드 모음 스키마: `title`, `description`, `tool`, `published`, `updated?`, `order`                                                                                            |
-| `src/content/guides/<언어>/<주소>.md`                                   | 가이드 글. 지금 dev에 13편 × 2언어                                                                                                                                              |
+| `src/content/guides/<언어>/<주소>.md`                                   | 가이드 글. 지금 dev에 22편 × 2언어                                                                                                                                              |
 | `src/guides.ts`                                                         | `guidesIn()`, `guideSlugs`, `guidePaths()`, `guidesForTool()`, 빌드 때 검사                                                                                                     |
 | `src/pages/guide/index.astro`, `[slug].astro` (+ `src/pages/en/guide/`) | 목록(카드 + 도구 아이콘), 글(위 도구 링크, 본문, 아래 도구 버튼·다른 글, `Article` 구조화 데이터, 작성/수정 날짜)                                                               |
 | `src/components/ToolGuides.astro`                                       | 도구 페이지의 "관련 가이드" (없으면 안 그림)                                                                                                                                    |
 | `src/layouts/DocLayout.astro`                                           | 글 페이지 틀 (위치 표시 → 제목 → 작은 글씨 → 배너 → 본문 → `after`)                                                                                                             |
 | `src/pages/about.astro`, `terms.astro`, `contact.astro` (+ `en/`)       | 소개(사이트명·만든 이유·처리 방식·live 도구 목록·무료), 약관(시행일), 문의(`contactEmail`)                                                                                      |
+| `src/pages/safety.astro` (+ `en/`)                                      | 안전한 이유: 보통 온라인 도구와 비교표, 서버 없이 처리하는 원리, 광고 격리, 개발자 도구로 직접 확인하는 법, 공개 코드(`sourceUrl`), 약속할 수 없는 것                           |
 | `src/components/Header.astro`, `Footer.astro`                           | 머리글·바닥글의 가이드 링크, 바닥글의 글 페이지 링크                                                                                                                            |
 | `public/og.png`                                                         | 링크 미리보기 그림 (`scripts/make-brand-images.mjs`가 만든다)                                                                                                                   |
 
 ### 가이드 글 목록 (`order` 순)
 
-| order | 주소                 | 도구                 |
-| ----- | -------------------- | -------------------- |
-| 1     | `compress-pdf`       | `pdf/compress`       |
-| 2     | `compress-image`     | `image/compress`     |
-| 3     | `resize-image`       | `image/resize`       |
-| 4     | `merge-pdf`          | `pdf/merge`          |
-| 5     | `pdf-to-jpg`         | `pdf/to-image`       |
-| 6     | `sign-pdf`           | `pdf/sign`           |
-| 7     | `convert-image`      | `image/convert`      |
-| 8     | `watermark-pdf`      | `pdf/watermark`      |
-| 9     | `header-footer-pdf`  | `pdf/header-footer`  |
-| 10    | `edit-pdf`           | `pdf/edit`           |
-| 11    | `n-up-pdf`           | `pdf/n-up`           |
-| 12    | `ocr-pdf`            | `pdf/ocr`            |
-| 13    | `redact-pdf`         | `pdf/redact`         |
-| 14    | `extract-images-pdf` | `pdf/extract-images` |
-| 15    | `fill-pdf-form`      | `pdf/fill-form`      |
-| 16    | `pdf-metadata`       | `pdf/metadata`       |
+| order | 주소                   | 도구                 |
+| ----- | ---------------------- | -------------------- |
+| 1     | `compress-pdf`         | `pdf/compress`       |
+| 2     | `compress-image`       | `image/compress`     |
+| 3     | `resize-image`         | `image/resize`       |
+| 4     | `merge-pdf`            | `pdf/merge`          |
+| 5     | `pdf-to-jpg`           | `pdf/to-image`       |
+| 6     | `sign-pdf`             | `pdf/sign`           |
+| 7     | `convert-image`        | `image/convert`      |
+| 8     | `watermark-pdf`        | `pdf/watermark`      |
+| 9     | `header-footer-pdf`    | `pdf/header-footer`  |
+| 10    | `edit-pdf`             | `pdf/edit`           |
+| 11    | `n-up-pdf`             | `pdf/n-up`           |
+| 12    | `ocr-pdf`              | `pdf/ocr`            |
+| 13    | `redact-pdf`           | `pdf/redact`         |
+| 14    | `extract-images-pdf`   | `pdf/extract-images` |
+| 15    | `fill-pdf-form`        | `pdf/fill-form`      |
+| 16    | `pdf-metadata`         | `pdf/metadata`       |
+| 17    | `photos-to-pdf`        | `pdf/from-image`     |
+| 18    | `protect-pdf`          | `pdf/protect`        |
+| 19    | `remove-pdf-password`  | `pdf/unlock`         |
+| 20    | `split-pdf`            | `pdf/split`          |
+| 21    | `organize-scanned-pdf` | `pdf/organize`       |
+| 22    | `crop-pdf-margins`     | `pdf/crop`           |
 
 2026-10-17 배포로 `redact-pdf`(가리기), `extract-images-pdf`(사진 꺼내기), `pdf-metadata`(문서 정보)가 더해졌다.
+2026-10-18(애드센스 첫 심사 거절 뒤) 가이드가 없던 도구 가운데 6개에 한국 상황의 쓰임새(휴대폰 사진 서류, 명세서 암호, 제출용 쪽 빼기 등)로 17~22번을 더했다.
 
 ### 빌드 때 검사 (`src/guides.ts`)
 
@@ -85,6 +93,9 @@
 - **글 페이지 문구는 지금 하는 일만**: 광고 스크립트가 이미 붙어 있는데 소개만 "광고로 운영비를 마련할 계획"이라고 해 현재형으로
   맞췄다(`d0e0fec`). "외부에서 불러오는 것은 없다"는 도구가 쓰는 프로그램에만 맞는 말이라(통계 스크립트는 외부에서 받음)
   소개의 설명을 고쳤다(`dbd1896`)
+- **안전한 이유 페이지** (2026-10-18, 애드센스 첫 심사 거절 뒤): 이미 많은 도구 사이트와 다른 점(파일을 올리지 않음)을
+  말로만 하지 않고 방문자가 직접 확인하게 한다. **"인터넷을 끊어도 된다"고 쓰지 않는다**: 도구 프로그램 일부를 쓸 때 받아 와
+  파일을 연 뒤 연결을 끊으면 합치기·압축·이미지로·이미지 압축이 모두 멈췄다(2026-10-18 Playwright `setOffline`으로 확인)
 
 ### 주의할 점
 
@@ -105,9 +116,9 @@
 - [x] 소개·방침·약관·문의 (한·영), 바닥글 링크, 사이트맵
 - [x] 가이드 모음·목록·글 페이지, 빌드 때 검사, 도구 페이지 관련 가이드, 머리글·바닥글 링크
 - [x] 가이드 16편 (2026-10-17 배포)
+- [x] 가이드 22편 (2026-10-18, 쓰임새 가이드 6편)
 - [x] 검색 등록: Google Search Console, 네이버 서치어드바이저 + 사이트맵 제출 (2026-10-13, 사용자가 직접)
-- [ ] 가이드가 없는 live 도구: 보기, 글자 추출, 나누기, 회전, 정리, 자르기, 이미지를 PDF로, 쪽 번호, 이미지 넣기,
-      암호 해제, 암호 걸기
+- [ ] 가이드가 없는 live 도구: 보기, 글자 추출, 회전, 쪽 번호, 이미지 넣기
 
 ## 4. 검증과 히스토리
 
@@ -125,7 +136,7 @@
   - 가이드 글의 `Article` 제목이 h1과 같고 날짜가 화면("2026년 10월 15일 작성")과 같다
   - 모든 가이드가 두 언어로 사이트맵에 있다
 - `tests/e2e/pages.spec.ts`
-  - 도구 페이지 바닥글에서 소개·방침·약관·문의로 간다
+  - 도구 페이지 바닥글에서 소개·안전한 이유·방침·약관·문의로 간다
   - 글 페이지가 모두 사이트맵에 있다
   - 문의 페이지와 방침의 메일 주소가 같다
   - `ads.txt`와 소유 확인 태그가 같은 AdSense 게시자를 가리킨다

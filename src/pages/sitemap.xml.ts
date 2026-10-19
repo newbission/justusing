@@ -14,6 +14,7 @@ export const GET: APIRoute = ({ site }) => {
     '/guide/',
     ...guideSlugs.map((slug) => `/guide/${slug}/`),
     '/about/',
+    '/safety/',
     '/privacy/',
     '/terms/',
     '/contact/',

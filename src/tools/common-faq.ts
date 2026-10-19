@@ -1,5 +1,5 @@
 /**
- * 모든 도구 페이지 FAQ 맨 앞에 붙는 공통 질문.
+ * 모든 도구 페이지 FAQ 뒤에 붙는 공통 질문 (도구마다 다른 질문이 먼저 보이게 뒤에 둔다).
  * 사이트의 핵심 약속(파일이 기기를 떠나지 않음)에 관한 것이라 도구마다 복사하지 않고 여기 한 곳에 둔다.
  * 답은 실제 구현과 어긋나지 않게 쓴다 (도구 격리: src/components/ToolFrame.astro, src/frame/FrameLayout.astro).
  */
@@ -14,7 +14,7 @@ export const COMMON_FAQ: Record<Locale, ToolContentText['faq']> = {
     },
     {
       q: '광고가 있어도 내 파일은 안전한가요?',
-      a: '네. 광고는 도구 화면 바깥에서만 동작합니다. 파일을 고르고 처리하는 도구 화면은 브라우저가 따로 떼어 놓은 격리 공간이라, 광고를 포함한 페이지의 다른 스크립트는 파일 내용이나 파일 이름을 읽을 수 없습니다. 도구 화면 안에서는 외부로 아무것도 보낼 수 없도록 막혀 있습니다. 파일을 페이지로 끌어오면 도구 화면이 화면 전체로 넓어져 격리된 공간에서 파일을 받습니다.',
+      a: '네. 광고는 도구 화면 바깥에서만 동작합니다. 파일을 고르고 처리하는 도구 화면은 브라우저가 따로 떼어 놓은 격리 공간이라, 광고를 포함한 페이지의 다른 스크립트는 파일 내용이나 파일 이름을 읽을 수 없습니다. 도구 화면 안에서는 이 사이트 말고 다른 곳으로 연결할 수 없도록 막혀 있습니다. 파일을 페이지로 끌어오면 도구 화면이 화면 전체로 넓어져 격리된 공간에서 파일을 받습니다.',
     },
   ],
   en: [
@@ -24,7 +24,7 @@ export const COMMON_FAQ: Record<Locale, ToolContentText['faq']> = {
     },
     {
       q: 'Are my files safe even with ads on the page?',
-      a: 'Yes. Ads only run outside the tool area. The tool area, where you choose and process files, is an isolated space your browser keeps separate, so other scripts on the page, including ads, cannot read your file content or file names. Nothing inside the tool area can be sent out. When you drag a file onto the page, the tool area expands to fill the screen so the isolated space receives the file.',
+      a: 'Yes. Ads only run outside the tool area. The tool area, where you choose and process files, is an isolated space your browser keeps separate, so other scripts on the page, including ads, cannot read your file content or file names. The tool area is blocked from connecting anywhere other than this site. When you drag a file onto the page, the tool area expands to fill the screen so the isolated space receives the file.',
     },
   ],
 };

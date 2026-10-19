@@ -4,8 +4,8 @@
  *
  * - 도구 frame(파일을 다루는 곳)의 요청: 우리 사이트로 가는 GET뿐이고 본문이 없어야 한다.
  * - 바깥 페이지의 요청: 위와 같거나, 방문 통계·광고 주소로만 갈 수 있다.
- *   그 요청의 주소와 본문에는 테스트 파일의 이름도, 파일 형식의 첫머리(PDF·이미지·글꼴)도,
- *   테스트 파일 내용의 일부(base64)도 없어야 한다.
+ * - 모든 요청의 주소와 본문에는 테스트 파일의 이름도, 파일 형식의 첫머리(PDF·이미지·글꼴)도,
+ *   테스트 파일 내용의 일부(base64)도 없어야 한다. 우리 사이트로 가는 GET도 주소에 실어 보낼 수 있다.
  */
 import { expect, type Page, type Request } from '@playwright/test';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -39,7 +39,7 @@ const FILE_MARKS = [
 const fixturesDir = fileURLToPath(new URL('../fixtures/', import.meta.url));
 const fixtures = readdirSync(fixturesDir).filter((name) => !name.endsWith('.py'));
 
-/** 테스트 파일 이름 (확장자 포함, PDF는 확장자를 뗀 이름도). 통계 요청에 나오면 안 된다. */
+/** 테스트 파일 이름 (확장자 포함, PDF는 확장자를 뗀 이름도). 어느 요청에도 나오면 안 된다. */
 const fileNames = fixtures.flatMap((name) =>
   name.endsWith('.pdf') ? [name, name.replace(/\.pdf$/, '')] : [name],
 );
@@ -56,6 +56,9 @@ const contentMarks = fixtures.flatMap((name) => {
   );
 });
 
+/** 어느 요청의 주소·본문에도 나오면 안 되는 것 */
+const MARKS = [...fileNames, ...FILE_MARKS, ...contentMarks];
+
 /** 기록한 요청에 파일이 기기 밖으로 나갈 만한 것이 없는지 확인한다 */
 export function expectLocalOnly(page: Page, requests: Request[], baseURL: string) {
   const origin = new URL(baseURL).origin;
@@ -63,15 +66,14 @@ export function expectLocalOnly(page: Page, requests: Request[], baseURL: string
     const url = new URL(request.url());
     if (url.protocol === 'blob:' || url.protocol === 'data:') continue;
 
+    // 본문뿐 아니라 주소(경로·쿼리)에 실어 보내는 것도 막는다
+    const sent = `${decodeURIComponent(url.href)}\n${request.postData() ?? ''}`;
+    // 요청이 많아 하나씩 expect로 대조하면 느리다. 찾은 것만 expect로 실패를 알린다
+    const found = MARKS.find((text) => sent.includes(text));
+    if (found) expect(sent, request.url()).not.toContain(found);
+
     const fromOuterPage = request.frame() === page.mainFrame();
-    if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) {
-      // 본문뿐 아니라 주소(경로·쿼리)에 실어 보내는 것도 막는다
-      const sent = `${decodeURIComponent(url.href)}\n${request.postData() ?? ''}`;
-      for (const text of [...fileNames, ...FILE_MARKS, ...contentMarks]) {
-        expect(sent, request.url()).not.toContain(text);
-      }
-      continue;
-    }
+    if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
 
     expect(url.origin, request.url()).toBe(origin);
     expect(request.method(), request.url()).toBe('GET');

@@ -3,13 +3,14 @@
  * 모든 도구 페이지를 만드는 라우트. 레지스트리의 live 도구마다 /<카테고리>/<이름>/ 페이지를 하나씩 만든다.
  *
  * 도구 화면은 격리 iframe(/<카테고리>/<이름>/frame/)으로 띄우고,
- * 그 아래 사용법·FAQ·관련 가이드·관련 도구는 content.ts·meta.ts·가이드 글에서 그린다.
+ * 그 아래 쓰임새·사용법·FAQ·관련 가이드·관련 도구는 content.ts·meta.ts·가이드 글에서 그린다.
  */
 import type { GetStaticPaths } from 'astro';
 import { toolPaths } from '../../tools/paths';
 import ToolLayout from '../../layouts/ToolLayout.astro';
 import ToolFrame from '../../components/ToolFrame.astro';
 import ToolHowTo from '../../components/ToolHowTo.astro';
+import ToolUses from '../../components/ToolUses.astro';
 import ToolFaq from '../../components/ToolFaq.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import ToolGuides from '../../components/ToolGuides.astro';
@@ -56,8 +57,11 @@ const siblings = toolsInCategory(tool.category).map((other) => ({
   {siblings}
 >
   <ToolFrame slot="tool" src={`${href}frame/`} title={t.tool.frameTitle(text.name)} />
-  <ToolHowTo slot="how-to" name={text.name} steps={content.howTo} />
-  <ToolFaq slot="faq" items={[...COMMON_FAQ[locale], ...content.faq]} />
+  <Fragment slot="how-to">
+    <ToolUses name={text.name} items={content.uses} />
+    <ToolHowTo name={text.name} steps={content.howTo} />
+  </Fragment>
+  <ToolFaq slot="faq" items={[...content.faq, ...COMMON_FAQ[locale]]} />
   <Fragment slot="related">
     <ToolGuides toolId={tool.id} />
     <RelatedTools ids={tool.related ?? []} />

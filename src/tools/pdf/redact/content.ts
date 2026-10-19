@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '주민등록번호 뒷자리 가리기',
+        text: '등본이나 가족관계증명서를 낼 때 주민등록번호 뒷자리를 가려 달라는 곳이 많습니다. 검은 상자로 가린 글자는 파일에서 지워져 복사하거나 검색해도 나오지 않습니다.',
+      },
+      {
+        title: '공개할 문서에서 이름 지우기',
+        text: '회의록이나 민원 답변처럼 밖에 공개할 문서에서 사람 이름·전화번호를 지웁니다. 글자로 된 PDF라면 여러 번 나오는 이름을 "찾아서 가리기"로 모든 쪽에서 한 번에 찾습니다.',
+      },
+      {
+        title: '거래 내역 일부만 보여 주기',
+        text: '통장 거래 내역서를 낼 때 필요한 줄만 남기고 잔액이나 다른 거래는 가립니다. 가린 쪽은 그림으로 바뀌어 그 쪽의 글자는 고르거나 찾을 수 없게 됩니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 가릴 PDF를 화면으로 끌어다 놓습니다.',
       '쪽 위에서 가릴 곳을 끌어 검은 상자를 그립니다. ‹ › 버튼으로 쪽을 넘깁니다.',
@@ -33,6 +47,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Hide ID numbers',
+        text: 'When a form asks for a copy of a certificate with part of the ID number hidden, black it out here. Covered text is removed from the file, so it cannot be copied or found by search.',
+      },
+      {
+        title: 'Remove names before publishing',
+        text: 'Take names and phone numbers out of minutes or replies that will be made public. In a text-based PDF, "Find and redact" finds a name that appears many times on every page at once.',
+      },
+      {
+        title: 'Share only part of a statement',
+        text: 'Keep the lines that matter on a bank statement and black out the balance and other transactions. Redacted pages become images, so their text can no longer be selected or searched.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to redact onto the screen.',
       'Drag on the page to draw black boxes over what you want to remove. Use the ‹ › buttons to change pages.',

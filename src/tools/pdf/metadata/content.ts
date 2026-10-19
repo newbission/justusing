@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '밖으로 보내기 전 작성자 지우기',
+        text: '회사에서 만든 견적서·제안서에는 작성자 이름, 회사 이름, 쓴 프로그램이 숨어 있는 경우가 많습니다. "문서 정보 모두 지우기"로 지우면 본문에 없는 정보가 함께 나가지 않습니다.',
+      },
+      {
+        title: '홈페이지에 올릴 PDF 제목 정리',
+        text: '안내문·공지 PDF를 홈페이지에 올리면 브라우저 탭이나 검색 결과에 문서 제목이 보이기도 합니다. 예전 파일 이름이나 엉뚱한 제목 대신 알맞은 제목을 적어 둡니다.',
+      },
+      {
+        title: '사진 속 촬영 위치 지우기',
+        text: '휴대폰 사진을 넣어 만든 PDF에는 JPEG 사진마다 촬영 위치·날짜가 남아 있을 수 있습니다. 중고 거래나 민원 첨부처럼 남에게 보내는 PDF라면 모두 지우고 보냅니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 PDF를 화면으로 끌어다 놓습니다.',
       '제목·작성자·주제·키워드 칸에 지금 적힌 정보가 나옵니다. 바꿀 것을 고칩니다. 칸을 비우면 그 정보를 지웁니다.',
@@ -40,6 +54,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Remove the author before sending',
+        text: 'Quotes and proposals made at work often carry the author name, company name and apps used. "Remove all document info" clears them so details that are not in the text do not go out with the file.',
+      },
+      {
+        title: 'Give a published PDF a proper title',
+        text: 'When you post a PDF on a website, its title may appear in the browser tab or in search results. Replace an old file name or a wrong title with one that fits.',
+      },
+      {
+        title: 'Clear photo locations',
+        text: 'A PDF made from phone photos may still hold the location and date of each JPEG photo. Remove them before sending the PDF to people you do not know.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag a PDF onto the screen.',
       'The current title, author, subject and keywords appear in the fields. Edit what you want to change. Leave a field empty to remove it.',

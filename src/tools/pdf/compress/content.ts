@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '첨부 용량 제한에 맞추기',
+        text: '입사 지원서나 관공서 민원처럼 "10MB 이하"로 올리라는 곳에 스캔한 PDF가 너무 클 때 씁니다. 줄인 뒤 원래 크기와 줄어든 크기를 바로 비교해 볼 수 있습니다.',
+      },
+      {
+        title: '메일로 보내기 좋게',
+        text: '사진이 많이 든 보고서나 제안서가 메일 첨부 한도를 넘을 때 줄여서 보냅니다. 글자는 그대로 두고 사진만 다시 저장하므로 본문 글자는 흐려지지 않습니다.',
+      },
+      {
+        title: '휴대폰으로 찍어 만든 PDF 줄이기',
+        text: '휴대폰 사진으로 만든 PDF는 쪽마다 사진이 커서 용량이 금방 불어납니다. "보통"으로 줄이면 보기에는 큰 차이 없이 파일이 가벼워지는 경우가 많습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 줄일 PDF를 화면으로 끌어다 놓습니다.',
       '줄이는 정도를 고릅니다. 잘 모르겠으면 "보통"을 고르세요.',
@@ -28,6 +42,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Meet an upload size limit',
+        text: 'When a job application or online form says "max 10 MB" and your scanned PDF is too big, shrink it here. You see the old and new sizes side by side.',
+      },
+      {
+        title: 'Make it small enough to email',
+        text: 'Shrink a report or proposal full of photos when it goes over the attachment limit. Only the photos are re-saved, so the text stays sharp.',
+      },
+      {
+        title: 'Slim down a PDF made from phone photos',
+        text: 'PDFs built from phone photos grow quickly because every page is a large picture. "Balanced" often makes them much lighter with little visible difference.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to shrink onto the screen.',
       'Choose how much to shrink. If you are not sure, choose "Balanced".',

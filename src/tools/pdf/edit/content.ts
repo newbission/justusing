@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '틀린 날짜·오타 고쳐 쓰기',
+        text: '안내문이나 견적서의 날짜·오타를 "흰색으로 가리기"로 덮고 그 위에 "글자 넣기"로 고쳐 씁니다. 아래 글자는 파일에 남으므로 보이는 모습만 고치는 방법입니다.',
+      },
+      {
+        title: '인쇄용 서류 빈칸에 적기',
+        text: '입력 칸 없이 인쇄용으로 만든 신청서나 확인서에 이름·날짜를 원하는 자리에 적어 넣습니다. 한글 글꼴을 골라 쓸 수 있어 손으로 써서 스캔하지 않아도 됩니다.',
+      },
+      {
+        title: '봐야 할 곳에 형광펜',
+        text: '계약서나 자료를 넘길 때 꼭 읽어야 할 조항에 "형광펜"을 칠해 두면 받는 사람이 바로 찾습니다. 옆에 "글자 넣기"로 짧은 메모를 붙일 수도 있습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 고칠 PDF를 화면으로 끌어다 놓습니다.',
       '위의 도구에서 "글자 넣기"를 고르고 쪽 위의 넣을 자리를 누른 뒤, 아래 칸에 글자를 적습니다. 처음이면 아래 글꼴 목록에서 글꼴을 받습니다.',
@@ -33,6 +47,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Fix a wrong date or typo',
+        text: 'Cover the wrong date or typo with "White out" and write the correction on top with "Add text". The text underneath stays in the file, so this only changes how the page looks.',
+      },
+      {
+        title: 'Fill in a print-only form',
+        text: 'Type your name or a date anywhere on an application made only for printing, with no fields. No need to print it, write by hand and scan it back.',
+      },
+      {
+        title: 'Highlight what matters',
+        text: 'Mark the clauses someone must read in a contract or handout with "Highlight" so they find them right away. You can add a short note next to them with "Add text".',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to edit onto the screen.',
       'Choose "Add text" above, click where the text should go, and type it in the box below. The first time, download a font from the list below.',

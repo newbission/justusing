@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '내려받은 신청서 바로 작성',
+        text: '관공서·학교·은행 홈페이지에서 받은 신청서 PDF에 입력 칸이 있다면 인쇄하지 않고 칸에 바로 적어 저장합니다. 한글은 글꼴을 골라 적으면 됩니다.',
+      },
+      {
+        title: '체크할 곳이 많은 동의서',
+        text: '체크 상자와 선택 상자가 많은 동의서·설문지를 화면에서 눌러 고르고 저장합니다. 손으로 표시한 뒤 다시 스캔하지 않아도 됩니다.',
+      },
+      {
+        title: '고칠 수 없게 굳혀서 제출',
+        text: '계약서나 제출 서류에 적은 내용을 받는 사람이 바꾸지 못하게 하려면 "칸을 글자로 굳히기"를 켭니다. 어느 프로그램에서 열어도 똑같이 보입니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 입력 칸이 있는 PDF를 화면으로 끌어다 놓습니다.',
       '쪽 위의 입력 칸(연한 초록 칸)을 눌러 글자를 적거나, 체크 상자·선택 상자를 고릅니다. ‹ › 버튼으로 쪽을 넘깁니다.',
@@ -33,6 +47,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Fill in a downloaded application',
+        text: 'If an application PDF from a government office, school or bank has form fields, type straight into them and save, with no printing.',
+      },
+      {
+        title: 'Consent forms full of checkboxes',
+        text: 'Tick checkboxes and pick options on consent forms and surveys right on screen, then save. No need to mark them by hand and scan them again.',
+      },
+      {
+        title: 'Lock your answers before sending',
+        text: 'Turn on "Flatten fields into text" so the recipient cannot change what you entered in a contract or submission. It also looks the same in every app.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag a PDF with form fields onto the screen.',
       'Click a field on the page (shaded light green) to type, or tick checkboxes and pick options. Use the ‹ › buttons to change pages.',

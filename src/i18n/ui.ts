@@ -25,6 +25,7 @@ const ko = {
     localNote: '모든 파일은 브라우저 안에서만 처리되며 서버로 업로드되지 않습니다.',
     siteInfo: '사이트 정보',
     about: '소개',
+    safety: '파일이 안전한 이유',
     privacy: '개인정보처리방침',
     terms: '이용약관',
     contact: '문의',
@@ -32,6 +33,7 @@ const ko = {
   tool: {
     localNote:
       '파일은 이 기기를 떠나지 않습니다. 모든 처리는 브라우저 안에서 이루어지며 서버로 업로드되지 않습니다.',
+    uses: (name: string) => `${name}, 이럴 때 쓰세요`,
     howTo: (name: string) => `${name} 사용법`,
     faq: '자주 묻는 질문',
     related: '관련 도구',
@@ -106,7 +108,8 @@ const ko = {
     cannotSeeThrough: '벽 너머를 볼 수 없음',
     adsTitle: '광고는 내 파일을 볼 수 없습니다',
     adsText:
-      '파일을 다루는 도구 화면은 브라우저가 따로 떼어 놓은 잠긴 방입니다. 바깥의 광고는 방 안을 들여다볼 수 없고, 방 안에서도 밖으로 아무것도 보낼 수 없습니다.',
+      '파일을 다루는 도구 화면은 브라우저가 따로 떼어 놓은 잠긴 방입니다. 바깥의 광고는 방 안을 들여다볼 수 없고, 방 안에서는 이 사이트 말고 다른 곳으로 연결할 수 없습니다.',
+    more: '직접 확인하는 법 보기',
   },
 };
 
@@ -131,6 +134,7 @@ const en: Ui = {
     localNote: 'Every file is processed inside your browser and never uploaded to a server.',
     siteInfo: 'Site information',
     about: 'About',
+    safety: 'Why your files are safe',
     privacy: 'Privacy Policy',
     terms: 'Terms of Use',
     contact: 'Contact',
@@ -138,6 +142,7 @@ const en: Ui = {
   tool: {
     localNote:
       'Your files never leave this device. Everything is processed inside your browser and nothing is uploaded to a server.',
+    uses: (name: string) => `When to use ${name}`,
     howTo: (name: string) => `How to use the ${name} tool`,
     faq: 'Frequently asked questions',
     related: 'Related tools',
@@ -213,7 +218,8 @@ const en: Ui = {
     cannotSeeThrough: 'Cannot see through the wall',
     adsTitle: 'Ads cannot see your files',
     adsText:
-      'The tool area that handles your files is a locked room that your browser keeps separate. Ads outside cannot look in, and nothing inside can be sent out.',
+      'The tool area that handles your files is a locked room that your browser keeps separate. Ads outside cannot look in, and the room cannot connect anywhere other than this site.',
+    more: 'See how to check it yourself',
   },
 };
 

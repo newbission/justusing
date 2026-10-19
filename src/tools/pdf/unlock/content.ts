@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '매번 묻는 암호 없애기',
+        text: '급여명세서나 카드 명세서처럼 열 때마다 암호를 묻는 PDF를, 암호를 한 번 넣어 암호 없는 파일로 저장해 둡니다. 암호를 모르는 파일은 풀 수 없습니다.',
+      },
+      {
+        title: '인쇄·복사 제한 풀기',
+        text: '내가 받은 안내 자료가 인쇄나 글자 복사를 막아 두어 쓰기 불편할 때, 열 때 암호를 묻지 않는 PDF라면 암호 없이 제한을 풉니다. 다룰 권리가 있는 파일에만 쓰세요.',
+      },
+      {
+        title: '다른 도구로 다루기 전에',
+        text: '암호가 걸린 PDF를 다른 프로그램에 올리거나 다른 사람과 나눌 때 암호를 따로 알려 주기 번거롭다면 먼저 풀어 둡니다. 내용과 화질은 그대로입니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 암호를 풀 PDF를 화면으로 끌어다 놓습니다.',
       '암호를 묻는 PDF면 암호를 입력하고 "열기"를 누릅니다. 인쇄·복사 제한만 걸린 PDF는 암호 없이 바로 열립니다.',
@@ -28,6 +42,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Stop typing the password every time',
+        text: 'Pay slips and card statements often ask for a password each time you open them. Enter it once and save a copy without a password. A password you do not know cannot be removed.',
+      },
+      {
+        title: 'Remove print and copy restrictions',
+        text: 'If a PDF you received blocks printing or copying text but opens without a password, remove those restrictions. Only use it on files you have the right to handle.',
+      },
+      {
+        title: 'Before sharing or further editing',
+        text: 'Unlock a protected PDF before sending it to someone or opening it in another program, so you do not have to pass the password along. Content and quality stay the same.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to unlock onto the screen.',
       'If the PDF asks for a password, enter it and click "Open". A PDF that only restricts printing or copying opens without a password.',

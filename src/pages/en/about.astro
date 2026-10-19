@@ -35,10 +35,13 @@ import { liveTools } from '../../tools/registry';
     </li>
     <li>
       The tool area, where you choose and process files, runs in an isolated space your browser
-      keeps separate. Other scripts on the page cannot read your file content or file names, and
-      nothing inside the tool area can be sent out.
+      keeps separate. Other scripts on the page cannot read your file content or file names, and the
+      tool area cannot connect anywhere other than this site.
     </li>
-    <li>You can check this yourself in the Network tab of your browser's developer tools.</li>
+    <li>
+      You can check this yourself in the Network tab of your browser's developer tools.
+      <a href={localizePath('/safety/', 'en')}>See how</a>
+    </li>
   </ul>
 
   <h2>Tools you can use now</h2>

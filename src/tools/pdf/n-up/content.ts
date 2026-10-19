@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '강의 자료 아껴 인쇄하기',
+        text: '수업 슬라이드 PDF를 한 장에 4쪽·6쪽씩 모아 인쇄하면 종이를 크게 줄일 수 있습니다. 시험공부용 요약 자료를 뽑을 때도 좋습니다.',
+      },
+      {
+        title: '모아찍은 유인물을 파일로 보내기',
+        text: '프린터의 "한 면에 여러 쪽" 설정과 달리 결과가 PDF로 남습니다. 모아찍은 유인물을 학생이나 동료에게 파일로 그대로 보낼 수 있습니다.',
+      },
+      {
+        title: '전체 흐름을 한눈에 보기',
+        text: '발표 자료나 시안을 한 장에 9쪽씩 모으면 전체 구성을 한눈에 훑어볼 수 있습니다. 쪽을 그림으로 바꾸지 않아 확대하면 글자가 선명합니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 모아찍을 PDF를 화면으로 끌어다 놓습니다.',
       '한 장에 넣을 쪽 수(2쪽·4쪽·6쪽·9쪽)와 종이(A4·Letter)를 고릅니다. 쪽마다 테두리 선을 넣을 수도 있습니다.',
@@ -36,6 +50,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Print lecture slides on less paper',
+        text: 'Put 4 or 6 slides on each sheet before printing to use far less paper. It also works well for printing study notes before an exam.',
+      },
+      {
+        title: 'Share handouts as a PDF',
+        text: 'Unlike the "pages per sheet" printer setting, you get a PDF, so you can send the same handout to students or colleagues as a file.',
+      },
+      {
+        title: 'See the whole deck at a glance',
+        text: 'Put 9 pages on a sheet to review the structure of a presentation or a set of drafts at a glance. Pages are not turned into images, so text stays sharp when you zoom in.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF onto the screen.',
       'Choose how many pages go on each sheet (2, 4, 6 or 9) and the paper size (A4 or Letter). You can also add a border around each page.',

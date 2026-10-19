@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '대외비·사내 문서 표시',
+        text: '외부에 돌면 안 되는 회의 자료나 사업 계획서의 모든 쪽에 "대외비"를 넣어 둡니다. 출력하거나 캡처해도 문서 성격이 함께 보입니다.',
+      },
+      {
+        title: '신분증 사본에 용도 적기',
+        text: '신분증이나 통장 사본을 낼 때 "○○ 제출용"처럼 용도를 적어 두면 다른 곳에 함부로 쓰이기 어렵습니다. "쪽 전체에 반복"으로 넣으면 지우기도 번거로워집니다.',
+      },
+      {
+        title: '초안·사본 구분',
+        text: '검토 중인 계약서나 견적서에 "초안", "사본"을 넣어 최종본과 헷갈리지 않게 합니다. 연한 진하기를 고르면 본문을 읽는 데 방해가 적습니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 워터마크를 넣을 PDF를 화면으로 끌어다 놓습니다.',
       '"넣을 글자"에 워터마크 글자를 적습니다. 예: 대외비, 사본, 회사 이름.',
@@ -33,6 +47,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Mark documents as confidential',
+        text: 'Put CONFIDENTIAL on every page of internal plans or meeting notes that should not leave the team. The label stays visible even if pages are printed or screenshotted.',
+      },
+      {
+        title: 'Label ID copies with their purpose',
+        text: 'When sending a copy of your ID or a bank statement, add text such as "For rental application only" so it is harder to reuse elsewhere. Repeating it across the page makes it more tedious to remove.',
+      },
+      {
+        title: 'Tell drafts from final versions',
+        text: 'Add DRAFT or COPY to a contract or quote under review so nobody mistakes it for the final version. A light opacity keeps the text easy to read.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to watermark onto the screen.',
       'Type your watermark in "Watermark text", such as CONFIDENTIAL, COPY or your company name.',

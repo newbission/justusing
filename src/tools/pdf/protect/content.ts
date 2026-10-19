@@ -2,6 +2,20 @@ import { defineContent } from '../../types';
 
 export default defineContent({
   ko: {
+    uses: [
+      {
+        title: '개인정보가 담긴 서류 보내기',
+        text: '주민등록번호나 계좌번호가 적힌 서류를 메일로 보낼 때 열기 암호를 걸어 둡니다. 암호는 메일과 따로 문자나 전화로 알려 주면 더 안전합니다.',
+      },
+      {
+        title: '급여명세서·인사 자료 공유',
+        text: '급여나 평가처럼 아무나 보면 안 되는 회사 문서를 공유 폴더나 메신저에 올리기 전에 암호를 걸어, 암호를 아는 사람만 열게 합니다.',
+      },
+      {
+        title: '예전 암호 바꾸기',
+        text: '이미 암호가 걸린 PDF를 지금 암호로 연 뒤 새 암호를 걸어 저장합니다. 담당자가 바뀌어 예전 암호를 더 쓰지 않을 때 씁니다.',
+      },
+    ],
     howTo: [
       '"PDF 파일 선택" 버튼을 누르거나 암호를 걸 PDF를 화면으로 끌어다 놓습니다.',
       '"새 암호"와 "암호 확인"에 같은 암호를 입력합니다.',
@@ -28,6 +42,20 @@ export default defineContent({
     ],
   },
   en: {
+    uses: [
+      {
+        title: 'Email a document with personal details',
+        text: 'Add an open password before emailing a document that shows ID or account numbers. Sharing the password separately, by text or phone, keeps it safer.',
+      },
+      {
+        title: 'Share payroll or HR files',
+        text: 'Before putting pay slips, reviews or other confidential files in a shared folder or chat, add a password so only people who know it can open them.',
+      },
+      {
+        title: 'Change an old password',
+        text: 'Open a protected PDF with its current password and save it with a new one. Useful when the old password has been shared too widely.',
+      },
+    ],
     howTo: [
       'Click "Choose PDF file" or drag the PDF you want to protect onto the screen.',
       'Enter the same password in "New password" and "Confirm password".',
