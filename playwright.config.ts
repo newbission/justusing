@@ -21,6 +21,8 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}`,
     channel: process.env.PLAYWRIGHT_CHANNEL,
+    // CI에서만 가끔 실패하는 테스트를 살피려고, 실패한 테스트의 기록(화면·요청·콘솔)을 남긴다
+    trace: process.env.CI ? 'retain-on-failure' : 'off',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
