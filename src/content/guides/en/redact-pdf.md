@@ -3,7 +3,7 @@ title: How to redact a PDF, and why black boxes are not enough
 description: Drawing a black rectangle over names, ID numbers or phone numbers in a PDF leaves the text underneath in the file. How to remove covered text for good, and how to check it.
 tool: pdf/redact
 published: 2026-10-15
-updated: 2026-10-16
+updated: 2026-10-19
 order: 13
 ---
 
@@ -18,6 +18,10 @@ Before sending a document, you often need to hide an ID number or an account num
 3. Drag on the page to draw black boxes. Use the ‹ › buttons to change pages.
 4. For words that appear many times, such as a name, type them in "Find and redact" and click "Redact all matches".
 5. Click "Redact and save", then "Download".
+
+![Contact details in a sample report. The original on the left shows the phone, ID and bank account numbers; in the redacted result on the right those three are painted over with black boxes](../../../assets/guides/en/redact-pdf/before-after.png)
+
+This is a real result: the phone, ID and bank account numbers in a sample report hidden with "Find and redact". Found text is covered with a little extra room on each side, because when the exact letter widths are unknown it is safer to cover too much than too little (the end of "Bank" on the account line was covered too).
 
 ## Always check afterwards
 

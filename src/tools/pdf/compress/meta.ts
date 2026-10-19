@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/from-image', 'pdf/split'],
+  flow: { from: { kind: 'pdf', mark: 'image' }, to: { kind: 'pdf', mark: 'image', small: true } },
 });

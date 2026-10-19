@@ -17,4 +17,5 @@ export default defineTool({
     },
   },
   related: ['pdf/organize', 'pdf/view'],
+  flow: { from: { kind: 'pdf' }, to: { kind: 'pdf', mark: 'rotate' } },
 });

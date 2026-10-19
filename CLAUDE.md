@@ -25,6 +25,7 @@ npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크�
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
 python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow, 먼저 npm install)
+PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
 ```
 
 개발 서버에서 `/_dev/layout/` 주소로 도구 페이지 틀과 광고 슬롯 위치를 볼 수 있다 (배포에는 없음).
@@ -99,6 +100,7 @@ python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 
    - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, title, description } }, related })`
      - `section`: 카테고리 안의 묶음 (`categories.ts`의 `sections` 키). 목록 페이지·홈이 묶음별 소제목으로 나눠 보여준다
      - `icon`: 목록 카드 아이콘. 24×24 칸에 선으로 그린 SVG path의 `d` 값들. 다른 도구와 한눈에 구분되게 그린다
+     - `flow`: 제목 아래 '넣는 것 → 나오는 것' 그림 (`ToolFlow`). 종이 종류·장수·종이 위 표시(`mark`)만 적는다 (2026-10-19)
    - `content.ts`: `defineContent({ ko: { uses: [{ title, text }], howTo: [...], faq: [{ q, a }] } })` — live 도구는 필수
      - `uses`: '이럴 때 쓰세요' 실제 상황 3개 (도구마다 다른 내용, 실제로 하는 일만). 페이지가 판에 박혀 보이지 않게 한다 (2026-10-18)
        (업로드 여부·광고 안전성 같은 모든 도구 공통 질문은 `src/tools/common-faq.ts`에 있고 자동으로 붙는다)
@@ -175,6 +177,10 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   도구의 버튼·동작을 바꾸면 그 도구의 가이드도 고친다
 - 실제 동작과 어긋나는 내용을 쓰지 않는다 (줄어드는 정도·지원 형식 등). 광고 심사의 '가치 있는 콘텐츠'가 목적이라
   도구 사용법을 늘여 쓰지 말고 원리·고르는 법·문제 해결처럼 읽을 거리를 담는다
+- 그림 (2026-10-19): 글 하나에 1~2장, 가볍게. 꾸미는 그림·사진 자료는 쓰지 않고 **우리 도구로 견본을 처리한 실제 결과**나
+  원리를 보여 주는 단순한 그림만 쓴다. `src/assets/guides/<언어>/<주소>/`에 두고 마크다운에서 상대 경로로 부른다
+  (빌드가 WebP로 바꾸고 크기를 적는다). 실제 결과 그림은 `scripts/guide-images/`(도구 실행 → 그리기)로 다시 만든다.
+  화면 문구는 그림에 넣지 않고 글로 쓰며, 그림을 설명하는 alt를 언어마다 쓴다. 휴대폰 폭에서 그림 속 글자가 읽히는지 본다
 
 ### 글 페이지와 방문 통계
 

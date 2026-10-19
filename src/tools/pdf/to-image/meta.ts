@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/extract-images', 'pdf/from-image', 'pdf/split'],
+  flow: { from: { kind: 'pdf', count: 3 }, to: { kind: 'jpg', count: 3 } },
 });

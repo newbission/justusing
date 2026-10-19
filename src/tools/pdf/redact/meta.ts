@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/edit', 'pdf/protect'],
+  flow: { from: { kind: 'pdf' }, to: { kind: 'pdf', mark: 'redact' } },
 });

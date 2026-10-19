@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['image/resize', 'pdf/compress'],
+  flow: { from: { kind: 'jpg' }, to: { kind: 'jpg', small: true } },
 });

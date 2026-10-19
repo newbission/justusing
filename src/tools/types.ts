@@ -31,7 +31,42 @@ export interface ToolMeta {
   icon: string[];
   /** 관련 도구 ID 목록 (예: ['pdf/split']) */
   related?: string[];
+  /** 제목 아래 '넣는 것 → 나오는 것' 작은 그림 (ToolFlow). 없으면 그리지 않는다 */
+  flow?: { from: FlowDoc; to: FlowDoc };
 }
+
+/** 그림 속 종이 한 묶음 */
+export interface FlowDoc {
+  /** 종이 아래 꼬리표 */
+  kind: 'pdf' | 'jpg' | 'png' | 'txt' | 'zip';
+  /** 겹친 장수 (1~3, 기본 1) */
+  count?: number;
+  /** 종이 위 그림 (기본: 글 줄) */
+  mark?: FlowMark;
+  /** 작게 그린다 (압축·크기 조절 결과) */
+  small?: boolean;
+}
+
+export type FlowMark =
+  | 'lines'
+  | 'photo'
+  | 'scan'
+  | 'text'
+  | 'rotate'
+  | 'grid'
+  | 'crop'
+  | 'number'
+  | 'watermark'
+  | 'header'
+  | 'image'
+  | 'sign'
+  | 'lock'
+  | 'unlock'
+  | 'info'
+  | 'redact'
+  | 'edit'
+  | 'form'
+  | 'order';
 
 export function defineTool(meta: ToolMeta): ToolMeta {
   return meta;

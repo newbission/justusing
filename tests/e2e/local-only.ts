@@ -8,6 +8,9 @@
  *   테스트 파일 내용의 일부(base64)도 없어야 한다. 우리 사이트로 가는 GET도 주소에 실어 보낼 수 있다.
  *   예외: '예시 파일로 해 보기'가 받는 우리 견본 파일 주소 그대로 (쿼리 없음, public/samples/에 있는 파일만).
  *   견본 이름(sample-photo.jpg 등)에 테스트 파일 이름이 들어 있을 수 있어서다.
+ *   빌드한 사이트에 실제로 있는 페이지 주소도 뺀다. 가이드 주소(/guide/photos-to-pdf/)에 테스트 파일 이름이
+ *   들어 있고, 그 주소로 옮겨 가는 요청과 방문 통계가 보내는 페이지 주소에 실린다.
+ *   (본 요청에서 모으지 않는다. 도구가 파일 이름을 주소에 넣어 옮겨 가면 그것도 예외가 되어 버린다)
  */
 import { expect, type Page, type Request } from '@playwright/test';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -66,6 +69,15 @@ const SAMPLE_PATHS = new Set(
   ),
 );
 
+/** 빌드한 사이트의 페이지 주소 (dist/ 안의 index.html마다 하나, 긴 것부터) */
+const distDir = fileURLToPath(new URL('../../dist/', import.meta.url));
+const SITE_PAGES = (readdirSync(distDir, { recursive: true }) as string[])
+  .filter((file) => file === 'index.html' || file.endsWith('/index.html'))
+  .map((file) => `/${file.slice(0, -'index.html'.length)}`)
+  .filter((path) => path !== '/')
+  // 긴 주소부터 지운다 (/guide/를 먼저 지우면 /guide/photos-to-pdf/가 남는다)
+  .sort((a, b) => b.length - a.length);
+
 /** 어느 요청의 주소·본문에도 나오면 안 되는 것 */
 const MARKS = [...fileNames, ...FILE_MARKS, ...contentMarks];
 
@@ -84,8 +96,13 @@ export function expectLocalOnly(page: Page, requests: Request[], baseURL: string
       request.method() === 'GET' &&
       SAMPLE_PATHS.has(decodeURIComponent(url.pathname));
     // 요청이 많아 하나씩 expect로 대조하면 느리다. 찾은 것만 expect로 실패를 알린다
-    const found = sample ? undefined : MARKS.find((text) => sent.includes(text));
-    if (found) expect(sent, request.url()).not.toContain(found);
+    // 걸린 것이 있을 때만 페이지 주소를 지우고 다시 본다 (요청마다 지우면 느리다)
+    const suspect = sample ? undefined : MARKS.find((text) => sent.includes(text));
+    const checked = suspect
+      ? SITE_PAGES.reduce((text, path) => text.replaceAll(path, '/'), sent)
+      : sent;
+    const found = suspect && MARKS.find((text) => checked.includes(text));
+    if (found) expect(checked, request.url()).not.toContain(found);
 
     const fromOuterPage = request.frame() === page.mainFrame();
     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;

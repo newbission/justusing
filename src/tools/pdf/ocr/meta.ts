@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/extract-text', 'pdf/compress'],
+  flow: { from: { kind: 'pdf', mark: 'scan' }, to: { kind: 'pdf', mark: 'text' } },
 });

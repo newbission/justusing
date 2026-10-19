@@ -3,6 +3,7 @@ title: How to print multiple PDF pages on one sheet (N-up)
 description: Put 2, 4, 6 or 9 pages of slides or handouts on each sheet and save it as a PDF. Paper orientation for each layout, text size, and how it differs from the printer setting.
 tool: pdf/n-up
 published: 2026-10-15
+updated: 2026-10-19
 order: 11
 ---
 
@@ -24,6 +25,10 @@ Printing dozens of lecture slides one per page uses a lot of paper. Putting 2 or
 | 4         | Portrait    | Lecture slides and presentations (most common) |
 | 6         | Landscape   | Slides that are mostly pictures                |
 | 9         | Portrait    | Skimming the overall flow at a glance          |
+
+![First sheet of a 4-page sample report after N-up. With 2 pages per sheet the two pages sit side by side on landscape paper; with 4 pages per sheet the four pages fill portrait paper in two rows](../../../assets/guides/en/n-up-pdf/sheets.png)
+
+This is the first sheet of a real result from this tool, made from a 4-page sample report. Two pages sit side by side on landscape paper; four pages fill portrait paper in two rows.
 
 The orientation is chosen for you. It gives the largest cells for portrait documents.
 
