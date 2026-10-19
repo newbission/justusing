@@ -26,4 +26,5 @@ export default defineTool({
     },
   },
   related: ['image/compress', 'image/resize'],
+  flow: { from: { kind: 'png' }, to: { kind: 'jpg' } },
 });

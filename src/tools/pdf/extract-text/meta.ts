@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/view', 'pdf/to-image'],
+  flow: { from: { kind: 'pdf' }, to: { kind: 'txt' } },
 });

@@ -17,4 +17,5 @@ export default defineTool({
     },
   },
   related: ['pdf/rotate', 'pdf/merge'],
+  flow: { from: { kind: 'pdf', count: 3 }, to: { kind: 'pdf', count: 3, mark: 'order' } },
 });

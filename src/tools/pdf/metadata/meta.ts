@@ -19,4 +19,5 @@ export default defineTool({
     },
   },
   related: ['pdf/protect', 'pdf/unlock'],
+  flow: { from: { kind: 'pdf', mark: 'info' }, to: { kind: 'pdf' } },
 });
