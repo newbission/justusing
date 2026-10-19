@@ -2,6 +2,7 @@
  * '예시로 따라 하기' E2E. 견본을 넣고 사용법 단계마다 단계 글에 적힌 버튼을 짚는지 본다.
  * 단계 글은 frame 페이지에 빌드 때 넣은 그 도구의 사용법이다 (src/frame/tour.ts).
  */
+import { fileURLToPath } from 'node:url';
 import { expect, test } from './test';
 
 test('따라 하기는 견본을 넣고 단계 글에 적힌 버튼을 짚는다', async ({ page }) => {
@@ -71,6 +72,24 @@ test('다시 받는 사이 그만두면 늦게 온 견본을 넣지 않는다', 
   await page.waitForTimeout(1500);
   await expect(tour).toBeHidden();
   await expect(frame.getByText('예시-보고서.pdf')).toHaveCount(0);
+});
+
+test('견본을 받는 사이 내 파일을 고르면 늦게 온 견본을 넣지 않는다', async ({ page }) => {
+  await page.route('**/samples/**', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue();
+  });
+  await page.goto('/pdf/split/');
+  await page.getByRole('button', { name: '예시로 따라 하기' }).click();
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame
+    .locator('input[type=file]')
+    .setInputFiles(fileURLToPath(new URL('../fixtures/three-pages.pdf', import.meta.url)));
+  await expect(frame.getByText('three-pages.pdf')).toBeVisible();
+  await page.waitForTimeout(1500);
+  await expect(frame.getByText('three-pages.pdf')).toBeVisible();
+  await expect(frame.getByText('예시-보고서.pdf')).toHaveCount(0);
+  await expect(frame.getByRole('region', { name: '따라 하기' })).toBeHidden();
 });
 
 test('견본이 있는 모든 도구에서 따라 하기가 시작된다', async ({ page, request }) => {
