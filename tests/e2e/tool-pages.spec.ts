@@ -51,6 +51,11 @@ test('모든 도구 페이지에 쓰임새 3개가 사용법 앞에 있고, FAQ�
     const [usesBox, howToBox] = [await uses.boundingBox(), await howTo.boundingBox()];
     expect(usesBox!.y, path).toBeLessThan(howToBox!.y);
 
+    // 제목 아래 '넣는 것 → 나오는 것' 그림: 넣는 종이와 나오는 종이 두 묶음, 보기 도구만 없다
+    const flow = page.locator('.flow svg.stack');
+    if (path.endsWith('/pdf/view/')) await expect(flow, path).toHaveCount(0);
+    else await expect(flow, path).toHaveCount(2);
+
     const first = (await page.locator('.faq summary').first().textContent())!.trim();
     expect(first, path).not.toBe(COMMON_FIRST_QUESTION[locale]);
   }
