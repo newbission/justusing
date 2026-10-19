@@ -13,6 +13,17 @@ const ko = {
     sampleLoading: '예시 파일을 받는 중…',
     sampleFailed: '예시 파일을 받지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.',
   },
+  /** 따라 하기 (src/frame/tour.ts) */
+  tour: {
+    region: '따라 하기',
+    count: (step: number, total: number) => `따라 하기 ${step}/${total}`,
+    sampleLoaded: '예시 파일을 넣었습니다. 내용은 모두 지어낸 것입니다. "다음"을 눌러 이어 가세요.',
+    previous: '이전',
+    next: '다음',
+    finish: '마치기',
+    close: '그만하기',
+    failed: '예시 파일을 받지 못했습니다. 인터넷 연결을 확인하고 다시 해 주세요.',
+  },
   pdf: {
     choose: 'PDF 파일 선택',
     chooseMany: 'PDF 파일 선택',
@@ -133,6 +144,16 @@ const en: FrameMessages = {
     sample: 'Try it with a sample file',
     sampleLoading: 'Loading the sample file…',
     sampleFailed: 'Could not load the sample file. Check your connection and try again.',
+  },
+  tour: {
+    region: 'Walkthrough',
+    count: (step: number, total: number) => `Walkthrough ${step}/${total}`,
+    sampleLoaded: 'We added a sample file. Everything in it is made up. Press "Next" to continue.',
+    previous: 'Back',
+    next: 'Next',
+    finish: 'Finish',
+    close: 'Stop',
+    failed: 'Could not load the sample file. Check your connection and try again.',
   },
   pdf: {
     choose: 'Choose PDF file',
