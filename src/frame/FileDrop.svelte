@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { onFrameFiles } from './drop';
+  import { announceFiles, onFilesArrived } from './drop';
   import { pick } from './locale';
   import { FRAME_MESSAGES } from './messages';
   import { hasSamples, loadSamples } from './samples';
@@ -33,7 +33,7 @@
   let run = 0;
 
   onMount(() => {
-    const off = onFrameFiles(() => run++);
+    const off = onFilesArrived(() => run++);
     return () => {
       run++;
       off();
@@ -49,6 +49,7 @@
       if (current !== run) return;
       sample = 'idle';
       onfiles(files);
+      announceFiles();
     } catch {
       if (current === run) sample = 'failed';
     }
@@ -58,7 +59,9 @@
     run++;
     sample = 'idle';
     const files = [...(list ?? [])];
-    if (files.length > 0) onfiles(multiple ? files : files.slice(0, 1));
+    if (files.length === 0) return;
+    onfiles(multiple ? files : files.slice(0, 1));
+    announceFiles();
   }
 </script>
 
