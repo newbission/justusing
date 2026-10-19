@@ -3,6 +3,7 @@ title: How to extract pages from a PDF
 description: Save just the pages you need as a new PDF, or split one PDF into several files. Choosing between split by range, every page and selected pages, writing page ranges, and getting several files at once.
 tool: pdf/split
 published: 2026-10-18
+updated: 2026-10-19
 order: 20
 ---
 
@@ -30,6 +31,8 @@ With "Split by range", each comma-separated range becomes one file.
 - `7` → a one-page file with page 7.
 - `5-` → page 5 to the end; `-3` → the first page to page 3.
 - `1-3, 4-6, 7` → three files.
+
+![Three ways to split a 7-page PDF. The range 1-3, 4-6, 7 makes three files (pages 1–3, 4–6 and 7), the range 1, 3, 5 makes three one-page files, and Selected pages only with pages 1, 3 and 5 clicked makes one file with those three pages](../../../assets/guides/en/split-pdf/ranges.svg)
 
 One thing trips people up: `1, 3, 5` does not make one file with pages 1, 3 and 5. It makes **three one-page files**. To collect scattered pages into one file, use "Selected pages only". Ranges may overlap, and pages not in any range are left out.
 
