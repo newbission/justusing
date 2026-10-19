@@ -3,6 +3,7 @@ title: How to reduce PDF file size (without uploading)
 description: Make a PDF small enough for email or upload limits. Why PDFs get big, which level to choose, and what to do when a PDF will not shrink.
 tool: pdf/compress
 published: 2026-10-15
+updated: 2026-10-19
 order: 1
 ---
 
@@ -35,6 +36,10 @@ If it is still too big, switch to **More** and click "Compress PDF" again. The o
 | Less     | Photo quality matters, or you will print it | Almost unchanged               |
 | Balanced | Sending by email or chat, reading on screen | Hard to tell apart on screen   |
 | More     | Strict upload limits                        | May look blurry when zoomed in |
+
+![The same spot cropped and enlarged from a sample photo PDF compressed at each level: original 532 KB, Less 427 KB, Balanced 200 KB, More 149 KB. In this photo the difference is hard to see even zoomed in](../../../assets/guides/en/compress-pdf/levels.png)
+
+These are real results from this tool: a sample photo PDF compressed at each level, with the same spot cropped and enlarged. In this photo the difference is hard to see even zoomed in, while the file shrank to about 40% of the original with **Balanced** and about 30% with **More**. Photos with fine texture or text in them show the difference more at **More**.
 
 In a scanned document the text is part of the photo, so **More** can blur small print. Start with **Balanced** for scans and check that small text is still readable in the downloaded file.
 
