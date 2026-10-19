@@ -56,6 +56,7 @@ const jsonLd = {
         <Breadcrumb items={breadcrumb} {siblings} />
         <h1>{name}</h1>
         <p class="lead">{description}</p>
+        <slot name="header" />
       </header>
 
       <!-- 제목 아래 가로 배너. 도구 칸(버튼)과 붙지 않게 아래로 32px 띄운다.

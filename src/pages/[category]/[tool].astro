@@ -14,6 +14,7 @@ import ToolUses from '../../components/ToolUses.astro';
 import ToolFaq from '../../components/ToolFaq.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import ToolGuides from '../../components/ToolGuides.astro';
+import GuideDialog from '../../components/GuideDialog.astro';
 import { CATEGORIES } from '../../tools/categories';
 import { COMMON_FAQ } from '../../tools/common-faq';
 import { toolsInCategory, type Tool } from '../../tools/registry';
@@ -56,6 +57,7 @@ const siblings = toolsInCategory(tool.category).map((other) => ({
   breadcrumb={breadcrumb}
   {siblings}
 >
+  <GuideDialog slot="header" toolId={tool.id} />
   <ToolFrame slot="tool" src={`${href}frame/`} title={t.tool.frameTitle(text.name)} />
   <Fragment slot="how-to">
     <ToolUses name={text.name} items={content.uses} />
