@@ -20,6 +20,11 @@ export function onFrameFiles(handler: (files: File[]) => void): () => void {
   return () => removeEventListener(FILES_EVENT, listener);
 }
 
+/** 놓인 파일처럼 도구 화면에 넘긴다 ('따라 하기'의 견본도 이 길로 넣는다) */
+export function deliverFiles(files: File[]) {
+  dispatchEvent(new CustomEvent(FILES_EVENT, { detail: files }));
+}
+
 export function setupFrameDrop() {
   const overlay = document.createElement('div');
   overlay.className = 'frame-drop-overlay';
@@ -107,6 +112,6 @@ export function setupFrameDrop() {
     event.preventDefault();
     const files = [...(event.dataTransfer?.files ?? [])];
     end();
-    if (files.length > 0) dispatchEvent(new CustomEvent(FILES_EVENT, { detail: files }));
+    if (files.length > 0) deliverFiles(files);
   });
 }
