@@ -33,7 +33,8 @@
 | `src/tools/<카테고리>/<이름>/`                                                              | 도구 하나: `meta.ts`, `content.ts`, `Frame.astro`, `App.svelte`, (`messages.ts`)                                                                                     |
 | `src/pages/index.astro`                                                                     | 허브: 대표 문구, 가로 배너, 약속 카드(`Promises`), 안전 그림(`SafetyDiagram`), 카테고리별 도구 목록, 본문 광고                                                       |
 | `src/pages/[category]/index.astro`                                                          | 카테고리 목록 (`ToolSections`, 묶음별 소제목)                                                                                                                        |
-| `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: 가이드 보기(`GuideDialog`) + `ToolFrame` + 쓰임새(`ToolUses`) + 사용법 + FAQ(도구 + 공통) + 관련 가이드 + 관련 도구                                     |
+| `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: 넣는 것 → 나오는 것 그림(`ToolFlow`) + 가이드 보기·따라 하기 + `ToolFrame` + 쓰임새(`ToolUses`) + 사용법 + FAQ(도구 + 공통) + 관련 가이드 + 관련 도구   |
+| `src/components/ToolFlow.astro`                                                             | 제목 아래 작은 그림. `meta.ts`의 `flow`(종이 종류·장수·표시)로 그린다. 없으면 안 그림 (PDF 보기)                                                                     |
 | `src/pages/[category]/[tool]/frame.astro`                                                   | 격리 frame 페이지: 도구 폴더의 `Frame.astro`를 그대로 그린다                                                                                                         |
 | `src/layouts/BaseLayout.astro`                                                              | 모든 바깥 페이지의 `<html>`·`<head>`(제목·설명·canonical·hreflang·OG·소유 확인), 머리글·바닥글, 통계·광고 스크립트, 하단 광고, 광고 차단 안내                        |
 | `src/layouts/ToolLayout.astro`                                                              | 도구 페이지 틀: 브레드크럼 → 제목 → `top-banner` → 도구 칸 → 로컬 처리 안내 → `below-tool` → 쓰임새·사용법 → `in-content` → FAQ → 관련. WebApplication 구조화 데이터 |
@@ -75,6 +76,8 @@
 
 ### 결정과 이유
 
+- **도구마다 '넣는 것 → 나오는 것' 그림** (2026-10-19): 글을 읽기 전에 하는 일을 한눈에. 27개를 손으로 그리지 않고 `meta.ts`의 `flow`
+  한 줄로 같은 부품이 그린다. 종이는 두 테마 모두 흰색, 나오는 쪽만 초록 테두리. 뜻은 제목·설명 글이 맡아 화면 읽기에서는 뺀다
 - **레지스트리를 유일한 목록으로**: 홈·카테고리·사이트맵·메뉴·관련 도구가 한 목록에서 나와 어긋나지 않는다.
   잘못된 ID·묶음은 빌드에서 멈춰 배포 전에 잡는다
 - **`TOOL_IDS`는 한 줄에 하나** (`prettier-ignore`): 도구를 더하는 커밋이 한 줄로 보이게 (`35709a2`)
