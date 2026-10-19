@@ -346,6 +346,7 @@
     {:else if phase === 'password'}
       <!-- 격리 frame은 form 제출이 막혀 있어(sandbox에 allow-forms 없음) form 대신 직접 처리한다 -->
       <div class="password" role="group" aria-label={common.pdf.passwordGroup}>
+        <p class="file" title={fileName}>{fileName}</p>
         <p>{common.pdf.passwordPrompt}</p>
         <p class="hint">{common.pdf.passwordNote}</p>
         <label>
@@ -572,6 +573,13 @@
   }
   .password p {
     margin: 0;
+  }
+  /* 어느 파일의 암호인지 (여러 파일을 넣었을 때 헷갈리지 않게) */
+  .password .file {
+    overflow: hidden;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .password .hint {
     color: var(--color-muted);
