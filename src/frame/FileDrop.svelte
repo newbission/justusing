@@ -5,6 +5,8 @@
   견본이 있는 도구는 '예시 파일로 해 보기'로 우리 사이트의 견본 파일을 넣는다 (src/frame/samples.ts).
 -->
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { onFrameFiles } from './drop';
   import { pick } from './locale';
   import { FRAME_MESSAGES } from './messages';
   import { hasSamples, loadSamples } from './samples';
@@ -24,20 +26,37 @@
   let { accept, label, multiple = false, hint, onfiles }: Props = $props();
 
   let sample: 'idle' | 'loading' | 'failed' = $state('idle');
+  /**
+   * 견본을 받는 사이 다른 파일이 들어오면(직접 고르기·놓기·따라 하기) 늘린다.
+   * 늦게 온 견본이 방금 넣은 파일을 바꾸거나 더해지지 않게 한다
+   */
+  let run = 0;
+
+  onMount(() => {
+    const off = onFrameFiles(() => run++);
+    return () => {
+      run++;
+      off();
+    };
+  });
 
   async function trySample() {
     if (sample === 'loading') return;
     sample = 'loading';
+    const current = ++run;
     try {
       const files = await loadSamples();
+      if (current !== run) return;
       sample = 'idle';
       onfiles(files);
     } catch {
-      sample = 'failed';
+      if (current === run) sample = 'failed';
     }
   }
 
   function choose(list: FileList | null | undefined) {
+    run++;
+    sample = 'idle';
     const files = [...(list ?? [])];
     if (files.length > 0) onfiles(multiple ? files : files.slice(0, 1));
   }
