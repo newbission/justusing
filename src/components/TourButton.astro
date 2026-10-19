@@ -24,7 +24,7 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
 ---
 
 {toolHasSamples(toolId) && (
-  <tour-dialog data-src={src}>
+  <tour-dialog data-src={src} data-title={t.tourFrame(name)} data-sandbox={sandbox}>
     <button type="button" class="open" data-tour-open>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M8 5v14l11-7z" />
@@ -40,7 +40,6 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
           </svg>
         </button>
       </div>
-      <iframe class="frame" title={t.tourFrame(name)} sandbox={sandbox} allow="fullscreen" />
     </dialog>
   </tour-dialog>
 )}
@@ -51,29 +50,38 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
   class TourDialog extends HTMLElement {
     connectedCallback() {
       const dialog = this.querySelector('dialog')!;
-      const frame = this.querySelector('iframe')!;
-      // frame은 한 번만 만들고 열 때마다 새로 띄운다 (contentWindow가 그대로라 데이터 보관소도 한 번만 붙인다)
-      serveData(frame);
+      let frame: HTMLIFrameElement | undefined;
+      let stopServing: (() => void) | undefined;
+      // 열 때마다 도구 화면을 새로 만들고 닫으면 없앤다. 있는 화면의 주소를 바꾸면 탭의 뒤로 가기 기록이 쌓인다
       this.querySelector('[data-tour-open]')!.addEventListener('click', () => {
         const theme = document.documentElement.dataset.theme;
+        frame = document.createElement('iframe');
+        frame.className = 'frame';
+        frame.title = this.dataset.title!;
+        frame.allow = 'fullscreen';
+        if (this.dataset.sandbox) frame.setAttribute('sandbox', this.dataset.sandbox);
         frame.src = `${this.dataset.src}#tour=1${theme ? `&theme=${theme}` : ''}`;
+        dialog.append(frame);
+        stopServing = serveData(frame);
         dialog.showModal();
       });
       this.querySelector('[data-tour-close]')!.addEventListener('click', () => dialog.close());
-      // 닫으면 화면을 비워 견본과 하던 것을 모두 버린다
+      // 닫으면 화면을 없애 견본과 하던 것을 모두 버린다
       dialog.addEventListener('close', () => {
-        frame.src = 'about:blank';
+        stopServing?.();
+        frame?.remove();
+        frame = undefined;
       });
-      // 마치기, 도구를 쓰는 순간 (내용 없는 신호). activity는 원래 도구 화면처럼 광고 차단 안내가 듣는다
+      // 마치기·Esc, 도구를 쓰는 순간 (내용 없는 신호). activity는 원래 도구 화면처럼 광고 차단 안내가 듣는다
       addEventListener('message', (event) => {
-        if (event.source !== frame.contentWindow) return;
+        if (!frame || event.source !== frame.contentWindow) return;
         if (event.data?.type === 'tour-end') dialog.close();
         if (event.data?.type === 'activity')
           document.dispatchEvent(new CustomEvent('toolactivity'));
       });
       document.addEventListener('themechange', (event) => {
         const theme = (event as CustomEvent<string>).detail;
-        frame.contentWindow?.postMessage({ type: 'theme', theme }, '*');
+        frame?.contentWindow?.postMessage({ type: 'theme', theme }, '*');
       });
     }
   }
@@ -174,7 +182,7 @@ const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads
     width: 22px;
     height: 22px;
   }
-  .frame {
+  dialog :global(.frame) {
     flex: 1;
     width: 100%;
     min-height: 0;
