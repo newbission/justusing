@@ -69,3 +69,30 @@ test('모든 가이드가 두 언어로 사이트맵에 있다', async ({ reques
     expect(sitemap).toContain(`/en${href}</loc>`);
   }
 });
+
+test('가이드 그림은 설명(alt)과 크기가 있고 실제로 열린다', async ({ page }) => {
+  await page.goto('/guide/');
+  const hrefs = await page
+    .locator('.guides a')
+    .evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href')!));
+  let total = 0;
+  for (const href of [...hrefs, ...hrefs.map((href) => `/en${href}`)]) {
+    await page.goto(href);
+    const images = await page.locator('.doc img').all();
+    total += images.length;
+    for (const image of images) {
+      // 화면 읽기용 설명이 있고, 크기를 적어 그림이 늦게 떠도 글이 밀리지 않는다
+      await expect(image, href).toHaveAttribute('alt', /.{10,}/);
+      await expect(image, href).toHaveAttribute('width', /^\d+$/);
+      await expect(image, href).toHaveAttribute('height', /^\d+$/);
+      await image.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth), {
+          message: href,
+        })
+        .toBeGreaterThan(0);
+    }
+  }
+  // 시범으로 그림을 넣은 4편 (나누기·모아찍기·압축·가리기) × 두 언어
+  expect(total).toBeGreaterThanOrEqual(8);
+});
