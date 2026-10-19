@@ -11,7 +11,7 @@
  */
 import { pick } from './locale';
 import { FRAME_MESSAGES } from './messages';
-import { deliverFiles } from './drop';
+import { deliverFiles, onFilesArrived } from './drop';
 import { loadSamples } from './samples';
 
 const TARGET = 'tour-target';
@@ -66,6 +66,8 @@ export function setupFrameTour() {
   let index = -1;
   /** 견본을 받는 중이거나 따라 하는 중이면 다시 시작하지 않는다 (견본이 두 번 들어간다) */
   let busy = false;
+  /** 견본을 받는 중 */
+  let loading = false;
   /** 시작할 때마다 늘린다. 견본을 받는 사이 그만두면(또는 다시 시작하면) 늦게 온 견본을 버린다 */
   let run = 0;
   let observer: MutationObserver | undefined;
@@ -146,11 +148,13 @@ export function setupFrameTour() {
     if (busy) return;
     busy = true;
     const current = ++run;
+    loading = true;
     let files: File[];
     try {
       files = await loadSamples();
     } catch {
       if (current !== run) return;
+      loading = false;
       busy = false;
       index = -1;
       count.textContent = '';
@@ -161,6 +165,7 @@ export function setupFrameTour() {
       return;
     }
     if (current !== run) return;
+    loading = false;
     failed(false);
     // 도구 화면은 놓인 파일과 같은 길(onFrameFiles)로 견본을 받는다
     deliverFiles(files);
@@ -185,6 +190,23 @@ export function setupFrameTour() {
     // 첫 단계(파일 고르기)는 견본을 넣었다는 말로 대신한다
     show(0);
   }
+
+  // 견본을 받는 사이 사용자가 파일을 넣으면(놓기·첫 화면·도구 안의 파일 추가) 늦게 온 견본을 버린다.
+  // 내 파일을 바꾸거나 더하지 않게 한다
+  const cancelLoading = () => {
+    if (!loading) return;
+    loading = false;
+    busy = false;
+    run++;
+  };
+  onFilesArrived(cancelLoading);
+  addEventListener(
+    'change',
+    (event) => {
+      if (event.target instanceof HTMLInputElement && event.target.type === 'file') cancelLoading();
+    },
+    true,
+  );
 
   addEventListener('message', (event) => {
     if (event.source !== parent || event.data?.type !== 'tour-start') return;
