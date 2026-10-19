@@ -1,6 +1,6 @@
 # 도구 격리 frame (`src/frame/`, `ToolFrame`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-18
+쓴 날 2026-10-16 · 고친 날 2026-10-19
 
 - 쓰는 곳: 모든 도구 페이지 (`/<카테고리>/<이름>/` 안의 `/<카테고리>/<이름>/frame/`)
 - 상태: 3단계(2026-10-10)부터 모든 도구의 바탕. Safari 수정은 PR #40 (2026-10-15)
@@ -42,7 +42,9 @@
 | `src/frame/parent.ts`                     | `requestShowTool()`(`show-tool`), `notifyActivity()`(`activity`)                                                        |
 | `src/frame/locale.ts`                     | `frameLocale`, `pick()`: `<html lang>`으로 언어를 고른다                                                                |
 | `src/frame/messages.ts`                   | frame 공통 부품 문구 (한·영)                                                                                            |
-| `src/frame/FileDrop.svelte`               | 첫 화면 파일 고르기 버튼 (놓기는 하지 않는다)                                                                           |
+| `src/frame/FileDrop.svelte`               | 첫 화면 파일 고르기 버튼 (놓기는 하지 않는다), 견본이 있으면 '예시 파일로 해 보기'                                      |
+| `src/frame/samples.ts`                    | 도구별 견본 목록, `hasSamples`, `loadSamples()`: frame이 `/samples/<언어>/`에서 바로 받는다                             |
+| `scripts/samples/make_samples.py`         | 견본 파일 만들기 (PyMuPDF·Pillow, Pretendard). 결과 `public/samples/`는 커밋한다                                        |
 | `src/frame/ActionBar.svelte`              | 실행·다운로드 막대. 높이 64px 고정, `data-action-bar`(activity가 본다)                                                  |
 | `src/frame/download.ts`                   | `downloadFile()`: Blob URL + `<a download>`, 60초 뒤 해제                                                               |
 | `src/frame/controls.css`, `format.ts`     | 공통 조작 모양, `formatSize()`·`baseName()`                                                                             |
@@ -118,6 +120,8 @@
 - CORS 헤더 (`a5bc972`): 출처가 null이라 우리 스크립트·워커·CMap도 CORS 허용이 필요하다. GitHub Pages는 모든 응답에 붙였지만 Cloudflare는 붙이지 않는다. `/_astro/*`, `/vendor/*`에만 붙인다 (공개 파일)
 - 미리보기·E2E는 `wrangler dev`: `astro preview`는 CORS 헤더를 저절로 붙여 배포에서만 깨지는 문제를 가린다
 - Safari 주소 허용 (PR #40): 아래 "주의할 점"
+- 예시 파일 (2026-10-19): 내 파일이 없어도 써 보게 견본을 넣는다. 다섯 첫 화면이 모두 `FileDrop`을 쓰므로 버튼을 거기 하나만 두고, 도구는 frame 주소에서 읽는다(도구마다 고칠 곳 없음).
+  견본은 공개 파일이라 바깥 보관소를 거치지 않고 frame이 바로 받는다 (`/samples/*` CORS). 내용은 모두 지어낸 것이고, 암호 견본은 파일 이름에 암호(0000)를 적어 암호 입력 화면에 파일 이름을 보인다
 - activity 신호 (`7d3a9e9`): 바깥은 frame 안 클릭을 볼 수 없다. 광고 차단 안내를 도구를 쓸 때마다 띄우려면 frame이 알려야 한다. 내용은 담지 않는다
 
 ### 주의할 점
@@ -131,7 +135,7 @@
   - HTML `style="…"` 속성 금지 (CSP). CSS 클래스나 Svelte `style:`을 쓴다. 스크립트에서 `element.style`을 바꾸는 것은 된다 (`drop.ts`의 크기 고정)
   - 파일 놓기를 도구가 직접 받지 않는다. `onFrameFiles()`로만 받는다
   - 외부 리소스가 필요하면 우리 사이트에 복사해 둔다 (예: `scripts/copy-pdfjs-assets.mjs` → `public/vendor/pdfjs/`)
-- frame에서 쓰는 새 공개 경로를 만들면 `public/_headers`에 CORS가 필요한지 본다 (`/_astro/`·`/vendor/`만 있다. 도구 데이터 `/data/`는 바깥 페이지가 받아 넘긴다)
+- frame에서 쓰는 새 공개 경로를 만들면 `public/_headers`에 CORS가 필요한지 본다 (`/_astro/`·`/vendor/`·`/samples/`가 있다. 도구 데이터 `/data/`는 바깥 페이지가 받아 넘긴다)
 - 신호에 파일 이름·내용을 절대 담지 않는다. 광고 차단 안내도 신호의 종류만 본다
 - 도구를 만들면 반드시 `npm run build` 후 `npm run preview` 또는 `npm run test:e2e`로 확인한다 (form 제출이 막히는 문제는 개발 서버에서 보이지 않았다)
 
@@ -147,6 +151,7 @@
 - [x] 전체 화면 허용 (`allow="fullscreen"`)
 - [x] 다운로드 도우미, ZIP 워커, 실행 막대, 공통 조작 모양
 - [x] activity 신호 (광고 차단 안내)
+- [x] 예시 파일로 해 보기 (`samples.ts`, `public/samples/`)
 - [x] `_headers` CORS, `wrangler dev`로 미리보기·E2E
 - [x] Safari: CSP에 사이트 주소 함께 적기 (스크립트·연결·이미지·글꼴·스타일)
 - [x] 도구 데이터를 바깥 보관소에서 받기 (`data.ts`, [글꼴·데이터 보관](../fonts-and-data/README.md))
@@ -157,6 +162,7 @@
 
 ### 자동 테스트
 
+- `tests/e2e/samples.spec.ts`: 모든 도구에서 예시 파일을 넣어 첫 화면을 지나는지, 영어 화면은 영어 견본인지
 - `tests/e2e/pdf-view.spec.ts`
   - 도구 화면은 출처 없는 격리 frame이다 (`self.origin === 'null'`, 서로의 DOM 접근이 막힘)
   - 도구 화면 안에서 외부 연결(`fetch('https://example.com/')`)은 CSP가 막는다
