@@ -32,10 +32,14 @@ function findTargets(names: string[]): HTMLElement[] {
     if (element.closest('.frame-tour')) continue;
     if (element.offsetParent === null) continue;
     const label = element.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-    // 고르기(라디오)는 긴 이름과 짧은 이름이 한 label 안에 있어 앞부분으로 맞춘다
+    // 고르기(라디오)는 긴 이름과 짧은 이름이 한 label 안에 붙어 있어 앞부분으로 맞춘다
     if (
       names.some(
-        (name) => label === name || (element.tagName === 'LABEL' && label.startsWith(name)),
+        (name) =>
+          label === name ||
+          // 버튼 이름 뒤에 바뀌는 말이 붙는다 ("모두 받기 (ZIP, 2장)", "데이터 받기 (7MB)")
+          label.startsWith(`${name} `) ||
+          (element.tagName === 'LABEL' && label.startsWith(name)),
       )
     ) {
       // 붙은 고르기 버튼은 묶음이 테두리를 잘라 내므로 묶음 전체를 짚는다
