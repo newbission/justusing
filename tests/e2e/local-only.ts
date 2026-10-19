@@ -6,6 +6,8 @@
  * - 바깥 페이지의 요청: 위와 같거나, 방문 통계·광고 주소로만 갈 수 있다.
  * - 모든 요청의 주소와 본문에는 테스트 파일의 이름도, 파일 형식의 첫머리(PDF·이미지·글꼴)도,
  *   테스트 파일 내용의 일부(base64)도 없어야 한다. 우리 사이트로 가는 GET도 주소에 실어 보낼 수 있다.
+ *   예외: '예시 파일로 해 보기'가 받는 우리 견본 파일 주소 그대로 (쿼리 없음, public/samples/에 있는 파일만).
+ *   견본 이름(sample-photo.jpg 등)에 테스트 파일 이름이 들어 있을 수 있어서다.
  */
 import { expect, type Page, type Request } from '@playwright/test';
 import { readdirSync, readFileSync } from 'node:fs';
@@ -56,6 +58,14 @@ const contentMarks = fixtures.flatMap((name) => {
   );
 });
 
+/** 견본 파일 주소 (/samples/<언어>/<이름>) */
+const samplesDir = fileURLToPath(new URL('../../public/samples/', import.meta.url));
+const SAMPLE_PATHS = new Set(
+  readdirSync(samplesDir).flatMap((locale) =>
+    readdirSync(samplesDir + locale).map((name) => `/samples/${locale}/${name}`),
+  ),
+);
+
 /** 어느 요청의 주소·본문에도 나오면 안 되는 것 */
 const MARKS = [...fileNames, ...FILE_MARKS, ...contentMarks];
 
@@ -68,8 +78,13 @@ export function expectLocalOnly(page: Page, requests: Request[], baseURL: string
 
     // 본문뿐 아니라 주소(경로·쿼리)에 실어 보내는 것도 막는다
     const sent = `${decodeURIComponent(url.href)}\n${request.postData() ?? ''}`;
+    const sample =
+      url.origin === origin &&
+      url.search === '' &&
+      request.method() === 'GET' &&
+      SAMPLE_PATHS.has(decodeURIComponent(url.pathname));
     // 요청이 많아 하나씩 expect로 대조하면 느리다. 찾은 것만 expect로 실패를 알린다
-    const found = MARKS.find((text) => sent.includes(text));
+    const found = sample ? undefined : MARKS.find((text) => sent.includes(text));
     if (found) expect(sent, request.url()).not.toContain(found);
 
     const fromOuterPage = request.frame() === page.mainFrame();
