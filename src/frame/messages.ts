@@ -16,12 +16,11 @@ const ko = {
   /** 따라 하기 (src/frame/tour.ts) */
   tour: {
     region: '따라 하기',
-    count: (step: number, total: number) => `따라 하기 ${step}/${total}`,
+    count: (step: number, total: number) => `${total}단계 중 ${step}단계`,
     sampleLoaded: '예시 파일을 넣었습니다. 내용은 모두 지어낸 것입니다. "다음"을 눌러 이어 가세요.',
     previous: '이전',
     next: '다음',
     finish: '마치기',
-    close: '그만하기',
     retry: '다시 받기',
     failed: '예시 파일을 받지 못했습니다. 인터넷 연결을 확인하고 다시 해 주세요.',
     notAccepted: '지금은 예시 파일을 넣을 수 없습니다. 하던 처리가 끝난 뒤 다시 받아 주세요.',
@@ -149,12 +148,11 @@ const en: FrameMessages = {
   },
   tour: {
     region: 'Walkthrough',
-    count: (step: number, total: number) => `Walkthrough ${step}/${total}`,
+    count: (step: number, total: number) => `Step ${step} of ${total}`,
     sampleLoaded: 'We added a sample file. Everything in it is made up. Press "Next" to continue.',
     previous: 'Back',
     next: 'Next',
     finish: 'Finish',
-    close: 'Stop',
     retry: 'Try again',
     failed: 'Could not load the sample file. Check your connection and try again.',
     notAccepted:
