@@ -9,6 +9,9 @@ const ko = {
     title: '파일을 여기로 끌어다 놓거나',
     overlay: '여기에 파일을 놓으세요',
     overlayNote: '파일은 이 기기를 떠나지 않습니다',
+    sample: '예시 파일로 해 보기',
+    sampleLoading: '예시 파일을 받는 중…',
+    sampleFailed: '예시 파일을 받지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.',
   },
   pdf: {
     choose: 'PDF 파일 선택',
@@ -127,6 +130,9 @@ const en: FrameMessages = {
     title: 'Drag and drop here, or',
     overlay: 'Drop your files here',
     overlayNote: 'Your files never leave this device',
+    sample: 'Try it with a sample file',
+    sampleLoading: 'Loading the sample file…',
+    sampleFailed: 'Could not load the sample file. Check your connection and try again.',
   },
   pdf: {
     choose: 'Choose PDF file',

@@ -2,10 +2,12 @@
   파일 선택 버튼. 모든 도구가 처음 화면에서 쓰는 공통 부품.
   고른 파일은 onfiles로 넘길 뿐 어디에도 보내지 않는다.
   끌어다 놓기는 frame 전체에서 처리한다 (src/frame/drop.ts, 도구는 onFrameFiles로 받음).
+  견본이 있는 도구는 '예시 파일로 해 보기'로 우리 사이트의 견본 파일을 넣는다 (src/frame/samples.ts).
 -->
 <script lang="ts">
   import { pick } from './locale';
   import { FRAME_MESSAGES } from './messages';
+  import { hasSamples, loadSamples } from './samples';
 
   const t = pick(FRAME_MESSAGES);
   interface Props {
@@ -20,6 +22,20 @@
   }
 
   let { accept, label, multiple = false, hint, onfiles }: Props = $props();
+
+  let sample: 'idle' | 'loading' | 'failed' = $state('idle');
+
+  async function trySample() {
+    if (sample === 'loading') return;
+    sample = 'loading';
+    try {
+      const files = await loadSamples();
+      sample = 'idle';
+      onfiles(files);
+    } catch {
+      sample = 'failed';
+    }
+  }
 
   function choose(list: FileList | null | undefined) {
     const files = [...(list ?? [])];
@@ -45,6 +61,14 @@
   </label>
   {#if hint}
     <p class="hint">{hint}</p>
+  {/if}
+  {#if hasSamples}
+    <button type="button" class="sample" disabled={sample === 'loading'} onclick={trySample}
+      >{sample === 'loading' ? t.drop.sampleLoading : t.drop.sample}</button
+    >
+    {#if sample === 'failed'}
+      <p class="hint" role="alert">{t.drop.sampleFailed}</p>
+    {/if}
   {/if}
 </div>
 
@@ -88,6 +112,20 @@
   .button:has(input:focus-visible) {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
+  }
+  .sample {
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    color: var(--color-accent);
+    font-size: 14px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .sample:disabled {
+    color: var(--color-muted);
+    cursor: default;
   }
   .hint {
     margin: 0;
