@@ -66,6 +66,8 @@ export function setupFrameTour() {
   let index = -1;
   /** 견본을 받는 중이거나 따라 하는 중이면 다시 시작하지 않는다 (견본이 두 번 들어간다) */
   let busy = false;
+  /** 시작할 때마다 늘린다. 견본을 받는 사이 그만두면(또는 다시 시작하면) 늦게 온 견본을 버린다 */
+  let run = 0;
   let observer: MutationObserver | undefined;
   let marked: HTMLElement[] = [];
 
@@ -132,6 +134,7 @@ export function setupFrameTour() {
 
   function stop() {
     busy = false;
+    run++;
     observer?.disconnect();
     observer = undefined;
     unmark();
@@ -142,10 +145,12 @@ export function setupFrameTour() {
   async function start() {
     if (busy) return;
     busy = true;
+    const current = ++run;
     let files: File[];
     try {
       files = await loadSamples();
     } catch {
+      if (current !== run) return;
       busy = false;
       index = -1;
       count.textContent = '';
@@ -155,6 +160,7 @@ export function setupFrameTour() {
       document.documentElement.classList.add('touring');
       return;
     }
+    if (current !== run) return;
     failed(false);
     // 도구 화면은 놓인 파일과 같은 길(onFrameFiles)로 견본을 받는다
     deliverFiles(files);
