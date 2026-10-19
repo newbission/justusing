@@ -39,7 +39,8 @@ const breadcrumb = Astro.props.breadcrumb ?? [
       <div class="top-banner">
         <AdSlot id="top-banner" />
       </div>
-      <article class="doc">
+      <!-- data-doc-body: 도구 페이지의 가이드 창(GuideDialog)이 이 안만 가져간다 -->
+      <article class="doc" data-doc-body>
         <slot />
       </article>
       <slot name="after" />
