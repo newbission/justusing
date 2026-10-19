@@ -1,8 +1,10 @@
 ---
 /**
- * 도구 제목 아래 '예시로 따라 하기'. 누르면 도구 화면(격리 frame)이 견본을 넣고 사용법을 한 단계씩 짚는다.
- * 견본이 없는 도구는 그리지 않는다. 저절로 시작하지 않는다 (저절로 뜨는 안내는 '과도한 팝업' 위험).
- * frame에는 내용 없는 신호만 보낸다 (ToolFrame이 'tourstart' 이벤트를 받아 전달, src/frame/tour.ts).
+ * 도구 제목 아래 '예시로 따라 하기'. 누르면 어두운 배경 위에 창을 띄우고, 그 안에 이 도구 화면을 하나 더 열어
+ * 견본으로 사용법을 한 단계씩 보여 준다 (src/frame/tour.ts, 주소 #tour=1).
+ * 창을 닫으면(오른쪽 위 ×, Esc, 마치기) 그 화면과 견본이 함께 사라지고 원래 도구 화면은 그대로다.
+ * 견본이 없는 도구는 그리지 않는다. 저절로 열지 않는다 (저절로 뜨는 창은 '과도한 팝업' 위험). 창 안에 광고는 없다.
+ * 창 안의 도구 화면도 원래 화면과 같은 격리 frame이다 (견본만 쓰지만 같은 방식으로 둔다).
  */
 import { toolHasSamples } from '../frame/samples';
 import { localeOf } from '../i18n/locales';
@@ -10,28 +12,74 @@ import { ui } from '../i18n/ui';
 
 interface Props {
   toolId: string;
+  /** 도구 이름 (창 제목) */
+  name: string;
+  /** frame 페이지 주소 (예: /pdf/merge/frame/) */
+  src: string;
 }
 
+const { toolId, name, src } = Astro.props;
 const t = ui(localeOf(Astro.url.pathname)).guide;
+const sandbox = import.meta.env.DEV ? undefined : 'allow-scripts allow-downloads';
 ---
 
-{toolHasSamples(Astro.props.toolId) && (
-  <button type="button" class="tour" data-tour-start>
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M8 5v14l11-7z" />
-    </svg>
-    {t.tour}
-  </button>
+{toolHasSamples(toolId) && (
+  <tour-dialog data-src={src}>
+    <button type="button" class="open" data-tour-open>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+      {t.tour}
+    </button>
+    <dialog aria-labelledby="tour-dialog-title">
+      <div class="head">
+        <h2 id="tour-dialog-title">{t.tourTitle(name)}</h2>
+        <button type="button" class="close" data-tour-close aria-label={t.closeDialog}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+      <iframe class="frame" title={t.tourFrame(name)} sandbox={sandbox} allow="fullscreen" />
+    </dialog>
+  </tour-dialog>
 )}
 
 <script>
-  for (const button of document.querySelectorAll('[data-tour-start]')) {
-    button.addEventListener('click', () => document.dispatchEvent(new CustomEvent('tourstart')));
+  import { serveData } from '../lib/data-store';
+
+  class TourDialog extends HTMLElement {
+    connectedCallback() {
+      const dialog = this.querySelector('dialog')!;
+      const frame = this.querySelector('iframe')!;
+      // frame은 한 번만 만들고 열 때마다 새로 띄운다 (contentWindow가 그대로라 데이터 보관소도 한 번만 붙인다)
+      serveData(frame);
+      this.querySelector('[data-tour-open]')!.addEventListener('click', () => {
+        const theme = document.documentElement.dataset.theme;
+        frame.src = `${this.dataset.src}#tour=1${theme ? `&theme=${theme}` : ''}`;
+        dialog.showModal();
+      });
+      this.querySelector('[data-tour-close]')!.addEventListener('click', () => dialog.close());
+      // 닫으면 화면을 비워 견본과 하던 것을 모두 버린다
+      dialog.addEventListener('close', () => {
+        frame.src = 'about:blank';
+      });
+      // 마치기 (내용 없는 신호)
+      addEventListener('message', (event) => {
+        if (event.source === frame.contentWindow && event.data?.type === 'tour-end') dialog.close();
+      });
+      document.addEventListener('themechange', (event) => {
+        const theme = (event as CustomEvent<string>).detail;
+        frame.contentWindow?.postMessage({ type: 'theme', theme }, '*');
+      });
+    }
   }
+
+  customElements.define('tour-dialog', TourDialog);
 </script>
 
 <style>
-  .tour {
+  .open {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -46,7 +94,7 @@ const t = ui(localeOf(Astro.url.pathname)).guide;
       background-color 0.12s,
       border-color 0.12s;
   }
-  .tour:hover {
+  .open:hover {
     border-color: var(--color-muted);
     background: var(--color-hover);
   }
@@ -58,6 +106,75 @@ const t = ui(localeOf(Astro.url.pathname)).guide;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.8;
+    stroke-linecap: round;
     stroke-linejoin: round;
+  }
+  dialog {
+    width: min(1100px, calc(100vw - 2 * var(--gutter)));
+    height: calc(100dvh - 48px);
+    padding: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-dialog);
+  }
+  dialog::backdrop {
+    background: var(--color-backdrop);
+  }
+  dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  /* 휴대폰: 화면을 꽉 채운다 */
+  @media (max-width: 767px) {
+    dialog {
+      width: 100vw;
+      max-width: 100vw;
+      height: 100dvh;
+      max-height: 100dvh;
+      border: none;
+      border-radius: 0;
+    }
+  }
+  .head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 10px 10px 20px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.4;
+  }
+  .close {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+  .close:hover {
+    background: var(--color-hover);
+  }
+  .close svg {
+    width: 22px;
+    height: 22px;
+  }
+  .frame {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: none;
   }
 </style>
