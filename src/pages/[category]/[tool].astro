@@ -63,7 +63,7 @@ const siblings = toolsInCategory(tool.category).map((other) => ({
     {tool.flow && <ToolFlow flow={tool.flow} icon={tool.icon} />}
     <div class="help">
       <GuideDialog toolId={tool.id} />
-      <TourButton toolId={tool.id} />
+      <TourButton toolId={tool.id} name={text.name} src={`${href}frame/`} />
     </div>
   </Fragment>
   <ToolFrame slot="tool" src={`${href}frame/`} title={t.tool.frameTitle(text.name)} />

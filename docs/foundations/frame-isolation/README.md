@@ -44,8 +44,8 @@
 | `src/frame/messages.ts`                   | frame 공통 부품 문구 (한·영)                                                                                            |
 | `src/frame/FileDrop.svelte`               | 첫 화면 파일 고르기 버튼 (놓기는 하지 않는다), 견본이 있으면 '예시 파일로 해 보기'                                      |
 | `src/frame/samples.ts`                    | 도구별 견본 목록, `hasSamples`, `loadSamples()`: frame이 `/samples/<언어>/`에서 바로 받는다                             |
-| `src/frame/tour.ts`                       | 따라 하기: 견본을 넣고 사용법을 한 단계씩, 단계 글의 따옴표 버튼 이름과 같은 버튼을 짚는다 (`setupFrameTour`)           |
-| `src/components/TourButton.astro`         | 도구 제목 아래 '예시로 따라 하기' (바깥). `tourstart` 이벤트 → `ToolFrame`이 `tour-start` 신호                          |
+| `src/frame/tour.ts`                       | 따라 하기 (주소 `#tour=1`인 화면에서만): 견본을 넣고 사용법을 한 단계씩, 누를 곳만 밝게 비추고 번호를 단다              |
+| `src/components/TourButton.astro`         | 도구 제목 아래 '예시로 따라 하기' (바깥): 어두운 배경 위 창에 도구 화면을 하나 더 연다. ×·Esc·마치기로 닫으면 비운다    |
 | `scripts/samples/make_samples.py`         | 견본 파일 만들기 (PyMuPDF·Pillow, Pretendard). 결과 `public/samples/`는 커밋한다                                        |
 | `src/frame/ActionBar.svelte`              | 실행·다운로드 막대. 높이 64px 고정, `data-action-bar`(activity가 본다)                                                  |
 | `src/frame/download.ts`                   | `downloadFile()`: Blob URL + `<a download>`, 60초 뒤 해제                                                               |
@@ -77,9 +77,8 @@
 | ------------ | ----------------------------------------------------- | ----------------------------------------------------------------------- |
 | 바깥 → frame | 주소 `#theme=light\|dark`, `{ type: 'theme', theme }` | 테마. frame은 `localStorage`를 못 읽는다                                |
 | 바깥 → frame | `{ type: 'drag-start', width, height }`               | 파일 끌기 시작, 지금 크기                                               |
-| 바깥 → frame | `{ type: 'tour-start' }`                              | 따라 하기 시작. 단계 글은 보내지 않는다 (frame이 자기 것을 쓴다)        |
 | frame → 바깥 | `drag-ready`, `drag-request`, `drag-end`              | 넓혀도 됨 / 칸 안에서 시작된 끌기 / 끝                                  |
-| frame → 바깥 | `tour-ready`                                          | 따라 하기 신호를 받을 준비가 됨. 그전에 누른 것은 바깥이 들고 있다      |
+| frame → 바깥 | `tour-end`                                            | 따라 하기를 마쳤으니 창을 닫아 달라 (TourButton)                        |
 | frame → 바깥 | `show-tool`                                           | 파일을 열었으니 도구 칸이 화면을 채우게 스크롤해 달라                   |
 | frame → 바깥 | `activity`                                            | 도구를 쓰는 순간 (광고 차단 안내가 `toolactivity`로 듣는다)             |
 | frame ↔ 바깥 | 데이터 요청·응답                                      | 우리 공개 파일 경로만 ([글꼴·데이터 보관](../fonts-and-data/README.md)) |
@@ -128,9 +127,12 @@
   견본은 공개 파일이라 바깥 보관소를 거치지 않고 frame이 바로 받는다 (`/samples/*` CORS). 내용은 모두 지어낸 것이고, 암호 견본은 파일 이름에 암호(0000)를 적어 암호 입력 화면에 파일 이름을 보인다.
   견본을 받는 사이 사용자가 파일을 넣으면(놓기·고르기·도구 안 파일 추가) 늦게 온 견본은 버린다: 모든 길이 `announceFiles()`(내용 없는 이벤트)를 알리고,
   `FileDrop`·따라 하기가 `onFilesArrived()`로 듣는다 (따라 하기는 파일 input의 `change`도 듣는다)
-- 따라 하기 (2026-10-19): 바깥은 내용 없는 `tour-start` 신호만 보낸다. 단계 글은 frame 페이지에 빌드 때 넣은 그 도구의 사용법(`body`의 `data-tour`)만 쓴다.
-  바깥 페이지에는 광고 스크립트가 있어 바깥이 보낸 글을 도구 화면에 띄우면 도구 안에 가짜 안내를 넣을 수 있다.
-  짚을 버튼은 사용법에 따옴표로 적힌 이름으로 찾아 도구마다 적을 것이 없다. 저절로 시작하지 않는다 ('과도한 팝업' 위험)
+- 따라 하기 (2026-10-19, 다시 만듦): 처음에는 원래 도구 화면 안에서 돌렸는데, 끌 수 없어 원래 기능으로 돌아가기 어렵고 강조도 약했다(사용자 피드백).
+  그래서 도구 페이지 위에 창을 띄우고 그 안에 도구 화면을 하나 더 연다(`#tour=1`). 창을 닫으면 그 화면과 견본이 사라지고 원래 화면은 그대로다.
+  누를 곳 밖은 어둡게 덮고(구멍 둘레 그림자, 누르는 것은 막지 않음) 단계 번호를 단다. 누를 곳: 단계 글의 따옴표 버튼 이름 → 단계 글에 이름이 나오는
+  고르기 묶음 → 버튼 이름이 없는 단계는 작업 영역(가장 넓은 스크롤 영역). 이름이 있는데 못 찾으면 나중에 나타날 버튼이라 기다린다.
+  단계 글은 frame 페이지에 빌드 때 넣은 그 도구의 사용법만 쓴다 (바깥의 광고 스크립트가 글을 꾸미지 못하게). 바깥에서 받는 신호는 없다.
+  창 안 도구 화면도 같은 격리 frame이다. 저절로 열지 않는다 ('과도한 팝업' 위험)
 - activity 신호 (`7d3a9e9`): 바깥은 frame 안 클릭을 볼 수 없다. 광고 차단 안내를 도구를 쓸 때마다 띄우려면 frame이 알려야 한다. 내용은 담지 않는다
 
 ### 주의할 점
@@ -172,7 +174,7 @@
 
 ### 자동 테스트
 
-- `tests/e2e/tour.spec.ts`: 따라 하기가 견본을 넣고 단계 버튼을 짚음(나중에 나타나는 다운로드 포함), 그만하기, 모든 도구에서 시작, 영어
+- `tests/e2e/tour.spec.ts`: 창 안에서 견본으로 따라 하기(누를 곳 비추기·나중에 나타나는 버튼·작업 영역), 마치기·×·Esc로 닫으면 원래 화면 그대로, 다시 열면 처음부터, 견본 실패·늦은 견본, 모든 도구, 영어
 - `tests/e2e/samples.spec.ts`: 모든 도구에서 예시 파일을 넣어 첫 화면을 지나는지, 영어 화면은 영어 견본인지
 - `tests/e2e/pdf-view.spec.ts`
   - 도구 화면은 출처 없는 격리 frame이다 (`self.origin === 'null'`, 서로의 DOM 접근이 막힘)
