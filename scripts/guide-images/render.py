@@ -49,8 +49,8 @@ TEXT = {
 
 
 def render(path: str, index: int, dpi: int, clip: fitz.Rect | None = None) -> Image.Image:
-    doc = fitz.open(path)
-    pixmap = doc[index].get_pixmap(dpi=dpi, clip=clip)
+    with fitz.open(path) as doc:
+        pixmap = doc[index].get_pixmap(dpi=dpi, clip=clip)
     return Image.open(io.BytesIO(pixmap.tobytes('png'))).convert('RGB')
 
 
@@ -100,7 +100,9 @@ def main():
 
         # 압축: 사진 한 곳을 크게 잘라 단계별로 비교한다 (용량은 PDF 전체)
         photos = os.path.join(samples, t['photos'])
-        page = fitz.open(photos)[0]
+        # 문서를 변수에 붙잡아 둔다 (쪽은 문서가 해제되면 쓸 수 없다)
+        photos_doc = fitz.open(photos)
+        page = photos_doc[0]
         image_rect = page.get_image_rects(page.get_images()[0][0])[0]
         clip = fitz.Rect(
             image_rect.x0 + image_rect.width * 0.36,
@@ -120,8 +122,9 @@ def main():
         for count in (2, 4):
             path = os.path.join(cache, f'n-up-{count}.pdf')
             # 종이 방향이 달라도 높이를 맞춰 나란히 둔다
-            page = fitz.open(path)[0]
-            image = render(path, 0, round(72 * 460 / page.rect.height))
+            with fitz.open(path) as sheet:
+                height = sheet[0].rect.height
+            image = render(path, 0, round(72 * 460 / height))
             items.append((image, t['perSheet'](count), ''))
         save(tiles(items, label_font, sub_font, gap=32), locale, 'n-up-pdf', 'sheets.png')
 
