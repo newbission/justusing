@@ -3,6 +3,7 @@ title: How to add a header and footer to a PDF (with page numbers and date)
 description: Put a company name, document title, page numbers like "3 / 10" and the date at the top and bottom of every PDF page. How placeholders work and how to skip the cover.
 tool: pdf/header-footer
 published: 2026-10-15
+updated: 2026-10-19
 order: 9
 ---
 
@@ -32,6 +33,10 @@ Common patterns:
 - Footer, center: `- {page} -` → "- 3 -"
 - Header, right: `Acme Inc. · Quote`
 - Footer, right: `Printed {date}` → "Printed 10/15/2026"
+
+![The sample report with the header 'Example Co. · Q3 Team Report' and the footer '{page} / {total}'. The bottom of page 1 shows 1 / 4 and the bottom of page 2 shows 2 / 4](../../../assets/guides/en/header-footer-pdf/header-footer.png)
+
+This is the actual result with the company and report name in the header and `{page} / {total}` centered in the footer. The same text is filled in as 1 / 4, 2 / 4 and so on.
 
 ## Leaving the cover blank
 
