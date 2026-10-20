@@ -54,7 +54,9 @@ test('가이드 글에 글 정보가 있고 날짜가 화면과 같다', async (
     .find((data) => data['@type'] === 'Article');
   expect(article?.headline).toBe(await page.getByRole('heading', { level: 1 }).textContent());
   expect(article?.datePublished).toMatch(/^2026-10-15/);
-  await expect(page.getByText('2026년 10월 15일 작성')).toBeVisible();
+  // 고친 글은 고친 날을 보인다
+  expect(article?.dateModified).toMatch(/^2026-10-19/);
+  await expect(page.getByText('2026년 10월 19일 고침')).toBeVisible();
 });
 
 test('모든 가이드가 두 언어로 사이트맵에 있다', async ({ request, page }) => {
