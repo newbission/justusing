@@ -3,6 +3,7 @@ title: How to remove a password from a PDF you open often
 description: Pay slips, bank and insurance statements often ask for a password every time you open them. How to save a copy without the password, remove print and copy restrictions, when it cannot be done, and how to store the result safely.
 tool: pdf/unlock
 published: 2026-10-18
+updated: 2026-10-19
 order: 19
 ---
 
@@ -33,6 +34,8 @@ If you see "The password is incorrect.", check the instructions in the email aga
 Some PDFs open without asking for anything, yet the print button is greyed out or text cannot be copied. These have **permission restrictions** but no open password. They open straight away, and the tool says "This PDF has restrictions such as no printing or copying. Saves a copy without them." Click "Unlock PDF" to get a copy without the restrictions.
 
 If a PDF has neither, you see "This PDF has no password or restrictions." and the button stays disabled, since there is nothing to remove.
+
+![Two kinds of PDF locks. A PDF with an open password needs the right password and is saved as a PDF that opens without one. A PDF with restrictions only opens right away but blocks printing and copying, and is saved without the restrictions](../../../assets/guides/en/remove-pdf-password/two-kinds.svg)
 
 ## Make sure you are allowed to unlock it
 
