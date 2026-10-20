@@ -3,6 +3,7 @@ title: How to clean up a scanned PDF
 description: Remove the blank backs of a double-sided scan, fix pages in the wrong order and turn upside-down pages upright. Plus what to do next to make the scan smaller and searchable.
 tool: pdf/organize
 published: 2026-10-18
+updated: 2026-10-19
 order: 21
 ---
 
@@ -16,6 +17,8 @@ Scans rarely come out exactly right. Turn on double-sided scanning and every sin
 4. Click "Organize PDF", then "Download" when it is done.
 
 Your original file is not changed; you download the result as a new PDF. Click "Reset" to go back to where you started.
+
+![Two ways to clean up a scanned PDF. A double-sided scan of page 1, blank, page 2, blank, page 3, blank becomes pages 1, 2, 3 after excluding the three blank pages, and a scan in the order 3, 1, 2 is dragged into 1, 2, 3](../../../assets/guides/en/organize-scanned-pdf/cleanup.svg)
 
 ## Removing blank backs
 

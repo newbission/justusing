@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 286" width="440" height="286" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif">
+<rect width="440" height="286" rx="12" fill="#fff"/>
+<text x="24" y="34" font-size="13" font-weight="700" fill="#6e6e6a">Scanned PDF</text>
+<text x="416" y="34" font-size="15" font-weight="700" fill="#1e1e1e" text-anchor="end">Blank backs in between</text>
+<rect x="24" y="46" width="22" height="28" rx="2" fill="#fff" stroke="#c9c9c4" stroke-width="1"/><text x="35" y="64.5" font-size="11" fill="#6e6e6a" text-anchor="middle">1</text>
+<rect x="50" y="46" width="22" height="28" rx="2" fill="#fafaf8" stroke="#c9c9c4" stroke-width="1" stroke-dasharray="3 2"/>
+<rect x="76" y="46" width="22" height="28" rx="2" fill="#fff" stroke="#c9c9c4" stroke-width="1"/><text x="87" y="64.5" font-size="11" fill="#6e6e6a" text-anchor="middle">2</text>
+<rect x="102" y="46" width="22" height="28" rx="2" fill="#fafaf8" stroke="#c9c9c4" stroke-width="1" stroke-dasharray="3 2"/>
+<rect x="128" y="46" width="22" height="28" rx="2" fill="#fff" stroke="#c9c9c4" stroke-width="1"/><text x="139" y="64.5" font-size="11" fill="#6e6e6a" text-anchor="middle">3</text>
+<rect x="154" y="46" width="22" height="28" rx="2" fill="#fafaf8" stroke="#c9c9c4" stroke-width="1" stroke-dasharray="3 2"/>
+<path d="M36 80v14m-5-6 5 6 5-6" fill="none" stroke="#6e6e6a" stroke-width="1.4"/>
+<rect x="24" y="98" width="86" height="40" rx="6" fill="#f2f7f4" stroke="#2f6f55" stroke-width="1.2"/>
+<rect x="30" y="104" width="22" height="28" rx="2" fill="#fff" stroke="#2f6f55" stroke-width="1.6"/><text x="41" y="122.5" font-size="11" fill="#1e1e1e" text-anchor="middle">1</text>
+<rect x="56" y="104" width="22" height="28" rx="2" fill="#fff" stroke="#2f6f55" stroke-width="1.6"/><text x="67" y="122.5" font-size="11" fill="#1e1e1e" text-anchor="middle">2</text>
+<rect x="82" y="104" width="22" height="28" rx="2" fill="#fff" stroke="#2f6f55" stroke-width="1.6"/><text x="93" y="122.5" font-size="11" fill="#1e1e1e" text-anchor="middle">3</text>
+<text x="416" y="123" font-size="14" font-weight="700" fill="#2f6f55" text-anchor="end">3 blank pages excluded</text>
+<path d="M24 146h392" stroke="#ecece8" stroke-width="1"/>
+<text x="24" y="166" font-size="13" font-weight="700" fill="#6e6e6a">Scanned PDF</text>
+<text x="416" y="166" font-size="15" font-weight="700" fill="#1e1e1e" text-anchor="end">Pages out of order</text>
+<rect x="24" y="178" width="22" height="28" rx="2" fill="#fff" stroke="#c9c9c4" stroke-width="1"/><text x="35" y="196.5" font-size="11" fill="#6e6e6a" text-anchor="middle">3</text>
+<rect x="50" y="178" width="22" height="28" rx="2" fill="#fff" stroke="#c9c9c4" stroke-width="1"/><text x="61" y="196.5" font-size="11" fill="#6e6e6a" text-anchor="middle">1</text>
+<rect x="76" y="178" width="22" height="28" rx="2" fill="#fff" stroke="#c9c9c4" stroke-width="1"/><text x="87" y="196.5" font-size="11" fill="#6e6e6a" text-anchor="middle">2</text>
+<path d="M36 212v14m-5-6 5 6 5-6" fill="none" stroke="#6e6e6a" stroke-width="1.4"/>
+<rect x="24" y="230" width="86" height="40" rx="6" fill="#f2f7f4" stroke="#2f6f55" stroke-width="1.2"/>
+<rect x="30" y="236" width="22" height="28" rx="2" fill="#fff" stroke="#2f6f55" stroke-width="1.6"/><text x="41" y="254.5" font-size="11" fill="#1e1e1e" text-anchor="middle">1</text>
+<rect x="56" y="236" width="22" height="28" rx="2" fill="#fff" stroke="#2f6f55" stroke-width="1.6"/><text x="67" y="254.5" font-size="11" fill="#1e1e1e" text-anchor="middle">2</text>
+<rect x="82" y="236" width="22" height="28" rx="2" fill="#fff" stroke="#2f6f55" stroke-width="1.6"/><text x="93" y="254.5" font-size="11" fill="#1e1e1e" text-anchor="middle">3</text>
+<text x="416" y="255" font-size="14" font-weight="700" fill="#2f6f55" text-anchor="end">Dragged into 1, 2, 3</text>
+</svg>
