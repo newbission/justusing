@@ -70,7 +70,7 @@
 - [x] 얼굴 찾기 워커, 데이터 복사·목록, 받기 동의(보관소 `face`)
 - [x] 화면: 미리보기·끌기·키보드·버튼, 확인 목록, JPG 저장
 - [x] 한·영 문구, 사용법·FAQ, 안전 페이지
-- [ ] 가이드 글
+- [x] 가이드 글 (`/guide/id-photo-size/`, 원리 그림 `size.svg`)
 - [x] E2E (`expectLocalOnly`, googleapis 요청 없음)
 - [x] wrangler 미리보기, 390×844 밝은·어두운 화면
 - [ ] Safari·iPhone 확인 (이 환경의 WebKit은 로컬 서버에 붙지 못함)
