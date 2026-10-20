@@ -38,11 +38,13 @@ export const CATEGORIES = {
     text: {
       ko: {
         name: '이미지',
-        description: '이미지를 업로드 없이 줄이고, 크기를 바꾸고, 변환하고, 증명사진으로 맞추는 도구',
+        description:
+          '이미지를 업로드 없이 줄이고, 크기를 바꾸고, 변환하고, 증명사진으로 맞추는 도구',
       },
       en: {
         name: 'Image',
-        description: 'Compress, resize, convert and crop images to ID photo size without uploading them',
+        description:
+          'Compress, resize, convert and crop images to ID photo size without uploading them',
       },
     },
     sections: {
