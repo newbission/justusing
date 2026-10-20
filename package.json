@@ -13,8 +13,8 @@
     "check": "astro check && svelte-check --tsconfig ./tsconfig.json --threshold warning",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "predev": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-ocr-data.mjs",
-    "prebuild": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-ocr-data.mjs",
+    "predev": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-ocr-data.mjs && node scripts/copy-face-data.mjs",
+    "prebuild": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-ocr-data.mjs && node scripts/copy-face-data.mjs",
     "test:e2e": "playwright test",
     "build:ad-preview": "SHOW_AD_PLACEHOLDERS=1 npm run build"
   },
@@ -22,6 +22,7 @@
     "@astrojs/svelte": "^9.0.1",
     "@cantoo/fontkit": "^2.0.12",
     "@cantoo/pdf-lib": "^2.11.1",
+    "@mediapipe/tasks-vision": "1.1.1",
     "@tesseract.js-data/eng": "1.0.0",
     "@tesseract.js-data/kor": "1.0.0",
     "astro": "^7.3.8",

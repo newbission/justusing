@@ -3,6 +3,7 @@
  * 단계 글은 frame 페이지에 빌드 때 넣은 그 도구의 사용법이다 (src/frame/tour.ts, src/components/TourButton.astro).
  */
 import { fileURLToPath } from 'node:url';
+import { NO_SAMPLE } from './no-sample';
 import { expect, test, type Page } from './test';
 
 async function openTour(page: Page, path: string, name = '예시로 따라 하기') {
@@ -116,7 +117,8 @@ test('견본이 있는 모든 도구에서 따라 하기가 시작된다', async
   const xml = await (await request.get('/sitemap.xml')).text();
   const paths = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
     .map((match) => new URL(match[1]!).pathname)
-    .filter((path) => /^\/[^/]+\/[^/]+\/$/.test(path) && !/^\/(en|guide)\//.test(path));
+    .filter((path) => /^\/[^/]+\/[^/]+\/$/.test(path) && !/^\/(en|guide)\//.test(path))
+    .filter((path) => !NO_SAMPLE.includes(path));
   expect(paths.length).toBeGreaterThanOrEqual(27);
 
   for (const path of paths) {

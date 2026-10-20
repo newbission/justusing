@@ -1,0 +1,12 @@
+{
+  "engine": {
+    "path": "/data/face/vision_wasm_module_internal.wasm",
+    "bytes": 13519940,
+    "sha256": "3b57e4b55ac6346bf940212e3e11250b308a6a474077385e2f527b119cf74525"
+  },
+  "model": {
+    "path": "/data/face/face_landmarker.task",
+    "bytes": 3758596,
+    "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff"
+  }
+}
