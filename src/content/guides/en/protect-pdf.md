@@ -3,6 +3,7 @@ title: How to password-protect a PDF before emailing it
 description: Add an open password to a PDF that contains personal details before you email it. How to share the password, how to pick a strong one, how the recipient opens the file, and what happens if you forget it.
 tool: pdf/protect
 published: 2026-10-18
+updated: 2026-10-19
 order: 18
 ---
 
@@ -25,6 +26,8 @@ The most common mistake is **putting the password in the same email** as the fil
 - Send the file by email and the password by **text message, chat or phone**.
 - If you exchange files with the same person often, you can agree on a rule in advance. Avoid anything others can easily find out, such as a birthday or phone number.
 - Mention in the email that the password is coming separately, so the recipient is not confused.
+
+![Send the locked PDF by email and the password another way, such as a text, chat or phone call. Do not put the PDF and the password in the same email](../../../assets/guides/en/protect-pdf/two-channels.svg)
 
 ## Choosing a good password
 
