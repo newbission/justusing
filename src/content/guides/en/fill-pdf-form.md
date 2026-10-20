@@ -3,6 +3,7 @@ title: How to fill in a PDF form and save it
 description: Fill the fields of a PDF application or contract without installing anything. Why some characters disappear, how to fix it, and how to flatten the form so others cannot change it.
 tool: pdf/fill-form
 published: 2026-10-15
+updated: 2026-10-19
 order: 15
 ---
 
@@ -19,6 +20,10 @@ PDF applications from schools, employers and government offices often have field
 ## Why characters disappear
 
 PDF fields usually use the built-in Helvetica font, which only covers Western European characters. Some apps drop anything else when saving. When you type such characters, this tool asks you to choose a font and embeds only the characters you typed, so they show up in every app. A font is downloaded once and kept in this browser.
+
+![The sample application form with the name, phone, date and note fields filled in and the consent box ticked](../../../assets/guides/en/fill-pdf-form/filled.png)
+
+This is the actual result of filling in and saving the sample form. The values are saved in the form fields, so other PDF apps show them as well.
 
 ## Stop others from changing it
 
