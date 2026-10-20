@@ -11,6 +11,11 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 
 - photos.pdf   사진이 든 2쪽 PDF (PDF 압축 도구). 1쪽 고화질 JPG, 2쪽 PNG 예측을 건 Flate RGB 사진,
                그리고 어디에서도 쓰지 않는 큰 객체 하나. 쪽마다 글자 "Photo page N"
 - scan.png     글자를 찍은 그림 (글자 인식 도구). 한글 한 줄, 영어 한 줄. Pretendard로 그린다
+
+이 스크립트가 만들지 않는 것:
+- face.jpg     흰 배경 앞 얼굴 사진 (증명사진 도구). 얼굴 인식은 실제 사진이라야 해서 NASA 공개 사진
+               (퍼블릭 도메인, commons.wikimedia.org/wiki/File:Jessica_Wittner_white_background.jpg)을
+               800×1200으로 줄였다. 테스트에만 쓰고 사이트 견본으로는 쓰지 않는다
 """
 import io
 import math
