@@ -63,13 +63,16 @@ function call(worker: Worker, request: FaceRequest, transfer: Transferable[] = [
 export class FaceFinder {
   private constructor(private worker: Worker | undefined) {}
 
-  /** 엔진을 띄운다. data: loadData로 받아 확인한 바이트 (경로 → 바이트) */
+  /** 엔진을 띄운다. data: loadData로 받아 확인한 바이트 (경로 → 바이트). 워커로 넘어가 비워진다 */
   static async create(data: Map<string, Uint8Array>): Promise<FaceFinder> {
     const worker = await createWorker(workerUrl);
     const finder = new FaceFinder(worker);
     const engine = data.get(FACE_ENGINE.path)!;
     const model = data.get(FACE_MODEL.path)!;
-    const response = await call(worker, { id: nextId++, type: 'init', engine, model });
+    // 17MB를 화면 스레드에서 복사하지 않게 넘겨준다 (받은 바이트는 여기서만 쓴다)
+    const response = await call(worker, { id: nextId++, type: 'init', engine, model }, [
+      ...new Set([engine.buffer, model.buffer]),
+    ]);
     if (response.kind === 'error') {
       finder.dispose();
       throw new Error(response.message);
