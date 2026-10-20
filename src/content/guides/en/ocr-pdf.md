@@ -3,6 +3,7 @@ title: How to make a scanned PDF searchable (OCR)
 description: You cannot search or copy text in a scanned or photographed PDF. How to turn it into a searchable, copyable PDF with OCR, and tips for better accuracy.
 tool: pdf/ocr
 published: 2026-10-15
+updated: 2026-10-19
 order: 12
 ---
 
@@ -20,6 +21,10 @@ Open the PDF and try to drag across some text. If no text is selected and the wh
 4. The first time, click "Download data". The button shows how much will be downloaded.
 5. Click "Recognize text" and wait. You can see which page is being read.
 6. Click "Download PDF" for a searchable PDF, or "Download TXT" for the text alone.
+
+![The sample scanned notice before and after OCR. After OCR, the places where text was found are shaded green, showing where text can now be searched and copied](../../../assets/guides/en/ocr-pdf/text-layer.png)
+
+This is the actual result of OCR on the sample scan, with the places that received text shaded green. The page looks the same, and an invisible text layer on top lets you search and copy the text.
 
 ## The data is downloaded once
 
