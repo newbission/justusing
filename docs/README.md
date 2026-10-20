@@ -83,8 +83,9 @@ PDF
 
 이미지
 
-| 폴더                                        | 도구        | 상태 |
-| ------------------------------------------- | ----------- | ---- |
-| [image-compress](./features/image-compress) | 이미지 압축 | live |
-| [image-resize](./features/image-resize)     | 크기 조절   | live |
-| [image-convert](./features/image-convert)   | 형식 변환   | live |
+| 폴더                                        | 도구        | 상태       |
+| ------------------------------------------- | ----------- | ---------- |
+| [image-compress](./features/image-compress) | 이미지 압축 | live       |
+| [image-resize](./features/image-resize)     | 크기 조절   | live       |
+| [image-convert](./features/image-convert)   | 형식 변환   | live       |
+| [image-id-photo](./features/image-id-photo) | 증명사진    | PR 진행 중 |
