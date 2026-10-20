@@ -3,6 +3,7 @@ title: How to sign a PDF (no printer needed)
 description: Add a handwritten signature to a contract or consent form PDF. Drawing with a mouse or finger, using a photo of a paper signature, signing every page, and how this differs from a digital signature.
 tool: pdf/sign
 published: 2026-10-15
+updated: 2026-10-19
 order: 6
 ---
 
@@ -21,6 +22,10 @@ When a contract or consent form arrives as a PDF, printing it, signing it and sc
 - Drawing with a finger or stylus on a **phone or tablet** feels more natural than a mouse.
 - Draw it **large**, using the whole box, then shrink it on the page for smoother lines.
 - A drawn signature has a transparent background, so it does not cover the text or the signature line beneath it.
+
+![The sample report with a signature drawn with a mouse, placed to the right of the author line on page 1](../../../assets/guides/en/sign-pdf/signed.png)
+
+This is the actual result of a mouse-drawn signature, made smaller and placed next to the author line. The signature goes in as an image with a transparent background, so it does not cover text or lines underneath.
 
 ## Using your paper signature
 

@@ -3,6 +3,7 @@ title: How to add and correct text in a PDF (white out and highlight)
 description: Write text onto a PDF, cover a mistake with white and write over it, and highlight what matters, all without installing software. Also explains the limits of white out.
 tool: pdf/edit
 published: 2026-10-15
+updated: 2026-10-19
 order: 10
 ---
 
@@ -43,7 +44,11 @@ White out **only places a white rectangle on top**. The original text stays in t
 - copying or searching the PDF can reveal the covered text, and
 - removing the rectangle in another program shows the original.
 
-So **do not use it to remove personal information** such as ID or account numbers. If content must really be gone, convert the page with [PDF to Image](/en/pdf/to-image/), cover it in the image, and rebuild the PDF with [Image to PDF](/en/pdf/from-image/).
+So **do not use it to remove personal information** such as ID or account numbers. If content must really be gone, use [Redact PDF](/en/pdf/redact/). It turns the redacted pages into painted images, so the text underneath is gone too.
+
+![The 'Average reply time' row of the sample report's table covered with white out. Above, the row looks empty on screen; below, pulling text from the same spot still gives Average reply time, 6.2 h, 3.9 h and -37%](../../../assets/guides/en/edit-pdf/white-out.png)
+
+Above is the actual result of covering one table row with white out. Below, the text pulled from the same spot in that file is written back in green. It is gone from the screen, but the text is still in the file.
 
 ## Signatures and stamps
 

@@ -3,6 +3,7 @@ title: How to reduce image file size (JPG and PNG)
 description: Shrink phone photos and screenshots while keeping them looking the same. How JPG and PNG shrink differently, and when to use WebP.
 tool: image/compress
 published: 2026-10-15
+updated: 2026-10-19
 order: 2
 ---
 
@@ -23,6 +24,10 @@ JPG makes files small by dropping detail the eye barely notices. How much it dro
 - **Less**: for photos you will zoom into or print.
 - **Balanced**: hard to tell apart on screen, and the file is usually half the size or less.
 - **More**: the smallest file. Edges may look rough when zoomed in a lot.
+
+![The edge of the sun cropped and enlarged from the sample photo (2000×1500) compressed at Balanced and More. Original 481 KB, Balanced 97 KB, More 69 KB, with almost no visible difference](../../../assets/guides/en/compress-image/levels.png)
+
+This is the same spot cropped and enlarged from the actual results. Even zoomed in the difference is hard to see, but the file shrank to about one fifth of the original at **Balanced** and one seventh at **More**.
 
 ## PNG shrinks by color count
 

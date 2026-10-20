@@ -3,7 +3,7 @@ title: How to change a PDF's author and title and remove hidden info
 description: PDF files often carry the author name, company, apps used and creation date. How to check, change or remove this document information.
 tool: pdf/metadata
 published: 2026-10-15
-updated: 2026-10-16
+updated: 2026-10-19
 order: 16
 ---
 
@@ -38,6 +38,10 @@ Phone photos placed in a PDF may still carry where they were taken and camera de
 What the file needs to work is also kept: attachment names and descriptions, paths in links to other files, information inside XFA forms, and a signature drawn visibly in a signature field (name and date).
 
 Names and numbers written on the pages are page content, not document info, so this does not remove them. Use [Redact PDF](/en/pdf/redact/) for those.
+
+![The sample report's document info before and after saving with Remove all. The original has a title, the author 'By Alex Doe (Example Co. Planning)', a subject, keywords, a creator, a PDF producer and a creation date; afterwards all of them are empty](../../../assets/guides/en/pdf-metadata/before-after.png)
+
+This is the sample report's document info read straight from the file before and after removing everything with this tool. The author's name, company and creation date, which never showed on screen, are gone too.
 
 ## When a good title helps
 

@@ -3,7 +3,7 @@ title: How to convert PDF to JPG images
 description: Turn PDF pages into JPG or PNG images. Converting every page or only some, choosing between JPG and PNG, and the difference between 150 and 300 DPI.
 tool: pdf/to-image
 published: 2026-10-15
-updated: 2026-10-17
+updated: 2026-10-19
 order: 5
 ---
 
@@ -35,9 +35,13 @@ A PNG of the same page can be several times larger than a JPG. Choose JPG for se
 DPI is how many dots are drawn per inch. Higher numbers mean bigger, sharper images.
 
 - **Standard (150 DPI)**: an A4 page becomes about 1240×1754 pixels. Plenty for viewing on screen and sharing.
-- **High (300 DPI)**: an A4 page becomes about 2480×3508 pixels. Choose it for printing or zooming into small text. Files are about four times larger.
+- **High (300 DPI)**: an A4 page becomes about 2480×3508 pixels. Choose it for printing or zooming into small text. It has four times the pixels, and the file is usually two to four times larger, depending on the page.
 
 Very large pages, such as drawings or posters, are scaled down slightly to a size the browser can draw.
+
+![The same spot in the table of page 1 of the sample report, enlarged to the same size from Standard (150 DPI) and High (300 DPI) JPGs. At 150 DPI the letter edges look stepped; at 300 DPI they are smooth. The page images are 86 KB and 234 KB](../../../assets/guides/en/pdf-to-jpg/dpi.png)
+
+This is the same spot enlarged to the same size from the actual results at both qualities. Zoomed in, the 300 DPI text is smoother. For this page, the file grew from 86 KB to 234 KB, about 2.7 times.
 
 ## Good to know
 

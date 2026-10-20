@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 254" width="440" height="254" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif">
+<rect width="440" height="254" rx="12" fill="#fff"/>
+<text x="24" y="34" font-size="13" font-weight="700" fill="#6e6e6a">보내는 사람</text>
+<text x="416" y="34" font-size="13" font-weight="700" fill="#6e6e6a" text-anchor="end">받는 사람</text>
+<rect x="24" y="52" width="30" height="38" rx="3" fill="#fff" stroke="#c9c9c4" stroke-width="1.2"/>
+<text x="39" y="75" font-size="9" font-weight="700" fill="#6e6e6a" text-anchor="middle">PDF</text>
+<path d="M47 82v-3a4 4 0 0 1 8 0v3" fill="none" stroke="#1e1e1e" stroke-width="1.5"/><rect x="44" y="82" width="14" height="10" rx="2" fill="#1e1e1e"/>
+<path d="M66 71h290m-6-5 6 5-6 5" fill="none" stroke="#6e6e6a" stroke-width="1.4"/>
+<text x="211" y="63" font-size="13" font-weight="700" fill="#1e1e1e" text-anchor="middle">메일: 암호 건 PDF</text>
+<rect x="386" y="52" width="30" height="38" rx="3" fill="#fff" stroke="#c9c9c4" stroke-width="1.2"/>
+<text x="401" y="75" font-size="9" font-weight="700" fill="#6e6e6a" text-anchor="middle">PDF</text>
+<path d="M409 82v-3a4 4 0 0 1 8 0v3" fill="none" stroke="#1e1e1e" stroke-width="1.5"/><rect x="406" y="82" width="14" height="10" rx="2" fill="#1e1e1e"/>
+<rect x="24" y="116" width="30" height="24" rx="4" fill="#f2f7f4" stroke="#2f6f55" stroke-width="1.2"/>
+<text x="39" y="132" font-size="10" font-weight="700" fill="#2f6f55" text-anchor="middle">••••</text>
+<path d="M66 128h290m-6-5 6 5-6 5" fill="none" stroke="#6e6e6a" stroke-width="1.4"/>
+<text x="211" y="120" font-size="13" font-weight="700" fill="#2f6f55" text-anchor="middle">문자·메신저·전화: 암호</text>
+<rect x="386" y="116" width="30" height="24" rx="4" fill="#f2f7f4" stroke="#2f6f55" stroke-width="1.2"/>
+<text x="401" y="132" font-size="10" font-weight="700" fill="#2f6f55" text-anchor="middle">••••</text>
+<path d="M24 160h392" stroke="#ecece8" stroke-width="1"/>
+<text x="24" y="186" font-size="13" font-weight="700" fill="#6e6e6a">하지 말 것</text>
+<rect x="24" y="198" width="30" height="38" rx="3" fill="#fff" stroke="#c9c9c4" stroke-width="1.2"/>
+<text x="39" y="221" font-size="9" font-weight="700" fill="#6e6e6a" text-anchor="middle">PDF</text>
+<path d="M47 228v-3a4 4 0 0 1 8 0v3" fill="none" stroke="#1e1e1e" stroke-width="1.5"/><rect x="44" y="228" width="14" height="10" rx="2" fill="#1e1e1e"/>
+<rect x="60" y="205" width="30" height="24" rx="4" fill="#fff" stroke="#c9c9c4" stroke-width="1.2"/>
+<text x="75" y="221" font-size="10" font-weight="700" fill="#6e6e6a" text-anchor="middle">••••</text>
+<text x="104" y="222" font-size="13" fill="#6e6e6a">같은 메일에 PDF와 암호를 함께</text>
+<path d="M24 196l70 42M94 196l-70 42" stroke="#6e6e6a" stroke-width="1.6"/>
+</svg>

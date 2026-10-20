@@ -3,6 +3,7 @@ title: How to resize an image (change its pixel size)
 description: Change the width and height of photos by percentage or in pixels. How to make many images the same size, the difference between keeping the aspect ratio and an exact size, and how size affects file size.
 tool: image/resize
 published: 2026-10-15
+updated: 2026-10-19
 order: 3
 ---
 
@@ -17,6 +18,10 @@ An image is a grid of tiny dots called pixels. A 4000×3000 photo has 12 million
 - Enlarging a small image cannot create detail that is not there, so it gets blurry.
 
 So simply resizing for where the image is going often solves file size problems too.
+
+![The sample photo at 100%, 50% and 25%, drawn to scale side by side. 2000×1500 is 481 KB, 1000×750 is 72 KB and 500×375 is 20 KB](../../../assets/guides/en/resize-image/sizes.png)
+
+These are actual results of resizing the sample photo. Halving the width and height leaves a quarter of the pixels, and for this photo the file went from 481 KB to 72 KB.
 
 ## Steps
 

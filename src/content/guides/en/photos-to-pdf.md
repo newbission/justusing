@@ -3,6 +3,7 @@ title: How to turn phone photos of documents into one PDF
 description: No scanner? Photograph forms, receipts or homework with your phone and turn them into one PDF ready to submit. Tips for clear photos, choosing page size and margins, page order, and what to do when the file is too big.
 tool: pdf/from-image
 published: 2026-10-18
+updated: 2026-10-19
 order: 17
 ---
 
@@ -48,6 +49,10 @@ Portrait photos will not end up sideways. The orientation stored in each photo i
 For photos of documents, choose the **paper size your recipient uses**. Even if the photos differ slightly in size, every page in the PDF will be the same size, which looks tidy and prints correctly. Each photo is centered without changing its proportions, and photos smaller than the paper are not stretched.
 
 For the margin, choose "No margin" or "Small margin" (about half an inch). If the document will be printed, "Small margin" is safer because many printers cannot print right to the edge. If it will only be read on screen, "No margin" makes the text a little larger.
+
+![The first page of two PDFs made from a sample document photo. 'A4 · Small margin' puts the photo in the middle of a white A4 page; 'Fit to image · No margin' makes the page the same size as the photo, so the photo fills it](../../../assets/guides/en/photos-to-pdf/page-sizes.png)
+
+These are actual results from the same document photo. On the left the photo is scaled to fit an A4 page; on the right the page is the same size as the photo.
 
 ## Common problems
 

@@ -3,6 +3,7 @@ title: Crop PDF margins to read on a phone or tablet
 description: Trim the wide margins of papers and e-book PDFs so they are easier to read on a phone or tablet. All pages versus this page, why the cropped-out parts stay in the file, and what to watch out for when printing.
 tool: pdf/crop
 published: 2026-10-18
+updated: 2026-10-19
 order: 22
 ---
 
@@ -21,6 +22,10 @@ Open a paper or textbook PDF made for A4 or Letter on a phone, and the whole pag
 - **Check several pages**: the same area stays in place as you move between pages with the ‹ › buttons. Look at the page with the widest text, pages where figures or tables stick out into the margin, and pages with page numbers, and make sure nothing gets cut.
 - **Leave a little room**: cropping right up to the text makes it touch the screen edge, which is harder to read. Keep a small margin.
 - **Scanned books**: odd and even pages often have their inner margin on opposite sides. Look at both and choose an area that fits the text on each.
+
+![Page 1 of the sample report next to the same page with its margins cropped, shown at the same width. The text on the cropped page looks larger](../../../assets/guides/en/crop-pdf-margins/before-after.png)
+
+The original and the actual cropped result are shown at the same width. The text looks larger by as much margin as was removed, and the narrower the screen, the bigger the difference.
 
 ## "All pages" or "This page"
 
