@@ -23,7 +23,6 @@
     autoPlace,
     centerPlace,
     drawCrop,
-    exportJpeg,
     headLength,
     outside,
     readFace,
@@ -32,6 +31,7 @@
     type Thumb,
     whiteBackground,
   } from '../../../lib/face/id-photo';
+  import { PhotoWorker } from '../../../lib/face/photo';
 
   const t = pick(MESSAGES);
 
@@ -43,10 +43,9 @@
   const VIEW_W = 245;
   const VIEW_H = 315;
 
+  /** 원본은 사진 워커가 들고 있다 (결과 파일용). 화면에는 줄인 사본만 둔다 */
   interface Photo {
     name: string;
-    /** 원본 (결과 파일용) */
-    bitmap: ImageBitmap;
     /** 줄인 사진 (미리보기·얼굴 찾기용) */
     preview: ImageBitmap;
     width: number;
@@ -78,7 +77,9 @@
   let find = $state.raw<Find>({ kind: 'idle' });
   let placement = $state.raw<Placement>({ cx: 0, cy: 0, angle: 0, height: 1 });
   let saved = $state.raw<{ size: number } | undefined>();
+  let saveFailed = $state(false);
   let finder: Promise<FaceFinder> | undefined;
+  const photos = new PhotoWorker();
 
   /** 받은 데이터로 얼굴 찾기 엔진을 띄운다 (엔진이 바이트를 넘겨받아 비운다) */
   function startFinder(bytes: Promise<Map<string, Uint8Array>>) {
@@ -103,6 +104,7 @@
     return () => {
       off();
       finder?.then((value) => value.dispose()).catch(() => {});
+      photos.dispose();
     };
   });
 
@@ -123,51 +125,18 @@
     }
   }
 
-  async function shrink(source: ImageBitmap, side: number) {
-    const scale = Math.min(1, side / Math.max(source.width, source.height));
-    const width = Math.max(1, Math.round(source.width * scale));
-    const height = Math.max(1, Math.round(source.height * scale));
-    const bitmap = await createImageBitmap(source, {
-      resizeWidth: width,
-      resizeHeight: height,
-      resizeQuality: 'high',
-    });
-    return { bitmap, scale };
-  }
-
   async function open(file: File) {
     const ticket = ++generation;
     close(false);
     phase = 'opening';
     try {
-      // 휴대폰 사진의 방향(EXIF)은 브라우저가 맞춰 읽는다
-      const bitmap = await createImageBitmap(file);
-      const preview = (await shrink(bitmap, PREVIEW_SIDE)).bitmap;
-      const small = await shrink(bitmap, THUMB_SIDE);
-      const canvas = new OffscreenCanvas(small.bitmap.width, small.bitmap.height);
-      const context = canvas.getContext('2d', { willReadFrequently: true })!;
-      context.drawImage(small.bitmap, 0, 0);
-      small.bitmap.close();
-      const thumb: Thumb = {
-        data: context.getImageData(0, 0, canvas.width, canvas.height).data,
-        width: canvas.width,
-        height: canvas.height,
-        scale: small.scale,
-      };
+      const opened = await photos.open(file, PREVIEW_SIDE, THUMB_SIDE);
       if (ticket !== generation) {
-        bitmap.close();
-        preview.close();
+        opened.preview.close();
         return;
       }
-      photo = {
-        name: file.name,
-        bitmap,
-        preview,
-        width: bitmap.width,
-        height: bitmap.height,
-        thumb,
-      };
-      placement = centerPlace(bitmap.width, bitmap.height);
+      photo = { name: file.name, ...opened };
+      placement = centerPlace(opened.width, opened.height);
       phase = 'ready';
       requestShowTool();
     } catch {
@@ -177,11 +146,11 @@
 
   function close(reset = true) {
     if (reset) generation++;
-    photo?.bitmap.close();
     photo?.preview.close();
     photo = undefined;
     find = { kind: 'idle' };
     saved = undefined;
+    saveFailed = false;
     phase = 'idle';
   }
 
@@ -244,6 +213,7 @@
   function update(next: Placement) {
     placement = next;
     saved = undefined;
+    saveFailed = false;
   }
 
   /** 사진을 칸 안에서 옮긴다 (dx, dy: 칸 높이에 대한 비율, 오른쪽·아래가 +) */
@@ -332,14 +302,14 @@
     if (!current || find.kind === 'finding') return;
     const entitlement = await canUse('image/id-photo');
     if (!entitlement.allowed) return;
-    const blob = await exportJpeg(current.bitmap, placement);
-    if (current !== photo) return;
-    downloadFile(
-      new Uint8Array(await blob.arrayBuffer()),
-      `${baseName(current.name)}_${t.suffix}.jpg`,
-      'image/jpeg',
-    );
-    saved = { size: blob.size };
+    try {
+      const bytes = await photos.export(placement);
+      if (current !== photo) return;
+      downloadFile(bytes, `${baseName(current.name)}_${t.suffix}.jpg`, 'image/jpeg');
+      saved = { size: bytes.length };
+    } catch {
+      if (current === photo) saveFailed = true;
+    }
   }
 
   const guideTop = `${(SPEC.topMm / SPEC.heightMm) * 100}%`;
@@ -357,7 +327,9 @@
 
     <ActionBar label={t.bar}>
       {#snippet text()}
-        {#if saved}
+        {#if saveFailed}
+          <strong>{t.saveFailed}</strong>
+        {:else if saved}
           {t.saved(formatSize(saved.size))}
         {:else if find.kind === 'finding'}
           {t.finding}

@@ -28,6 +28,8 @@ const ko = {
   findFailed: '얼굴을 찾지 못했습니다. 기기의 메모리가 부족할 수 있습니다. 칸을 직접 맞춰 주세요.',
   download: 'JPG 다운로드',
   saved: (size: string) => `413×531 JPG ${size}를 만들었습니다.`,
+  saveFailed:
+    'JPG를 만들지 못했습니다. 기기의 메모리가 부족할 수 있습니다. 다른 앱을 닫고 다시 해 보세요.',
 
   preview: '증명사진 미리보기',
   previewHelp:
@@ -91,6 +93,8 @@ const en: typeof ko = {
   findFailed: 'Could not find a face. Your device may be low on memory. Fit the frame yourself.',
   download: 'Download JPG',
   saved: (size: string) => `Made a 413×531 JPG of ${size}.`,
+  saveFailed:
+    'Could not make the JPG. Your device may be low on memory. Close other apps and try again.',
 
   preview: 'ID photo preview',
   previewHelp:
