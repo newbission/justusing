@@ -55,8 +55,7 @@ async function exportPhoto(request: Extract<PhotoRequest, { type: 'export' }>) {
   postMessage(response, { transfer: [bytes.buffer] });
 }
 
-addEventListener('message', async (event: MessageEvent<PhotoRequest>) => {
-  const request = event.data;
+async function handle(request: PhotoRequest) {
   try {
     if (request.type === 'open') await open(request);
     else await exportPhoto(request);
@@ -67,4 +66,13 @@ addEventListener('message', async (event: MessageEvent<PhotoRequest>) => {
       message: error instanceof Error ? error.message : String(error),
     } satisfies PhotoResponse);
   }
+}
+
+/**
+ * 요청은 온 순서대로 하나씩 처리한다. 큰 사진을 여는 사이 작은 사진을 열면 작은 것이 먼저 끝나고 큰 것이
+ * 원본을 덮어써, 그 뒤 저장이 화면에 없는 사진을 자르게 된다. 줄 세우면 마지막에 연 사진이 원본으로 남는다
+ */
+let queue: Promise<void> = Promise.resolve();
+addEventListener('message', (event: MessageEvent<PhotoRequest>) => {
+  queue = queue.then(() => handle(event.data));
 });
