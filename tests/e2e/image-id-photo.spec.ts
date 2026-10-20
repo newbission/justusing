@@ -4,7 +4,8 @@
  * 흰 배경 얼굴 사진(face.jpg)을 기울여 넣고, 얼굴 찾기 데이터를 받아 저절로 맞춘 결과가
  * 413×531 JPG이고 기울기가 바로잡혔는지 본다. 데이터 없이 직접 맞추기와 키보드 조작도 본다.
  */
-import { expect, test, type FrameLocator, type Page, type Request } from './test';
+import type { FrameLocator } from '@playwright/test';
+import { expect, test, type Page, type Request } from './test';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { expectLocalOnly } from './local-only';
