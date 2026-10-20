@@ -20,9 +20,11 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       # 실패한 E2E의 기록. 내려받아 npx playwright show-trace 로 본다
-      - if: failure()
+      # 재시도에서 통과해도 첫 실패의 기록은 남으므로 CI가 통과해도 올린다 (기록이 없으면 건너뜀)
+      - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-traces
-          path: test-results/
+          path: test-results/**/trace.zip
+          if-no-files-found: ignore
           retention-days: 7
