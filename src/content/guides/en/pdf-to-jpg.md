@@ -39,6 +39,10 @@ DPI is how many dots are drawn per inch. Higher numbers mean bigger, sharper ima
 
 Very large pages, such as drawings or posters, are scaled down slightly to a size the browser can draw.
 
+![The same spot in the table of page 1 of the sample report, enlarged to the same size from Standard (150 DPI) and High (300 DPI) JPGs. At 150 DPI the letter edges look stepped; at 300 DPI they are smooth. The page images are 86 KB and 234 KB](../../../assets/guides/en/pdf-to-jpg/dpi.png)
+
+This is the same spot enlarged to the same size from the actual results at both qualities. Zoomed in, the 300 DPI text is smoother. For this page, the file grew from 86 KB to 234 KB, about 2.7 times.
+
 ## Good to know
 
 - **Password-protected PDFs** can be converted after you open them with the password. The images have no password, so store them carefully.
