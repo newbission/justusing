@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 330" width="440" height="330" font-family="Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif">
+<rect width="440" height="330" rx="12" fill="#fff"/>
+<rect x="40" y="30" width="196.0" height="252.0" fill="#fff" stroke="#1e1e1e" stroke-width="1.4"/>
+<path d="M41.0 281.0C62.4 248.4 93.2 245.6 112.8 237.2L163.2 237.2C182.8 245.6 213.6 248.4 235.0 281.0Z" fill="#e4e4e0"/>
+<ellipse cx="138.0" cy="147.6" rx="67.2" ry="95.2" fill="#d6d6d1"/>
+<path d="M40 52.4h196.0" stroke="#2f6f55" stroke-width="1.5" stroke-dasharray="5 3"/>
+<rect x="40" y="231.6" width="196.0" height="22.4" fill="#2f6f55" fill-opacity="0.18" stroke="#2f6f55" stroke-width="1"/>
+<path d="M40 294.0h196.0M40 289.0v10M236.0 289.0v10" stroke="#6e6e6a" stroke-width="1"/>
+<text x="138.0" y="310.0" font-size="13" font-weight="700" fill="#1e1e1e" text-anchor="middle">35 mm</text>
+<path d="M26 30v252.0M21 30h10M21 282.0h10" stroke="#6e6e6a" stroke-width="1"/>
+<text x="20" y="156.0" font-size="13" font-weight="700" fill="#1e1e1e" text-anchor="middle" transform="rotate(-90 20 156.0)">45 mm</text>
+<path d="M245.0 52.4h5v190.4h-5" fill="none" stroke="#2f6f55" stroke-width="1.4"/>
+<text x="260.0" y="136.4" font-size="14" font-weight="700" fill="#2f6f55">Head 32–36 mm</text>
+<text x="260.0" y="155.4" font-size="12" fill="#6e6e6a">Top of head to chin</text>
+<text x="260.0" y="56.4" font-size="12" fill="#6e6e6a">Top of head</text>
+<text x="260.0" y="246.8" font-size="12" fill="#6e6e6a">Chin</text>
+<text x="260.0" y="292.0" font-size="12" font-weight="700" fill="#1e1e1e">File for online use</text>
+<text x="260.0" y="310.0" font-size="12" fill="#6e6e6a">413×531 px, up to 500 KB</text>
+</svg>
