@@ -460,39 +460,45 @@ def convert_image(t, cache, samples, fonts):
 
 CONVERT_CROP = (52, 160, 116, 206)
 
-GUIDES = [
-    compress_pdf,
-    n_up_pdf,
-    redact_pdf,
-    merge_pdf,
-    watermark_pdf,
-    header_footer_pdf,
-    sign_pdf,
-    edit_pdf,
-    crop_pdf,
-    pdf_to_jpg,
-    ocr_pdf,
-    photos_to_pdf,
-    pdf_metadata,
-    fill_pdf_form,
-    extract_images_pdf,
-    compress_image,
-    resize_image,
-    convert_image,
-]
+# 글 주소 → 그림 함수 (글을 골라 다시 그릴 때 다른 글의 재료가 없어도 되게 이름으로 고른다)
+GUIDES = {
+    'compress-pdf': compress_pdf,
+    'n-up-pdf': n_up_pdf,
+    'redact-pdf': redact_pdf,
+    'merge-pdf': merge_pdf,
+    'watermark-pdf': watermark_pdf,
+    'header-footer-pdf': header_footer_pdf,
+    'sign-pdf': sign_pdf,
+    'edit-pdf': edit_pdf,
+    'crop-pdf-margins': crop_pdf,
+    'pdf-to-jpg': pdf_to_jpg,
+    'ocr-pdf': ocr_pdf,
+    'photos-to-pdf': photos_to_pdf,
+    'pdf-metadata': pdf_metadata,
+    'fill-pdf-form': fill_pdf_form,
+    'extract-images-pdf': extract_images_pdf,
+    'compress-image': compress_image,
+    'resize-image': resize_image,
+    'convert-image': convert_image,
+}
 
 
 def main():
     """글 이름을 적으면 그 그림만 다시 그린다 (예: merge-pdf)"""
     fonts = (ImageFont.truetype(BOLD, 18), ImageFont.truetype(REGULAR, 15))
     only = sys.argv[1:]
+    for slug in only:
+        if slug not in GUIDES:
+            raise SystemExit(f'없는 글: {slug}')
     for locale, t in TEXT.items():
         cache = os.path.join(CACHE, locale)
         samples = os.path.join(SAMPLES, locale)
-        for guide in GUIDES:
-            slug, name, image = guide(t, cache, samples, fonts)
-            if not only or slug in only:
-                save(image, locale, slug, name)
+        for slug, guide in GUIDES.items():
+            if only and slug not in only:
+                continue
+            folder, name, image = guide(t, cache, samples, fonts)
+            assert folder == slug, (folder, slug)
+            save(image, locale, slug, name)
 
 
 if __name__ == '__main__':
