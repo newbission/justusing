@@ -3,7 +3,7 @@ title: How to extract images from a PDF at original quality
 description: Save the photos and pictures inside a PDF as JPG or PNG files with no quality loss. How it differs from screenshots and saving whole pages, and when images cannot be extracted.
 tool: pdf/extract-images
 published: 2026-10-15
-updated: 2026-10-16
+updated: 2026-10-19
 order: 14
 ---
 
@@ -31,6 +31,10 @@ When you need a photo from a catalog, report or paper PDF, a screenshot only cap
 | Extract Images                    | The image files inside the page | Original          |
 
 If you need the page as it looks, text and all, use "PDF to Image". If you only need the pictures, use this tool.
+
+![The edge of the sun in the photo on page 1 of the sample photo PDF, enlarged to the same size. The extracted photo keeps its original 1400×1050 pixels; in the page image from PDF to Image (150 DPI) the same photo is drawn about 940 pixels wide, so the edge is slightly rougher](../../../assets/guides/en/extract-images-pdf/compare.png)
+
+This is the same spot, enlarged to the same size, from the actual results of both methods. The extracted photo has exactly the pixels stored in the PDF; in the page image, the photo only has as many pixels as its size on the page and the chosen resolution allow.
 
 ## Tiny images such as icons and lines
 
