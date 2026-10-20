@@ -41,6 +41,11 @@
     | { kind: 'failed' }
     | { kind: 'ready' };
   let data = $state<Data>({ kind: 'checking' });
+  /**
+   * "데이터 받기"로 받은 바이트. 보관소를 쓸 수 없는 창(시크릿 모드 등)에서는 인식할 때 다시 받게 되므로
+   * 받은 것을 그대로 쓴다
+   */
+  let downloaded: Map<string, Uint8Array> | undefined;
 
   // 고른 언어의 데이터가 보관돼 있는지 확인한다. 없으면 받지 않고 묻는다 (와이파이인지 알 수 없다)
   $effect(() => {
@@ -65,13 +70,14 @@
     const wanted = files;
     data = { kind: 'downloading', percent: 0 };
     try {
-      await loadData(wanted, OCR_CONSENT, (received) => {
+      const bytes = await loadData(wanted, OCR_CONSENT, (received) => {
         if (files !== wanted) return;
         data = {
           kind: 'downloading',
           percent: Math.min(99, Math.floor((received / totalBytes) * 100)),
         };
       });
+      downloaded = new Map([...(downloaded ?? []), ...bytes]);
       if (files === wanted) data = { kind: 'ready' };
     } catch {
       if (files === wanted) data = { kind: 'failed' };
@@ -145,7 +151,10 @@
       }
 
       run = { kind: 'starting' };
-      const bytes = await loadData(ocrFiles(chosen), OCR_CONSENT);
+      const needed = ocrFiles(chosen);
+      const bytes = needed.every((file) => downloaded?.has(file.path))
+        ? downloaded!
+        : await loadData(needed, OCR_CONSENT);
       pool = await OcrPool.create(bytes, chosen, indices.length);
       if (pdf !== source) return;
 

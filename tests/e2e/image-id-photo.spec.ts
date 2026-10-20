@@ -92,6 +92,14 @@ test('얼굴을 찾아 기울기를 바로잡고 413×531 JPG로 받는다', asy
   // 받은 것은 우리 사이트의 데이터뿐이다 (얼굴 찾기 엔진의 사용 통계도 보내지 않는다)
   expectLocalOnly(page, requests, baseURL!);
   expect(requests.filter((request) => request.url().includes('googleapis'))).toEqual([]);
+  // 엔진·모델은 한 번씩만 받는다 (받은 바이트로 바로 띄운다)
+  const face = requests
+    .map((request) => new URL(request.url()).pathname)
+    .filter((path) => path.startsWith('/data/face/'));
+  expect(face.sort()).toEqual([
+    '/data/face/face_landmarker.task',
+    '/data/face/vision_wasm_module_internal.wasm',
+  ]);
 });
 
 test('키보드로 크기·위치·기울기를 바꾸고 자동으로 다시 맞춘다', async ({ page }) => {

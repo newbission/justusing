@@ -80,6 +80,16 @@
   let saved = $state.raw<{ size: number } | undefined>();
   let finder: Promise<FaceFinder> | undefined;
 
+  /** 받은 데이터로 얼굴 찾기 엔진을 띄운다 (엔진이 바이트를 넘겨받아 비운다) */
+  function startFinder(bytes: Promise<Map<string, Uint8Array>>) {
+    const started = bytes.then((value) => FaceFinder.create(value));
+    started.catch(() => {
+      if (finder === started) finder = undefined;
+    });
+    finder = started;
+    return started;
+  }
+
   onMount(() => {
     dataStatus(FACE_FILES, FACE_CONSENT).then((status) => {
       const lowSpace = status.available !== undefined && status.available < totalBytes * 2;
@@ -99,12 +109,14 @@
   async function downloadData() {
     data = { kind: 'downloading', percent: 0 };
     try {
-      await loadData(FACE_FILES, FACE_CONSENT, (received) => {
+      const bytes = await loadData(FACE_FILES, FACE_CONSENT, (received) => {
         data = {
           kind: 'downloading',
           percent: Math.min(99, Math.floor((received / totalBytes) * 100)),
         };
       });
+      // 받은 바이트로 바로 띄운다. 보관소를 쓸 수 없는 창(시크릿 모드 등)에서 다시 받지 않게 한다
+      startFinder(Promise.resolve(bytes));
       data = { kind: 'ready' };
     } catch {
       data = { kind: 'failed' };
@@ -188,9 +200,9 @@
     const ticket = generation;
     find = { kind: 'finding' };
     try {
-      finder ??= loadData(FACE_FILES, FACE_CONSENT).then((bytes) => FaceFinder.create(bytes));
-      finder.catch(() => (finder = undefined));
-      const faces = await (await finder).detect(await createImageBitmap(current.preview));
+      const faces = await (
+        await (finder ?? startFinder(loadData(FACE_FILES, FACE_CONSENT)))
+      ).detect(await createImageBitmap(current.preview));
       if (ticket !== generation) return;
       if (faces.length === 0) {
         find = { kind: 'none' };
