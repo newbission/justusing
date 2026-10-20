@@ -46,6 +46,10 @@ White out **only places a white rectangle on top**. The original text stays in t
 
 So **do not use it to remove personal information** such as ID or account numbers. If content must really be gone, use [Redact PDF](/en/pdf/redact/). It turns the redacted pages into painted images, so the text underneath is gone too.
 
+![The 'Average reply time' row of the sample report's table covered with white out. Above, the row looks empty on screen; below, pulling text from the same spot still gives Average reply time, 6.2 h, 3.9 h and -37%](../../../assets/guides/en/edit-pdf/white-out.png)
+
+Above is the actual result of covering one table row with white out. Below, the text pulled from the same spot in that file is written back in green. It is gone from the screen, but the text is still in the file.
+
 ## Signatures and stamps
 
 - Handwritten signature: [Sign PDF](/en/pdf/sign/)
