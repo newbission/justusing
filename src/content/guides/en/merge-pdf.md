@@ -3,6 +3,7 @@ title: How to merge PDF files into one
 description: Combine several PDF files into one in the order you want. Reordering files and pages, leaving out pages, and merging password-protected PDFs.
 tool: pdf/merge
 published: 2026-10-15
+updated: 2026-10-19
 order: 4
 ---
 
@@ -22,6 +23,10 @@ Applications, supporting documents and reports often have to be sent as a single
 - Or use the **↑ ↓** buttons on the right of a row to move it one step. This works with the keyboard too.
 - Remove a file you added by mistake with **×**.
 - To add a missing file, click "Add files" or drag it onto the page again; it is added to the end of the list.
+
+![Result of merging the sample report (4 pages) and the sample appendix (2 pages) in that order. Pages 1–4 come from the report and pages 5–6 from the appendix](../../../assets/guides/en/merge-pdf/merged.png)
+
+This is the actual result of merging the sample report (4 pages) and appendix (2 pages) in that order. The file at the top of the list comes first, and each file keeps its own page order.
 
 ## Choosing pages
 
