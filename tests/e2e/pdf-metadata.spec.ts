@@ -236,7 +236,8 @@ test.describe('서울 시간대에서', () => {
 
   test('시간대가 적힌 날짜를 이 기기의 시각으로 보여 준다', async ({ page }) => {
     const frame = await openTool(page);
-    await expect(frame.getByText('오후 12:04', { exact: false })).toBeVisible();
+    // 고친 날짜는 지금 시각이라 시각만으로 찾으면 겹칠 수 있다 (만든 날짜 2026-01-02)
+    await expect(frame.getByText('2026. 1. 2. 오후 12:04', { exact: true })).toBeVisible();
   });
 });
 
