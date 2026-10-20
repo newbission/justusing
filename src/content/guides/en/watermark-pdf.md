@@ -3,6 +3,7 @@ title: How to add a watermark to a PDF (Confidential, Copy)
 description: Put a text watermark such as "CONFIDENTIAL" or "COPY" on every page of a PDF. Choosing a font, centered versus repeated layouts, and how to make a watermark harder to remove.
 tool: pdf/watermark
 published: 2026-10-15
+updated: 2026-10-19
 order: 8
 ---
 
@@ -38,6 +39,10 @@ To use a font you already have, such as a company font, choose a TTF, OTF or WOF
 | Opacity | Light / Medium / Strong | Light for printing, medium for screen use                |
 
 Gray is the safest color; choose red when it needs to stand out.
+
+![Two layouts of CONFIDENTIAL on page 1 of the sample report. Once in the center puts it diagonally across the middle once; Repeated across the page fills the whole page](../../../assets/guides/en/watermark-pdf/layouts.png)
+
+These are actual results with CONFIDENTIAL on the sample report (default angle, size and opacity). The repeated layout leaves the text on any part of the page someone cuts out, but the content is a little harder to read.
 
 ## Making the watermark harder to remove
 
