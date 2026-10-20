@@ -374,6 +374,10 @@ Co-Authored-By: ...
   - [x] 압축 (`/image/compress/`): JPG·WebP는 화질, PNG는 색 수로 줄인다. 원본보다 크면 원본 그대로
   - [x] 크기 조절 (`/image/resize/`): 비율(%) 또는 가로·세로 픽셀(비율 유지·정확히)
   - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF, Safari의 HEIC)를 JPG·PNG·WebP로
+  - [x] 증명사진 (`/image/id-photo/`, 2026-10-20): MediaPipe Face Landmarker로 얼굴을 찾아 여권 규격(3.5×4.5cm,
+        머리 3.2~3.6cm)에 맞게 자르기·크기·기울기만 바꾼다(`src/lib/face/`). 얼굴 보정·배경 바꾸기는 하지 않는다(여권 규정).
+        엔진·모델(16.5MB)은 받기 전에 묻고 보관한다. 엔진에 든 사용 통계 전송은 워커의 fetch를 없애 막는다.
+        견본은 지어낸 얼굴 사진이 생길 때까지 없다 (`tests/e2e/no-sample.ts`)
   - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기), 배경 제거(누끼, 모델 데이터 크기를
         밝히고 캐시), 자르기·회전 등
   - [x] 가이드 글 (`/guide/`, 2026-10-15): 검색 유입과 광고 심사용. 첫 6편 (PDF 압축·합치기·이미지로·서명,
