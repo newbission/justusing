@@ -69,12 +69,17 @@ const localOnlyTest = `${siteConfig.sourceUrl}/blob/main/tests/e2e/local-only.ts
   </p>
   <ul>
     <li>
-      Tool programs, Korean fonts, and text recognition (OCR) data all come from this site. Nothing
-      is loaded from other companies' servers.
+      Tool programs, Korean fonts, and text recognition (OCR) and face finding data all come from
+      this site. Nothing is loaded from other companies' servers.
     </li>
     <li>
-      Large downloads such as fonts and OCR data show their size before downloading, and are used
-      only after checking that their content has not been changed.
+      The face finding engine in the ID photo tool (Google MediaPipe) includes a feature that sends
+      usage statistics. On this site it is blocked from connecting to the internet, so nothing is
+      sent.
+    </li>
+    <li>
+      Large downloads such as fonts, OCR and face finding data show their size before downloading,
+      and are used only after checking that their content has not been changed.
     </li>
     <li>
       Heavy work runs in a separate background thread (Web Worker), so the page does not freeze
