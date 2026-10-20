@@ -3,6 +3,7 @@ title: WebP·PNG를 JPG로 바꾸는 방법
 description: 웹에서 저장한 WebP가 열리지 않을 때, PNG를 JPG로 바꿔 용량을 줄일 때. JPG·PNG·WebP의 차이와 상황별로 고르는 법, 아이폰 HEIC 사진 다루는 법을 설명합니다.
 tool: image/convert
 published: 2026-10-15
+updated: 2026-10-19
 order: 7
 ---
 
@@ -27,6 +28,10 @@ order: 7
 | WebP | JPG·PNG보다 작음, 투명 지원                          | 웹사이트, 블로그                  |
 
 **어디서나 열려야 하면 JPG**, **투명이나 또렷한 글자가 필요하면 PNG**, **웹에 올릴 거라면 WebP**로 고르면 대부분 맞습니다.
+
+![예시 화면 캡처(PNG)를 JPG와 WebP로 바꾼 결과에서 '알림' 글자를 크게 키운 그림. PNG 원본은 24KB이고 글자 가장자리가 깨끗하며, JPG는 33KB로 오히려 커지고 가장자리에 옅은 얼룩이 생기며, WebP는 13KB](../../../assets/guides/ko/convert-image/formats.png)
+
+화면 캡처를 바꾼 실제 결과에서 글자를 크게 키운 것입니다. 글자와 단색이 많은 이미지는 JPG로 바꾸면 오히려 커지고 글자 둘레가 조금 흐려집니다. 이런 이미지는 PNG로 두거나 WebP를 고르세요.
 
 ## 바꿀 때 알아 둘 점
 

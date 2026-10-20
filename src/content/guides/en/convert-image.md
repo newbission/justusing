@@ -3,6 +3,7 @@ title: How to convert WebP and PNG to JPG
 description: When a saved WebP will not open, or a PNG is too big. The differences between JPG, PNG and WebP, which to choose, and how to handle iPhone HEIC photos.
 tool: image/convert
 published: 2026-10-15
+updated: 2026-10-19
 order: 7
 ---
 
@@ -27,6 +28,10 @@ The file name stays the same and only the extension changes (for example, `cat.w
 | WebP   | Smaller than JPG and PNG, supports transparency          | Websites and blogs                    |
 
 In most cases: **JPG if it has to open everywhere**, **PNG if you need transparency or crisp text**, **WebP if it is going on the web**.
+
+![The word 'Notifications' enlarged from the sample screenshot (PNG) and its JPG and WebP versions. The PNG original is 28 KB with clean edges, the JPG is larger at 36 KB with faint smudges around the letters, and the WebP is 16 KB](../../../assets/guides/en/convert-image/formats.png)
+
+This is text enlarged from the actual results of converting a screenshot. Images with lots of text and flat color can get bigger as JPG, with slightly blurry letter edges. Keep such images as PNG or choose WebP.
 
 ## Good to know
 
