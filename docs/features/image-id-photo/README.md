@@ -27,18 +27,20 @@
 
 ### 파일
 
-| 파일                                    | 역할                                                                  |
-| --------------------------------------- | --------------------------------------------------------------------- |
-| `src/tools/image/id-photo/App.svelte`   | 화면: 데이터 받기, 미리보기(끌기·키보드), 맞추기 버튼, 확인, 다운로드 |
-| `src/lib/face/face.ts`                  | 얼굴 찾기 워커를 띄우고 부른다, 데이터 목록·동의 이름                 |
-| `src/lib/face/face.worker.ts`           | MediaPipe Face Landmarker (점 478개)                                  |
-| `src/lib/face/id-photo.ts`              | 규격, 기울기·정수리 읽기, 자동 칸, 그리기·JPG 저장 (순수 계산)        |
-| `scripts/copy-face-data.mjs`            | 엔진(wasm)·모델을 `public/data/face/`로 복사하고 크기·SHA-256 목록    |
-| `vendor/mediapipe/face_landmarker.task` | 모델 (npm에 없어 그대로 커밋, Apache-2.0)                             |
+| 파일                                       | 역할                                                                  |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| `src/tools/image/id-photo/App.svelte`      | 화면: 데이터 받기, 미리보기(끌기·키보드), 맞추기 버튼, 확인, 다운로드 |
+| `src/lib/face/face.ts`                     | 얼굴 찾기 워커를 띄우고 부른다, 데이터 목록·동의 이름                 |
+| `src/lib/face/face.worker.ts`              | MediaPipe Face Landmarker (점 478개)                                  |
+| `src/lib/face/photo.ts`, `photo.worker.ts` | 사진 읽기·줄이기·결과 JPG 만들기 워커 (원본은 워커가 들고 있다)       |
+| `src/lib/face/id-photo.ts`                 | 규격, 기울기·정수리 읽기, 자동 칸, 그리기·JPG 저장 (순수 계산)        |
+| `scripts/copy-face-data.mjs`               | 엔진(wasm)·모델을 `public/data/face/`로 복사하고 크기·SHA-256 목록    |
+| `vendor/mediapipe/face_landmarker.task`    | 모델 (npm에 없어 그대로 커밋, Apache-2.0)                             |
 
 ### 처리 흐름
 
-1. 사진 고르기 → `createImageBitmap`(EXIF 방향 적용). 미리보기용(긴 변 1600)과 살피기용(긴 변 600 픽셀) 사본을 만든다
+1. 사진 고르기 → 사진 워커가 `createImageBitmap`(EXIF 방향 적용)으로 읽고, 미리보기용(긴 변 1600)과 살피기용(긴 변 600 픽셀)
+   사본을 화면에 넘긴다. 큰 사진도 화면 스레드를 막지 않는다
 2. 데이터가 보관돼 있으면 바로, 없으면 "데이터 받기"(엔진 13.5MB + 모델 3.7MB) 뒤에 얼굴을 찾는다. 그동안은 사진 가운데 칸
 3. `readFace`: 두 눈동자(468·473)로 기울기, 152번이 턱, 10번(이마 꼭대기)에서 위로 올라가며 정수리를 찾는다
 4. `autoPlace`: 머리 길이 3.4cm(범위 가운데), 정수리가 위에서 0.4cm, 두 눈 가운데가 좌우 가운데인 칸
@@ -58,6 +60,8 @@
 - 모델은 블렌드셰이프까지 든 원본 그대로 쓴다 (빼면 0.9MB 줄지만 고친 파일은 확인할 출처가 없어진다)
 
 ### 주의할 점
+
+- "데이터 받기"가 돌려준 바이트로 바로 엔진을 띄운다. 버리고 다시 `loadData`를 부르면 보관소가 없는 창(시크릿 모드)에서 두 번 받는다
 
 - 기울기 부호: `angle`은 눈을 잇는 선의 각도(화면 기준 시계 방향 +), 그릴 때 `rotate(-angle)`. `inCrop`·`outside`·
   `headLength`가 같은 축(u: 눈 방향, v: 아래)을 쓴다
