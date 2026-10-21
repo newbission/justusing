@@ -5,12 +5,18 @@
  * 워커가 원본을 들고 있고, 화면에는 미리보기용 작은 사진과 살피기용 픽셀만 넘긴다.
  */
 import { createWorker } from '../worker';
-import type { Matte, Placement, Thumb } from './id-photo';
+import type { Matte, Output, Placement, Thumb } from './id-photo';
 import workerUrl from './photo.worker.ts?worker&url';
 
 export type PhotoRequest =
   | { id: number; type: 'open'; file: File; previewSide: number; thumbSide: number }
-  | { id: number; type: 'export'; placement: Placement; background?: Background }
+  | {
+      id: number;
+      type: 'export';
+      placement: Placement;
+      output: Output;
+      background?: Background;
+    }
   | { id: number; type: 'cutout'; matte: Matte; scale: number };
 
 export type PhotoResponse =
@@ -22,7 +28,7 @@ export type PhotoResponse =
       preview: ImageBitmap;
       thumb: Thumb;
     }
-  | { id: number; kind: 'exported'; bytes: Uint8Array }
+  | { id: number; kind: 'exported'; bytes: Uint8Array; fits: boolean }
   | { id: number; kind: 'cutout'; image: ImageBitmap; x: number; y: number }
   | { id: number; kind: 'error'; message: string };
 
@@ -79,12 +85,25 @@ export class PhotoWorker {
     return response;
   }
 
-  /** 마지막으로 연 사진에서 칸을 잘라 결과 JPG를 만든다 (background가 있으면 배경을 바꾼다) */
-  async export(placement: Placement, background?: Background): Promise<Uint8Array> {
-    const response = await this.call({ id: nextId++, type: 'export', placement, background });
+  /**
+   * 마지막으로 연 사진에서 칸을 잘라 결과 파일을 만든다 (background가 있으면 배경을 바꾼다).
+   * fits: 용량 상한 안에 들었는지
+   */
+  async export(
+    placement: Placement,
+    output: Output,
+    background?: Background,
+  ): Promise<{ bytes: Uint8Array; fits: boolean }> {
+    const response = await this.call({
+      id: nextId++,
+      type: 'export',
+      placement,
+      output,
+      background,
+    });
     if (response.kind !== 'exported')
       throw new Error(response.kind === 'error' ? response.message : 'unexpected');
-    return response.bytes;
+    return { bytes: response.bytes, fits: response.fits };
   }
 
   /** 원본에서 사람만 남긴 그림 (scale배 크기, 미리보기용). 다 쓰면 image를 닫는다 */

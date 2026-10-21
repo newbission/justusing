@@ -22,6 +22,9 @@ export const SPEC = {
   /** 온라인 제출 크기 (픽셀, 300 DPI에서 3.5×4.5cm) */
   outWidth: 413,
   outHeight: 531,
+  /** 인화용 크기 (600 DPI) */
+  printWidth: 827,
+  printHeight: 1063,
   /** 온라인 제출 용량 한도 */
   maxBytes: 500 * 1024,
 } as const;
@@ -360,22 +363,49 @@ export function drawCrop(
   context.restore();
 }
 
-/** 결과 JPG (413×531). 온라인 제출 한도(500KB)를 넘으면 화질을 낮춘다 */
-export async function exportJpeg(
+/** 결과 파일을 어떻게 저장할지 */
+export interface Output {
+  /** online: 온라인 제출 413×531, print: 인화용 827×1063 */
+  size: 'online' | 'print';
+  format: 'jpeg' | 'png';
+  /** JPG 용량 상한 (바이트). 없으면 화질을 낮추지 않는다. PNG는 맞추지 않는다 */
+  maxBytes?: number;
+}
+
+export const outputSize = (output: Output) =>
+  output.size === 'print'
+    ? { width: SPEC.printWidth, height: SPEC.printHeight }
+    : { width: SPEC.outWidth, height: SPEC.outHeight };
+
+/** JPG 화질 (위에서부터 용량 상한에 들어가는 첫 값을 쓴다) */
+const QUALITIES = [0.95, 0.92, 0.9, 0.85, 0.8, 0.75, 0.7, 0.6, 0.5, 0.4];
+
+/**
+ * 결과 파일. JPG는 용량 상한을 넘으면 화질을 낮춘다.
+ * fits: 상한 안에 들었는지 (가장 낮은 화질로도 넘거나, 상한을 맞추지 않는 PNG가 넘으면 false)
+ */
+export async function exportPhoto(
   image: CanvasImageSource,
   placement: Placement,
+  output: Output,
   background?: { color: string; matte: Matte },
-): Promise<Blob> {
-  const canvas = new OffscreenCanvas(SPEC.outWidth, SPEC.outHeight);
+): Promise<{ blob: Blob; fits: boolean }> {
+  const { width, height } = outputSize(output);
+  const canvas = new OffscreenCanvas(width, height);
   const backdrop = background && {
     color: background.color,
     cutout: cutout(image, background.matte, 1),
   };
-  drawCrop(canvas.getContext('2d')!, image, placement, SPEC.outWidth, SPEC.outHeight, backdrop);
-  let blob: Blob | undefined;
-  for (const quality of [0.95, 0.9, 0.85, 0.8, 0.7]) {
-    blob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
-    if (blob.size <= SPEC.maxBytes) break;
+  drawCrop(canvas.getContext('2d')!, image, placement, width, height, backdrop);
+  const limit = output.maxBytes ?? Infinity;
+  if (output.format === 'png') {
+    const blob = await canvas.convertToBlob({ type: 'image/png' });
+    return { blob, fits: blob.size <= limit };
   }
-  return blob!;
+  let blob: Blob | undefined;
+  for (const quality of QUALITIES) {
+    blob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
+    if (blob.size <= limit) return { blob, fits: true };
+  }
+  return { blob: blob!, fits: false };
 }
