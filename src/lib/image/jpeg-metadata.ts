@@ -46,6 +46,8 @@ export type SegmentAction = 'keep' | 'drop' | Uint8Array;
 export function rewriteJpeg(
   bytes: Uint8Array,
   decide: (marker: number, segment: Uint8Array) => SegmentAction,
+  /** 그림 끝 뒤에 덧붙은 자료가 있으면 그 자료로 부른다 (결과에서는 빠진다) */
+  onTrailing?: (rest: Uint8Array) => void,
 ): Uint8Array | undefined {
   if (bytes[0] !== 0xff || bytes[1] !== SOI) return undefined;
   const parts: Uint8Array[] = [bytes.subarray(0, 2)];
@@ -66,7 +68,10 @@ export function rewriteJpeg(
     if (marker === EOI) {
       parts.push(bytes.subarray(at, at + 2));
       // 그림 끝 뒤에 덧붙은 자료(움직이는 사진의 영상, 다른 그림 등)는 뺀다. 거기에도 촬영 정보가 들어 있을 수 있다
-      if (at + 2 < bytes.length) removed = true;
+      if (at + 2 < bytes.length) {
+        removed = true;
+        onTrailing?.(bytes.subarray(at + 2));
+      }
       offset = bytes.length;
       break;
     }

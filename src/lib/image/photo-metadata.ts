@@ -28,6 +28,11 @@ export interface PhotoInfo {
   orientation: number;
   /** 그림 말고 지울 수 있는 정보가 있다 */
   extra: boolean;
+  /**
+   * 그림 뒤에 다른 그림이나 영상이 붙어 있다: 안드로이드 Ultra HDR의 밝기 정보(게인 맵), 움직이는 사진의 영상 등.
+   * 두 방식 모두 빼므로 HDR 사진은 일반 사진으로, 움직이는 사진은 멈춘 사진으로 남는다 (화면이 미리 알린다)
+   */
+  appended: boolean;
 }
 
 export function detectFormat(bytes: Uint8Array): PhotoFormat | undefined {
@@ -44,6 +49,7 @@ export function readPhotoInfo(bytes: Uint8Array): PhotoInfo | undefined {
     location: false,
     orientation: 1,
     extra: false,
+    appended: false,
   };
   const exif = (tiff: Uint8Array) => {
     const read = readExif(tiff);
@@ -59,13 +65,19 @@ export function readPhotoInfo(bytes: Uint8Array): PhotoInfo | undefined {
   };
 
   if (format === 'jpeg') {
-    const result = rewriteJpeg(bytes, (marker, segment) => {
-      const kind = jpegSegmentKind(marker, segment);
-      if (kind === 'exif') exif(segment.subarray(10));
-      else if (kind === 'xmp') xmp(segment);
-      if (kind !== 'image') info.extra = true;
-      return 'keep';
-    });
+    const result = rewriteJpeg(
+      bytes,
+      (marker, segment) => {
+        const kind = jpegSegmentKind(marker, segment);
+        if (kind === 'exif') exif(segment.subarray(10));
+        else if (kind === 'xmp') xmp(segment);
+        if (kind !== 'image') info.extra = true;
+        return 'keep';
+      },
+      (rest) => {
+        if (contains(rest, '\xff\xd8\xff') || contains(rest, 'ftyp')) info.appended = true;
+      },
+    );
     if (!result) return undefined;
     // 그림 끝 뒤에 덧붙은 자료가 있으면 rewriteJpeg가 그것을 빼고 새 배열을 준다
     if (result !== bytes) info.extra = true;
