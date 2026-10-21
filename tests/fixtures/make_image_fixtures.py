@@ -11,6 +11,7 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 
 - photos.pdf   사진이 든 2쪽 PDF (PDF 압축 도구). 1쪽 고화질 JPG, 2쪽 PNG 예측을 건 Flate RGB 사진,
                그리고 어디에서도 쓰지 않는 큰 객체 하나. 쪽마다 글자 "Photo page N"
 - located.jpg  촬영 정보가 든 사진 (위치정보 지우기). 화소 400×300, 방향 6, GPS(서울시청 앞), 찍은 날짜, 기기,
+               EXIF 자유 글(설명 'Secret', 메모 'Near my house'),
                GPS가 든 XMP, 설명 글, 그림 끝 뒤에 덧붙은 영상(움직이는 사진처럼 ftyp로 시작)
 - located.png  GPS·날짜·기기가 든 eXIf와 설명 글(tEXt)이 있는 PNG
 - located.webp GPS가 든 EXIF와 XMP가 있는 WebP (방향 6)
@@ -154,7 +155,9 @@ def located_exif(orientation: int) -> bytes:
     exif[0x010F] = 'Apple'
     exif[0x0110] = 'iPhone 15 Pro'
     exif[0x0112] = orientation
+    exif[0x010E] = 'Home: 123 Secret St'
     exif.get_ifd(0x8769)[0x9003] = '2024:05:01 14:23:11'
+    exif.get_ifd(0x8769)[0x9286] = b'ASCII\0\0\0Near my house'
     gps = exif.get_ifd(0x8825)
     gps[1] = 'N'
     gps[2] = (37.0, 33.0, 58.68)
