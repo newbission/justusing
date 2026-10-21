@@ -1,9 +1,9 @@
 /**
- * 증명사진의 사진 다루기 워커 (photo.ts가 부른다). 원본을 읽어 줄인 사본을 만들고, 결과 JPG를 그린다
+ * 증명사진의 사진 다루기 워커 (photo.ts가 부른다). 원본을 읽어 줄인 사본을 만들고, 결과 파일(JPG·PNG)을 그린다
  * (배경을 바꾸면 원본 크기에서 사람만 남겨 그 색 위에 그린다).
  * 사진은 메모리에서만 다룬다.
  */
-import { cutout, exportJpeg, type Thumb } from './id-photo';
+import { cutout, exportPhoto as exportFile, type Thumb } from './id-photo';
 import type { PhotoRequest, PhotoResponse } from './photo';
 
 /** 마지막으로 연 원본 */
@@ -50,9 +50,14 @@ async function open(request: Extract<PhotoRequest, { type: 'open' }>) {
 
 async function exportPhoto(request: Extract<PhotoRequest, { type: 'export' }>) {
   if (!original) throw new Error('no photo');
-  const blob = await exportJpeg(original, request.placement, request.background);
+  const { blob, fits } = await exportFile(
+    original,
+    request.placement,
+    request.output,
+    request.background,
+  );
   const bytes = new Uint8Array(await blob.arrayBuffer());
-  const response: PhotoResponse = { id: request.id, kind: 'exported', bytes };
+  const response: PhotoResponse = { id: request.id, kind: 'exported', bytes, fits };
   postMessage(response, { transfer: [bytes.buffer] });
 }
 
