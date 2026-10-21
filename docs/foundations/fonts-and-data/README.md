@@ -21,12 +21,12 @@ PDF에 한글을 넣거나 스캔본 글자를 읽으려면 큰 공개 파일(�
 
 사용자 파일은 이 경로로 오가지 않는다. 오가는 것은 우리 사이트의 공개 파일(`/data/...`)과 그 경로뿐이다.
 
-| 묶음                                | 파일                                                                        | 크기                                   |
-| ----------------------------------- | --------------------------------------------------------------------------- | -------------------------------------- |
-| 글꼴 8종 (보통·굵게, 일부는 보통만) | `public/data/fonts/<id>-<굵기>.woff2`                                       | 모두 합쳐 약 7.6MB, 글꼴마다 0.1~2.4MB |
-| OCR 엔진                            | `public/data/ocr/tesseract-core-simd-lstm.wasm`                             | 약 2.9MB                               |
-| OCR 언어 데이터                     | `public/data/ocr/kor.traineddata.gz`, `eng.traineddata.gz`                  | 약 1.6MB, 3.0MB                        |
-| 얼굴 찾기 엔진·모델                 | `public/data/face/vision_wasm_module_internal.wasm`, `face_landmarker.task` | 약 13.5MB, 3.7MB                       |
+| 묶음                                | 파일                                                                                                   | 크기                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| 글꼴 8종 (보통·굵게, 일부는 보통만) | `public/data/fonts/<id>-<굵기>.woff2`                                                                  | 모두 합쳐 약 7.6MB, 글꼴마다 0.1~2.4MB |
+| OCR 엔진                            | `public/data/ocr/tesseract-core-simd-lstm.wasm`                                                        | 약 2.9MB                               |
+| OCR 언어 데이터                     | `public/data/ocr/kor.traineddata.gz`, `eng.traineddata.gz`                                             | 약 1.6MB, 3.0MB                        |
+| 얼굴 찾기 엔진·모델                 | `public/data/face/vision_wasm_module_internal.wasm`, `face_landmarker.task`, `selfie_segmenter.tflite` | 약 13.5MB, 3.7MB, 0.25MB               |
 
 ## 2. 어떻게 만드는지
 
