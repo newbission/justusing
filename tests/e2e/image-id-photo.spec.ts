@@ -2,7 +2,7 @@
  * 증명사진 E2E. 빌드 결과에서 돌린다 (playwright.config.ts 참고).
  *
  * 흰 배경 얼굴 사진(face.jpg)을 기울여 넣고, 얼굴 찾기 데이터를 받아 저절로 맞춘 결과가
- * 413×531 JPG이고 기울기가 바로잡혔는지 본다. 데이터 없이 직접 맞추기와 키보드 조작도 본다.
+ * 413×531 JPG이고 기울기가 바로잡혔는지 본다. 데이터 없이 직접 맞추기와 키보드 조작, 배경 바꾸기와 좌우 반전도 본다.
  */
 import type { FrameLocator } from '@playwright/test';
 import { expect, test, type Page, type Request } from './test';
@@ -55,6 +55,26 @@ async function jpegSize(page: Page, bytes: Buffer) {
   }, Array.from(bytes));
 }
 
+/** 받은 JPG의 픽셀 (RGBA, 한 줄씩) */
+async function jpegPixels(page: Page, bytes: Buffer) {
+  return page.evaluate(async (data) => {
+    const bitmap = await createImageBitmap(new Blob([new Uint8Array(data)]));
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    return {
+      width: bitmap.width,
+      data: Array.from(context.getImageData(0, 0, bitmap.width, bitmap.height).data),
+    };
+  }, Array.from(bytes));
+}
+
+async function download(page: Page, frame: FrameLocator) {
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: 'JPG 다운로드' }).click();
+  return readFile(await (await event).path());
+}
+
 const angle = async (frame: FrameLocator) =>
   Number((await frame.getByText(/^기울기 /).textContent())!.match(/-?\d+\.\d/)![0]);
 
@@ -98,6 +118,7 @@ test('얼굴을 찾아 기울기를 바로잡고 413×531 JPG로 받는다', asy
     .filter((path) => path.startsWith('/data/face/'));
   expect(face.sort()).toEqual([
     '/data/face/face_landmarker.task',
+    '/data/face/selfie_segmenter.tflite',
     '/data/face/vision_wasm_module_internal.wasm',
   ]);
 });
@@ -134,4 +155,66 @@ test('데이터를 받지 않아도 직접 맞춰 받을 수 있다', async ({ p
   expect(await jpegSize(page, bytes)).toEqual({ width: 413, height: 531 });
   // 얼굴을 찾지 않았으니 머리 길이는 보이지 않는다
   await expect(frame.getByText('머리 길이 약', { exact: false })).toHaveCount(0);
+});
+
+test('배경을 하늘색으로 바꾸고 좌우를 뒤집는다', async ({ page }) => {
+  test.setTimeout(120_000);
+  const frame = await open(page);
+  await frame.getByRole('button', { name: /^데이터 받기/ }).click();
+  await expect(frame.getByText('머리 길이 약 3.4cm')).toBeVisible({ timeout: 60_000 });
+  const plain = await jpegPixels(page, await download(page, frame));
+
+  // 좌우 반전: 결과가 원래 결과를 거울에 비춘 것과 같고, 화면의 기울기도 반대로 보인다
+  const before = await angle(frame);
+  await frame.getByRole('button', { name: '좌우 반전' }).click();
+  await expect(frame.getByRole('button', { name: '좌우 반전' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect(await angle(frame)).toBeCloseTo(-before, 1);
+  // 뒤집어도 왼쪽으로 기울이기는 화면에서 왼쪽으로 기운다
+  const view = frame.getByRole('application', { name: '증명사진 미리보기' });
+  await view.focus();
+  await view.press('[');
+  expect(await angle(frame)).toBeCloseTo(-before + 0.5, 1);
+  await view.press(']');
+  const flipped = await jpegPixels(page, await download(page, frame));
+  let difference = 0;
+  for (let y = 0; y < 531; y += 7) {
+    for (let x = 0; x < 413; x += 7) {
+      const a = (y * 413 + x) * 4;
+      const b = (y * 413 + (412 - x)) * 4;
+      difference += Math.abs(plain.data[a]! - flipped.data[b]!);
+    }
+  }
+  expect(difference / (Math.ceil(531 / 7) * Math.ceil(413 / 7))).toBeLessThan(8);
+  await frame.getByRole('button', { name: '좌우 반전' }).click();
+
+  // 배경 바꾸기: 위쪽 귀퉁이는 하늘색, 얼굴 가운데는 원래 색
+  await frame.getByText('하늘색', { exact: true }).click();
+  await expect(frame.getByText('배경을 바꿨습니다.', { exact: false })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(frame.getByText('흰색이 아닌 배경입니다.', { exact: false })).toBeVisible();
+  await expect(frame.getByRole('button', { name: 'JPG 다운로드' })).toBeEnabled({
+    timeout: 30_000,
+  });
+  const blue = await jpegPixels(page, await download(page, frame));
+  const at = (pixels: typeof blue, x: number, y: number) =>
+    pixels.data.slice((y * 413 + x) * 4, (y * 413 + x) * 4 + 3);
+  for (const [x, y] of [
+    [10, 10],
+    [402, 10],
+  ]) {
+    const [r, g, b] = at(blue, x!, y!);
+    // #cfe2f3 (JPG라 조금 어긋난다)
+    expect(Math.abs(r! - 0xcf) + Math.abs(g! - 0xe2) + Math.abs(b! - 0xf3)).toBeLessThan(15);
+  }
+  const face = at(blue, 206, 220);
+  const original = at(plain, 206, 220);
+  expect(face.reduce((sum, value, i) => sum + Math.abs(value - original[i]!), 0)).toBeLessThan(15);
+
+  // 원래대로 돌리면 배경 알림이 사라진다
+  await frame.getByText('원래대로', { exact: true }).click();
+  await expect(frame.getByText('배경을 바꿨습니다.', { exact: false })).toHaveCount(0);
 });
