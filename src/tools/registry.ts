@@ -44,6 +44,7 @@ const TOOL_IDS: readonly string[] = [
   'image/resize',
   'image/convert',
   'image/id-photo',
+  'image/remove-location',
 ];
 
 export interface Tool extends ToolMeta {
