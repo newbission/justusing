@@ -1,6 +1,7 @@
 <!--
   증명사진 도구 화면 (격리 frame 안에서 실행).
-  사진 한 장에서 얼굴을 찾아 여권 규격(3.5×4.5cm, 머리 길이 3.2~3.6cm)에 맞게 자르고·키우고·기울기만 바로잡는다.
+  사진 한 장에서 얼굴을 찾아 여권 규격(3.5×4.5cm, 머리 길이 3.2~3.6cm)에 맞게 자르고·키우고·기울기를 바로잡는다.
+  고르면 배경을 다른 색으로 바꾼다 (사람과 배경을 나누는 모델, 얼굴 찾기 데이터에 함께 들어 있다).
   얼굴 찾기 데이터는 처음 한 번 받아(크기를 밝히고 묻는다) 이 브라우저에 보관한다. 받지 않아도 직접 맞출 수 있다.
   사진은 어디로도 전송되지 않는다.
 -->
@@ -22,11 +23,16 @@
     SPEC,
     autoPlace,
     centerPlace,
+    cutout,
     drawCrop,
     headLength,
+    matteCovers,
+    matteRegion,
     outside,
     readFace,
+    type Backdrop,
     type Face,
+    type Matte,
     type Placement,
     type Thumb,
     whiteBackground,
@@ -39,6 +45,11 @@
   const PREVIEW_SIDE = 1600;
   /** 정수리·배경을 살필 때 쓰는 사진의 긴 변 */
   const THUMB_SIDE = 600;
+  /** 사람·배경 나누기에 넣는 그림의 긴 변 (모델은 256으로 줄여 본다) */
+  const MATTE_SIDE = 512;
+  /** 고를 수 있는 배경색 */
+  const BACKGROUNDS = { white: '#ffffff', gray: '#e6e6e6', blue: '#cfe2f3' } as const;
+  type BackgroundChoice = 'original' | keyof typeof BACKGROUNDS | 'custom';
   /** 미리보기 칸 크기 (CSS 픽셀, 35:45) */
   const VIEW_W = 245;
   const VIEW_H = 315;
@@ -80,6 +91,22 @@
   let saveFailed = $state(false);
   let finder: Promise<FaceFinder> | undefined;
   const photos = new PhotoWorker();
+
+  let background = $state<BackgroundChoice>('original');
+  let customColor = $state('#dfe8f0');
+  const backgroundColor = $derived(
+    background === 'original'
+      ? undefined
+      : background === 'custom'
+        ? customColor
+        : BACKGROUNDS[background],
+  );
+  type MatteState =
+    | { kind: 'none' }
+    | { kind: 'working' }
+    | { kind: 'ready'; matte: Matte; cutout: Backdrop['cutout'] }
+    | { kind: 'failed' };
+  let matte = $state.raw<MatteState>({ kind: 'none' });
 
   /** 받은 데이터로 얼굴 찾기 엔진을 띄운다 (엔진이 바이트를 넘겨받아 비운다) */
   function startFinder(bytes: Promise<Map<string, Uint8Array>>) {
@@ -149,6 +176,7 @@
     photo?.preview.close();
     photo = undefined;
     find = { kind: 'idle' };
+    matte = { kind: 'none' };
     saved = undefined;
     saveFailed = false;
     phase = 'idle';
@@ -188,6 +216,59 @@
     }
   }
 
+  // 배경을 바꾸기로 했으면 사람과 배경을 나눈다. 칸을 나눈 영역 밖으로 옮기면 다시 나눈다
+  $effect(() => {
+    if (background === 'original' || data.kind !== 'ready' || !photo) return;
+    const current = matte;
+    if (current.kind === 'working' || current.kind === 'failed') return;
+    if (
+      current.kind === 'ready' &&
+      matteCovers(current.matte, placement, photo.width, photo.height)
+    )
+      return;
+    untrack(() => separate());
+  });
+
+  async function separate() {
+    const current = photo;
+    if (!current) return;
+    const ticket = generation;
+    matte = { kind: 'working' };
+    try {
+      const region = matteRegion(placement, current.width, current.height);
+      const k = current.preview.width / current.width;
+      const side = Math.max(region.width, region.height) * k;
+      const fit = MATTE_SIDE / side;
+      const bitmap = await createImageBitmap(
+        current.preview,
+        region.x * k,
+        region.y * k,
+        region.width * k,
+        region.height * k,
+        {
+          resizeWidth: Math.max(1, Math.round(region.width * k * fit)),
+          resizeHeight: Math.max(1, Math.round(region.height * k * fit)),
+          resizeQuality: 'high',
+        },
+      );
+      const mask = await (
+        await (finder ?? startFinder(loadData(FACE_FILES, FACE_CONSENT)))
+      ).segment(bitmap);
+      if (ticket !== generation) return;
+      const made: Matte = { ...region, mask };
+      matte = { kind: 'ready', matte: made, cutout: cutout(current.preview, k, made) };
+    } catch {
+      if (ticket === generation) matte = { kind: 'failed' };
+    }
+  }
+
+  /** 지금 그릴 배경 (바꾸지 않거나 아직 나누지 못했으면 없다) */
+  const backdrop = $derived<Backdrop | undefined>(
+    backgroundColor && matte.kind === 'ready'
+      ? { color: backgroundColor, cutout: matte.cutout }
+      : undefined,
+  );
+
   // 미리보기 그리기
   let canvas: HTMLCanvasElement | undefined = $state();
   $effect(() => {
@@ -202,6 +283,7 @@
       { ...placement, cx: placement.cx * k, cy: placement.cy * k, height: placement.height * k },
       canvas.width,
       canvas.height,
+      backdrop,
     );
   });
 
@@ -281,6 +363,9 @@
     dragging = undefined;
   }
 
+  /** 배경을 바꾸기로 했는데 아직 나누는 중이면 저장을 기다리게 한다 (원래 배경으로 저장되지 않게) */
+  const busy = $derived(background !== 'original' && matte.kind === 'working');
+
   const head = $derived(find.kind === 'found' ? headLength(find.face, placement) : undefined);
   // 화면에서 보이는 기울기 (좌우를 뒤집으면 방향도 뒤집힌다)
   const degrees = $derived(
@@ -299,7 +384,10 @@
         list.push(t.checkHead);
       }
     }
-    if (!whiteBackground(photo.thumb)) list.push(t.checkBackground);
+    if (backgroundColor) {
+      list.push(t.checkReplaced);
+      if (backgroundColor !== BACKGROUNDS.white) list.push(t.checkNotWhite);
+    } else if (!whiteBackground(photo.thumb)) list.push(t.checkBackground);
     if (placement.height < SPEC.outHeight) list.push(t.checkSmall);
     if (outside(placement, photo.width, photo.height)) list.push(t.checkOutside);
     return list;
@@ -307,11 +395,16 @@
 
   async function save() {
     const current = photo;
-    if (!current || find.kind === 'finding') return;
+    if (!current || find.kind === 'finding' || busy) return;
     const entitlement = await canUse('image/id-photo');
     if (!entitlement.allowed) return;
     try {
-      const bytes = await photos.export(placement);
+      const bytes = await photos.export(
+        placement,
+        backdrop && matte.kind === 'ready'
+          ? { color: backdrop.color, matte: matte.matte }
+          : undefined,
+      );
       if (current !== photo) return;
       downloadFile(bytes, `${baseName(current.name)}_${t.suffix}.jpg`, 'image/jpeg');
       saved = { size: bytes.length };
@@ -341,6 +434,8 @@
           {t.saved(formatSize(saved.size))}
         {:else if find.kind === 'finding'}
           {t.finding}
+        {:else if busy}
+          {t.separating}
         {:else if find.kind === 'found'}
           {t.found}
         {:else if find.kind === 'none'}
@@ -351,8 +446,11 @@
           {t.manualReady}
         {/if}
       {/snippet}
-      <button type="button" class="btn primary" disabled={find.kind === 'finding'} onclick={save}
-        >{t.download}</button
+      <button
+        type="button"
+        class="btn primary"
+        disabled={find.kind === 'finding' || busy}
+        onclick={save}>{t.download}</button
       >
     </ActionBar>
 
@@ -446,6 +544,56 @@
                 >{find.kind === 'found' ? t.reset : t.resetManual}</button
               >
             </div>
+          </section>
+
+          <section class="background" aria-labelledby="background-title">
+            <h2 id="background-title">{t.backgroundTitle}</h2>
+            <div class="swatches" role="radiogroup" aria-labelledby="background-title">
+              {#each ['original', 'white', 'gray', 'blue'] as const as option (option)}
+                <label class:checked={background === option}>
+                  <input
+                    type="radio"
+                    name="background"
+                    value={option}
+                    bind:group={background}
+                    disabled={data.kind !== 'ready'}
+                  />
+                  <span
+                    class="dot"
+                    class:original={option === 'original'}
+                    style:background-color={option === 'original' ? undefined : BACKGROUNDS[option]}
+                  ></span>
+                  {t.backgrounds[option]}
+                </label>
+              {/each}
+              <label class:checked={background === 'custom'}>
+                <input
+                  type="radio"
+                  name="background"
+                  value="custom"
+                  bind:group={background}
+                  disabled={data.kind !== 'ready'}
+                />
+                <span class="dot" style:background-color={customColor}></span>
+                {t.backgrounds.custom}
+              </label>
+            </div>
+            {#if background === 'custom'}
+              <label class="pick">
+                {t.customColor}
+                <input type="color" bind:value={customColor} />
+              </label>
+            {/if}
+            {#if data.kind !== 'ready'}
+              <p class="help">{t.backgroundNeedsData}</p>
+            {:else if background !== 'original' && matte.kind === 'failed'}
+              <p class="help"><strong>{t.separateFailed}</strong></p>
+              <button type="button" class="btn" onclick={() => (matte = { kind: 'none' })}
+                >{t.retry}</button
+              >
+            {:else}
+              <p class="help">{t.backgroundNote}</p>
+            {/if}
           </section>
 
           <section class="checks" aria-label={t.checksTitle}>
@@ -615,6 +763,7 @@
     color: var(--color-muted);
   }
   .data,
+  .background,
   .checks {
     margin-bottom: 16px;
     padding: 16px;
@@ -622,6 +771,7 @@
     border-radius: var(--radius);
   }
   .data h2,
+  .background h2,
   .checks h2 {
     margin: 0 0 8px;
     font-size: 15px;
@@ -637,6 +787,67 @@
   }
   .checks li + li {
     margin-top: 4px;
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .swatches label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .swatches label:hover {
+    background: var(--color-hover);
+  }
+  .swatches label.checked {
+    border-color: var(--color-text);
+    box-shadow: inset 0 0 0 1px var(--color-text);
+    font-weight: 600;
+  }
+  .swatches label:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .swatches label:has(input:disabled) {
+    color: var(--color-muted);
+    cursor: default;
+  }
+  .swatches input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .dot {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--color-line);
+    border-radius: 50%;
+  }
+  /* 원래 배경: 반으로 나눈 점 */
+  .dot.original {
+    background: linear-gradient(135deg, var(--color-bg) 50%, var(--color-muted) 50%);
+  }
+  .pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+  .pick input {
+    width: 44px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: none;
   }
   .adjust {
     margin-bottom: 16px;
