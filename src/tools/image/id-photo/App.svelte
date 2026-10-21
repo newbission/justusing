@@ -363,8 +363,18 @@
     dragging = undefined;
   }
 
-  /** 배경을 바꾸기로 했는데 아직 나누는 중이면 저장을 기다리게 한다 (원래 배경으로 저장되지 않게) */
-  const busy = $derived(background !== 'original' && matte.kind === 'working');
+  /**
+   * 배경을 바꾸기로 했는데 그 배경을 그릴 수 없으면(나누는 중, 나누지 못함, 칸을 나눈 영역 밖으로 옮겨 다시 나눠야 함)
+   * 저장하지 않는다. 저장하면 화면과 달리 원래 배경이나 예전 영역으로 저장된다
+   */
+  const busy = $derived(
+    background !== 'original' &&
+      !(
+        matte.kind === 'ready' &&
+        photo &&
+        matteCovers(matte.matte, placement, photo.width, photo.height)
+      ),
+  );
 
   const head = $derived(find.kind === 'found' ? headLength(find.face, placement) : undefined);
   // 화면에서 보이는 기울기 (좌우를 뒤집으면 방향도 뒤집힌다)
@@ -401,8 +411,8 @@
     try {
       const bytes = await photos.export(
         placement,
-        backdrop && matte.kind === 'ready'
-          ? { color: backdrop.color, matte: matte.matte }
+        backgroundColor && matte.kind === 'ready'
+          ? { color: backgroundColor, matte: matte.matte }
           : undefined,
       );
       if (current !== photo) return;
@@ -435,7 +445,11 @@
         {:else if find.kind === 'finding'}
           {t.finding}
         {:else if busy}
-          {t.separating}
+          {#if matte.kind === 'failed'}
+            <strong>{t.separateFailed}</strong>
+          {:else}
+            {t.separating}
+          {/if}
         {:else if find.kind === 'found'}
           {t.found}
         {:else if find.kind === 'none'}
