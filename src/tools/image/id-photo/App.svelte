@@ -218,7 +218,7 @@
       const face = readFace(points, current.width, current.height, current.thumb);
       const auto = autoPlace(face);
       placement = auto;
-      saved = undefined;
+      edited();
       find = { kind: 'found', face, auto, faces: faces.length };
     } catch {
       if (ticket === generation) find = { kind: 'failed' };
@@ -280,10 +280,7 @@
   // 배경을 바꾸면 결과도 바뀌므로 지난번에 받은 결과 안내를 지운다 (칸을 옮길 때의 update와 같다)
   $effect(() => {
     void backgroundColor;
-    untrack(() => {
-      saved = undefined;
-      saveFailed = false;
-    });
+    untrack(edited);
   });
 
   /** 지금 그릴 배경 (바꾸지 않거나 아직 나누지 못했으면 없다) */
@@ -313,6 +310,17 @@
 
   function update(next: Placement) {
     placement = next;
+    edited();
+  }
+
+  /**
+   * 결과가 바뀔 때마다 늘어난다. 저장하는 사이에 바뀌면 끝난 저장을 지금 결과로 안내하지 않는다
+   * (받은 파일은 누른 때의 결과다)
+   */
+  let edits = 0;
+  /** 결과가 바뀌었다: 지난번에 받은 결과 안내를 지운다 */
+  function edited() {
+    edits++;
     saved = undefined;
     saveFailed = false;
   }
@@ -432,6 +440,7 @@
     if (!current || find.kind === 'finding' || busy) return;
     const entitlement = await canUse('image/id-photo');
     if (!entitlement.allowed) return;
+    const version = edits;
     try {
       const bytes = await photos.export(
         placement,
@@ -441,9 +450,9 @@
       );
       if (current !== photo) return;
       downloadFile(bytes, `${baseName(current.name)}_${t.suffix}.jpg`, 'image/jpeg');
-      saved = { size: bytes.length };
+      if (version === edits) saved = { size: bytes.length };
     } catch {
-      if (current === photo) saveFailed = true;
+      if (current === photo && version === edits) saveFailed = true;
     }
   }
 
