@@ -65,6 +65,8 @@ export function rewriteJpeg(
     if (marker === undefined) return undefined;
     if (marker === EOI) {
       parts.push(bytes.subarray(at, at + 2));
+      // 그림 끝 뒤에 덧붙은 자료(움직이는 사진의 영상, 다른 그림 등)는 뺀다. 거기에도 촬영 정보가 들어 있을 수 있다
+      if (at + 2 < bytes.length) removed = true;
       offset = bytes.length;
       break;
     }
