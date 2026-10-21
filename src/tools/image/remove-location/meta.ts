@@ -1,7 +1,7 @@
 import { defineTool } from '../../types';
 
 export default defineTool({
-  status: 'soon',
+  status: 'live',
   section: 'photo',
   icon: [
     'M12 21c-4.5-5-7-8.2-7-11a7 7 0 0 1 14 0c0 2.8-2.5 6-7 11z',
