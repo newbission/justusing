@@ -451,7 +451,7 @@
       list.push(t.checkReplaced);
       if (backgroundColor !== BACKGROUNDS.white) list.push(t.checkNotWhite);
     } else if (!whiteBackground(photo.thumb)) list.push(t.checkBackground);
-    if (placement.height < SPEC.outHeight) list.push(t.checkSmall);
+    if (placement.height < outputSize(output).height) list.push(t.checkSmall);
     if (outside(placement, photo.width, photo.height)) list.push(t.checkOutside);
     return list;
   });
