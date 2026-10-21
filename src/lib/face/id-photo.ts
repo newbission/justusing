@@ -1,11 +1,12 @@
 /**
  * 증명사진 맞추기. 찾은 얼굴 점으로 사진을 여권 규격(3.5×4.5cm, 머리 길이 3.2~3.6cm)에 맞게
- * 자르고·키우고·기울기만 바로잡는다. 얼굴을 고치거나 배경을 바꾸지 않는다 (여권 규정이 금지한다).
+ * 자르고·키우고·기울기를 바로잡는다. 얼굴은 고치지 않는다 (여권 규정이 금지한다).
+ * 배경은 사용자가 고르면 바꾼다. 여권은 배경을 합성한 사진을 받지 않으므로 화면에 알린다.
  *
  * 좌표는 원본 사진의 픽셀. 잘라 낼 칸은 가운데(cx, cy)·기울기(angle)·높이(height)로 적는다.
  * 맞춘 결과와 검사는 참고용이다. 받아 주는지는 접수하는 기관이 정한다.
  */
-import type { Point } from './face';
+import type { Mask, Point } from './face';
 
 /** 여권 사진 규격 (외교부 여권안내). 주민등록증도 여권 규격 사진을 받는다 */
 export const SPEC = {
@@ -230,35 +231,109 @@ export function inCrop(point: { x: number; y: number }, placement: Placement) {
   };
 }
 
-/** 칸이 사진 밖으로 나가는지 (나간 곳은 흰색으로 채운다) */
-export function outside(placement: Placement, width: number, height: number): boolean {
+/** 칸의 네 귀퉁이 (원본 픽셀) */
+function corners(placement: Placement) {
   const u = { x: Math.cos(placement.angle), y: Math.sin(placement.angle) };
   const v = { x: -Math.sin(placement.angle), y: Math.cos(placement.angle) };
   const w = cropWidth(placement) / 2;
   const h = placement.height / 2;
-  // 반 픽셀은 봐준다 (돌린 칸의 귀퉁이 반올림)
   return [
     [-1, -1],
     [1, -1],
     [1, 1],
     [-1, 1],
-  ].some(([a, b]) => {
-    const x = placement.cx + u.x * w * a + v.x * h * b;
-    const y = placement.cy + u.y * w * a + v.y * h * b;
-    return x < -0.5 || y < -0.5 || x > width + 0.5 || y > height + 0.5;
+  ].map(([a, b]) => ({
+    x: placement.cx + u.x * w * a + v.x * h * b,
+    y: placement.cy + u.y * w * a + v.y * h * b,
+  }));
+}
+
+/** 칸이 사진 밖으로 나가는지 (나간 곳은 배경색으로 채운다) */
+export function outside(placement: Placement, width: number, height: number): boolean {
+  // 반 픽셀은 봐준다 (돌린 칸의 귀퉁이 반올림)
+  return corners(placement).some(
+    ({ x, y }) => x < -0.5 || y < -0.5 || x > width + 0.5 || y > height + 0.5,
+  );
+}
+
+/** 사람과 배경을 나눈 결과. 원본 사진의 한 영역(x, y, width, height)을 나눴다 */
+export interface Matte {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  mask: Mask;
+}
+
+/** 배경을 나눌 영역: 칸을 넉넉히 둘러싼 네모 (원본 픽셀, 사진 안으로 자름) */
+export function matteRegion(placement: Placement, width: number, height: number) {
+  const points = corners(placement);
+  const margin = placement.height * 0.15;
+  const x0 = Math.max(0, Math.floor(Math.min(...points.map((p) => p.x)) - margin));
+  const y0 = Math.max(0, Math.floor(Math.min(...points.map((p) => p.y)) - margin));
+  const x1 = Math.min(width, Math.ceil(Math.max(...points.map((p) => p.x)) + margin));
+  const y1 = Math.min(height, Math.ceil(Math.max(...points.map((p) => p.y)) + margin));
+  return { x: x0, y: y0, width: Math.max(1, x1 - x0), height: Math.max(1, y1 - y0) };
+}
+
+/** 칸이 나눈 영역 안에 있는지 (사진 밖은 어차피 배경색이라 따지지 않는다). 벗어나면 다시 나눈다 */
+export function matteCovers(matte: Matte, placement: Placement, width: number, height: number) {
+  return corners(placement).every(({ x, y }) => {
+    const cx = Math.min(width, Math.max(0, x));
+    const cy = Math.min(height, Math.max(0, y));
+    return (
+      cx >= matte.x - 0.5 &&
+      cy >= matte.y - 0.5 &&
+      cx <= matte.x + matte.width + 0.5 &&
+      cy <= matte.y + matte.height + 0.5
+    );
   });
 }
 
-/** 칸을 그린다 (흰 바탕 위에). 화면 미리보기와 결과 파일이 같은 함수를 쓴다 */
+/**
+ * 사진에서 사람만 남긴 그림. image는 원본을 scale배 한 사진 (미리보기는 줄인 사진, 결과 파일은 원본).
+ * 모델이 낸 가장자리는 넓게 번져 배경이 비치므로, 확신이 낮은 쪽을 조금 깎아 경계를 좁힌다
+ */
+export function cutout(image: CanvasImageSource, scale: number, matte: Matte) {
+  const { mask } = matte;
+  const alpha = new OffscreenCanvas(mask.width, mask.height);
+  const pixels = new ImageData(mask.width, mask.height);
+  for (let i = 0; i < mask.data.length; i++) {
+    pixels.data[i * 4 + 3] = Math.min(255, Math.max(0, ((mask.data[i] - 38) * 255) / 179));
+  }
+  alpha.getContext('2d')!.putImageData(pixels, 0, 0);
+  const x = Math.floor(matte.x * scale);
+  const y = Math.floor(matte.y * scale);
+  const canvas = new OffscreenCanvas(
+    Math.max(1, Math.round(matte.width * scale)),
+    Math.max(1, Math.round(matte.height * scale)),
+  );
+  const context = canvas.getContext('2d')!;
+  context.drawImage(image, -x, -y);
+  context.globalCompositeOperation = 'destination-in';
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(alpha, 0, 0, canvas.width, canvas.height);
+  return { image: canvas, x, y };
+}
+
+/** 바꿀 배경: 색과 사람만 남긴 그림 (그림의 좌표는 그리는 사진의 픽셀) */
+export interface Backdrop {
+  color: string;
+  cutout: { image: CanvasImageSource; x: number; y: number };
+}
+
+/** 칸을 그린다 (흰 바탕, 배경을 바꾸면 그 색 위에). 화면 미리보기와 결과 파일이 같은 함수를 쓴다 */
 export function drawCrop(
   context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   image: CanvasImageSource,
   placement: Placement,
   width: number,
   height: number,
+  backdrop?: Backdrop,
 ) {
   context.save();
-  context.fillStyle = '#ffffff';
+  context.fillStyle = backdrop?.color ?? '#ffffff';
   context.fillRect(0, 0, width, height);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
@@ -267,14 +342,23 @@ export function drawCrop(
   context.scale(height / placement.height, height / placement.height);
   context.rotate(-placement.angle);
   context.translate(-placement.cx, -placement.cy);
-  context.drawImage(image, 0, 0);
+  if (backdrop) context.drawImage(backdrop.cutout.image, backdrop.cutout.x, backdrop.cutout.y);
+  else context.drawImage(image, 0, 0);
   context.restore();
 }
 
 /** 결과 JPG (413×531). 온라인 제출 한도(500KB)를 넘으면 화질을 낮춘다 */
-export async function exportJpeg(image: CanvasImageSource, placement: Placement): Promise<Blob> {
+export async function exportJpeg(
+  image: CanvasImageSource,
+  placement: Placement,
+  background?: { color: string; matte: Matte },
+): Promise<Blob> {
   const canvas = new OffscreenCanvas(SPEC.outWidth, SPEC.outHeight);
-  drawCrop(canvas.getContext('2d')!, image, placement, SPEC.outWidth, SPEC.outHeight);
+  const backdrop = background && {
+    color: background.color,
+    cutout: cutout(image, 1, background.matte),
+  };
+  drawCrop(canvas.getContext('2d')!, image, placement, SPEC.outWidth, SPEC.outHeight, backdrop);
   let blob: Blob | undefined;
   for (const quality of [0.95, 0.9, 0.85, 0.8, 0.7]) {
     blob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
