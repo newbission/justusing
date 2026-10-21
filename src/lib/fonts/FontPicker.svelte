@@ -67,6 +67,8 @@
    * 고른 글꼴을 바꾸지 않는다 (받기는 끝까지 해서 보관해 둔다)
    */
   let picks = 0;
+  /** 글꼴마다 아직 받지 않은 크기 (진행률용, 일부 굵기만 없으면 그만큼만 받는다) */
+  const needBytes = new Map<string, number>();
 
   /** 보관된 글꼴을 고른다 (보관소에서 바로 읽는다) */
   async function choose(font: FontEntry) {
@@ -87,7 +89,10 @@
       const bytes = await loadData(font.files, fontConsent(font), (received) => {
         states[font.id] = {
           kind: 'downloading',
-          percent: Math.min(99, Math.round((received / font.bytes) * 100)),
+          percent: Math.min(
+            99,
+            Math.round((received / (needBytes.get(font.id) || font.bytes)) * 100),
+          ),
         };
       });
       const entry = toSelected(font, bytes);
@@ -130,6 +135,7 @@
       const status = await dataStatus(font.files, fontConsent(font));
       const lowSpace = status.available !== undefined && status.available < font.bytes * 2;
       const missing = missingData(font.files, status);
+      needBytes.set(font.id, missing.bytes);
       states[font.id] =
         missing.bytes === 0
           ? { kind: 'cached' }
