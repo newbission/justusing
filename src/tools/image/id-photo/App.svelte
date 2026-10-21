@@ -262,6 +262,15 @@
     }
   }
 
+  // 배경을 바꾸면 결과도 바뀌므로 지난번에 받은 결과 안내를 지운다 (칸을 옮길 때의 update와 같다)
+  $effect(() => {
+    void backgroundColor;
+    untrack(() => {
+      saved = undefined;
+      saveFailed = false;
+    });
+  });
+
   /** 지금 그릴 배경 (바꾸지 않거나 아직 나누지 못했으면 없다) */
   const backdrop = $derived<Backdrop | undefined>(
     backgroundColor && matte.kind === 'ready'
