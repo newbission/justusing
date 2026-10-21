@@ -112,6 +112,7 @@
     방향이 남아 세로로 열림, 로컬 처리
   - 위치만 지우기: JPG·PNG·WebP 세 장을 ZIP으로, 셋 다 위치·설명 글이 없고 날짜·기기는 남음, 브라우저가 열 수 있음
   - 지울 정보가 없는 사진: 원본 그대로 두고 알림, 다운로드 버튼 없음
+  - EXIF가 머리 4바이트에서 끝난 사진: 그 조각만 빼고 지움, 그림은 그대로 열림
   - 방식을 바꾸면 이전 결과를 버림
 - 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`)
 
