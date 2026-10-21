@@ -26,6 +26,7 @@ const SAMPLES = {
     docPhoto1: '예시-서류사진1.jpg',
     docPhoto2: '예시-서류사진2.jpg',
     photo: '예시-사진.jpg',
+    located: '예시-위치사진.jpg',
     screen: '예시-화면캡처.png',
   },
   en: {
@@ -37,6 +38,7 @@ const SAMPLES = {
     docPhoto1: 'sample-document-photo-1.jpg',
     docPhoto2: 'sample-document-photo-2.jpg',
     photo: 'sample-photo.jpg',
+    located: 'sample-photo-with-location.jpg',
     screen: 'sample-screenshot.png',
   },
 };
@@ -366,6 +368,19 @@ const JOBS = {
         .click();
       await frame.getByRole('button', { name: '변환하기' }).click();
       await save('다운로드', `${out}image-convert.${ext}`);
+    }
+  },
+
+  // 위치 정보 지우기: 위치가 든 견본을 모두 지우기·위치만 지우기로
+  async 'remove-location'({ sample, out }) {
+    for (const [mode, label] of [
+      ['all', '모든 정보 지우기 (추천)'],
+      ['location', '위치만 지우기'],
+    ]) {
+      await open('/image/remove-location/', sample('located'));
+      await frame.getByText(label).click();
+      await frame.getByRole('button', { name: '정보 지우기' }).click();
+      await save('다운로드', `${out}remove-location-${mode}.jpg`);
     }
   },
 };
