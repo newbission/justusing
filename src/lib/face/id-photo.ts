@@ -33,6 +33,8 @@ export interface Placement {
   angle: number;
   /** 칸 높이. 너비는 높이 × 35/45 */
   height: number;
+  /** 좌우를 뒤집는다 (휴대폰 앞 카메라 사진) */
+  flip: boolean;
 }
 
 export const cropWidth = (placement: Placement) =>
@@ -200,13 +202,14 @@ export function autoPlace(face: Face): Placement {
     cy: centerU * u.y + centerV * v.y,
     angle,
     height,
+    flip: false,
   };
 }
 
 /** 얼굴을 찾지 못했을 때 처음 칸: 사진 가운데, 기울기 없음 */
 export function centerPlace(width: number, height: number): Placement {
   const fit = Math.min(height, (width * SPEC.heightMm) / SPEC.widthMm) * 0.9;
-  return { cx: width / 2, cy: height / 2, angle: 0, height: fit };
+  return { cx: width / 2, cy: height / 2, angle: 0, height: fit, flip: false };
 }
 
 /** 칸 안에서 정수리~턱 길이 (mm) */
@@ -260,6 +263,7 @@ export function drawCrop(
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
   context.translate(width / 2, height / 2);
+  if (placement.flip) context.scale(-1, 1);
   context.scale(height / placement.height, height / placement.height);
   context.rotate(-placement.angle);
   context.translate(-placement.cx, -placement.cy);
