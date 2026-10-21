@@ -41,13 +41,25 @@ function ask(request: Ask): Promise<MetadataResponse> {
 async function send(request: Ask): Promise<MetadataResponse> {
   const worker = await (workerPromise ??= createWorker(workerUrl));
   const id = nextId++;
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    const finish = () => {
+      worker.removeEventListener('message', listener);
+      worker.removeEventListener('error', onError);
+    };
     const listener = (event: MessageEvent<MetadataResponse>) => {
       if (event.data.id !== id) return;
-      worker.removeEventListener('message', listener);
+      finish();
       resolve(event.data);
     };
+    // 워커가 죽으면(메모리 부족 등) 답이 오지 않는다. 이 요청을 실패로 끝내고 다음 요청은 새 워커로 한다
+    const onError = () => {
+      finish();
+      worker.terminate();
+      workerPromise = undefined;
+      reject(new MetadataError());
+    };
     worker.addEventListener('message', listener);
+    worker.addEventListener('error', onError);
     worker.postMessage({ ...request, id } as MetadataRequest);
   });
 }
