@@ -30,6 +30,25 @@ function keepsApp(marker: number, bytes: Uint8Array, body: number): boolean {
 }
 
 export function stripJpegMetadata(bytes: Uint8Array): Uint8Array | undefined {
+  return rewriteJpeg(bytes, (marker, segment) =>
+    marker !== COM && keepsApp(marker, segment, 4) ? 'keep' : 'drop',
+  );
+}
+
+/** 정보 조각 하나를 어떻게 할지: 그대로 두기, 빼기, 또는 바꾼 조각(머리 FF 표시·길이까지 포함) */
+export type SegmentAction = 'keep' | 'drop' | Uint8Array;
+
+/**
+ * JPEG의 정보 조각(APP0~APP15, 설명 COM)마다 decide를 불러 두거나 빼거나 바꾼다. 그 밖의 조각과 압축 자료는 그대로 옮긴다.
+ * decide는 조각 전체(FF 표시부터 끝까지)를 받는다. 아무것도 바뀌지 않으면 받은 bytes를 그대로 돌려준다.
+ * 구조를 읽지 못하면 undefined
+ */
+export function rewriteJpeg(
+  bytes: Uint8Array,
+  decide: (marker: number, segment: Uint8Array) => SegmentAction,
+  /** 그림 끝 뒤에 덧붙은 자료가 있으면 그 자료로 부른다 (결과에서는 빠진다) */
+  onTrailing?: (rest: Uint8Array) => void,
+): Uint8Array | undefined {
   if (bytes[0] !== 0xff || bytes[1] !== SOI) return undefined;
   const parts: Uint8Array[] = [bytes.subarray(0, 2)];
   let removed = false;
@@ -48,6 +67,11 @@ export function stripJpegMetadata(bytes: Uint8Array): Uint8Array | undefined {
     if (marker === undefined) return undefined;
     if (marker === EOI) {
       parts.push(bytes.subarray(at, at + 2));
+      // 그림 끝 뒤에 덧붙은 자료(움직이는 사진의 영상, 다른 그림 등)는 뺀다. 거기에도 촬영 정보가 들어 있을 수 있다
+      if (at + 2 < bytes.length) {
+        removed = true;
+        onTrailing?.(bytes.subarray(at + 2));
+      }
       offset = bytes.length;
       break;
     }
@@ -60,9 +84,13 @@ export function stripJpegMetadata(bytes: Uint8Array): Uint8Array | undefined {
     const length = (bytes[at + 2]! << 8) | bytes[at + 3]!;
     const end = at + 2 + length;
     if (length < 2 || end > bytes.length) return undefined;
-    const app = marker >= 0xe0 && marker <= 0xef;
-    if ((app && !keepsApp(marker, bytes, at + 4)) || marker === COM) {
-      removed = true;
+    if ((marker >= 0xe0 && marker <= 0xef) || marker === COM) {
+      const action = decide(marker, bytes.subarray(at, end));
+      if (action === 'keep') parts.push(bytes.subarray(at, end));
+      else {
+        if (action !== 'drop') parts.push(action);
+        removed = true;
+      }
       offset = end;
       continue;
     }

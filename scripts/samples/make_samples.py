@@ -59,6 +59,7 @@ TEXT = {
         'docPhotos': ['예시-서류사진1.jpg', '예시-서류사진2.jpg'],
         'photo': '예시-사진.jpg',
         'face': '예시-증명사진.jpg',
+        'located': '예시-위치사진.jpg',
         'screen': '예시-화면캡처.png',
         'sample': '예시 파일 · 내용은 모두 지어낸 것입니다',
         'company': '예시상사',
@@ -143,6 +144,7 @@ TEXT = {
         'docPhotos': ['sample-document-photo-1.jpg', 'sample-document-photo-2.jpg'],
         'photo': 'sample-photo.jpg',
         'face': 'sample-id-photo.jpg',
+        'located': 'sample-photo-with-location.jpg',
         'screen': 'sample-screenshot.png',
         'sample': 'Sample file · Everything in it is made up',
         'company': 'Example Co.',
@@ -540,6 +542,20 @@ def screenshot(t) -> Image.Image:
     return image
 
 
+def located_exif() -> bytes:
+    """위치정보 지우기 견본의 촬영 정보. 위치는 공공장소(서울시청 앞), 기기 이름은 지어낸 것"""
+    exif = Image.Exif()
+    exif[0x010F] = 'justus.ing'
+    exif[0x0110] = 'Sample Camera'
+    exif.get_ifd(0x8769)[0x9003] = '2026:05:01 14:23:00'
+    gps = exif.get_ifd(0x8825)
+    gps[1] = 'N'
+    gps[2] = (37.0, 33.0, 58.68)
+    gps[3] = 'E'
+    gps[4] = (126.0, 58.0, 40.44)
+    return exif.tobytes()
+
+
 def main():
     hero = jpeg(landscape(1600, 1060, 7), 90)
     gallery = [jpeg(landscape(1400, 1050, seed), 92) for seed in (11, 12, 13)]
@@ -567,6 +583,7 @@ def main():
             photo_of(sheet, 30 + index).save(os.path.join(folder, t['docPhotos'][index]), 'JPEG', quality=88)
         photo.save(os.path.join(folder, t['photo']), 'JPEG', quality=95)
         face.save(os.path.join(folder, t['face']), 'JPEG', quality=90)
+        photo.save(os.path.join(folder, t['located']), 'JPEG', quality=90, exif=located_exif())
         screenshot(t).save(os.path.join(folder, t['screen']), 'PNG', optimize=True)
         for name in sorted(os.listdir(folder)):
             print(f'{locale}/{name}  {os.path.getsize(os.path.join(folder, name)) // 1024}KB')

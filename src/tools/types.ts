@@ -50,6 +50,8 @@ export interface FlowDoc {
 export type FlowMark =
   | 'lines'
   | 'photo'
+  /** 사진 위 위치 표시 (위치정보 지우기) */
+  | 'location'
   | 'scan'
   | 'text'
   | 'rotate'

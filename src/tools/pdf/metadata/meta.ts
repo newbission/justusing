@@ -18,6 +18,6 @@ export default defineTool({
         'Change the title, author, subject and keywords of a PDF, or remove hidden information such as the author name, apps used and creation date. Your file is never uploaded.',
     },
   },
-  related: ['pdf/protect', 'pdf/unlock'],
+  related: ['pdf/protect', 'pdf/unlock', 'image/remove-location'],
   flow: { from: { kind: 'pdf', mark: 'info' }, to: { kind: 'pdf' } },
 });
