@@ -170,7 +170,7 @@ LOCATED_XMP = (
 )
 located = Image.new('RGB', (400, 300), (200, 120, 40))
 buffer = io.BytesIO()
-located.save(buffer, 'JPEG', quality=90, exif=located_exif(6), xmp=LOCATED_XMP)
+located.save(buffer, 'JPEG', quality=90, exif=located_exif(6), xmp=LOCATED_XMP, comment=b'taken at home')
 with open(path('located.jpg'), 'wb') as file:
     file.write(buffer.getvalue() + b'MOTION-PHOTO-VIDEO')
 text = PngImagePlugin.PngInfo()
