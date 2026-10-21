@@ -272,6 +272,14 @@ test('인화용 크기·PNG·용량 상한으로 받는다', async ({ page }) =>
   expect(await jpegSize(page, bytes)).toEqual({ width: 827, height: 1063 });
   await expect(frame.getByText(/^827×1063 PNG [\d.]+(KB|MB)를 만들었습니다\./)).toBeVisible();
 
+  // 처음 칸(약 925픽셀 높이)은 온라인용(531)보다 크지만 인화용(1063)보다 작아 늘린다고 알린다
+  await expect(
+    frame.getByText('원본 사진이 작아 늘려서 만듭니다.', { exact: false }),
+  ).toBeVisible();
+  await frame.getByText('온라인 제출용', { exact: true }).click();
+  await expect(frame.getByText('원본 사진이 작아', { exact: false })).toHaveCount(0);
+  await frame.getByText('인화용', { exact: true }).click();
+
   // 인화용 JPG 100KB 이하: 화질을 낮춰 맞춘다
   await frame.getByText('JPG', { exact: true }).click();
   await frame.getByText('100KB', { exact: true }).click();
