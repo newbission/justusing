@@ -21,7 +21,7 @@
   import { onMount } from 'svelte';
   import { pick, frameLocale } from '../../frame/locale';
   import { FRAME_MESSAGES } from '../../frame/messages';
-  import { dataStatus, loadData } from '../../frame/data';
+  import { dataStatus, loadData, missingData } from '../../frame/data';
   import { formatSize } from '../../frame/format';
   import { FONTS, fontConsent, fontPreview, type FontEntry } from './catalog';
 
@@ -129,12 +129,13 @@
     for (const font of FONTS) {
       const status = await dataStatus(font.files, fontConsent(font));
       const lowSpace = status.available !== undefined && status.available < font.bytes * 2;
-      const all = font.files.every((file) => status.cached.has(file.path));
-      states[font.id] = all
-        ? { kind: 'cached' }
-        : status.consented
-          ? { kind: 'removed', lowSpace }
-          : { kind: 'missing', lowSpace };
+      const missing = missingData(font.files, status);
+      states[font.id] =
+        missing.bytes === 0
+          ? { kind: 'cached' }
+          : missing.removed
+            ? { kind: 'removed', lowSpace }
+            : { kind: 'missing', lowSpace };
     }
     // 받아 둔 글꼴이 있으면 목록 순서대로 첫 글꼴을 골라 둔다 (보관소에서 바로 읽는다)
     const first = FONTS.find((font) => states[font.id]?.kind === 'cached');
