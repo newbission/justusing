@@ -33,7 +33,7 @@ export default defineContent({
       },
       {
         q: '화질이 나빠지나요?',
-        a: '아니요. 사진을 다시 저장하지 않고 파일 안의 정보 부분만 떼어 냅니다. 그림 자료는 한 바이트도 바뀌지 않아 화질과 가로·세로가 그대로입니다.',
+        a: '아니요. 사진을 다시 저장하지 않고 파일 안의 정보 부분만 떼어 냅니다. 그림 자료는 한 바이트도 바뀌지 않아 화질과 가로·세로가 그대로입니다. 다만 HDR 사진은 사진 뒤에 붙은 밝기 정보가 함께 빠져 일반 사진으로 보입니다.',
       },
       {
         q: '"모든 정보 지우기"와 "위치만 지우기"는 무엇이 다른가요?',
@@ -41,7 +41,7 @@ export default defineContent({
       },
       {
         q: '어떤 사진을 넣을 수 있나요?',
-        a: 'JPG·PNG·WebP 사진입니다. 아이폰의 HEIC 사진은 아직 넣을 수 없습니다. 아이폰 Safari에서 사진 보관함으로 고르면 보통 JPG로 바뀌어 들어옵니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다.',
+        a: 'JPG·PNG·WebP 사진입니다. 아이폰의 HEIC 사진은 아직 넣을 수 없습니다. 아이폰 Safari에서 사진 보관함으로 고르면 보통 JPG로 바뀌어 들어옵니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다. 안드로이드의 HDR 사진(Ultra HDR)은 사진 뒤에 붙은 밝기 정보가 빠져 일반 사진으로 보입니다. 이런 사진을 넣으면 지우기 전에 화면에 알려 드립니다.',
       },
       {
         q: '지운 뒤 사진이 옆으로 눕지 않나요?',
@@ -81,7 +81,7 @@ export default defineContent({
       },
       {
         q: 'Will the quality get worse?',
-        a: 'No. The photo is not saved again; only the info part of the file is taken out. The image data is not changed by a single byte, so quality, width and height stay the same.',
+        a: 'No. The photo is not saved again; only the info part of the file is taken out. The image data is not changed by a single byte, so quality, width and height stay the same. HDR photos, however, lose the brightness data attached after the picture and show as regular photos.',
       },
       {
         q: 'What is the difference between "Remove all info" and "Location only"?',
@@ -89,7 +89,7 @@ export default defineContent({
       },
       {
         q: 'Which photos can I add?',
-        a: 'JPG, PNG and WebP photos. iPhone HEIC photos are not supported yet. When you pick from your photo library in Safari on iPhone, photos usually arrive as JPG. For motion photos, the video attached after the picture is removed too, leaving only the still photo.',
+        a: 'JPG, PNG and WebP photos. iPhone HEIC photos are not supported yet. When you pick from your photo library in Safari on iPhone, photos usually arrive as JPG. For motion photos, the video attached after the picture is removed too, leaving only the still photo. Android HDR photos (Ultra HDR) lose the brightness data attached after the picture and show as regular photos. If you add such photos, the screen tells you before you remove anything.',
       },
       {
         q: 'Will my photos turn sideways?',
