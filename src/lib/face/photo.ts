@@ -5,12 +5,12 @@
  * 워커가 원본을 들고 있고, 화면에는 미리보기용 작은 사진과 살피기용 픽셀만 넘긴다.
  */
 import { createWorker } from '../worker';
-import type { Placement, Thumb } from './id-photo';
+import type { Matte, Placement, Thumb } from './id-photo';
 import workerUrl from './photo.worker.ts?worker&url';
 
 export type PhotoRequest =
   | { id: number; type: 'open'; file: File; previewSide: number; thumbSide: number }
-  | { id: number; type: 'export'; placement: Placement };
+  | { id: number; type: 'export'; placement: Placement; background?: Background };
 
 export type PhotoResponse =
   | {
@@ -23,6 +23,12 @@ export type PhotoResponse =
     }
   | { id: number; kind: 'exported'; bytes: Uint8Array }
   | { id: number; kind: 'error'; message: string };
+
+/** 바꿀 배경: 색과 사람·배경을 나눈 결과 */
+export interface Background {
+  color: string;
+  matte: Matte;
+}
 
 export interface OpenedPhoto {
   width: number;
@@ -71,9 +77,9 @@ export class PhotoWorker {
     return response;
   }
 
-  /** 마지막으로 연 사진에서 칸을 잘라 결과 JPG를 만든다 */
-  async export(placement: Placement): Promise<Uint8Array> {
-    const response = await this.call({ id: nextId++, type: 'export', placement });
+  /** 마지막으로 연 사진에서 칸을 잘라 결과 JPG를 만든다 (background가 있으면 배경을 바꾼다) */
+  async export(placement: Placement, background?: Background): Promise<Uint8Array> {
+    const response = await this.call({ id: nextId++, type: 'export', placement, background });
     if (response.kind !== 'exported')
       throw new Error(response.kind === 'error' ? response.message : 'unexpected');
     return response.bytes;
