@@ -1,0 +1,121 @@
+/**
+ * 위치 정보 지우기 E2E. 빌드 결과에서 돌린다 (playwright.config.ts 참고).
+ *
+ * 받은 파일을 다시 읽어 위치·날짜·기기가 지워졌는지, 그림 자료는 그대로인지, 브라우저가 바로 세워 여는지 보고,
+ * 처리하는 동안 파일이 기기를 떠나지 않는다는 약속을 확인한다.
+ */
+import { expect, test, type Page, type Request } from './test';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { unzipSync } from 'fflate';
+import { expectLocalOnly } from './local-only';
+import { readPhotoInfo } from '../../src/lib/image/photo-metadata';
+
+const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
+
+async function openTool(page: Page, files: string[]) {
+  await page.goto('/image/remove-location/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles(files.map(fixture));
+  return frame;
+}
+
+/** 브라우저로 이미지를 열어 바로 세운 가로·세로를 읽는다 */
+async function inspect(page: Page, bytes: Uint8Array) {
+  return page.evaluate(async (data) => {
+    const bitmap = await createImageBitmap(new Blob([new Uint8Array(data)]), {
+      imageOrientation: 'from-image',
+    });
+    return { width: bitmap.width, height: bitmap.height };
+  }, Array.from(bytes));
+}
+
+/** JPEG의 압축 자료(첫 스캔 머리부터 그림 끝까지) */
+function scanData(bytes: Uint8Array): Uint8Array {
+  let start = 2;
+  while (!(bytes[start] === 0xff && bytes[start + 1] === 0xda)) {
+    start += 2 + ((bytes[start + 2]! << 8) | bytes[start + 3]!);
+  }
+  let end = bytes.length - 2;
+  while (!(bytes[end] === 0xff && bytes[end + 1] === 0xd9)) end--;
+  return bytes.subarray(start, end + 2);
+}
+
+test('사진의 정보를 모두 지우고 방향만 남긴다', async ({ page, baseURL }) => {
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  const frame = await openTool(page, ['located.jpg']);
+  await expect(
+    frame.getByText('위치 37.5663, 126.9779 · 2024-05-01 14:23 · Apple iPhone 15 Pro'),
+  ).toBeVisible();
+  await expect(frame.getByText('사진 1장 중 1장에 위치가 있습니다.')).toBeVisible();
+  requests.length = 0; // 페이지를 여는 요청은 빼고, 파일을 고른 뒤부터 센다
+
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('완료: 사진 1장에서 지웠습니다.')).toBeVisible();
+  await expect(frame.getByText('정보를 모두 지웠습니다', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const file = await event;
+  expect(file.suggestedFilename()).toBe('located_정보삭제.jpg');
+  const bytes = new Uint8Array(await readFile(await file.path()));
+  const original = new Uint8Array(await readFile(fixture('located.jpg')));
+
+  expect(readPhotoInfo(bytes)).toMatchObject({ location: false, orientation: 6 });
+  expect(readPhotoInfo(bytes)?.date).toBeUndefined();
+  expect(readPhotoInfo(bytes)?.device).toBeUndefined();
+  const text = Buffer.from(bytes).toString('latin1');
+  expect(text).not.toContain('GPSLatitude');
+  expect(text).not.toContain('MOTION-PHOTO-VIDEO');
+  // 다시 압축하지 않는다: 그림 자료가 한 바이트도 바뀌지 않는다
+  expect(Buffer.from(scanData(bytes)).equals(Buffer.from(scanData(original)))).toBe(true);
+  // 방향을 남겨 바로 세운 세로 사진으로 열린다
+  expect(await inspect(page, bytes)).toEqual({ width: 300, height: 400 });
+  expectLocalOnly(page, requests, baseURL!);
+});
+
+test('위치만 지우면 찍은 날짜와 기기는 남는다 (JPG·PNG·WebP를 ZIP으로)', async ({ page }) => {
+  const frame = await openTool(page, ['located.jpg', 'located.png', 'located.webp']);
+  await expect(frame.getByText('사진 3장 중 3장에 위치가 있습니다.')).toBeVisible();
+  await frame.getByText('위치만 지우기').click();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('완료: 사진 3장에서 지웠습니다.')).toBeVisible();
+
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '모두 받기 (ZIP, 3장)' }).click();
+  const file = await event;
+  expect(file.suggestedFilename()).toBe('사진_정보삭제.zip');
+  const files = unzipSync(new Uint8Array(await readFile(await file.path())));
+  expect(Object.keys(files).sort()).toEqual([
+    'located_위치삭제.jpg',
+    'located_위치삭제.png',
+    'located_위치삭제.webp',
+  ]);
+  for (const [name, bytes] of Object.entries(files)) {
+    expect(readPhotoInfo(bytes), name).toMatchObject({
+      location: false,
+      date: '2024-05-01 14:23',
+      device: 'Apple iPhone 15 Pro',
+    });
+    expect(Buffer.from(bytes).toString('latin1'), name).not.toContain('GPSLatitude');
+    expect((await inspect(page, bytes)).width, name).toBeGreaterThan(0);
+  }
+});
+
+test('지울 정보가 없는 사진은 원본 그대로 두고 알린다', async ({ page }) => {
+  const frame = await openTool(page, ['tall.jpg']);
+  await expect(frame.getByText('위치 없음')).toBeVisible();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('지울 정보가 없었습니다.', { exact: false })).toBeVisible();
+  await expect(frame.getByText('지울 정보가 없어 원본 그대로')).toBeVisible();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toHaveCount(0);
+});
+
+test('방식을 바꾸면 지운 결과를 버리고 다시 지울 수 있다', async ({ page }) => {
+  const frame = await openTool(page, ['located.jpg']);
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toBeVisible();
+  await frame.getByText('위치만 지우기').click();
+  await expect(frame.getByRole('button', { name: '정보 지우기' })).toBeEnabled();
+  await expect(frame.getByText('위치 37.5663, 126.9779', { exact: false })).toBeVisible();
+});
