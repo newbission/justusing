@@ -26,8 +26,23 @@ const ko = {
   manualReady: '사진 위 칸을 직접 맞춰 주세요.',
   noFace: '얼굴을 찾지 못했습니다. 칸을 직접 맞춰 주세요.',
   findFailed: '얼굴을 찾지 못했습니다. 기기의 메모리가 부족할 수 있습니다. 칸을 직접 맞춰 주세요.',
-  download: 'JPG 다운로드',
-  saved: (size: string) => `413×531 JPG ${size}를 만들었습니다.`,
+  download: (format: string) => `${format} 다운로드`,
+  saved: (pixels: string, format: string, size: string) =>
+    `${pixels} ${format} ${size}를 만들었습니다.`,
+  jpegOver: (limit: string) => `가장 낮은 화질로도 ${limit}를 넘었습니다.`,
+  pngOver: (limit: string) => `${limit}를 넘었습니다. 용량 제한이 있는 곳에는 JPG를 고르세요.`,
+
+  outputTitle: '저장 방식',
+  sizeGroup: '크기',
+  sizes: { online: '온라인 제출용', print: '인화용' },
+  formatGroup: '형식',
+  limitGroup: '용량 상한',
+  noLimit: '제한 없음',
+  onlineHelp: '온라인 제출용은 413×531 픽셀(여권 규격)입니다.',
+  printHelp:
+    '인화용은 827×1063 픽셀(600 DPI)이라 더 선명하게 뽑힙니다. 여권 온라인 신청에는 온라인 제출용을 쓰세요.',
+  jpegHelp: 'JPG는 용량 상한을 넘으면 화질을 낮춰 맞춥니다.',
+  pngHelp: 'PNG는 화질을 그대로 두는 대신 용량이 크고, 상한을 넘어도 줄이지 않고 알려 드립니다.',
   saveFailed:
     'JPG를 만들지 못했습니다. 기기의 메모리가 부족할 수 있습니다. 다른 앱을 닫고 다시 해 보세요.',
 
@@ -83,6 +98,7 @@ const ko = {
   checksNote:
     '이 도구는 얼굴을 고치지 않습니다. 배경은 직접 고를 때만 바꿉니다. 받아 주는지는 접수하는 곳이 정합니다.',
   suffix: '증명사진',
+  suffixPrint: '증명사진_인화용',
 };
 
 const en: typeof ko = {
@@ -111,8 +127,23 @@ const en: typeof ko = {
   manualReady: 'Fit the frame on the photo yourself.',
   noFace: 'No face was found. Fit the frame yourself.',
   findFailed: 'Could not find a face. Your device may be low on memory. Fit the frame yourself.',
-  download: 'Download JPG',
-  saved: (size: string) => `Made a 413×531 JPG of ${size}.`,
+  download: (format: string) => `Download ${format}`,
+  saved: (pixels: string, format: string, size: string) => `Made a ${pixels} ${format} of ${size}.`,
+  jpegOver: (limit: string) => `It is over ${limit} even at the lowest quality.`,
+  pngOver: (limit: string) => `It is over ${limit}. Choose JPG for places with a file size limit.`,
+
+  outputTitle: 'Save as',
+  sizeGroup: 'Size',
+  sizes: { online: 'For upload', print: 'For printing' },
+  formatGroup: 'Format',
+  limitGroup: 'File size limit',
+  noLimit: 'No limit',
+  onlineHelp: 'For upload is 413×531 pixels (the passport size).',
+  printHelp:
+    'For printing is 827×1063 pixels (600 DPI), so prints come out sharper. Use For upload for online passport applications.',
+  jpegHelp: 'JPG lowers the quality to stay under the size limit.',
+  pngHelp:
+    'PNG keeps full quality but is larger; if it goes over the limit, it is not shrunk and you are told.',
   saveFailed:
     'Could not make the JPG. Your device may be low on memory. Close other apps and try again.',
 
@@ -170,6 +201,7 @@ const en: typeof ko = {
   checksNote:
     'This tool never retouches your face. It changes the background only when you choose a color. The office you submit to decides whether it is accepted.',
   suffix: 'id-photo',
+  suffixPrint: 'id-photo_print',
 };
 
 export const MESSAGES: Record<Locale, typeof ko> = { ko, en };

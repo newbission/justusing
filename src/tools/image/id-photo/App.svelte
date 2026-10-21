@@ -27,11 +27,13 @@
     headLength,
     matteCovers,
     matteRegion,
+    outputSize,
     outside,
     readFace,
     type Backdrop,
     type Face,
     type Matte,
+    type Output,
     type Placement,
     type Thumb,
     whiteBackground,
@@ -88,7 +90,21 @@
     | { kind: 'failed' };
   let find = $state.raw<Find>({ kind: 'idle' });
   let placement = $state.raw<Placement>({ cx: 0, cy: 0, angle: 0, height: 1, flip: false });
-  let saved = $state.raw<{ size: number } | undefined>();
+  let saved = $state.raw<
+    { size: number; fits: boolean; width: number; height: number; output: Output } | undefined
+  >();
+
+  /** 저장 방식 (기본: 여권 온라인 제출 규격) */
+  const LIMITS = [500, 200, 100, 0] as const;
+  let size = $state<Output['size']>('online');
+  let format = $state<Output['format']>('jpeg');
+  /** 용량 상한 (KB, 0은 제한 없음) */
+  let limit = $state<(typeof LIMITS)[number]>(500);
+  const output = $derived<Output>({
+    size,
+    format,
+    maxBytes: limit === 0 ? undefined : limit * 1024,
+  });
   let saveFailed = $state(false);
   let finder: Promise<FaceFinder> | undefined;
   const photos = new PhotoWorker();
@@ -282,6 +298,11 @@
     void backgroundColor;
     untrack(edited);
   });
+  // 저장 방식을 바꿔도 결과가 바뀐다
+  $effect(() => {
+    void output;
+    untrack(edited);
+  });
 
   /** 지금 그릴 배경 (바꾸지 않거나 아직 나누지 못했으면 없다) */
   const backdrop = $derived<Backdrop | undefined>(
@@ -442,15 +463,22 @@
     if (!entitlement.allowed) return;
     const version = edits;
     try {
-      const bytes = await photos.export(
+      const wanted = output;
+      const { bytes, fits } = await photos.export(
         placement,
+        wanted,
         backgroundColor && matte.kind === 'ready'
           ? { color: backgroundColor, matte: matte.matte }
           : undefined,
       );
       if (current !== photo) return;
-      downloadFile(bytes, `${baseName(current.name)}_${t.suffix}.jpg`, 'image/jpeg');
-      if (version === edits) saved = { size: bytes.length };
+      const suffix = wanted.size === 'print' ? t.suffixPrint : t.suffix;
+      const [extension, type] =
+        wanted.format === 'png' ? ['png', 'image/png'] : ['jpg', 'image/jpeg'];
+      downloadFile(bytes, `${baseName(current.name)}_${suffix}.${extension}`, type);
+      if (version === edits) {
+        saved = { size: bytes.length, fits, ...outputSize(wanted), output: wanted };
+      }
     } catch {
       if (current === photo && version === edits) saveFailed = true;
     }
@@ -474,7 +502,18 @@
         {#if saveFailed}
           <strong>{t.saveFailed}</strong>
         {:else if saved}
-          {t.saved(formatSize(saved.size))}
+          {t.saved(
+            `${saved.width}×${saved.height}`,
+            saved.output.format === 'png' ? 'PNG' : 'JPG',
+            formatSize(saved.size),
+          )}
+          {#if !saved.fits && saved.output.maxBytes}
+            <strong
+              >{saved.output.format === 'png'
+                ? t.pngOver(formatSize(saved.output.maxBytes))
+                : t.jpegOver(formatSize(saved.output.maxBytes))}</strong
+            >
+          {/if}
         {:else if find.kind === 'finding'}
           {t.finding}
         {:else if busy}
@@ -497,7 +536,7 @@
         type="button"
         class="btn primary"
         disabled={find.kind === 'finding' || busy}
-        onclick={save}>{t.download}</button
+        onclick={save}>{t.download(format === 'png' ? 'PNG' : 'JPG')}</button
       >
     </ActionBar>
 
@@ -641,6 +680,40 @@
             {:else}
               <p class="help">{t.backgroundNote}</p>
             {/if}
+          </section>
+
+          <section class="output" aria-labelledby="output-title">
+            <h2 id="output-title">{t.outputTitle}</h2>
+            <div class="choices">
+              <div class="choice" role="radiogroup" aria-label={t.sizeGroup}>
+                {#each ['online', 'print'] as const as option (option)}
+                  <label class:checked={size === option}>
+                    <input type="radio" name="size" value={option} bind:group={size} />
+                    {t.sizes[option]}
+                  </label>
+                {/each}
+              </div>
+              <div class="choice" role="radiogroup" aria-label={t.formatGroup}>
+                {#each ['jpeg', 'png'] as const as option (option)}
+                  <label class:checked={format === option}>
+                    <input type="radio" name="format" value={option} bind:group={format} />
+                    {option === 'png' ? 'PNG' : 'JPG'}
+                  </label>
+                {/each}
+              </div>
+              <div class="choice" role="radiogroup" aria-label={t.limitGroup}>
+                {#each LIMITS as option (option)}
+                  <label class:checked={limit === option}>
+                    <input type="radio" name="limit" value={option} bind:group={limit} />
+                    {option === 0 ? t.noLimit : `${option}KB`}
+                  </label>
+                {/each}
+              </div>
+            </div>
+            <p class="help">
+              {size === 'print' ? t.printHelp : t.onlineHelp}
+              {format === 'png' ? t.pngHelp : t.jpegHelp}
+            </p>
           </section>
 
           <section class="checks" aria-label={t.checksTitle}>
@@ -811,6 +884,7 @@
   }
   .data,
   .background,
+  .output,
   .checks {
     margin-bottom: 16px;
     padding: 16px;
@@ -819,6 +893,7 @@
   }
   .data h2,
   .background h2,
+  .output h2,
   .checks h2 {
     margin: 0 0 8px;
     font-size: 15px;
