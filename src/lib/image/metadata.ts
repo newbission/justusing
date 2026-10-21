@@ -29,7 +29,16 @@ type Ask = MetadataRequest extends infer R
     : never
   : never;
 
-async function ask(request: Ask): Promise<MetadataResponse> {
+/** 앞 요청이 끝나야 다음 요청을 보낸다. 큰 사진 여러 장의 전체 복사본이 한꺼번에 메모리에 오르지 않게 */
+let queue: Promise<unknown> = Promise.resolve();
+
+function ask(request: Ask): Promise<MetadataResponse> {
+  const next = queue.then(() => send(request));
+  queue = next.catch(() => undefined);
+  return next;
+}
+
+async function send(request: Ask): Promise<MetadataResponse> {
   const worker = await (workerPromise ??= createWorker(workerUrl));
   const id = nextId++;
   return new Promise((resolve) => {
