@@ -398,6 +398,8 @@ class Tiff {
   }
 
   static open(bytes: Uint8Array): Tiff | undefined {
+    // 머리(바이트 순서 4바이트 + 첫 칸 위치 4바이트)가 다 있어야 한다
+    if (bytes.length < 8) return undefined;
     if (!startsWith(bytes, 0, 'II*\0') && !startsWith(bytes, 0, 'MM\0*')) return undefined;
     return new Tiff(bytes);
   }
@@ -481,7 +483,21 @@ const TAG = {
   dateTimeOriginal: 0x9003,
 };
 
+/** 깨진 EXIF가 범위 밖을 가리키면 DataView가 RangeError를 던진다. 그 EXIF만 읽지 못한 것으로 둔다 */
+function guard<T>(read: () => T): T | undefined {
+  try {
+    return read();
+  } catch (error) {
+    if (error instanceof RangeError) return undefined;
+    throw error;
+  }
+}
+
 function readExif(bytes: Uint8Array) {
+  return guard(() => readExifFields(bytes));
+}
+
+function readExifFields(bytes: Uint8Array) {
   const tiff = Tiff.open(bytes);
   if (!tiff) return undefined;
   const ifd0 = tiff.ifd(tiff.u32(4));
@@ -575,6 +591,10 @@ interface Field {
  * 읽지 못하면 undefined (그 EXIF는 통째로 뺀다)
  */
 function safeExif(bytes: Uint8Array): Uint8Array | undefined {
+  return guard(() => safeExifFields(bytes));
+}
+
+function safeExifFields(bytes: Uint8Array): Uint8Array | undefined {
   const tiff = Tiff.open(bytes);
   const ifd0 = tiff?.ifd(tiff.u32(4));
   if (!tiff || !ifd0) return undefined;
