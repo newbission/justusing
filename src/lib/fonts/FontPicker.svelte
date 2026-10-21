@@ -21,7 +21,7 @@
   import { onMount } from 'svelte';
   import { pick, frameLocale } from '../../frame/locale';
   import { FRAME_MESSAGES } from '../../frame/messages';
-  import { dataStatus, loadData } from '../../frame/data';
+  import { dataStatus, loadData, missingData } from '../../frame/data';
   import { formatSize } from '../../frame/format';
   import { FONTS, fontConsent, fontPreview, type FontEntry } from './catalog';
 
@@ -67,6 +67,8 @@
    * 고른 글꼴을 바꾸지 않는다 (받기는 끝까지 해서 보관해 둔다)
    */
   let picks = 0;
+  /** 글꼴마다 아직 받지 않은 크기 (진행률용, 일부 굵기만 없으면 그만큼만 받는다) */
+  const needBytes = new Map<string, number>();
 
   /** 보관된 글꼴을 고른다 (보관소에서 바로 읽는다) */
   async function choose(font: FontEntry) {
@@ -87,7 +89,10 @@
       const bytes = await loadData(font.files, fontConsent(font), (received) => {
         states[font.id] = {
           kind: 'downloading',
-          percent: Math.min(99, Math.round((received / font.bytes) * 100)),
+          percent: Math.min(
+            99,
+            Math.round((received / (needBytes.get(font.id) || font.bytes)) * 100),
+          ),
         };
       });
       const entry = toSelected(font, bytes);
@@ -129,12 +134,14 @@
     for (const font of FONTS) {
       const status = await dataStatus(font.files, fontConsent(font));
       const lowSpace = status.available !== undefined && status.available < font.bytes * 2;
-      const all = font.files.every((file) => status.cached.has(file.path));
-      states[font.id] = all
-        ? { kind: 'cached' }
-        : status.consented
-          ? { kind: 'removed', lowSpace }
-          : { kind: 'missing', lowSpace };
+      const missing = missingData(font.files, status);
+      needBytes.set(font.id, missing.bytes);
+      states[font.id] =
+        missing.bytes === 0
+          ? { kind: 'cached' }
+          : missing.removed
+            ? { kind: 'removed', lowSpace }
+            : { kind: 'missing', lowSpace };
     }
     // 받아 둔 글꼴이 있으면 목록 순서대로 첫 글꼴을 골라 둔다 (보관소에서 바로 읽는다)
     const first = FONTS.find((font) => states[font.id]?.kind === 'cached');

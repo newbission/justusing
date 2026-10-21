@@ -1,8 +1,9 @@
 /**
- * 증명사진의 사진 다루기 워커 (photo.ts가 부른다). 원본을 읽어 줄인 사본을 만들고, 결과 JPG를 그린다.
+ * 증명사진의 사진 다루기 워커 (photo.ts가 부른다). 원본을 읽어 줄인 사본을 만들고, 결과 JPG를 그린다
+ * (배경을 바꾸면 원본 크기에서 사람만 남겨 그 색 위에 그린다).
  * 사진은 메모리에서만 다룬다.
  */
-import { exportJpeg, type Thumb } from './id-photo';
+import { cutout, exportJpeg, type Thumb } from './id-photo';
 import type { PhotoRequest, PhotoResponse } from './photo';
 
 /** 마지막으로 연 원본 */
@@ -49,15 +50,24 @@ async function open(request: Extract<PhotoRequest, { type: 'open' }>) {
 
 async function exportPhoto(request: Extract<PhotoRequest, { type: 'export' }>) {
   if (!original) throw new Error('no photo');
-  const blob = await exportJpeg(original, request.placement);
+  const blob = await exportJpeg(original, request.placement, request.background);
   const bytes = new Uint8Array(await blob.arrayBuffer());
   const response: PhotoResponse = { id: request.id, kind: 'exported', bytes };
   postMessage(response, { transfer: [bytes.buffer] });
 }
 
+function cutoutPhoto(request: Extract<PhotoRequest, { type: 'cutout' }>) {
+  if (!original) throw new Error('no photo');
+  const piece = cutout(original, request.matte, request.scale);
+  const image = piece.image.transferToImageBitmap();
+  const response: PhotoResponse = { id: request.id, kind: 'cutout', image, x: piece.x, y: piece.y };
+  postMessage(response, { transfer: [image] });
+}
+
 async function handle(request: PhotoRequest) {
   try {
     if (request.type === 'open') await open(request);
+    else if (request.type === 'cutout') cutoutPhoto(request);
     else await exportPhoto(request);
   } catch (error) {
     postMessage({

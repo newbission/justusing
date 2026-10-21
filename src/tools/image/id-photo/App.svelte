@@ -1,6 +1,7 @@
 <!--
   증명사진 도구 화면 (격리 frame 안에서 실행).
-  사진 한 장에서 얼굴을 찾아 여권 규격(3.5×4.5cm, 머리 길이 3.2~3.6cm)에 맞게 자르고·키우고·기울기만 바로잡는다.
+  사진 한 장에서 얼굴을 찾아 여권 규격(3.5×4.5cm, 머리 길이 3.2~3.6cm)에 맞게 자르고·키우고·기울기를 바로잡는다.
+  고르면 배경을 다른 색으로 바꾼다 (사람과 배경을 나누는 모델, 얼굴 찾기 데이터에 함께 들어 있다).
   얼굴 찾기 데이터는 처음 한 번 받아(크기를 밝히고 묻는다) 이 브라우저에 보관한다. 받지 않아도 직접 맞출 수 있다.
   사진은 어디로도 전송되지 않는다.
 -->
@@ -11,7 +12,7 @@
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
-  import { dataStatus, loadData } from '../../../frame/data';
+  import { dataStatus, loadData, missingData } from '../../../frame/data';
   import { downloadFile } from '../../../frame/download';
   import { onFrameFiles } from '../../../frame/drop';
   import { baseName, formatSize } from '../../../frame/format';
@@ -24,9 +25,13 @@
     centerPlace,
     drawCrop,
     headLength,
+    matteCovers,
+    matteRegion,
     outside,
     readFace,
+    type Backdrop,
     type Face,
+    type Matte,
     type Placement,
     type Thumb,
     whiteBackground,
@@ -39,6 +44,11 @@
   const PREVIEW_SIDE = 1600;
   /** 정수리·배경을 살필 때 쓰는 사진의 긴 변 */
   const THUMB_SIDE = 600;
+  /** 사람·배경 나누기에 넣는 그림의 긴 변 (모델은 256으로 줄여 본다) */
+  const MATTE_SIDE = 512;
+  /** 고를 수 있는 배경색 */
+  const BACKGROUNDS = { white: '#ffffff', gray: '#e6e6e6', blue: '#cfe2f3' } as const;
+  type BackgroundChoice = 'original' | keyof typeof BACKGROUNDS | 'custom';
   /** 미리보기 칸 크기 (CSS 픽셀, 35:45) */
   const VIEW_W = 245;
   const VIEW_H = 315;
@@ -67,6 +77,8 @@
     | { kind: 'ready' };
   let data = $state<Data>({ kind: 'checking' });
   const totalBytes = FACE_FILES.reduce((sum, file) => sum + file.bytes, 0);
+  /** 받아야 할 크기 (전에 받은 사람은 새로 더해진 파일만) */
+  let needBytes = $state(totalBytes);
 
   type Find =
     | { kind: 'idle' }
@@ -75,11 +87,32 @@
     | { kind: 'none' }
     | { kind: 'failed' };
   let find = $state.raw<Find>({ kind: 'idle' });
-  let placement = $state.raw<Placement>({ cx: 0, cy: 0, angle: 0, height: 1 });
+  let placement = $state.raw<Placement>({ cx: 0, cy: 0, angle: 0, height: 1, flip: false });
   let saved = $state.raw<{ size: number } | undefined>();
   let saveFailed = $state(false);
   let finder: Promise<FaceFinder> | undefined;
   const photos = new PhotoWorker();
+
+  let background = $state<BackgroundChoice>('original');
+  let customColor = $state('#dfe8f0');
+  const backgroundColor = $derived(
+    background === 'original'
+      ? undefined
+      : background === 'custom'
+        ? customColor
+        : BACKGROUNDS[background],
+  );
+  type MatteState =
+    | { kind: 'none' }
+    | { kind: 'working' }
+    | { kind: 'ready'; matte: Matte; cutout: { image: ImageBitmap; x: number; y: number } }
+    | { kind: 'failed' };
+  let matte = $state.raw<MatteState>({ kind: 'none' });
+  /** 나눈 결과를 바꾼다 (예전 미리보기 그림은 닫는다) */
+  function setMatte(next: MatteState) {
+    if (matte.kind === 'ready') matte.cutout.image.close();
+    matte = next;
+  }
 
   /** 받은 데이터로 얼굴 찾기 엔진을 띄운다 (엔진이 바이트를 넘겨받아 비운다) */
   function startFinder(bytes: Promise<Map<string, Uint8Array>>) {
@@ -93,10 +126,13 @@
 
   onMount(() => {
     dataStatus(FACE_FILES, FACE_CONSENT).then((status) => {
-      const lowSpace = status.available !== undefined && status.available < totalBytes * 2;
-      data = FACE_FILES.every((file) => status.cached.has(file.path))
-        ? { kind: 'ready' }
-        : { kind: 'missing', removed: status.consented, lowSpace };
+      const missing = missingData(FACE_FILES, status);
+      const lowSpace = status.available !== undefined && status.available < missing.bytes * 2;
+      needBytes = missing.bytes;
+      data =
+        missing.bytes === 0
+          ? { kind: 'ready' }
+          : { kind: 'missing', removed: missing.removed, lowSpace };
     });
     const off = onFrameFiles(([file]) => {
       if (file) open(file);
@@ -114,7 +150,7 @@
       const bytes = await loadData(FACE_FILES, FACE_CONSENT, (received) => {
         data = {
           kind: 'downloading',
-          percent: Math.min(99, Math.floor((received / totalBytes) * 100)),
+          percent: Math.min(99, Math.floor((received / needBytes) * 100)),
         };
       });
       // 받은 바이트로 바로 띄운다. 보관소를 쓸 수 없는 창(시크릿 모드 등)에서 다시 받지 않게 한다
@@ -149,6 +185,7 @@
     photo?.preview.close();
     photo = undefined;
     find = { kind: 'idle' };
+    setMatte({ kind: 'none' });
     saved = undefined;
     saveFailed = false;
     phase = 'idle';
@@ -181,12 +218,77 @@
       const face = readFace(points, current.width, current.height, current.thumb);
       const auto = autoPlace(face);
       placement = auto;
-      saved = undefined;
+      edited();
       find = { kind: 'found', face, auto, faces: faces.length };
     } catch {
       if (ticket === generation) find = { kind: 'failed' };
     }
   }
+
+  // 배경을 바꾸기로 했으면 사람과 배경을 나눈다. 칸을 나눈 영역 밖으로 옮기면 다시 나눈다
+  $effect(() => {
+    if (background === 'original' || data.kind !== 'ready' || !photo) return;
+    const current = matte;
+    if (current.kind === 'working' || current.kind === 'failed') return;
+    if (
+      current.kind === 'ready' &&
+      matteCovers(current.matte, placement, photo.width, photo.height)
+    )
+      return;
+    untrack(() => separate());
+  });
+
+  async function separate() {
+    const current = photo;
+    if (!current) return;
+    const ticket = generation;
+    setMatte({ kind: 'working' });
+    try {
+      const region = matteRegion(placement, current.width, current.height);
+      const k = current.preview.width / current.width;
+      const side = Math.max(region.width, region.height) * k;
+      const fit = MATTE_SIDE / side;
+      const bitmap = await createImageBitmap(
+        current.preview,
+        region.x * k,
+        region.y * k,
+        region.width * k,
+        region.height * k,
+        {
+          resizeWidth: Math.max(1, Math.round(region.width * k * fit)),
+          resizeHeight: Math.max(1, Math.round(region.height * k * fit)),
+          resizeQuality: 'high',
+        },
+      );
+      const mask = await (
+        await (finder ?? startFinder(loadData(FACE_FILES, FACE_CONSENT)))
+      ).segment(bitmap);
+      if (ticket !== generation) return;
+      const made: Matte = { ...region, mask };
+      // 사람만 남긴 미리보기는 사진 워커가 원본에서 만든다 (화면 스레드를 막지 않게)
+      const piece = await photos.cutout(made, k);
+      if (ticket !== generation) {
+        piece.image.close();
+        return;
+      }
+      setMatte({ kind: 'ready', matte: made, cutout: piece });
+    } catch {
+      if (ticket === generation) setMatte({ kind: 'failed' });
+    }
+  }
+
+  // 배경을 바꾸면 결과도 바뀌므로 지난번에 받은 결과 안내를 지운다 (칸을 옮길 때의 update와 같다)
+  $effect(() => {
+    void backgroundColor;
+    untrack(edited);
+  });
+
+  /** 지금 그릴 배경 (바꾸지 않거나 아직 나누지 못했으면 없다) */
+  const backdrop = $derived<Backdrop | undefined>(
+    backgroundColor && matte.kind === 'ready'
+      ? { color: backgroundColor, cutout: matte.cutout }
+      : undefined,
+  );
 
   // 미리보기 그리기
   let canvas: HTMLCanvasElement | undefined = $state();
@@ -199,19 +301,26 @@
     drawCrop(
       canvas.getContext('2d')!,
       photo.preview,
-      {
-        cx: placement.cx * k,
-        cy: placement.cy * k,
-        angle: placement.angle,
-        height: placement.height * k,
-      },
+      { ...placement, cx: placement.cx * k, cy: placement.cy * k, height: placement.height * k },
       canvas.width,
       canvas.height,
+      backdrop,
     );
   });
 
   function update(next: Placement) {
     placement = next;
+    edited();
+  }
+
+  /**
+   * 결과가 바뀔 때마다 늘어난다. 저장하는 사이에 바뀌면 끝난 저장을 지금 결과로 안내하지 않는다
+   * (받은 파일은 누른 때의 결과다)
+   */
+  let edits = 0;
+  /** 결과가 바뀌었다: 지난번에 받은 결과 안내를 지운다 */
+  function edited() {
+    edits++;
     saved = undefined;
     saveFailed = false;
   }
@@ -221,8 +330,8 @@
     const { angle, height } = placement;
     const ux = Math.cos(angle);
     const uy = Math.sin(angle);
-    // 사진이 오른쪽으로 가면 칸은 사진 위에서 왼쪽으로 간다
-    const du = -dx * height;
+    // 사진이 오른쪽으로 가면 칸은 사진 위에서 왼쪽으로 간다 (좌우를 뒤집었으면 거꾸로)
+    const du = (placement.flip ? dx : -dx) * height;
     const dv = -dy * height;
     update({
       ...placement,
@@ -235,14 +344,22 @@
     const limit = Math.max(photo?.width ?? 1, photo?.height ?? 1) * 3;
     update({ ...placement, height: Math.min(limit, Math.max(16, placement.height / factor)) });
   }
-  /** 사진을 돌린다 (degrees > 0이면 시계 반대 방향) */
+  /** 사진을 돌린다 (degrees > 0이면 화면에서 시계 반대 방향, 좌우를 뒤집었으면 원본에서는 거꾸로) */
   function rotate(degrees: number) {
-    update({ ...placement, angle: placement.angle + (degrees * Math.PI) / 180 });
+    const sign = placement.flip ? -1 : 1;
+    update({ ...placement, angle: placement.angle + (sign * degrees * Math.PI) / 180 });
   }
 
+  /** 좌우를 뒤집는다. 휴대폰 앞 카메라는 거울처럼 뒤집힌 사진을 남기기도 한다 */
+  function flip() {
+    update({ ...placement, flip: !placement.flip });
+  }
+
+  /** 처음 칸으로 되돌린다 (좌우 반전은 사진의 성질이라 그대로 둔다) */
   function reset() {
-    if (find.kind === 'found') update(find.auto);
-    else if (photo) update(centerPlace(photo.width, photo.height));
+    const { flip } = placement;
+    if (find.kind === 'found') update({ ...find.auto, flip });
+    else if (photo) update({ ...centerPlace(photo.width, photo.height), flip });
   }
 
   function onkeydown(event: KeyboardEvent) {
@@ -278,8 +395,26 @@
     dragging = undefined;
   }
 
+  /**
+   * 배경을 바꾸기로 했는데 그 배경을 그릴 수 없으면(나누는 중, 나누지 못함, 칸을 나눈 영역 밖으로 옮겨 다시 나눠야 함)
+   * 저장하지 않는다. 저장하면 화면과 달리 원래 배경이나 예전 영역으로 저장된다
+   */
+  const busy = $derived(
+    background !== 'original' &&
+      !(
+        matte.kind === 'ready' &&
+        photo &&
+        matteCovers(matte.matte, placement, photo.width, photo.height)
+      ),
+  );
+
   const head = $derived(find.kind === 'found' ? headLength(find.face, placement) : undefined);
-  const degrees = $derived(((placement.angle * 180) / Math.PI).toFixed(1).replace('-0.0', '0.0'));
+  // 화면에서 보이는 기울기 (좌우를 뒤집으면 방향도 뒤집힌다)
+  const degrees = $derived(
+    (((placement.flip ? -1 : 1) * placement.angle * 180) / Math.PI)
+      .toFixed(1)
+      .replace('-0.0', '0.0'),
+  );
   const checks = $derived.by(() => {
     if (!photo) return [];
     const list: string[] = [];
@@ -291,7 +426,10 @@
         list.push(t.checkHead);
       }
     }
-    if (!whiteBackground(photo.thumb)) list.push(t.checkBackground);
+    if (backgroundColor) {
+      list.push(t.checkReplaced);
+      if (backgroundColor !== BACKGROUNDS.white) list.push(t.checkNotWhite);
+    } else if (!whiteBackground(photo.thumb)) list.push(t.checkBackground);
     if (placement.height < SPEC.outHeight) list.push(t.checkSmall);
     if (outside(placement, photo.width, photo.height)) list.push(t.checkOutside);
     return list;
@@ -299,16 +437,22 @@
 
   async function save() {
     const current = photo;
-    if (!current || find.kind === 'finding') return;
+    if (!current || find.kind === 'finding' || busy) return;
     const entitlement = await canUse('image/id-photo');
     if (!entitlement.allowed) return;
+    const version = edits;
     try {
-      const bytes = await photos.export(placement);
+      const bytes = await photos.export(
+        placement,
+        backgroundColor && matte.kind === 'ready'
+          ? { color: backgroundColor, matte: matte.matte }
+          : undefined,
+      );
       if (current !== photo) return;
       downloadFile(bytes, `${baseName(current.name)}_${t.suffix}.jpg`, 'image/jpeg');
-      saved = { size: bytes.length };
+      if (version === edits) saved = { size: bytes.length };
     } catch {
-      if (current === photo) saveFailed = true;
+      if (current === photo && version === edits) saveFailed = true;
     }
   }
 
@@ -333,6 +477,12 @@
           {t.saved(formatSize(saved.size))}
         {:else if find.kind === 'finding'}
           {t.finding}
+        {:else if busy}
+          {#if matte.kind === 'failed'}
+            <strong>{t.separateFailed}</strong>
+          {:else}
+            {t.separating}
+          {/if}
         {:else if find.kind === 'found'}
           {t.found}
         {:else if find.kind === 'none'}
@@ -343,8 +493,11 @@
           {t.manualReady}
         {/if}
       {/snippet}
-      <button type="button" class="btn primary" disabled={find.kind === 'finding'} onclick={save}
-        >{t.download}</button
+      <button
+        type="button"
+        class="btn primary"
+        disabled={find.kind === 'finding' || busy}
+        onclick={save}>{t.download}</button
       >
     </ActionBar>
 
@@ -390,7 +543,7 @@
                 {#if data.kind === 'missing' && data.removed}
                   <p><strong>{t.dataRemoved}</strong></p>
                 {/if}
-                <p>{t.dataSize(formatSize(totalBytes))}</p>
+                <p>{t.dataSize(formatSize(needBytes))}</p>
                 <p class="help">{t.dataNote}</p>
                 {#if data.kind === 'missing' && data.lowSpace}
                   <p class="help">{t.lowSpace}</p>
@@ -405,7 +558,7 @@
                   onclick={downloadData}
                   >{data.kind === 'downloading'
                     ? t.downloading(data.percent)
-                    : t.getData(formatSize(totalBytes))}</button
+                    : t.getData(formatSize(needBytes))}</button
                 >
               {/if}
             </section>
@@ -429,10 +582,65 @@
               <span class="angle">{t.angle(degrees)}</span>
             </div>
             <div class="row">
+              <button type="button" class="btn" aria-pressed={placement.flip} onclick={flip}
+                >{t.flip}</button
+              >
+            </div>
+            <div class="row">
               <button type="button" class="btn" onclick={reset}
                 >{find.kind === 'found' ? t.reset : t.resetManual}</button
               >
             </div>
+          </section>
+
+          <section class="background" aria-labelledby="background-title">
+            <h2 id="background-title">{t.backgroundTitle}</h2>
+            <div class="swatches" role="radiogroup" aria-labelledby="background-title">
+              {#each ['original', 'white', 'gray', 'blue'] as const as option (option)}
+                <label class:checked={background === option}>
+                  <input
+                    type="radio"
+                    name="background"
+                    value={option}
+                    bind:group={background}
+                    disabled={data.kind !== 'ready'}
+                  />
+                  <span
+                    class="dot"
+                    class:original={option === 'original'}
+                    style:background-color={option === 'original' ? undefined : BACKGROUNDS[option]}
+                  ></span>
+                  {t.backgrounds[option]}
+                </label>
+              {/each}
+              <label class:checked={background === 'custom'}>
+                <input
+                  type="radio"
+                  name="background"
+                  value="custom"
+                  bind:group={background}
+                  disabled={data.kind !== 'ready'}
+                />
+                <span class="dot" style:background-color={customColor}></span>
+                {t.backgrounds.custom}
+              </label>
+            </div>
+            {#if background === 'custom'}
+              <label class="pick">
+                {t.customColor}
+                <input type="color" bind:value={customColor} />
+              </label>
+            {/if}
+            {#if data.kind !== 'ready'}
+              <p class="help">{t.backgroundNeedsData}</p>
+            {:else if background !== 'original' && matte.kind === 'failed'}
+              <p class="help"><strong>{t.separateFailed}</strong></p>
+              <button type="button" class="btn" onclick={() => setMatte({ kind: 'none' })}
+                >{t.retry}</button
+              >
+            {:else}
+              <p class="help">{t.backgroundNote}</p>
+            {/if}
           </section>
 
           <section class="checks" aria-label={t.checksTitle}>
@@ -602,6 +810,7 @@
     color: var(--color-muted);
   }
   .data,
+  .background,
   .checks {
     margin-bottom: 16px;
     padding: 16px;
@@ -609,6 +818,7 @@
     border-radius: var(--radius);
   }
   .data h2,
+  .background h2,
   .checks h2 {
     margin: 0 0 8px;
     font-size: 15px;
@@ -624,6 +834,67 @@
   }
   .checks li + li {
     margin-top: 4px;
+  }
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .swatches label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .swatches label:hover {
+    background: var(--color-hover);
+  }
+  .swatches label.checked {
+    border-color: var(--color-text);
+    box-shadow: inset 0 0 0 1px var(--color-text);
+    font-weight: 600;
+  }
+  .swatches label:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .swatches label:has(input:disabled) {
+    color: var(--color-muted);
+    cursor: default;
+  }
+  .swatches input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .dot {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--color-line);
+    border-radius: 50%;
+  }
+  /* 원래 배경: 반으로 나눈 점 */
+  .dot.original {
+    background: linear-gradient(135deg, var(--color-bg) 50%, var(--color-muted) 50%);
+  }
+  .pick {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+  .pick input {
+    width: 44px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: none;
   }
   .adjust {
     margin-bottom: 16px;

@@ -65,6 +65,18 @@ export async function dataStatus(files: DataFile[], consent: string): Promise<Da
   };
 }
 
+/**
+ * 보관돼 있지 않은 파일의 크기와, 받아 둔 것이 지워졌는지.
+ * 일부만 보관돼 있으면 지워진 것이 아니다: 새로 더해지거나 바뀐 파일, 처음 고른 언어처럼 그것만 더 받는다
+ */
+export function missingData(files: DataFile[], status: DataStatus) {
+  const missing = files.filter((file) => !status.cached.has(file.path));
+  return {
+    bytes: missing.reduce((sum, file) => sum + file.bytes, 0),
+    removed: status.consented && missing.length === files.length,
+  };
+}
+
 async function sha256(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');

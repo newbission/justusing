@@ -13,13 +13,14 @@ export default defineContent({
       },
       {
         title: '입사 지원서·원서에 넣을 사진',
-        text: '지원서 양식에 3.5×4.5 비율 사진을 넣어야 할 때 쓸 수 있습니다. 얼굴이 가운데 오도록 맞춘 JPG를 받아 양식에 붙입니다.',
+        text: '지원서 양식에 3.5×4.5 비율 사진을 넣어야 할 때 쓸 수 있습니다. 집 벽 앞에서 찍었다면 배경을 흰색이나 하늘색으로 바꾸고, 얼굴이 가운데 오도록 맞춘 JPG를 받아 양식에 붙입니다.',
       },
     ],
     howTo: [
       '"사진 선택"을 누르거나 사진을 화면으로 끌어다 놓습니다. 흰 배경 앞에서 정면을 보고 찍은 사진이 좋습니다.',
       '처음 쓸 때는 "데이터 받기"로 얼굴 찾기 데이터를 받습니다. 받기 전에 크기를 알려 드리고, 받지 않으면 칸을 직접 맞출 수 있습니다.',
-      '얼굴을 찾으면 머리 끝이 점선에, 턱이 초록 띠 안에 오도록 저절로 자르고 기울기를 바로잡습니다. 사진을 끌거나 "크게"·"작게"와 방향 버튼으로 조금씩 고칩니다.',
+      '얼굴을 찾으면 머리 끝이 점선에, 턱이 초록 띠 안에 오도록 저절로 자르고 기울기를 바로잡습니다. 사진을 끌거나 "크게"·"작게"와 방향 버튼으로 조금씩 고칩니다. 앞 카메라로 찍어 좌우가 뒤집혔으면 "좌우 반전"을 누릅니다.',
+      '배경을 바꾸려면 "배경"에서 "흰색"·"연한 회색"·"하늘색"이나 "다른 색"을 고릅니다. 여권에 낼 사진은 "원래대로" 두세요.',
       '"확인할 것"에 적힌 내용을 살펴보고 "JPG 다운로드"를 눌러 413×531 JPG를 받습니다.',
     ],
     faq: [
@@ -28,8 +29,12 @@ export default defineContent({
         a: '크기와 머리 길이는 외교부 여권 사진 기준(3.5×4.5cm, 정수리부터 턱까지 3.2~3.6cm)에 맞춥니다. 주민등록증도 여권 규격 사진을 받습니다. 다만 배경·조명·표정·안경 같은 다른 조건은 사진을 찍을 때 정해지므로, 받아 주는지는 접수하는 곳이 정합니다. 화면의 확인 결과는 참고용입니다.',
       },
       {
-        q: '배경을 흰색으로 바꿔 주나요?',
-        a: '아니요. 여권 사진 규정은 배경을 지우거나 합성한 사진, 얼굴을 보정한 사진을 받지 않습니다. 이 도구는 자르기·크기·기울기만 맞춥니다. 흰 벽이나 흰 종이 앞에서 그림자가 지지 않게 찍어 주세요.',
+        q: '배경을 흰색으로 바꿀 수 있나요?',
+        a: '네. "배경"에서 색을 고르면 사람과 배경을 이 기기 안에서 나눠 배경만 바꿉니다. 다만 여권 사진 규정은 배경을 지우거나 합성한 사진을 받지 않으므로, 여권에는 흰 벽 앞에서 찍은 원래 사진을 쓰세요. 지원서처럼 규정이 없는 곳에 쓰기 좋습니다. 얼굴은 어느 경우에도 고치지 않습니다.',
+      },
+      {
+        q: '사진의 좌우가 뒤집혀 보여요.',
+        a: '휴대폰 앞 카메라는 화면에 거울처럼 보여 주고, 저장할 때는 뒤집지 않거나(아이폰 기본) 뒤집어 저장하기도 합니다. 그래서 찍을 때 본 모습과 좌우가 달라 보일 수 있습니다. "좌우 반전"을 누르면 결과 사진의 좌우가 바뀝니다. 가르마나 점의 위치를 보고 실제 모습과 같은 쪽으로 맞추세요.',
       },
       {
         q: '얼굴 찾기 데이터는 무엇인가요?',
@@ -57,13 +62,14 @@ export default defineContent({
       },
       {
         title: 'Photos for job and school applications',
-        text: 'Use it when a form needs a photo in the 35×45 ratio. Download a JPG with the face centered and paste it into the form.',
+        text: 'Use it when a form needs a photo in the 35×45 ratio. If you took it against a wall at home, change the background to white or sky blue, then download a JPG with the face centered and paste it into the form.',
       },
     ],
     howTo: [
       'Click "Choose photo" or drag a photo onto the screen. A photo taken facing the camera in front of a white background works best.',
       'The first time, use "Download data" to get the face finding data. You see its size before downloading, and you can fit the frame yourself without it.',
-      'Once a face is found, the photo is cropped and straightened so the top of the head sits on the dashed line and the chin falls inside the green band. Drag the photo or use "Larger", "Smaller" and the direction buttons to fine-tune it.',
+      'Once a face is found, the photo is cropped and straightened so the top of the head sits on the dashed line and the chin falls inside the green band. Drag the photo or use "Larger", "Smaller" and the direction buttons to fine-tune it. If the front camera left the photo mirrored, click "Flip horizontally".',
+      'To change the background, choose "White", "Light gray", "Sky blue" or "Other color" under "Background". Keep "Original" for a passport photo.',
       'Read "Things to check" and click "Download JPG" to get a 413×531 JPG.',
     ],
     faq: [
@@ -72,8 +78,12 @@ export default defineContent({
         a: 'The size and head length follow the Korean passport photo rules (35×45 mm, 32–36 mm from the top of the head to the chin), which Korean resident ID cards also accept. Other conditions such as background, lighting, expression and glasses are set when the photo is taken, so the office you submit to decides whether it is accepted. The checks on screen are for reference.',
       },
       {
-        q: 'Does it make the background white?',
-        a: 'No. Passport photo rules do not accept photos with a removed or replaced background, or a retouched face. This tool only crops, resizes and straightens. Take the photo in front of a white wall or white paper without shadows.',
+        q: 'Can it make the background white?',
+        a: 'Yes. Choose a color under "Background" and you are separated from the background on this device, then only the background is changed. Passport photo rules do not accept photos with a removed or composited background, though, so use an original photo taken in front of a white wall for a passport. It suits forms without such rules, like job applications. Your face is never retouched.',
+      },
+      {
+        q: 'My photo looks mirrored.',
+        a: 'Phone front cameras show a mirror image on screen, then save it either unmirrored (the iPhone default) or mirrored. So the photo can look flipped compared with what you saw. Click "Flip horizontally" to flip the result. Check the side of your parting or a mole to match how you really look.',
       },
       {
         q: 'What is the face finding data?',

@@ -11,7 +11,7 @@
   import { FRAME_MESSAGES } from '../../../frame/messages';
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
-  import { dataStatus, loadData } from '../../../frame/data';
+  import { dataStatus, loadData, missingData } from '../../../frame/data';
   import { downloadFile } from '../../../frame/download';
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
@@ -32,7 +32,8 @@
   let skipText = $state(true);
 
   const files = $derived(ocrFiles(OCR_LANGS.filter((lang) => langs.includes(lang))));
-  const totalBytes = $derived(files.reduce((sum, file) => sum + file.bytes, 0));
+  /** 받아야 할 크기 (고른 언어 중 보관돼 있지 않은 것만) */
+  let needBytes = $state(0);
 
   type Data =
     | { kind: 'checking' }
@@ -50,16 +51,18 @@
   // 고른 언어의 데이터가 보관돼 있는지 확인한다. 없으면 받지 않고 묻는다 (와이파이인지 알 수 없다)
   $effect(() => {
     const wanted = files;
-    const bytes = totalBytes;
     if (wanted.length < 2) return;
     let current = true;
     untrack(() => (data = { kind: 'checking' }));
     dataStatus(wanted, OCR_CONSENT).then((status) => {
       if (!current) return;
-      const lowSpace = status.available !== undefined && status.available < bytes * 2;
-      data = wanted.every((file) => status.cached.has(file.path))
-        ? { kind: 'ready' }
-        : { kind: 'missing', removed: status.consented, lowSpace };
+      const missing = missingData(wanted, status);
+      const lowSpace = status.available !== undefined && status.available < missing.bytes * 2;
+      needBytes = missing.bytes;
+      data =
+        missing.bytes === 0
+          ? { kind: 'ready' }
+          : { kind: 'missing', removed: missing.removed, lowSpace };
     });
     return () => {
       current = false;
@@ -74,7 +77,7 @@
         if (files !== wanted) return;
         data = {
           kind: 'downloading',
-          percent: Math.min(99, Math.floor((received / totalBytes) * 100)),
+          percent: Math.min(99, Math.floor((received / needBytes) * 100)),
         };
       });
       downloaded = new Map([...(downloaded ?? []), ...bytes]);
@@ -295,7 +298,7 @@
             {#if data.kind === 'missing' && data.removed}
               <p><strong>{t.dataRemoved}</strong></p>
             {/if}
-            <p>{t.dataSize(formatSize(totalBytes))}</p>
+            <p>{t.dataSize(formatSize(needBytes))}</p>
             <p class="help">{t.dataNote}</p>
             {#if data.kind === 'missing' && data.lowSpace}
               <p class="help">{t.lowSpace}</p>
@@ -310,7 +313,7 @@
               onclick={download}
               >{data.kind === 'downloading'
                 ? t.downloading(data.percent)
-                : t.download(formatSize(totalBytes))}</button
+                : t.download(formatSize(needBytes))}</button
             >
           {/if}
         </section>

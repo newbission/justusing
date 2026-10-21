@@ -46,12 +46,13 @@ Put a photo into the [ID Photo Maker](/en/image/id-photo/) and it finds the face
 2. In the preview, check that the top of the head is on the dashed line and the chin is inside the green band
 3. If it is off, drag the photo or use "Larger", "Smaller" and the direction buttons, then click "Download JPG"
 
-This tool only crops, resizes and straightens. It does not make the background white or retouch the face, because passport rules do not accept such photos.
+The face is never retouched. The background changes only when you pick a color under "Background", and passport rules do not accept photos with a removed or composited background, so keep "Original" for a passport. Changing the background is for places without such rules, like job applications.
 
 ## Troubleshooting
 
 - **"The top of the head could not be found"**: If the background has a pattern or the hair is close to the background color, the top of the head is estimated from the face proportions. Check in the preview that the top of the head is on the dashed line and adjust it yourself
-- **"The background may not be white"**: You see this when the top corners of the photo are not white. If you took the photo against a gray wall or in shade, retaking it against a white wall is the safest choice
+- **"The background may not be white"**: You see this when the top corners of the photo are not white. If you took the photo against a gray wall or in shade, retaking it against a white wall is the safest choice. For photos that are not for a passport, you can change the background to white
+- **The photo looks mirrored**: Phone front cameras show a mirror image on screen but may save the photo unmirrored. Use "Flip horizontally" to match how you really look
 - **"The original photo is small, so it is enlarged"**: The face area is smaller than 413×531 pixels. Use a photo taken closer or zoomed in
 
 The checks on screen are for reference. The office you submit to decides whether a photo is accepted, so also check its instructions.
