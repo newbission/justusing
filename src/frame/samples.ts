@@ -18,6 +18,7 @@ type SampleKey =
   | 'docPhoto1'
   | 'docPhoto2'
   | 'photo'
+  | 'face'
   | 'screen';
 
 /** 언어별 파일 이름 (make_samples.py의 TEXT와 같게) */
@@ -32,6 +33,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     docPhoto1: '예시-서류사진1.jpg',
     docPhoto2: '예시-서류사진2.jpg',
     photo: '예시-사진.jpg',
+    face: '예시-증명사진.jpg',
     screen: '예시-화면캡처.png',
   },
   en: {
@@ -44,6 +46,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     docPhoto1: 'sample-document-photo-1.jpg',
     docPhoto2: 'sample-document-photo-2.jpg',
     photo: 'sample-photo.jpg',
+    face: 'sample-id-photo.jpg',
     screen: 'sample-screenshot.png',
   },
 };
@@ -77,6 +80,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/compress': ['photo', 'screen'],
   'image/resize': ['photo', 'screen'],
   'image/convert': ['photo', 'screen'],
+  'image/id-photo': ['face'],
 };
 
 const TYPES: Record<string, string> = {

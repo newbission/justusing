@@ -8,6 +8,8 @@
 - 글꼴은 Pretendard(node_modules, OFL)를 PDF에 넣는다. PyMuPDF 기본 한글 글꼴은 숫자·영문 사이가 벌어진다.
   PDF에는 가변 TTF에서 굵기를 뽑아 넣는다. 고정 굵기 OTF를 넣으면 괄호·하이픈 같은 문장부호가 다른 글자로 찍힌다
 - 같은 입력이면 같은 파일이 나오게 난수 씨앗을 고정한다 (다시 만들어도 쓸데없는 바뀜이 없게)
+- 증명사진 견본(face.jpg)은 그릴 수 없어 이미지 생성 AI(ChatGPT)로 만든 실존하지 않는 사람의 사진을 둔다
+  (2026-10-20, 사용자가 만들어 줌). 그대로 다시 저장해 메타데이터를 남기지 않는다
 
 파일 목록과 도구 연결은 src/frame/samples.ts에 있다. 파일을 더하거나 이름을 바꾸면 거기도 고친다.
 """
@@ -21,7 +23,8 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(HERE))
 OUT = os.path.join(ROOT, 'public', 'samples')
 FONT_DIR = os.path.join(ROOT, 'node_modules', 'pretendard', 'dist', 'public', 'static')
 REGULAR = os.path.join(FONT_DIR, 'Pretendard-Regular.otf')
@@ -55,6 +58,7 @@ TEXT = {
         'form': '예시-신청서.pdf',
         'docPhotos': ['예시-서류사진1.jpg', '예시-서류사진2.jpg'],
         'photo': '예시-사진.jpg',
+        'face': '예시-증명사진.jpg',
         'screen': '예시-화면캡처.png',
         'sample': '예시 파일 · 내용은 모두 지어낸 것입니다',
         'company': '예시상사',
@@ -138,6 +142,7 @@ TEXT = {
         'form': 'sample-form.pdf',
         'docPhotos': ['sample-document-photo-1.jpg', 'sample-document-photo-2.jpg'],
         'photo': 'sample-photo.jpg',
+        'face': 'sample-id-photo.jpg',
         'screen': 'sample-screenshot.png',
         'sample': 'Sample file · Everything in it is made up',
         'company': 'Example Co.',
@@ -539,6 +544,7 @@ def main():
     hero = jpeg(landscape(1600, 1060, 7), 90)
     gallery = [jpeg(landscape(1400, 1050, seed), 92) for seed in (11, 12, 13)]
     photo = landscape(2000, 1500, 21)
+    face = Image.open(os.path.join(HERE, 'face.jpg')).convert('RGB')
     for locale, t in TEXT.items():
         folder = os.path.join(OUT, locale)
         os.makedirs(folder, exist_ok=True)
@@ -560,6 +566,7 @@ def main():
         for index, sheet in enumerate(sheets):
             photo_of(sheet, 30 + index).save(os.path.join(folder, t['docPhotos'][index]), 'JPEG', quality=88)
         photo.save(os.path.join(folder, t['photo']), 'JPEG', quality=95)
+        face.save(os.path.join(folder, t['face']), 'JPEG', quality=90)
         screenshot(t).save(os.path.join(folder, t['screen']), 'PNG', optimize=True)
         for name in sorted(os.listdir(folder)):
             print(f'{locale}/{name}  {os.path.getsize(os.path.join(folder, name)) // 1024}KB')
