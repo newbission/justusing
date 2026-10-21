@@ -49,6 +49,7 @@ const ko = {
   right: '오른쪽으로',
   rotateLeft: '왼쪽으로 기울이기',
   rotateRight: '오른쪽으로 기울이기',
+  flip: '좌우 반전',
   reset: '자동으로 다시 맞추기',
   resetManual: '처음으로',
 
@@ -114,6 +115,7 @@ const en: typeof ko = {
   right: 'Right',
   rotateLeft: 'Tilt left',
   rotateRight: 'Tilt right',
+  flip: 'Flip horizontally',
   reset: 'Fit automatically again',
   resetManual: 'Start over',
 

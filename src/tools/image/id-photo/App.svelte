@@ -75,7 +75,7 @@
     | { kind: 'none' }
     | { kind: 'failed' };
   let find = $state.raw<Find>({ kind: 'idle' });
-  let placement = $state.raw<Placement>({ cx: 0, cy: 0, angle: 0, height: 1 });
+  let placement = $state.raw<Placement>({ cx: 0, cy: 0, angle: 0, height: 1, flip: false });
   let saved = $state.raw<{ size: number } | undefined>();
   let saveFailed = $state(false);
   let finder: Promise<FaceFinder> | undefined;
@@ -199,12 +199,7 @@
     drawCrop(
       canvas.getContext('2d')!,
       photo.preview,
-      {
-        cx: placement.cx * k,
-        cy: placement.cy * k,
-        angle: placement.angle,
-        height: placement.height * k,
-      },
+      { ...placement, cx: placement.cx * k, cy: placement.cy * k, height: placement.height * k },
       canvas.width,
       canvas.height,
     );
@@ -221,8 +216,8 @@
     const { angle, height } = placement;
     const ux = Math.cos(angle);
     const uy = Math.sin(angle);
-    // 사진이 오른쪽으로 가면 칸은 사진 위에서 왼쪽으로 간다
-    const du = -dx * height;
+    // 사진이 오른쪽으로 가면 칸은 사진 위에서 왼쪽으로 간다 (좌우를 뒤집었으면 거꾸로)
+    const du = (placement.flip ? dx : -dx) * height;
     const dv = -dy * height;
     update({
       ...placement,
@@ -235,14 +230,22 @@
     const limit = Math.max(photo?.width ?? 1, photo?.height ?? 1) * 3;
     update({ ...placement, height: Math.min(limit, Math.max(16, placement.height / factor)) });
   }
-  /** 사진을 돌린다 (degrees > 0이면 시계 반대 방향) */
+  /** 사진을 돌린다 (degrees > 0이면 화면에서 시계 반대 방향, 좌우를 뒤집었으면 원본에서는 거꾸로) */
   function rotate(degrees: number) {
-    update({ ...placement, angle: placement.angle + (degrees * Math.PI) / 180 });
+    const sign = placement.flip ? -1 : 1;
+    update({ ...placement, angle: placement.angle + (sign * degrees * Math.PI) / 180 });
   }
 
+  /** 좌우를 뒤집는다. 휴대폰 앞 카메라는 거울처럼 뒤집힌 사진을 남기기도 한다 */
+  function flip() {
+    update({ ...placement, flip: !placement.flip });
+  }
+
+  /** 처음 칸으로 되돌린다 (좌우 반전은 사진의 성질이라 그대로 둔다) */
   function reset() {
-    if (find.kind === 'found') update(find.auto);
-    else if (photo) update(centerPlace(photo.width, photo.height));
+    const { flip } = placement;
+    if (find.kind === 'found') update({ ...find.auto, flip });
+    else if (photo) update({ ...centerPlace(photo.width, photo.height), flip });
   }
 
   function onkeydown(event: KeyboardEvent) {
@@ -279,7 +282,12 @@
   }
 
   const head = $derived(find.kind === 'found' ? headLength(find.face, placement) : undefined);
-  const degrees = $derived(((placement.angle * 180) / Math.PI).toFixed(1).replace('-0.0', '0.0'));
+  // 화면에서 보이는 기울기 (좌우를 뒤집으면 방향도 뒤집힌다)
+  const degrees = $derived(
+    (((placement.flip ? -1 : 1) * placement.angle * 180) / Math.PI)
+      .toFixed(1)
+      .replace('-0.0', '0.0'),
+  );
   const checks = $derived.by(() => {
     if (!photo) return [];
     const list: string[] = [];
@@ -427,6 +435,11 @@
               <button type="button" class="btn" onclick={() => rotate(-0.5)}>{t.rotateRight}</button
               >
               <span class="angle">{t.angle(degrees)}</span>
+            </div>
+            <div class="row">
+              <button type="button" class="btn" aria-pressed={placement.flip} onclick={flip}
+                >{t.flip}</button
+              >
             </div>
             <div class="row">
               <button type="button" class="btn" onclick={reset}
