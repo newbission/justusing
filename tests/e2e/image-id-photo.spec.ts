@@ -224,7 +224,33 @@ test('배경을 하늘색으로 바꾸고 좌우를 뒤집는다', async ({ page
   const [r, g, b] = at(wide, 10, 10);
   expect(Math.abs(r! - 0xcf) + Math.abs(g! - 0xe2) + Math.abs(b! - 0xf3)).toBeLessThan(15);
 
+  // 칸을 사진 밖으로 다 옮겨도 받을 수 있다 (사진 밖은 배경색)
+  for (let i = 0; i < 60; i++) await view.press('Shift+ArrowRight');
+  await expect(frame.getByText('칸이 사진 밖으로 나가', { exact: false })).toBeVisible();
+  await expect(frame.getByRole('button', { name: 'JPG 다운로드' })).toBeEnabled({
+    timeout: 30_000,
+  });
+
   // 원래대로 돌리면 배경 알림이 사라진다
   await frame.getByText('원래대로', { exact: true }).click();
   await expect(frame.getByText('배경을 바꿨습니다.', { exact: false })).toHaveCount(0);
+});
+
+test('전에 받은 사람은 새로 더해진 데이터만 받는다', async ({ page }) => {
+  test.setTimeout(120_000);
+  let frame = await open(page);
+  await frame.getByRole('button', { name: /^데이터 받기/ }).click();
+  await expect(frame.getByText('머리 길이 약 3.4cm')).toBeVisible({ timeout: 60_000 });
+
+  // 배경 모델이 더해지기 전에 받은 사람: 엔진·얼굴 모델만 보관돼 있다
+  await page.evaluate(async () => {
+    const cache = await caches.open('justusing-data-v1');
+    for (const request of await cache.keys()) {
+      if (request.url.includes('selfie_segmenter')) await cache.delete(request);
+    }
+  });
+  frame = await open(page);
+  // 지워졌다고 하지 않고, 더해진 것의 크기만 알린다
+  await expect(frame.getByRole('button', { name: /^데이터 받기 \(\d+(\.\d)?KB\)$/ })).toBeVisible();
+  await expect(frame.getByText('지워졌습니다', { exact: false })).toHaveCount(0);
 });
