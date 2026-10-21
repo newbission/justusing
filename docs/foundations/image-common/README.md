@@ -1,9 +1,9 @@
 # 이미지 도구 공통 (`src/lib/image/`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-19
+쓴 날 2026-10-16 · 고친 날 2026-10-20
 
 - 쓰는 곳: [이미지 압축](../../features/image-compress/README.md), [크기 조절](../../features/image-resize/README.md),
-  [형식 변환](../../features/image-convert/README.md). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
+  [형식 변환](../../features/image-convert/README.md), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
   (이미지를 PDF로·이미지 넣기·서명 넣기)도 쓴다
 - 상태: dev·main 반영 (PR #36, #44, 2026-10-15)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../frame-isolation/README.md), [PDF 공통](../pdf-common/README.md)
@@ -30,18 +30,21 @@
 
 ### 파일
 
-| 파일                                         | 역할                                                                                                              |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `src/lib/image/ImageBatchTool.svelte`        | 여러 장 도구의 공통 화면. `bar`·`options`·`meta`·`actions` snippet과 `hint`·`broken`·`onremove`·`result`를 받는다 |
-| `src/lib/compare/CompareSlider.svelte`       | 원본·결과를 겹쳐 비교하는 부품. 문구를 넘겨받아 도구 화면·가이드 어디서나 쓴다                                    |
-| `src/lib/image/batch.svelte.ts`              | `ImageBatch` 클래스(목록 상태), `BATCH_ACCEPT`, `EXTENSIONS`(형식 → 확장자)                                       |
-| `src/lib/image/process.ts`                   | `processImage(file, options, signal?)`, 워커 풀, `ImageProcessError(reason: 'decode' \| 'encode')`                |
-| `src/lib/image/process.worker.ts`            | 바로 세워 읽기 → 절반씩 줄이기 → 저장 (OffscreenCanvas, PNG 색 줄이기는 UPNG)                                     |
-| `src/lib/image/upng-globals.ts`              | UPNG.js가 워커에서 찾는 `window`·`pako`를 fflate로 마련한다                                                       |
-| `src/lib/image/prepare.ts`                   | `readImageInfo()`(바로 세운 가로·세로), `jpegOrientation()`, `toEmbeddable()`(PDF에 넣을 JPG·PNG 준비)            |
-| `src/lib/image/embed.ts` + `embed.worker.ts` | `embedImage()`: `toEmbeddable`을 워커에서 돌린다 (이미지 넣기·서명 넣기)                                          |
-| `src/lib/zip.ts` + `zip.worker.ts`           | `makeZip()`: 여러 결과를 ZIP 하나로 (워커)                                                                        |
-| `src/frame/messages.ts`의 `images`           | 목록 화면 공통 문구 (한·영)                                                                                       |
+| 파일                                         | 역할                                                                                                                 |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/image/ImageBatchTool.svelte`        | 여러 장 도구의 공통 화면. `bar`·`options`·`meta`·`actions` snippet과 `hint`·`broken`·`onremove`·`result`를 받는다    |
+| `src/lib/compare/CompareSlider.svelte`       | 원본·결과를 겹쳐 비교하는 부품. 문구를 넘겨받아 도구 화면·가이드 어디서나 쓴다                                       |
+| `src/lib/image/batch.svelte.ts`              | `ImageBatch` 클래스(목록 상태), `BATCH_ACCEPT`, `EXTENSIONS`(형식 → 확장자)                                          |
+| `src/lib/image/process.ts`                   | `processImage(file, options, signal?)`, 워커 풀, `ImageProcessError(reason: 'decode' \| 'encode')`                   |
+| `src/lib/image/process.worker.ts`            | 바로 세워 읽기 → 절반씩 줄이기 → 저장 (OffscreenCanvas, PNG 색 줄이기는 UPNG)                                        |
+| `src/lib/image/upng-globals.ts`              | UPNG.js가 워커에서 찾는 `window`·`pako`를 fflate로 마련한다                                                          |
+| `src/lib/image/prepare.ts`                   | `readImageInfo()`(바로 세운 가로·세로), `jpegOrientation()`, `toEmbeddable()`(PDF에 넣을 JPG·PNG 준비)               |
+| `src/lib/image/embed.ts` + `embed.worker.ts` | `embedImage()`: `toEmbeddable`을 워커에서 돌린다 (이미지 넣기·서명 넣기)                                             |
+| `src/lib/image/jpeg-metadata.ts`             | `rewriteJpeg()`: JPEG 정보 조각마다 두기·빼기·바꾸기, `stripJpegMetadata()`: 허용 목록으로 빼기 (다시 압축하지 않음) |
+| `src/lib/image/photo-metadata.ts`            | `readPhotoInfo()`·`cleanPhoto()`: JPG·PNG·WebP의 촬영 정보 읽기·지우기 (위치 정보 지우기)                            |
+| `src/lib/image/metadata.ts` + `.worker.ts`   | 위 둘을 워커에서 돌린다                                                                                              |
+| `src/lib/zip.ts` + `zip.worker.ts`           | `makeZip()`: 여러 결과를 ZIP 하나로 (워커)                                                                           |
+| `src/frame/messages.ts`의 `images`           | 목록 화면 공통 문구 (한·영)                                                                                          |
 
 ### 처리 흐름
 
