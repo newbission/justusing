@@ -37,7 +37,7 @@ export default defineContent({
       },
       {
         q: '"모든 정보 지우기"와 "위치만 지우기"는 무엇이 다른가요?',
-        a: '"모든 정보 지우기"는 위치, 찍은 날짜, 기기, 편집 프로그램 기록, 설명 글을 모두 지우고 사진 방향 정보만 남깁니다. "위치만 지우기"는 GPS 위치와 위치가 들어갈 수 있는 XMP·IPTC 정보만 지우고 찍은 날짜·기기는 남겨, 사진 앱에서 날짜순 정리가 그대로 됩니다.',
+        a: '"모든 정보 지우기"는 위치, 찍은 날짜, 기기, 편집 프로그램 기록, 설명 글을 모두 지우고 사진 방향 정보만 남깁니다. "위치만 지우기"는 찍은 날짜·기기·렌즈·노출 같은 촬영 정보만 남기고, GPS 위치와 함께 장소가 적힐 수 있는 설명·메모 글, 편집 기록(XMP·IPTC)을 지웁니다. 사진 앱에서 날짜순 정리가 그대로 됩니다.',
       },
       {
         q: '어떤 사진을 넣을 수 있나요?',
@@ -85,7 +85,7 @@ export default defineContent({
       },
       {
         q: 'What is the difference between "Remove all info" and "Location only"?',
-        a: '"Remove all info" removes the location, date taken, device, editing history and descriptions, keeping only the orientation. "Location only" removes the GPS location and the XMP and IPTC data that can hold a location, and keeps the date taken and device so photo apps still sort by date.',
+        a: '"Remove all info" removes the location, date taken, device, editing history and descriptions, keeping only the orientation. "Location only" keeps only shooting details such as the date taken, device, lens and exposure, and removes the GPS location along with captions, notes and editing data (XMP, IPTC) where a place could be written. Photo apps still sort by date.',
       },
       {
         q: 'Which photos can I add?',
