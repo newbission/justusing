@@ -67,6 +67,8 @@ PDF에 한글을 넣거나 스캔본 글자를 읽으려면 큰 공개 파일(�
 - 동의 이름: 글꼴은 글꼴마다 `font:<id>`, OCR은 `ocr` (`src/lib/ocr/ocr.ts`의 `OCR_CONSENT`), 얼굴 찾기는 `face`
   (`src/lib/face/face.ts`, 복사는 `scripts/copy-face-data.mjs`, 모델은 `vendor/mediapipe/`)
 - 도구 화면을 바깥 페이지 없이 따로 열면(개발 중) 보관 없이 바로 받고, 확인은 똑같이 한다
+- 받을 크기와 '지워졌다' 안내는 `missingData`(`src/frame/data.ts`)로 정한다. 보관되지 않은 파일만 세고, 묶음의 파일이
+  모두 없을 때만 지워진 것으로 본다. 일부만 없으면 새로 더해진 파일(증명사진의 배경 모델), 바뀐 파일, 처음 고른 언어다
 
 ### 글꼴 만들기 (`build_fonts.py`)
 
