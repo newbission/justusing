@@ -107,7 +107,7 @@ test('얼굴을 찾아 기울기를 바로잡고 413×531 JPG로 받는다', asy
   const bytes = await readFile(await file.path());
   expect(bytes.length).toBeLessThanOrEqual(500 * 1024);
   expect(await jpegSize(page, bytes)).toEqual({ width: 413, height: 531 });
-  await expect(frame.getByText(/^413×531 JPG \d+KB를 만들었습니다\.$/)).toBeVisible();
+  await expect(frame.getByText(/^413×531 JPG \d+KB를 만들었습니다\./)).toBeVisible();
 
   // 받은 것은 우리 사이트의 데이터뿐이다 (얼굴 찾기 엔진의 사용 통계도 보내지 않는다)
   expectLocalOnly(page, requests, baseURL!);
@@ -253,4 +253,33 @@ test('전에 받은 사람은 새로 더해진 데이터만 받는다', async ({
   // 지워졌다고 하지 않고, 더해진 것의 크기만 알린다
   await expect(frame.getByRole('button', { name: /^데이터 받기 \(\d+(\.\d)?KB\)$/ })).toBeVisible();
   await expect(frame.getByText('지워졌습니다', { exact: false })).toHaveCount(0);
+});
+
+test('인화용 크기·PNG·용량 상한으로 받는다', async ({ page }) => {
+  test.setTimeout(120_000);
+  const frame = await open(page);
+
+  // 인화용 PNG: 827×1063, 이름에 인화용
+  await frame.getByText('인화용', { exact: true }).click();
+  await frame.getByText('PNG', { exact: true }).click();
+  await frame.getByText('제한 없음', { exact: true }).click();
+  let event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: 'PNG 다운로드' }).click();
+  let file = await event;
+  expect(file.suggestedFilename()).toBe('portrait_증명사진_인화용.png');
+  let bytes = await readFile(await file.path());
+  expect(bytes.subarray(1, 4).toString()).toBe('PNG');
+  expect(await jpegSize(page, bytes)).toEqual({ width: 827, height: 1063 });
+  await expect(frame.getByText(/^827×1063 PNG [\d.]+(KB|MB)를 만들었습니다\./)).toBeVisible();
+
+  // 인화용 JPG 100KB 이하: 화질을 낮춰 맞춘다
+  await frame.getByText('JPG', { exact: true }).click();
+  await frame.getByText('100KB', { exact: true }).click();
+  event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: 'JPG 다운로드' }).click();
+  file = await event;
+  expect(file.suggestedFilename()).toBe('portrait_증명사진_인화용.jpg');
+  bytes = await readFile(await file.path());
+  expect(bytes.length).toBeLessThanOrEqual(100 * 1024);
+  expect(await jpegSize(page, bytes)).toEqual({ width: 827, height: 1063 });
 });
