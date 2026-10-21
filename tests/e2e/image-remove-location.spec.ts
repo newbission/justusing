@@ -132,3 +132,15 @@ test('방식을 바꾸면 지운 결과를 버리고 다시 지울 수 있다', 
   await expect(frame.getByRole('button', { name: '정보 지우기' })).toBeEnabled();
   await expect(frame.getByText('위치 37.5663, 126.9779', { exact: false })).toBeVisible();
 });
+
+test('EXIF가 깨진 사진도 그 조각만 빼고 지운다', async ({ page }) => {
+  const frame = await openTool(page, ['short-exif.jpg']);
+  await expect(frame.getByText('위치 없음')).toBeVisible();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('완료: 사진 1장에서 지웠습니다.')).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const bytes = new Uint8Array(await readFile(await (await event).path()));
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('Exif');
+  expect(await inspect(page, bytes)).toEqual({ width: 200, height: 150 });
+});
