@@ -3,7 +3,6 @@
  * 견본 목록은 src/frame/samples.ts, 파일은 public/samples/ (scripts/samples/make_samples.py).
  */
 import { fileURLToPath } from 'node:url';
-import { NO_SAMPLE } from './no-sample';
 import { expect, test } from './test';
 
 /** 사이트맵에 실린 한국어 도구 페이지 주소 중 견본이 있는 것 (예: /pdf/merge/) */
@@ -11,8 +10,7 @@ async function toolPaths(request: import('@playwright/test').APIRequestContext) 
   const xml = await (await request.get('/sitemap.xml')).text();
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
     .map((match) => new URL(match[1]!).pathname)
-    .filter((path) => /^\/[^/]+\/[^/]+\/$/.test(path) && !/^\/(en|guide)\//.test(path))
-    .filter((path) => !NO_SAMPLE.includes(path));
+    .filter((path) => /^\/[^/]+\/[^/]+\/$/.test(path) && !/^\/(en|guide)\//.test(path));
 }
 
 test('모든 도구에서 예시 파일을 넣으면 첫 화면을 지나 파일 이름이 보인다', async ({
