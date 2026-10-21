@@ -107,6 +107,9 @@ test('위치만 지우면 찍은 날짜와 기기는 남는다 (JPG·PNG·WebP�
     expect(text, name).not.toContain('GPSLatitude');
     // 위치가 적힐 수 있는 설명 글(PNG 글 조각, JPEG COM)도 뺀다
     expect(text, name).not.toContain('taken at home');
+    // EXIF 자유 글(설명·메모)에 적힌 장소도 남기지 않는다
+    expect(text, name).not.toContain('Secret');
+    expect(text, name).not.toContain('Near my house');
     expect((await inspect(page, bytes)).width, name).toBeGreaterThan(0);
   }
 });
