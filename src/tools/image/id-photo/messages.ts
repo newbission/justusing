@@ -50,6 +50,22 @@ const ko = {
   rotateLeft: '왼쪽으로 기울이기',
   rotateRight: '오른쪽으로 기울이기',
   flip: '좌우 반전',
+
+  backgroundTitle: '배경',
+  backgrounds: {
+    original: '원래대로',
+    white: '흰색',
+    gray: '연한 회색',
+    blue: '하늘색',
+    custom: '다른 색',
+  },
+  customColor: '배경색',
+  backgroundNeedsData: '배경을 바꾸려면 얼굴 찾기 데이터를 받아 주세요.',
+  backgroundNote:
+    '사람과 배경을 이 기기 안에서 나눠 배경만 바꿉니다. 머리카락 가장자리가 어색하면 흰 벽 앞에서 다시 찍는 것이 가장 확실합니다.',
+  separating: '사람과 배경을 나누는 중…',
+  separateFailed: '배경을 나누지 못했습니다. 기기의 메모리가 부족할 수 있습니다.',
+  retry: '다시 해 보기',
   reset: '자동으로 다시 맞추기',
   resetManual: '처음으로',
 
@@ -60,9 +76,12 @@ const ko = {
   checkCrown: '정수리를 사진에서 찾지 못해 얼굴 비율로 어림했습니다. 머리 끝 선을 직접 확인하세요.',
   checkHead: '머리 길이가 기준(3.2~3.6cm)을 벗어났습니다.',
   checkSmall: '원본 사진이 작아 늘려서 만듭니다. 흐릿할 수 있습니다.',
-  checkOutside: '칸이 사진 밖으로 나가 그 부분을 흰색으로 채웠습니다.',
+  checkOutside: '칸이 사진 밖으로 나가 그 부분을 배경색으로 채웠습니다.',
+  checkReplaced:
+    '배경을 바꿨습니다. 여권은 배경을 지우거나 합성한 사진을 받지 않으므로, 여권에는 흰 벽 앞에서 찍은 원래 사진을 쓰세요.',
+  checkNotWhite: '흰색이 아닌 배경입니다. 여권 사진은 흰 배경이어야 합니다.',
   checksNote:
-    '이 도구는 자르기·크기·기울기만 맞춥니다. 얼굴을 고치거나 배경을 바꾸지 않습니다 (여권 규정이 금지합니다). 받아 주는지는 접수하는 곳이 정합니다.',
+    '이 도구는 얼굴을 고치지 않습니다. 배경은 직접 고를 때만 바꿉니다. 받아 주는지는 접수하는 곳이 정합니다.',
   suffix: '증명사진',
 };
 
@@ -116,6 +135,22 @@ const en: typeof ko = {
   rotateLeft: 'Tilt left',
   rotateRight: 'Tilt right',
   flip: 'Flip horizontally',
+
+  backgroundTitle: 'Background',
+  backgrounds: {
+    original: 'Original',
+    white: 'White',
+    gray: 'Light gray',
+    blue: 'Sky blue',
+    custom: 'Other color',
+  },
+  customColor: 'Background color',
+  backgroundNeedsData: 'To change the background, download the face finding data.',
+  backgroundNote:
+    'You and the background are separated on this device and only the background is changed. If the hair edges look odd, retaking the photo in front of a white wall is the surest way.',
+  separating: 'Separating you from the background…',
+  separateFailed: 'Could not separate the background. Your device may be low on memory.',
+  retry: 'Try again',
   reset: 'Fit automatically again',
   resetManual: 'Start over',
 
@@ -128,9 +163,12 @@ const en: typeof ko = {
     'The top of the head could not be found in the photo, so it was estimated from the face. Check the top-of-head line yourself.',
   checkHead: 'The head length is outside 3.2–3.6 cm.',
   checkSmall: 'The original photo is small, so it is enlarged. It may look blurry.',
-  checkOutside: 'The frame goes past the photo, so that part is filled with white.',
+  checkOutside: 'The frame goes past the photo, so that part is filled with the background color.',
+  checkReplaced:
+    'The background is replaced. Korean passports do not accept photos with a removed or composited background, so use an original photo taken in front of a white wall for a passport.',
+  checkNotWhite: 'The background is not white. Korean passport photos need a white background.',
   checksNote:
-    'This tool only crops, resizes and straightens. It does not retouch your face or change the background (passport rules forbid it). The office you submit to decides whether it is accepted.',
+    'This tool never retouches your face. It changes the background only when you choose a color. The office you submit to decides whether it is accepted.',
   suffix: 'id-photo',
 };
 
