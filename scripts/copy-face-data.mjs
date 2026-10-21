@@ -3,6 +3,7 @@
  *
  * - vision_wasm_module_internal.wasm  인식 엔진 (@mediapipe/tasks-vision, Apache-2.0)
  * - face_landmarker.task              얼굴 모델 (vendor/mediapipe/, Apache-2.0)
+ * - selfie_segmenter.tflite           사람 영역 나누기 모델 (vendor/mediapipe/, Apache-2.0)
  *
  * 엔진은 설치된 패키지 버전(package.json에 고정)과 같은 파일이어야 해서 커밋하지 않고 dev/build 전에 복사한다.
  * 목록에는 크기·SHA-256을 적어 둔다. 도구 화면은 받은 바이트를 이 값과 맞춰 본 뒤에만 쓴다.
@@ -17,6 +18,7 @@ const catalogPath = new URL('src/lib/face/catalog.json', root);
 const files = {
   engine: 'node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.wasm',
   model: 'vendor/mediapipe/face_landmarker.task',
+  segmenter: 'vendor/mediapipe/selfie_segmenter.tflite',
 };
 
 await rm(to, { recursive: true, force: true });
