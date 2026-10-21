@@ -65,6 +65,8 @@
   });
 
   const located = $derived(batch.ready.filter((item) => infoOf(item)?.location).length);
+  /** HDR 밝기 정보나 움직이는 사진의 영상이 붙은 사진 수 (지우면 함께 빠진다) */
+  const appended = $derived(batch.ready.filter((item) => infoOf(item)?.appended).length);
 
   /** 모든 사진을 지금 방식으로 처리했으면 그 결과 */
   const summary = $derived.by(() => {
@@ -224,6 +226,9 @@
       {/each}
     </div>
     <p class="help">{t.modeHelp[mode]} {t.note}</p>
+    {#if appended > 0}
+      <p class="help"><strong>{t.appended(appended)}</strong></p>
+    {/if}
   {/snippet}
 
   {#snippet meta(item: BatchItem)}

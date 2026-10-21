@@ -15,6 +15,8 @@ const ko = {
     location: '위치만 지우고 찍은 날짜·기기는 남깁니다. 사진 앱에서 날짜순 정리가 그대로 됩니다.',
   } satisfies Record<CleanMode, string>,
   note: '사진을 다시 저장하지 않고 정보만 떼어 내므로 화질이 그대로입니다.',
+  appended: (count: number) =>
+    `사진 ${count}장에 HDR 밝기 정보나 움직이는 사진의 영상이 붙어 있습니다. 여기에도 촬영 정보가 있을 수 있어 함께 빼므로, HDR 사진은 일반 사진으로, 움직이는 사진은 멈춘 사진으로 저장됩니다.`,
   reading: '사진 정보를 읽는 중입니다…',
   needOne: '정보를 지울 사진을 넣어 주세요.',
   ready: (count: number, located: number) =>
@@ -58,6 +60,8 @@ const en: typeof ko = {
       'Removes only the location and keeps the date taken and device, so photo apps still sort by date.',
   },
   note: 'Only the info is taken out and the photo is not saved again, so the quality stays the same.',
+  appended: (count: number) =>
+    `${count} ${count === 1 ? 'photo has' : 'photos have'} HDR brightness data or a motion photo video attached. These can hold shooting data too, so they are removed: HDR photos are saved as regular photos and motion photos as still photos.`,
   reading: 'Reading photo info…',
   needOne: 'Add the photos you want to clean.',
   ready: (count: number, located: number) =>
