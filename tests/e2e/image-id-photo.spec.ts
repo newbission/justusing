@@ -214,6 +214,16 @@ test('배경을 하늘색으로 바꾸고 좌우를 뒤집는다', async ({ page
   const original = at(plain, 206, 220);
   expect(face.reduce((sum, value, i) => sum + Math.abs(value - original[i]!), 0)).toBeLessThan(15);
 
+  // 칸을 나눈 영역 밖까지 넓히면 다시 나눈 뒤에 받는다 (예전 영역으로 받지 않는다)
+  await view.focus();
+  for (let i = 0; i < 20; i++) await view.press('-');
+  await expect(frame.getByRole('button', { name: 'JPG 다운로드' })).toBeEnabled({
+    timeout: 30_000,
+  });
+  const wide = await jpegPixels(page, await download(page, frame));
+  const [r, g, b] = at(wide, 10, 10);
+  expect(Math.abs(r! - 0xcf) + Math.abs(g! - 0xe2) + Math.abs(b! - 0xf3)).toBeLessThan(15);
+
   // 원래대로 돌리면 배경 알림이 사라진다
   await frame.getByText('원래대로', { exact: true }).click();
   await expect(frame.getByText('배경을 바꿨습니다.', { exact: false })).toHaveCount(0);
