@@ -49,6 +49,12 @@ test('사진의 정보를 모두 지우고 방향만 남긴다', async ({ page, 
     frame.getByText('위치 37.5663, 126.9779 · 2024-05-01 14:23 · Apple iPhone 15 Pro'),
   ).toBeVisible();
   await expect(frame.getByText('사진 1장 중 1장에 위치가 있습니다.')).toBeVisible();
+  // 그림 뒤에 붙은 영상(움직이는 사진)은 함께 빠진다고 미리 알린다
+  await expect(
+    frame.getByText('사진 1장에 HDR 밝기 정보나 움직이는 사진의 영상이 붙어 있습니다.', {
+      exact: false,
+    }),
+  ).toBeVisible();
   requests.length = 0; // 페이지를 여는 요청은 빼고, 파일을 고른 뒤부터 센다
 
   await frame.getByRole('button', { name: '정보 지우기' }).click();
@@ -108,6 +114,7 @@ test('위치만 지우면 찍은 날짜와 기기는 남는다 (JPG·PNG·WebP�
 test('지울 정보가 없는 사진은 원본 그대로 두고 알린다', async ({ page }) => {
   const frame = await openTool(page, ['tall.jpg']);
   await expect(frame.getByText('위치 없음')).toBeVisible();
+  await expect(frame.getByText('HDR 밝기 정보', { exact: false })).toHaveCount(0);
   await frame.getByRole('button', { name: '정보 지우기' }).click();
   await expect(frame.getByText('지울 정보가 없었습니다.', { exact: false })).toBeVisible();
   await expect(frame.getByText('지울 정보가 없어 원본 그대로')).toBeVisible();
