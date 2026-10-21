@@ -21,7 +21,8 @@ export default defineContent({
       '처음 쓸 때는 "데이터 받기"로 얼굴 찾기 데이터를 받습니다. 받기 전에 크기를 알려 드리고, 받지 않으면 칸을 직접 맞출 수 있습니다.',
       '얼굴을 찾으면 머리 끝이 점선에, 턱이 초록 띠 안에 오도록 저절로 자르고 기울기를 바로잡습니다. 사진을 끌거나 "크게"·"작게"와 방향 버튼으로 조금씩 고칩니다. 앞 카메라로 찍어 좌우가 뒤집혔으면 "좌우 반전"을 누릅니다.',
       '배경을 바꾸려면 "배경"에서 "흰색"·"연한 회색"·"하늘색"이나 "다른 색"을 고릅니다. 여권에 낼 사진은 "원래대로" 두세요.',
-      '"확인할 것"에 적힌 내용을 살펴보고 "JPG 다운로드"를 눌러 413×531 JPG를 받습니다.',
+      '"저장 방식"은 처음에 여권 온라인 규격(온라인 제출용, JPG, 500KB)으로 되어 있습니다. 사진관에 맡길 때는 "인화용", 용량 제한이 더 작은 곳에는 "200KB"·"100KB"를 고릅니다.',
+      '"확인할 것"에 적힌 내용을 살펴보고 "JPG 다운로드"를 눌러 받습니다.',
     ],
     faq: [
       {
@@ -46,7 +47,11 @@ export default defineContent({
       },
       {
         q: '인쇄해서 쓸 수도 있나요?',
-        a: '받은 413×531 JPG는 3.5×4.5cm로 인쇄하면 300 DPI가 되어 인화에도 충분한 크기입니다. 사진관·인화 서비스에 맡길 때는 3.5×4.5cm 크기로 뽑아 달라고 하면 됩니다.',
+        a: '네. "저장 방식"에서 "인화용"을 고르면 827×1063 픽셀(3.5×4.5cm에 600 DPI)로 받아 더 선명하게 뽑힙니다. 온라인 제출용(413×531)도 300 DPI라 인화에 쓸 수 있습니다. 사진관·인화 서비스에 맡길 때는 3.5×4.5cm 크기로 뽑아 달라고 하면 됩니다.',
+      },
+      {
+        q: 'JPG 말고 PNG로 받을 수 있나요?',
+        a: '네. "저장 방식"에서 "PNG"를 고르면 화질을 낮추지 않고 저장합니다. 대신 용량이 커서, 고른 용량 상한을 넘으면 알려 드립니다. 여권 온라인 신청은 500KB 이하 JPG·PNG를 받으므로, 넘으면 JPG를 고르세요.',
       },
     ],
   },
@@ -70,7 +75,8 @@ export default defineContent({
       'The first time, use "Download data" to get the face finding data. You see its size before downloading, and you can fit the frame yourself without it.',
       'Once a face is found, the photo is cropped and straightened so the top of the head sits on the dashed line and the chin falls inside the green band. Drag the photo or use "Larger", "Smaller" and the direction buttons to fine-tune it. If the front camera left the photo mirrored, click "Flip horizontally".',
       'To change the background, choose "White", "Light gray", "Sky blue" or "Other color" under "Background". Keep "Original" for a passport photo.',
-      'Read "Things to check" and click "Download JPG" to get a 413×531 JPG.',
+      '"Save as" starts at the Korean passport upload format (For upload, JPG, 500KB). Choose "For printing" for a photo studio, or "200KB"/"100KB" for sites with a smaller size limit.',
+      'Read "Things to check" and click "Download JPG".',
     ],
     faq: [
       {
@@ -95,7 +101,11 @@ export default defineContent({
       },
       {
         q: 'Can I print it?',
-        a: 'Printed at 35×45 mm, the 413×531 JPG is 300 DPI, which is enough for photo prints. When ordering prints, ask for a 35×45 mm print.',
+        a: 'Yes. Choose "For printing" under "Save as" to get 827×1063 pixels (600 DPI at 35×45 mm) for sharper prints. The 413×531 upload file is 300 DPI and also works for prints. When ordering prints, ask for a 35×45 mm print.',
+      },
+      {
+        q: 'Can I get a PNG instead of a JPG?',
+        a: 'Yes. Choose "PNG" under "Save as" to save without lowering the quality. It is larger, so you are told if it goes over the size limit you picked. Korean online passport applications accept JPG or PNG up to 500 KB, so choose JPG if it is over.',
       },
     ],
   },
