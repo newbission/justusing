@@ -12,7 +12,7 @@
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
-  import { dataStatus, loadData } from '../../../frame/data';
+  import { dataStatus, loadData, missingData } from '../../../frame/data';
   import { downloadFile } from '../../../frame/download';
   import { onFrameFiles } from '../../../frame/drop';
   import { baseName, formatSize } from '../../../frame/format';
@@ -77,6 +77,8 @@
     | { kind: 'ready' };
   let data = $state<Data>({ kind: 'checking' });
   const totalBytes = FACE_FILES.reduce((sum, file) => sum + file.bytes, 0);
+  /** 받아야 할 크기 (전에 받은 사람은 새로 더해진 파일만) */
+  let needBytes = $state(totalBytes);
 
   type Find =
     | { kind: 'idle' }
@@ -124,10 +126,13 @@
 
   onMount(() => {
     dataStatus(FACE_FILES, FACE_CONSENT).then((status) => {
-      const lowSpace = status.available !== undefined && status.available < totalBytes * 2;
-      data = FACE_FILES.every((file) => status.cached.has(file.path))
-        ? { kind: 'ready' }
-        : { kind: 'missing', removed: status.consented, lowSpace };
+      const missing = missingData(FACE_FILES, status);
+      const lowSpace = status.available !== undefined && status.available < missing.bytes * 2;
+      needBytes = missing.bytes;
+      data =
+        missing.bytes === 0
+          ? { kind: 'ready' }
+          : { kind: 'missing', removed: missing.removed, lowSpace };
     });
     const off = onFrameFiles(([file]) => {
       if (file) open(file);
@@ -145,7 +150,7 @@
       const bytes = await loadData(FACE_FILES, FACE_CONSENT, (received) => {
         data = {
           kind: 'downloading',
-          percent: Math.min(99, Math.floor((received / totalBytes) * 100)),
+          percent: Math.min(99, Math.floor((received / needBytes) * 100)),
         };
       });
       // 받은 바이트로 바로 띄운다. 보관소를 쓸 수 없는 창(시크릿 모드 등)에서 다시 받지 않게 한다
@@ -529,7 +534,7 @@
                 {#if data.kind === 'missing' && data.removed}
                   <p><strong>{t.dataRemoved}</strong></p>
                 {/if}
-                <p>{t.dataSize(formatSize(totalBytes))}</p>
+                <p>{t.dataSize(formatSize(needBytes))}</p>
                 <p class="help">{t.dataNote}</p>
                 {#if data.kind === 'missing' && data.lowSpace}
                   <p class="help">{t.lowSpace}</p>
@@ -544,7 +549,7 @@
                   onclick={downloadData}
                   >{data.kind === 'downloading'
                     ? t.downloading(data.percent)
-                    : t.getData(formatSize(totalBytes))}</button
+                    : t.getData(formatSize(needBytes))}</button
                 >
               {/if}
             </section>
