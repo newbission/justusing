@@ -15,6 +15,7 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 
                GPS가 든 XMP, 설명 글, 그림 끝 뒤에 덧붙은 영상(움직이는 사진처럼 ftyp로 시작)
 - located.png  GPS·날짜·기기가 든 eXIf와 설명 글(tEXt)이 있는 PNG
 - located.webp GPS가 든 EXIF와 XMP가 있는 WebP (방향 6)
+- short-exif.jpg EXIF 조각이 머리 4바이트에서 끝난 JPEG (그림은 멀쩡함)
 - scan.png     글자를 찍은 그림 (글자 인식 도구). 한글 한 줄, 영어 한 줄. Pretendard로 그린다
 
 이 스크립트가 만들지 않는 것:
@@ -180,6 +181,12 @@ text = PngImagePlugin.PngInfo()
 text.add_text('Comment', 'taken at home')
 located.save(path('located.png'), exif=located_exif(1), pnginfo=text)
 located.save(path('located.webp'), quality=90, exif=located_exif(6), xmp=LOCATED_XMP)
+# EXIF 머리(바이트 순서)만 있고 끝난 사진: 그림은 멀쩡하다
+buffer = io.BytesIO()
+Image.new('RGB', (200, 150), (90, 90, 160)).save(buffer, 'JPEG', quality=90)
+plain = buffer.getvalue()
+with open(path('short-exif.jpg'), 'wb') as file:
+    file.write(plain[:2] + bytes([0xFF, 0xE1, 0, 12]) + b'Exif\0\0MM\0*' + plain[2:])
 
 scan = Image.new('L', (1240, 600), 255)
 font = ImageFont.truetype(
@@ -191,5 +198,5 @@ scan.save(path('scan.png'), optimize=True)
 
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
-             'located.jpg', 'located.png', 'located.webp']:
+             'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg']:
     print(name, os.path.getsize(path(name)), 'bytes')
