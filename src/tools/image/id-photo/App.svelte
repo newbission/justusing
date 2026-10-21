@@ -23,7 +23,6 @@
     SPEC,
     autoPlace,
     centerPlace,
-    cutout,
     drawCrop,
     headLength,
     matteCovers,
@@ -104,9 +103,14 @@
   type MatteState =
     | { kind: 'none' }
     | { kind: 'working' }
-    | { kind: 'ready'; matte: Matte; cutout: Backdrop['cutout'] }
+    | { kind: 'ready'; matte: Matte; cutout: { image: ImageBitmap; x: number; y: number } }
     | { kind: 'failed' };
   let matte = $state.raw<MatteState>({ kind: 'none' });
+  /** 나눈 결과를 바꾼다 (예전 미리보기 그림은 닫는다) */
+  function setMatte(next: MatteState) {
+    if (matte.kind === 'ready') matte.cutout.image.close();
+    matte = next;
+  }
 
   /** 받은 데이터로 얼굴 찾기 엔진을 띄운다 (엔진이 바이트를 넘겨받아 비운다) */
   function startFinder(bytes: Promise<Map<string, Uint8Array>>) {
@@ -176,7 +180,7 @@
     photo?.preview.close();
     photo = undefined;
     find = { kind: 'idle' };
-    matte = { kind: 'none' };
+    setMatte({ kind: 'none' });
     saved = undefined;
     saveFailed = false;
     phase = 'idle';
@@ -233,7 +237,7 @@
     const current = photo;
     if (!current) return;
     const ticket = generation;
-    matte = { kind: 'working' };
+    setMatte({ kind: 'working' });
     try {
       const region = matteRegion(placement, current.width, current.height);
       const k = current.preview.width / current.width;
@@ -256,9 +260,15 @@
       ).segment(bitmap);
       if (ticket !== generation) return;
       const made: Matte = { ...region, mask };
-      matte = { kind: 'ready', matte: made, cutout: cutout(current.preview, k, made) };
+      // 사람만 남긴 미리보기는 사진 워커가 원본에서 만든다 (화면 스레드를 막지 않게)
+      const piece = await photos.cutout(made, k);
+      if (ticket !== generation) {
+        piece.image.close();
+        return;
+      }
+      setMatte({ kind: 'ready', matte: made, cutout: piece });
     } catch {
-      if (ticket === generation) matte = { kind: 'failed' };
+      if (ticket === generation) setMatte({ kind: 'failed' });
     }
   }
 
@@ -611,7 +621,7 @@
               <p class="help">{t.backgroundNeedsData}</p>
             {:else if background !== 'original' && matte.kind === 'failed'}
               <p class="help"><strong>{t.separateFailed}</strong></p>
-              <button type="button" class="btn" onclick={() => (matte = { kind: 'none' })}
+              <button type="button" class="btn" onclick={() => setMatte({ kind: 'none' })}
                 >{t.retry}</button
               >
             {:else}

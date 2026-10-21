@@ -3,7 +3,7 @@
  * (배경을 바꾸면 원본 크기에서 사람만 남겨 그 색 위에 그린다).
  * 사진은 메모리에서만 다룬다.
  */
-import { exportJpeg, type Thumb } from './id-photo';
+import { cutout, exportJpeg, type Thumb } from './id-photo';
 import type { PhotoRequest, PhotoResponse } from './photo';
 
 /** 마지막으로 연 원본 */
@@ -56,9 +56,18 @@ async function exportPhoto(request: Extract<PhotoRequest, { type: 'export' }>) {
   postMessage(response, { transfer: [bytes.buffer] });
 }
 
+function cutoutPhoto(request: Extract<PhotoRequest, { type: 'cutout' }>) {
+  if (!original) throw new Error('no photo');
+  const piece = cutout(original, request.matte, request.scale);
+  const image = piece.image.transferToImageBitmap();
+  const response: PhotoResponse = { id: request.id, kind: 'cutout', image, x: piece.x, y: piece.y };
+  postMessage(response, { transfer: [image] });
+}
+
 async function handle(request: PhotoRequest) {
   try {
     if (request.type === 'open') await open(request);
+    else if (request.type === 'cutout') cutoutPhoto(request);
     else await exportPhoto(request);
   } catch (error) {
     postMessage({

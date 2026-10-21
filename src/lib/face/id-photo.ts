@@ -291,10 +291,11 @@ export function matteCovers(matte: Matte, placement: Placement, width: number, h
 }
 
 /**
- * 사진에서 사람만 남긴 그림. image는 원본을 scale배 한 사진 (미리보기는 줄인 사진, 결과 파일은 원본).
+ * 원본 사진에서 사람만 남긴 그림을 scale배 크기로 만든다 (미리보기는 줄여서, 결과 파일은 원본 크기).
+ * 돌려준 x·y는 scale배 한 사진에서의 자리. 사진 워커에서 부른다 (화면 스레드를 막지 않게).
  * 모델이 낸 가장자리는 넓게 번져 배경이 비치므로, 확신이 낮은 쪽을 조금 깎아 경계를 좁힌다
  */
-export function cutout(image: CanvasImageSource, scale: number, matte: Matte) {
+export function cutout(original: CanvasImageSource, matte: Matte, scale: number) {
   const { mask } = matte;
   const alpha = new OffscreenCanvas(mask.width, mask.height);
   const pixels = new ImageData(mask.width, mask.height);
@@ -302,19 +303,27 @@ export function cutout(image: CanvasImageSource, scale: number, matte: Matte) {
     pixels.data[i * 4 + 3] = Math.min(255, Math.max(0, ((mask.data[i] - 38) * 255) / 179));
   }
   alpha.getContext('2d')!.putImageData(pixels, 0, 0);
-  const x = Math.floor(matte.x * scale);
-  const y = Math.floor(matte.y * scale);
   const canvas = new OffscreenCanvas(
     Math.max(1, Math.round(matte.width * scale)),
     Math.max(1, Math.round(matte.height * scale)),
   );
   const context = canvas.getContext('2d')!;
-  context.drawImage(image, -x, -y);
-  context.globalCompositeOperation = 'destination-in';
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
+  context.drawImage(
+    original,
+    matte.x,
+    matte.y,
+    matte.width,
+    matte.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
+  context.globalCompositeOperation = 'destination-in';
   context.drawImage(alpha, 0, 0, canvas.width, canvas.height);
-  return { image: canvas, x, y };
+  return { image: canvas, x: matte.x * scale, y: matte.y * scale };
 }
 
 /** 바꿀 배경: 색과 사람만 남긴 그림 (그림의 좌표는 그리는 사진의 픽셀) */
@@ -356,7 +365,7 @@ export async function exportJpeg(
   const canvas = new OffscreenCanvas(SPEC.outWidth, SPEC.outHeight);
   const backdrop = background && {
     color: background.color,
-    cutout: cutout(image, 1, background.matte),
+    cutout: cutout(image, background.matte, 1),
   };
   drawCrop(canvas.getContext('2d')!, image, placement, SPEC.outWidth, SPEC.outHeight, backdrop);
   let blob: Blob | undefined;

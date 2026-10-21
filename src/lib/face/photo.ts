@@ -10,7 +10,8 @@ import workerUrl from './photo.worker.ts?worker&url';
 
 export type PhotoRequest =
   | { id: number; type: 'open'; file: File; previewSide: number; thumbSide: number }
-  | { id: number; type: 'export'; placement: Placement; background?: Background };
+  | { id: number; type: 'export'; placement: Placement; background?: Background }
+  | { id: number; type: 'cutout'; matte: Matte; scale: number };
 
 export type PhotoResponse =
   | {
@@ -22,6 +23,7 @@ export type PhotoResponse =
       thumb: Thumb;
     }
   | { id: number; kind: 'exported'; bytes: Uint8Array }
+  | { id: number; kind: 'cutout'; image: ImageBitmap; x: number; y: number }
   | { id: number; kind: 'error'; message: string };
 
 /** 바꿀 배경: 색과 사람·배경을 나눈 결과 */
@@ -83,6 +85,14 @@ export class PhotoWorker {
     if (response.kind !== 'exported')
       throw new Error(response.kind === 'error' ? response.message : 'unexpected');
     return response.bytes;
+  }
+
+  /** 원본에서 사람만 남긴 그림 (scale배 크기, 미리보기용). 다 쓰면 image를 닫는다 */
+  async cutout(matte: Matte, scale: number) {
+    const response = await this.call({ id: nextId++, type: 'cutout', matte, scale });
+    if (response.kind !== 'cutout')
+      throw new Error(response.kind === 'error' ? response.message : 'unexpected');
+    return { image: response.image, x: response.x, y: response.y };
   }
 
   dispose() {
