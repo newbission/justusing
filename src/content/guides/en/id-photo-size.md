@@ -44,7 +44,7 @@ Put a photo into the [ID Photo Maker](/en/image/id-photo/) and it finds the face
 
 1. Add the photo. The first time, use "Download data" to get the face finding data. You can also fit the frame yourself without it
 2. In the preview, check that the top of the head is on the dashed line and the chin is inside the green band
-3. If it is off, drag the photo or use "Larger", "Smaller" and the direction buttons, then click "Download JPG"
+3. If it is off, drag the photo or use "Larger", "Smaller" and the direction buttons, then click "Download JPG". For a photo studio print, choose "For printing" under "Save as" (827×1063 pixels, 600 DPI) for a sharper print
 
 The face is never retouched. The background changes only when you pick a color under "Background", and passport rules do not accept photos with a removed or composited background, so keep "Original" for a passport. Changing the background is for places without such rules, like job applications.
 
