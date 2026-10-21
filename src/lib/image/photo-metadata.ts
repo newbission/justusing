@@ -2,7 +2,8 @@
  * 사진 파일(JPG·PNG·WebP) 안의 촬영 정보(EXIF·GPS, XMP, IPTC, 설명 글)를 읽고 지운다 (위치정보 지우기 도구).
  * 그림은 다시 압축하지 않고 정보 조각만 빼거나 고쳐 다시 이어 붙인다. 화질과 그림 바이트가 그대로다.
  *
- * - location: GPS 칸을 0으로 덮어 비우고, 위치가 들어갈 수 있는 XMP·IPTC와 그림 끝 뒤에 덧붙은 자료를 뺀다.
+ * - location: EXIF의 GPS 칸을 0으로 덮어 비우고, EXIF와 그림을 그리는 데 필요한 조각 말고는 모두 뺀다
+ *   (XMP·IPTC·설명 글·알 수 없는 조각과 그림 끝 뒤에 덧붙은 자료. 어디에든 위치가 적힐 수 있어 남길 것만 정한다).
  *   찍은 날짜·기기 같은 나머지 EXIF는 남긴다
  * - all: 그림을 그리는 데 필요한 것(색 프로필 등)만 남기고 모두 뺀다. 사진이 눕지 않게 방향(Orientation) 한 칸만 새로 적는다
  *
@@ -76,7 +77,7 @@ export function readPhotoInfo(bytes: Uint8Array): PhotoInfo | undefined {
     for (const chunk of chunks.list) {
       if (chunk.type === 'eXIf') exif(chunk.data);
       else if (PNG_TEXT.has(chunk.type)) xmp(chunk.data);
-      if (PNG_META.has(chunk.type)) info.extra = true;
+      if (!pngKeeps(chunk.type)) info.extra = true;
     }
     if (chunks.trailing) info.extra = true;
     return info;
@@ -87,7 +88,7 @@ export function readPhotoInfo(bytes: Uint8Array): PhotoInfo | undefined {
     for (const chunk of chunks.list) {
       if (chunk.type === 'EXIF') exif(exifTiff(chunk.data));
       else if (chunk.type === 'XMP ') xmp(chunk.data);
-      if (WEBP_META.has(chunk.type)) info.extra = true;
+      if (!WEBP_IMAGE.has(chunk.type)) info.extra = true;
     }
     if (chunks.trailing) info.extra = true;
     return info;
@@ -127,12 +128,12 @@ function cleanJpeg(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
     if (!stripped || orientation === 1) return stripped;
     return withJpegExif(stripped, orientationTiff(orientation));
   }
+  // 남길 것만 정한다 (허용 목록): 그림을 그리는 데 쓰는 조각과, GPS를 비운 EXIF.
+  // XMP·IPTC·설명(COM)·여러 장 묶음 목록(MPF)·제조사 조각 등 나머지는 모두 뺀다
   return rewriteJpeg(bytes, (marker, segment): SegmentAction => {
     const kind = jpegSegmentKind(marker, segment);
-    if (kind === 'xmp' || kind === 'iptc') return 'drop';
-    // 여러 장 묶음 사진(MPF)의 목록. 그림 끝 뒤에 붙은 다른 그림을 빼므로 목록도 뺀다
-    if (marker === 0xe2 && startsWith(segment, 4, 'MPF\0')) return 'drop';
-    if (kind !== 'exif') return 'keep';
+    if (kind === 'image') return 'keep';
+    if (kind !== 'exif') return 'drop';
     const copy = segment.slice();
     return clearGps(copy.subarray(10)) ? copy : 'keep';
   });
@@ -152,9 +153,30 @@ function withJpegExif(bytes: Uint8Array, tiff: Uint8Array): Uint8Array {
 
 // ── PNG ──
 
-/** 촬영 정보가 들어 있는 PNG 조각: EXIF, 글(XMP도 여기 들어 있다), 고친 시각 */
-const PNG_META = new Set(['eXIf', 'tEXt', 'zTXt', 'iTXt', 'tIME']);
+/**
+ * 그림을 그리는 데 쓰는 PNG 보조 조각 (허용 목록): 투명·색·감마·밀도·HDR, 움직이는 PNG(APNG).
+ * 이름 첫 글자가 대문자인 필수 조각(IHDR·PLTE·IDAT·IEND 등)도 남긴다. 그 밖의 보조 조각은 뺀다
+ */
+const PNG_IMAGE = new Set([
+  'tRNS',
+  'cHRM',
+  'gAMA',
+  'iCCP',
+  'sBIT',
+  'sRGB',
+  'cICP',
+  'mDCV',
+  'cLLI',
+  'bKGD',
+  'hIST',
+  'pHYs',
+  'sPLT',
+  'acTL',
+  'fcTL',
+  'fdAT',
+]);
 const PNG_TEXT = new Set(['tEXt', 'zTXt', 'iTXt']);
+const pngKeeps = (type: string) => PNG_IMAGE.has(type) || (type[0]! >= 'A' && type[0]! <= 'Z');
 
 interface Chunk {
   type: string;
@@ -192,10 +214,6 @@ function pngChunk(type: string, data: Uint8Array): Uint8Array {
   return chunk;
 }
 
-/** XMP를 담은 글 조각 (iTXt·zTXt·tEXt 모두 키워드로 시작한다) */
-const isPngXmp = (chunk: Chunk) =>
-  PNG_TEXT.has(chunk.type) && startsWith(chunk.data, 0, 'XML:com.adobe.xmp\0');
-
 function cleanPng(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
   const chunks = pngChunks(bytes);
   if (!chunks) return undefined;
@@ -204,23 +222,22 @@ function cleanPng(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
   let wroteOrientation = false;
   const parts: Uint8Array[] = [bytes.subarray(0, 8)];
   for (const chunk of chunks.list) {
-    if (mode === 'location') {
-      if (isPngXmp(chunk)) {
+    // 위치만 지울 때는 EXIF(GPS를 비움)와 고친 시각을 남긴다. 글 조각은 XMP·IPTC·EXIF 프로필을 담을 수 있어 뺀다
+    if (mode === 'location' && chunk.type === 'eXIf') {
+      const data = chunk.data.slice();
+      if (clearGps(data)) {
+        parts.push(pngChunk('eXIf', data));
         changed = true;
-        continue;
+      } else {
+        parts.push(chunk.whole);
       }
-      if (chunk.type === 'eXIf') {
-        const data = chunk.data.slice();
-        if (clearGps(data)) {
-          parts.push(pngChunk('eXIf', data));
-          changed = true;
-          continue;
-        }
-      }
+      continue;
+    }
+    if (mode === 'location' && chunk.type === 'tIME') {
       parts.push(chunk.whole);
       continue;
     }
-    if (!PNG_META.has(chunk.type)) {
+    if (pngKeeps(chunk.type)) {
       // 방향은 그림 자료(IDAT) 앞에 둔다
       if (chunk.type === 'IDAT' && orientation !== 1 && !wroteOrientation) {
         parts.push(pngChunk('eXIf', orientationTiff(orientation)));
@@ -238,7 +255,8 @@ function cleanPng(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
 
 /** 촬영 정보 조각과 VP8X 머리의 표시 비트 */
 const WEBP_FLAGS: Record<string, number> = { EXIF: 0x08, 'XMP ': 0x04 };
-const WEBP_META = new Set(Object.keys(WEBP_FLAGS));
+/** 그림을 그리는 데 쓰는 WebP 조각 (허용 목록). 그 밖의 조각은 뺀다 */
+const WEBP_IMAGE = new Set(['VP8 ', 'VP8L', 'VP8X', 'ALPH', 'ANIM', 'ANMF', 'ICCP']);
 
 function webpChunks(bytes: Uint8Array): { list: Chunk[]; trailing: boolean } | undefined {
   const size = u32le(bytes, 4) + 8;
@@ -280,7 +298,7 @@ function cleanWebp(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
   let clearFlags = 0;
   let setFlags = 0;
   for (const chunk of chunks.list) {
-    if (!WEBP_META.has(chunk.type)) {
+    if (WEBP_IMAGE.has(chunk.type)) {
       parts.push(chunk.whole);
       continue;
     }
@@ -300,7 +318,7 @@ function cleanWebp(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
       setFlags |= WEBP_FLAGS.EXIF!;
       continue;
     }
-    clearFlags |= WEBP_FLAGS[chunk.type]!;
+    clearFlags |= WEBP_FLAGS[chunk.type] ?? 0;
   }
   if (!changed) return bytes;
   // VP8X가 없는 단순한 WebP에는 정보 조각이 붙을 수 없다. 표시 비트는 VP8X에만 있다
