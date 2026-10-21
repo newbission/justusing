@@ -53,6 +53,6 @@ The face is never retouched. The background changes only when you pick a color u
 - **"The top of the head could not be found"**: If the background has a pattern or the hair is close to the background color, the top of the head is estimated from the face proportions. Check in the preview that the top of the head is on the dashed line and adjust it yourself
 - **"The background may not be white"**: You see this when the top corners of the photo are not white. If you took the photo against a gray wall or in shade, retaking it against a white wall is the safest choice. For photos that are not for a passport, you can change the background to white
 - **The photo looks mirrored**: Phone front cameras show a mirror image on screen but may save the photo unmirrored. Use "Flip horizontally" to match how you really look
-- **"The original photo is small, so it is enlarged"**: The face area is smaller than 413×531 pixels. Use a photo taken closer or zoomed in
+- **"The original photo is small, so it is enlarged"**: The face area is smaller than the size you chose (413×531 pixels for upload, 827×1063 for printing). Use a photo taken closer or zoomed in
 
 The checks on screen are for reference. The office you submit to decides whether a photo is accepted, so also check its instructions.
