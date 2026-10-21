@@ -2,7 +2,7 @@
  * 사진 파일(JPG·PNG·WebP) 안의 촬영 정보(EXIF·GPS, XMP, IPTC, 설명 글)를 읽고 지운다 (위치정보 지우기 도구).
  * 그림은 다시 압축하지 않고 정보 조각만 빼거나 고쳐 다시 이어 붙인다. 화질과 그림 바이트가 그대로다.
  *
- * - location: EXIF의 GPS 칸을 0으로 덮어 비우고, EXIF와 그림을 그리는 데 필요한 조각 말고는 모두 뺀다
+ * - location: EXIF는 위치가 적힐 수 없는 칸(날짜·기기·촬영 설정)만 골라 새로 만들고, 그림을 그리는 데 필요한 조각 말고는 모두 뺀다
  *   (XMP·IPTC·설명 글·알 수 없는 조각과 그림 끝 뒤에 덧붙은 자료. 어디에든 위치가 적힐 수 있어 남길 것만 정한다).
  *   찍은 날짜·기기 같은 나머지 EXIF는 남긴다
  * - all: 그림을 그리는 데 필요한 것(색 프로필 등)만 남기고 모두 뺀다. 사진이 눕지 않게 방향(Orientation) 한 칸만 새로 적는다
@@ -146,18 +146,26 @@ function cleanJpeg(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
     const kind = jpegSegmentKind(marker, segment);
     if (kind === 'image') return 'keep';
     if (kind !== 'exif') return 'drop';
-    const copy = segment.slice();
-    return clearGps(copy.subarray(10)) ? copy : 'keep';
+    const tiff = segment.subarray(10);
+    const safe = safeExif(tiff);
+    if (!safe) return 'drop';
+    return sameBytes(safe, tiff) ? 'keep' : jpegExifSegment(safe);
   });
 }
 
-/** 정보를 모두 뺀 JPEG에 방향만 적은 EXIF 조각을 JFIF 뒤(없으면 맨 앞)에 넣는다 */
-function withJpegExif(bytes: Uint8Array, tiff: Uint8Array): Uint8Array {
+/** TIFF를 담은 APP1 Exif 조각 */
+function jpegExifSegment(tiff: Uint8Array): Uint8Array {
   const length = 2 + 6 + tiff.length;
   const segment = new Uint8Array(2 + length);
   segment.set([0xff, 0xe1, length >> 8, length & 0xff]);
   segment.set(ascii('Exif\0\0'), 4);
   segment.set(tiff, 10);
+  return segment;
+}
+
+/** 정보를 모두 뺀 JPEG에 방향만 적은 EXIF 조각을 JFIF 뒤(없으면 맨 앞)에 넣는다 */
+function withJpegExif(bytes: Uint8Array, tiff: Uint8Array): Uint8Array {
+  const segment = jpegExifSegment(tiff);
   let at = 2;
   if (bytes[2] === 0xff && bytes[3] === 0xe0) at = 4 + ((bytes[4]! << 8) | bytes[5]!);
   return concat([bytes.subarray(0, at), segment, bytes.subarray(at)]);
@@ -236,12 +244,12 @@ function cleanPng(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
   for (const chunk of chunks.list) {
     // 위치만 지울 때는 EXIF(GPS를 비움)와 고친 시각을 남긴다. 글 조각은 XMP·IPTC·EXIF 프로필을 담을 수 있어 뺀다
     if (mode === 'location' && chunk.type === 'eXIf') {
-      const data = chunk.data.slice();
-      if (clearGps(data)) {
-        parts.push(pngChunk('eXIf', data));
-        changed = true;
-      } else {
+      const safe = safeExif(chunk.data);
+      if (safe && sameBytes(safe, chunk.data)) {
         parts.push(chunk.whole);
+      } else {
+        if (safe) parts.push(pngChunk('eXIf', safe));
+        changed = true;
       }
       continue;
     }
@@ -315,12 +323,14 @@ function cleanWebp(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
       continue;
     }
     if (mode === 'location' && chunk.type === 'EXIF') {
-      const data = chunk.data.slice();
-      if (clearGps(exifTiff(data))) {
-        parts.push(webpChunk('EXIF', data));
-        changed = true;
-      } else {
+      const tiff = exifTiff(chunk.data);
+      const safe = safeExif(tiff);
+      if (safe && sameBytes(safe, tiff)) {
         parts.push(chunk.whole);
+      } else {
+        if (safe) parts.push(webpChunk('EXIF', safe));
+        else clearFlags |= WEBP_FLAGS.EXIF!;
+        changed = true;
       }
       continue;
     }
@@ -511,24 +521,126 @@ function readExif(bytes: Uint8Array) {
   };
 }
 
+/** 위치만 지울 때 남기는 EXIF 칸 (허용 목록). 자유 글(설명·메모), 제조사 메모, GPS, 썸네일은 옮기지 않는다 */
+const KEEP_IFD0 = new Set([
+  0x010f, // 제조사
+  0x0110, // 모델
+  0x0112, // 방향
+  0x011a, // 가로 해상도
+  0x011b, // 세로 해상도
+  0x0128, // 해상도 단위
+  0x0132, // 고친 날짜
+]);
+const KEEP_EXIF = new Set([
+  0x829a, // 노출 시간
+  0x829d, // 조리개 값
+  0x8822, // 노출 프로그램
+  0x8827, // ISO
+  0x9000, // EXIF 판
+  0x9003, // 찍은 날짜
+  0x9004, // 디지털로 만든 날짜
+  0x9010, // 시간대
+  0x9011,
+  0x9012,
+  0x9201, // 셔터 속도
+  0x9202, // 조리개
+  0x9204, // 노출 보정
+  0x9207, // 측광 방식
+  0x9209, // 플래시
+  0x920a, // 초점 거리
+  0x9290, // 1초 아래 시각
+  0x9291,
+  0x9292,
+  0xa001, // 색 공간
+  0xa002, // 가로 화소
+  0xa003, // 세로 화소
+  0xa402, // 노출 방식
+  0xa403, // 화이트 밸런스
+  0xa405, // 35mm 환산 초점 거리
+  0xa406, // 장면 종류
+  0xa433, // 렌즈 제조사
+  0xa434, // 렌즈 모델
+]);
+
+interface Field {
+  tag: number;
+  type: number;
+  count: number;
+  value: Uint8Array;
+}
+
 /**
- * GPS 칸의 값과 항목을 모두 0으로 덮고 항목 수를 0으로 만든다 (bytes를 바로 고친다).
- * 칸 자리는 그대로 두므로 다른 값의 위치가 바뀌지 않는다. 지운 것이 있으면 true
+ * 위치가 적힐 수 없는 칸만 골라 EXIF를 새로 만든다 (바이트 순서는 원본 그대로).
+ * 위치는 GPS 칸뿐 아니라 설명·메모 같은 자유 글에도 적힐 수 있어, 지울 칸이 아니라 남길 칸을 정한다.
+ * 읽지 못하면 undefined (그 EXIF는 통째로 뺀다)
  */
-function clearGps(bytes: Uint8Array): boolean {
+function safeExif(bytes: Uint8Array): Uint8Array | undefined {
   const tiff = Tiff.open(bytes);
   const ifd0 = tiff?.ifd(tiff.u32(4));
-  if (!tiff || !ifd0) return false;
-  const offset = tiff.pointer(find(ifd0, TAG.gps));
-  const entries = offset ? tiff.ifd(offset) : undefined;
-  if (!offset || !entries || entries.length === 0) return false;
-  for (const entry of entries) {
-    if (entry.size > 4 && tiff.fits(entry)) bytes.fill(0, entry.value, entry.value + entry.size);
-  }
-  // 항목 수, 항목들, 다음 목록 위치(4바이트)까지 0으로
-  bytes.fill(0, offset, Math.min(bytes.length, offset + 2 + entries.length * 12 + 4));
-  return true;
+  if (!tiff || !ifd0) return undefined;
+  const pick = (entries: Entry[] | undefined, keep: Set<number>): Field[] =>
+    (entries ?? [])
+      .filter((entry) => keep.has(entry.tag) && tiff.fits(entry))
+      .map((entry) => ({
+        tag: entry.tag,
+        type: entry.type,
+        count: entry.count,
+        value: bytes.subarray(entry.value, entry.value + entry.size),
+      }));
+  const exifOffset = tiff.pointer(find(ifd0, TAG.exif));
+  const main = pick(ifd0, KEEP_IFD0);
+  const exif = pick(exifOffset ? tiff.ifd(exifOffset) : undefined, KEEP_EXIF);
+  return writeTiff(tiff.little, main, exif);
 }
+
+/** IFD0(+EXIF 칸)만 있는 TIFF. 값이 4바이트보다 크면 칸 뒤에 짝수 자리로 둔다 */
+function writeTiff(little: boolean, main: Field[], exif: Field[]): Uint8Array {
+  const pointer = exif.length > 0 ? { tag: TAG.exif, type: 4, count: 1 } : undefined;
+  const ifdSize = (count: number) => 2 + count * 12 + 4;
+  const dataSize = (fields: Field[]) =>
+    fields.reduce(
+      (sum, field) => sum + (field.value.length > 4 ? (field.value.length + 1) & ~1 : 0),
+      0,
+    );
+  const mainCount = main.length + (pointer ? 1 : 0);
+  const exifStart = 8 + ifdSize(mainCount) + dataSize(main);
+  const total = exifStart + (exif.length > 0 ? ifdSize(exif.length) + dataSize(exif) : 0);
+  const out = new Uint8Array(total);
+  const view = new DataView(out.buffer);
+  out.set(ascii(little ? 'II*\0' : 'MM\0*'));
+  view.setUint32(4, 8, little);
+
+  const writeIfd = (
+    at: number,
+    fields: (Field | { tag: number; type: number; count: number; pointTo: number })[],
+  ) => {
+    fields.sort((a, b) => a.tag - b.tag);
+    view.setUint16(at, fields.length, little);
+    let data = at + ifdSize(fields.length);
+    fields.forEach((field, index) => {
+      const entry = at + 2 + index * 12;
+      view.setUint16(entry, field.tag, little);
+      view.setUint16(entry + 2, field.type, little);
+      view.setUint32(entry + 4, field.count, little);
+      if ('pointTo' in field) {
+        view.setUint32(entry + 8, field.pointTo, little);
+      } else if (field.value.length <= 4) {
+        out.set(field.value, entry + 8);
+      } else {
+        view.setUint32(entry + 8, data, little);
+        out.set(field.value, data);
+        data += (field.value.length + 1) & ~1;
+      }
+    });
+    view.setUint32(at + 2 + fields.length * 12, 0, little);
+  };
+  writeIfd(8, pointer ? [...main, { ...pointer, pointTo: exifStart }] : [...main]);
+  if (exif.length > 0) writeIfd(exifStart, [...exif]);
+  return out;
+}
+
+const sameBytes = (a: Uint8Array, b: Uint8Array) =>
+  a.length === b.length && a.every((value, index) => value === b[index]);
 
 /** 방향(Orientation) 한 칸만 있는 EXIF (빅 엔디언) */
 function orientationTiff(orientation: number): Uint8Array {
