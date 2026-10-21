@@ -265,15 +265,19 @@ export interface Matte {
   mask: Mask;
 }
 
-/** 배경을 나눌 영역: 칸을 넉넉히 둘러싼 네모 (원본 픽셀, 사진 안으로 자름) */
+/**
+ * 배경을 나눌 영역: 칸을 넉넉히 둘러싼 네모 (원본 픽셀, 사진 안으로 자름).
+ * 칸이 사진 밖으로 다 나가도 사진 가장자리의 한 줄은 남겨, 늘 사진 안의 영역이 된다
+ */
 export function matteRegion(placement: Placement, width: number, height: number) {
   const points = corners(placement);
   const margin = placement.height * 0.15;
-  const x0 = Math.max(0, Math.floor(Math.min(...points.map((p) => p.x)) - margin));
-  const y0 = Math.max(0, Math.floor(Math.min(...points.map((p) => p.y)) - margin));
-  const x1 = Math.min(width, Math.ceil(Math.max(...points.map((p) => p.x)) + margin));
-  const y1 = Math.min(height, Math.ceil(Math.max(...points.map((p) => p.y)) + margin));
-  return { x: x0, y: y0, width: Math.max(1, x1 - x0), height: Math.max(1, y1 - y0) };
+  const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
+  const x0 = clamp(Math.floor(Math.min(...points.map((p) => p.x)) - margin), 0, width - 1);
+  const y0 = clamp(Math.floor(Math.min(...points.map((p) => p.y)) - margin), 0, height - 1);
+  const x1 = clamp(Math.ceil(Math.max(...points.map((p) => p.x)) + margin), x0 + 1, width);
+  const y1 = clamp(Math.ceil(Math.max(...points.map((p) => p.y)) + margin), y0 + 1, height);
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
 }
 
 /** 칸이 나눈 영역 안에 있는지 (사진 밖은 어차피 배경색이라 따지지 않는다). 벗어나면 다시 나눈다 */
