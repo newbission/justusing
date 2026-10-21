@@ -380,7 +380,7 @@ Co-Authored-By: ...
         엔진·모델(16.8MB)은 받기 전에 묻고 보관한다. 엔진에 든 사용 통계 전송은 워커의 fetch를 없애 막는다.
         견본은 이미지 생성 AI로 만든 가상 인물이다 (`scripts/samples/face.jpg`)
   - [x] 사진 위치 정보 지우기 (`/image/remove-location/`, 2026-10-20): JPG·PNG·WebP를 다시 저장하지 않고 정보 조각만
-        고친다(`src/lib/image/photo-metadata.ts`). 모두 지우기(방향만 새로 적음)·위치만 지우기(GPS 칸을 0으로 덮고 XMP·IPTC 뺌).
+        고친다(`src/lib/image/photo-metadata.ts`). 모두 지우기(방향만 새로 적음)·위치만 지우기(EXIF는 날짜·기기·촬영 설정 칸만 골라 새로 만들고 나머지 조각은 뺌).
         JPEG 끝 뒤에 덧붙은 자료(움직이는 사진 영상)는 두 방식 모두 뺀다. 지운 결과를 다시 읽어 위치가 남았으면 실패로 알린다
   - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기), 배경 제거(누끼, 모델 데이터 크기를
         밝히고 캐시), 자르기·회전 등
