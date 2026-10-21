@@ -53,6 +53,9 @@ TEXT = {
         'recognized': '글자 인식 뒤 (찾은 글자 자리)',
         'fromImage': {'a4': 'A4 · 여백 있음', 'fit': '이미지에 맞춤 · 여백 없음'},
         'metaHead': ('항목', '원본', '모두 지운 뒤'),
+        'located': '예시-위치사진.jpg',
+        'exifHead': ('항목', '원본', '모든 정보 지우기', '위치만 지우기'),
+        'exifFields': {'gps': '위치 (위도, 경도)', 'date': '찍은 날짜', 'device': '기기'},
         'metaFields': [
             ('title', '제목'),
             ('author', '작성자'),
@@ -88,6 +91,9 @@ TEXT = {
         'recognized': 'After OCR (where text was found)',
         'fromImage': {'a4': 'A4 · Small margin', 'fit': 'Fit to image · No margin'},
         'metaHead': ('Field', 'Original', 'After removing all'),
+        'located': 'sample-photo-with-location.jpg',
+        'exifHead': ('Field', 'Original', 'Remove all info', 'Location only'),
+        'exifFields': {'gps': 'Location (lat, long)', 'date': 'Date taken', 'device': 'Device'},
         'metaFields': [
             ('title', 'Title'),
             ('author', 'Author'),
@@ -378,6 +384,55 @@ def pdf_metadata(t, cache, samples, fonts):
     return 'pdf-metadata', 'before-after.png', card
 
 
+def exif_summary(path: str) -> dict:
+    """사진 파일 안의 위치·찍은 날짜·기기 (Pillow로 직접 읽는다)"""
+    exif = Image.open(path).getexif()
+    gps = exif.get_ifd(0x8825)
+    out = {}
+    if 2 in gps and 4 in gps:
+        lat = sum(float(v) / 60 ** i for i, v in enumerate(gps[2])) * (-1 if gps.get(1) == 'S' else 1)
+        lon = sum(float(v) / 60 ** i for i, v in enumerate(gps[4])) * (-1 if gps.get(3) == 'W' else 1)
+        out['gps'] = f'{lat:.4f}, {lon:.4f}'
+    date = exif.get_ifd(0x8769).get(0x9003)
+    if date:
+        out['date'] = f'{date[:4]}-{date[5:7]}-{date[8:10]} {date[11:16]}'
+    device = ' '.join(v for v in (exif.get(0x010F), exif.get(0x0110)) if v)
+    if device:
+        out['device'] = device
+    return out
+
+
+def photo_location(t, cache, samples, fonts):
+    # 견본과 두 방식으로 지운 결과의 촬영 정보를 표로
+    columns = [
+        exif_summary(os.path.join(samples, t['located'])),
+        exif_summary(os.path.join(cache, 'remove-location-all.jpg')),
+        exif_summary(os.path.join(cache, 'remove-location-location.jpg')),
+    ]
+    label_font, _ = fonts
+    cell = ImageFont.truetype(REGULAR, 16)
+    rows = [t['exifHead']] + [
+        (name, *(column.get(key) or '—' for column in columns)) for key, name in t['exifFields'].items()
+    ]
+    widths = [max(cell.getlength(row[col]) for row in rows) + 28 for col in range(4)]
+    row_h = 36
+    width = round(PAD * 2 + sum(widths))
+    height = PAD * 2 + row_h * len(rows)
+    card = Image.new('RGB', (width, height), BG)
+    draw = ImageDraw.Draw(card)
+    for r, row in enumerate(rows):
+        y = PAD + r * row_h
+        if r:
+            draw.line([PAD, y, width - PAD, y], fill=LINE)
+        x = PAD
+        for c, text in enumerate(row):
+            font = label_font if r == 0 else cell
+            color = MUTED if r == 0 or text == '—' else INK
+            draw.text((x + 4, y + row_h / 2), text, font=font, fill=color, anchor='lm')
+            x += widths[c]
+    return 'photo-location', 'before-after.png', card
+
+
 def fill_pdf_form(t, cache, samples, fonts):
     path = os.path.join(cache, 'fill-form.pdf')
     image = render(path, 0, 96, page_rect(path, 0, 0.08, 0.06, 0.92, 0.428))
@@ -480,6 +535,7 @@ GUIDES = {
     'compress-image': compress_image,
     'resize-image': resize_image,
     'convert-image': convert_image,
+    'photo-location': photo_location,
 }
 
 
