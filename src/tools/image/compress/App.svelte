@@ -120,6 +120,14 @@
     working = false;
   }
 
+  /** ZIP에 실제로 들어가는 장수 (실패한 사진은 빠진다) */
+  const zipCount = $derived(
+    batch.ready.filter((item) => {
+      const state = outcomeOf(item)?.state;
+      return state === 'done' || state === 'kept';
+    }).length,
+  );
+
   async function downloadAll() {
     const files = await Promise.all(
       batch.ready.map(async (item) => {
@@ -180,7 +188,7 @@
         >
       {:else if summary && summary.shrunk.length > 0}
         <button type="button" class="btn primary" onclick={downloadAll}
-          >{t.downloadAll(batch.ready.length)}</button
+          >{t.downloadAll(zipCount)}</button
         >
       {:else}
         <button
