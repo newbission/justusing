@@ -129,8 +129,9 @@ function cuts(job: StitchJob, bitmaps: ImageBitmap[]): number[] {
   let y = 0;
   while (height - y > chunk) {
     const target = y + chunk;
-    const search = Math.max(1, Math.floor(chunk / 4));
-    y = blankRow(job, bitmaps, target - search, target) ?? target;
+    // 지금 장의 첫 줄(y)은 찾지 않는다. 그 줄에서 자르면 앞으로 나아가지 못한다
+    const from = Math.max(y + 1, target - Math.floor(chunk / 4));
+    y = (from < target ? blankRow(job, bitmaps, from, target) : undefined) ?? target;
     starts.push(y);
   }
   return starts;
