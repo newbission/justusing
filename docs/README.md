@@ -89,4 +89,5 @@ PDF
 | [image-resize](./features/image-resize)                   | 크기 조절        | live       |
 | [image-convert](./features/image-convert)                 | 형식 변환        | live       |
 | [image-id-photo](./features/image-id-photo)               | 증명사진         | live       |
-| [image-remove-location](./features/image-remove-location) | 위치 정보 지우기 | PR 진행 중 |
+| [image-remove-location](./features/image-remove-location) | 위치 정보 지우기 | live       |
+| [image-stitch](./features/image-stitch)                   | 이어 붙이기      | PR 진행 중 |

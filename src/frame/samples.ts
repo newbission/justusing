@@ -20,7 +20,10 @@ type SampleKey =
   | 'photo'
   | 'face'
   | 'located'
-  | 'screen';
+  | 'screen'
+  | 'chat1'
+  | 'chat2'
+  | 'chat3';
 
 /** 언어별 파일 이름 (make_samples.py의 TEXT와 같게) */
 const NAMES: Record<Locale, Record<SampleKey, string>> = {
@@ -37,6 +40,9 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     face: '예시-증명사진.jpg',
     located: '예시-위치사진.jpg',
     screen: '예시-화면캡처.png',
+    chat1: '예시-대화캡처1.png',
+    chat2: '예시-대화캡처2.png',
+    chat3: '예시-대화캡처3.png',
   },
   en: {
     report: 'sample-report.pdf',
@@ -51,6 +57,9 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     face: 'sample-id-photo.jpg',
     located: 'sample-photo-with-location.jpg',
     screen: 'sample-screenshot.png',
+    chat1: 'sample-chat-1.png',
+    chat2: 'sample-chat-2.png',
+    chat3: 'sample-chat-3.png',
   },
 };
 
@@ -85,6 +94,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/convert': ['photo', 'screen'],
   'image/id-photo': ['face'],
   'image/remove-location': ['located', 'screen'],
+  'image/stitch': ['chat1', 'chat2', 'chat3'],
 };
 
 const TYPES: Record<string, string> = {

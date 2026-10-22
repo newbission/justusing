@@ -116,6 +116,9 @@ export function setupFrameTour() {
   /** 견본을 받는 중. 그사이 사용자가 파일을 넣으면 늦게 온 견본을 버린다 */
   let loading = false;
   let run = 0;
+  /** 견본을 받기 시작했는지. 그 전에 사용자가 파일을 넣으면 견본을 받지 않는다 */
+  let started = false;
+  let skipped = false;
   let marked: HTMLElement[] = [];
 
   // 누를 곳 둘레를 빼고 어둡게 덮는 막 (밝은 구멍의 그림자가 나머지를 덮는다). 누르는 것은 막지 않는다
@@ -237,6 +240,7 @@ export function setupFrameTour() {
 
   async function start() {
     if (loading) return;
+    started = true;
     loading = true;
     const current = ++run;
     let files: File[];
@@ -286,6 +290,8 @@ export function setupFrameTour() {
 
   // 견본을 받는 사이 사용자가 파일을 넣으면(놓기·고르기) 늦게 온 견본을 버린다
   const cancelLoading = () => {
+    // 창이 견본을 받기 시작하기 전에 넣었으면 처음부터 받지 않는다
+    if (!started) skipped = true;
     if (!loading) return;
     loading = false;
     run++;
@@ -305,6 +311,10 @@ export function setupFrameTour() {
   });
 
   // 도구 화면이 파일을 받을 준비를 마친 뒤 시작한다 (도구는 이 스크립트 다음에 붙는다)
-  if (document.readyState === 'complete') requestAnimationFrame(() => void start());
-  else addEventListener('load', () => requestAnimationFrame(() => void start()), { once: true });
+  const begin = () =>
+    requestAnimationFrame(() => {
+      if (!skipped) void start();
+    });
+  if (document.readyState === 'complete') begin();
+  else addEventListener('load', begin, { once: true });
 }

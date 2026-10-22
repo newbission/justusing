@@ -18,6 +18,6 @@ export default defineTool({
         'Change the width and height of images by percentage or in pixels. Resize many at once and download them as a ZIP. Your images are never uploaded.',
     },
   },
-  related: ['image/compress', 'pdf/from-image'],
+  related: ['image/compress', 'image/stitch', 'pdf/from-image'],
   flow: { from: { kind: 'jpg' }, to: { kind: 'jpg', small: true } },
 });

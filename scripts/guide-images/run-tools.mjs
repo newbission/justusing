@@ -28,6 +28,9 @@ const SAMPLES = {
     photo: '예시-사진.jpg',
     located: '예시-위치사진.jpg',
     screen: '예시-화면캡처.png',
+    chat1: '예시-대화캡처1.png',
+    chat2: '예시-대화캡처2.png',
+    chat3: '예시-대화캡처3.png',
   },
   en: {
     report: 'sample-report.pdf',
@@ -40,6 +43,9 @@ const SAMPLES = {
     photo: 'sample-photo.jpg',
     located: 'sample-photo-with-location.jpg',
     screen: 'sample-screenshot.png',
+    chat1: 'sample-chat-1.png',
+    chat2: 'sample-chat-2.png',
+    chat3: 'sample-chat-3.png',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -382,6 +388,15 @@ const JOBS = {
       await frame.getByRole('button', { name: '정보 지우기' }).click();
       await save('다운로드', `${out}remove-location-${mode}.jpg`);
     }
+  },
+
+  // 이어 붙이기: 대화 캡처 세 장을 겹친 부분을 지우고 PNG 한 장으로
+  async stitch({ sample, out }) {
+    await open('/image/stitch/', [sample('chat1'), sample('chat2'), sample('chat3')]);
+    await frame.getByText('겹친 부분을 찾았습니다').nth(1).waitFor();
+    await frame.getByText('PNG', { exact: true }).click();
+    await frame.getByRole('button', { name: '이어 붙이기' }).click();
+    await save('다운로드', `${out}stitch.png`);
   },
 };
 

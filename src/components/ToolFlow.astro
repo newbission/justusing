@@ -138,6 +138,13 @@ function marks(mark: FlowMark): {
         accent: ['M24 26v10', 'M21 33l3 3 3-3', 'M10 36V26', 'M7 29l3-3 3 3'],
         texts: [],
       };
+    case 'stitch':
+      return {
+        lines: ['M6 9h16', 'M6 14h20', 'M6 28h18', 'M6 33h14'],
+        fills: [],
+        accent: ['M2 21h30'],
+        texts: [],
+      };
     default:
       return {
         lines: ['M6 12h16', 'M6 17h20', 'M6 22h14', 'M6 27h18'],

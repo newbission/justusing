@@ -39,17 +39,18 @@ export const CATEGORIES = {
       ko: {
         name: '이미지',
         description:
-          '이미지를 업로드 없이 줄이고, 크기를 바꾸고, 변환하고, 증명사진으로 맞추고, 위치 정보를 지우는 도구',
+          '이미지를 업로드 없이 줄이고, 크기를 바꾸고, 변환하고, 이어 붙이고, 증명사진으로 맞추고, 위치 정보를 지우는 도구',
       },
       en: {
         name: 'Image',
         description:
-          'Compress, resize, convert, crop to ID photo size and remove location data without uploading',
+          'Compress, resize, convert, stitch, crop to ID photo size and remove location data without uploading',
       },
     },
     sections: {
       optimize: { ko: '용량·크기', en: 'Size' },
       convert: { ko: '변환', en: 'Convert' },
+      edit: { ko: '편집', en: 'Edit' },
       photo: { ko: '사진 다듬기', en: 'Photo' },
     },
   },

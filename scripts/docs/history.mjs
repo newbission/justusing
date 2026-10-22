@@ -50,7 +50,8 @@ const DOCS = {
   'features/image-resize': { scopes: ['image-resize'], prs: [36] },
   'features/image-convert': { scopes: ['image-convert'], prs: [44] },
   'features/image-id-photo': { scopes: ['image-id-photo'], prs: [] },
-  'features/image-remove-location': { scopes: ['image-remove-location'], prs: [] },
+  'features/image-remove-location': { scopes: ['image-remove-location'], prs: [116] },
+  'features/image-stitch': { scopes: ['image-stitch'], prs: [] },
   // 기반 (여러 도구·페이지가 같이 쓰는 것)
   'foundations/frame-isolation': { scopes: ['frame'], prs: [40] },
   'foundations/pdf-common': { scopes: ['pdf'], prs: [76, 77] },

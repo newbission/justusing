@@ -68,7 +68,9 @@ export type FlowMark =
   | 'redact'
   | 'edit'
   | 'form'
-  | 'order';
+  | 'order'
+  /** 이은 자리 (이어 붙이기) */
+  | 'stitch';
 
 export function defineTool(meta: ToolMeta): ToolMeta {
   return meta;
