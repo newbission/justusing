@@ -95,20 +95,27 @@ function drawRows(
   }
 }
 
-/** [from, to) 줄 가운데 아래에서부터 처음 만나는 한 색 줄. 없으면 undefined */
+/**
+ * [from, to) 줄 가운데 아래에서부터 처음 만나는 한 색 줄. 없으면 undefined.
+ * 줄 묶음씩 아래에서부터 그려 본다 (넓은 결과에서 탐색 canvas가 브라우저 면적 한계를 넘지 않게)
+ */
 function blankRow(job: StitchJob, bitmaps: ImageBitmap[], from: number, to: number) {
   const { width } = job.layout;
-  const rows = to - from;
-  const ctx = context(new OffscreenCanvas(width, rows));
-  drawRows(ctx, job, bitmaps, from, rows);
-  const data = ctx.getImageData(0, 0, width, rows).data;
-  for (let r = rows - 1; r >= 0; r--) {
-    const start = r * width * 4;
-    let blank = true;
-    for (let i = start + 4; i < start + width * 4 && blank; i++) {
-      if (Math.abs(data[i]! - data[start + (i % 4)]!) > BLANK_TOLERANCE) blank = false;
+  const strip = stripRows(width);
+  const ctx = context(new OffscreenCanvas(width, Math.min(strip, to - from)));
+  for (let end = to; end > from; end -= strip) {
+    const start = Math.max(from, end - strip);
+    const rows = end - start;
+    drawRows(ctx, job, bitmaps, start, rows);
+    const data = ctx.getImageData(0, 0, width, rows).data;
+    for (let r = rows - 1; r >= 0; r--) {
+      const at = r * width * 4;
+      let blank = true;
+      for (let i = at + 4; i < at + width * 4 && blank; i++) {
+        if (Math.abs(data[i]! - data[at + (i % 4)]!) > BLANK_TOLERANCE) blank = false;
+      }
+      if (blank) return start + r;
     }
-    if (blank) return from + r;
   }
   return undefined;
 }
