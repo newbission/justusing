@@ -9,6 +9,7 @@
  *
  * 구조를 읽지 못하면 undefined (원본을 고치지 않는다). 워커(metadata.worker.ts)에서 돈다.
  */
+import { crc32 } from '../crc32';
 import { rewriteJpeg, stripJpegMetadata, type SegmentAction } from './jpeg-metadata';
 
 export type CleanMode = 'location' | 'all';
@@ -709,20 +710,4 @@ function concat(parts: Uint8Array[]): Uint8Array {
     at += part.length;
   }
   return out;
-}
-
-let crcTable: Uint32Array | undefined;
-
-function crc32(bytes: Uint8Array): number {
-  if (!crcTable) {
-    crcTable = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) {
-      let c = n;
-      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-      crcTable[n] = c >>> 0;
-    }
-  }
-  let crc = 0xffffffff;
-  for (const byte of bytes) crc = crcTable[(crc ^ byte) & 0xff]! ^ (crc >>> 8);
-  return (crc ^ 0xffffffff) >>> 0;
 }
