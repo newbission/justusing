@@ -68,6 +68,9 @@ TEXT = {
         'extracted': '꺼낸 사진 (원본)',
         'pageImage': 'PDF를 이미지로 (150 DPI)',
         'formats': {'png': 'PNG (원본)', 'jpg': 'JPG', 'webp': 'WebP'},
+        'scrolls': ['예시-대화캡처1.png', '예시-대화캡처2.png', '예시-대화캡처3.png'],
+        'capture': lambda n: f'캡처 {n}',
+        'stitched': '이은 결과',
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -106,6 +109,9 @@ TEXT = {
         'extracted': 'Extracted photo (original)',
         'pageImage': 'PDF to image (150 DPI)',
         'formats': {'png': 'PNG (original)', 'jpg': 'JPG', 'webp': 'WebP'},
+        'scrolls': ['sample-chat-1.png', 'sample-chat-2.png', 'sample-chat-3.png'],
+        'capture': lambda n: f'Screenshot {n}',
+        'stitched': 'Stitched',
     },
 }
 
@@ -515,6 +521,18 @@ def convert_image(t, cache, samples, fonts):
 
 CONVERT_CROP = (52, 160, 116, 206)
 
+
+def stitch_screenshots(t, cache, samples, fonts):
+    # 캡처 세 장과 이은 결과를 같은 비율로 줄여 나란히 둔다 (겹친 부분과 막대가 빠져 세 장 합보다 짧다)
+    scale = 300 / 1334
+    paths = [(os.path.join(samples, name), t['capture'](n + 1)) for n, name in enumerate(t['scrolls'])]
+    paths.append((os.path.join(cache, 'stitch.png'), t['stitched']))
+    items = []
+    for path, label in paths:
+        image = Image.open(path).convert('RGB')
+        items.append((fit_width(image, round(image.width * scale), Image.LANCZOS), label, f'{image.width}×{image.height}'))
+    return 'stitch-screenshots', 'stitched.png', tiles(items, *fonts, gap=20)
+
 # 글 주소 → 그림 함수 (글을 골라 다시 그릴 때 다른 글의 재료가 없어도 되게 이름으로 고른다)
 GUIDES = {
     'compress-pdf': compress_pdf,
@@ -536,6 +554,7 @@ GUIDES = {
     'resize-image': resize_image,
     'convert-image': convert_image,
     'photo-location': photo_location,
+    'stitch-screenshots': stitch_screenshots,
 }
 
 
