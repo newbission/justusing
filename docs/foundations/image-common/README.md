@@ -1,9 +1,10 @@
 # 이미지 도구 공통 (`src/lib/image/`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-20
+쓴 날 2026-10-16 · 고친 날 2026-10-22
 
 - 쓰는 곳: [이미지 압축](../../features/image-compress/README.md), [크기 조절](../../features/image-resize/README.md),
-  [형식 변환](../../features/image-convert/README.md), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
+  [형식 변환](../../features/image-convert/README.md), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만),
+  [이어 붙이기](../../features/image-stitch/README.md)(목록 상태 `ImageBatch`만). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
   (이미지를 PDF로·이미지 넣기·서명 넣기)도 쓴다
 - 상태: dev·main 반영 (PR #36, #44, 2026-10-15)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../frame-isolation/README.md), [PDF 공통](../pdf-common/README.md)
@@ -43,6 +44,11 @@
 | `src/lib/image/jpeg-metadata.ts`             | `rewriteJpeg()`: JPEG 정보 조각마다 두기·빼기·바꾸기, `stripJpegMetadata()`: 허용 목록으로 빼기 (다시 압축하지 않음) |
 | `src/lib/image/photo-metadata.ts`            | `readPhotoInfo()`·`cleanPhoto()`: JPG·PNG·WebP의 촬영 정보 읽기·지우기 (위치 정보 지우기)                            |
 | `src/lib/image/metadata.ts` + `.worker.ts`   | 위 둘을 워커에서 돌린다                                                                                              |
+| `src/lib/image/stitch-layout.ts`             | `layoutStitch()`: 여러 장을 한 장으로 이을 때의 배치 (이어 붙이기)                                                   |
+| `src/lib/image/stitch-detect.ts`             | `detectSeam()`: 화면 캡처의 고정 막대·겹친 부분 찾기                                                                 |
+| `src/lib/image/stitch.ts` + `.worker.ts`     | `findSeam()`·`stitchImages()`: 위 둘을 워커에서, 나누기·저장까지                                                     |
+| `src/lib/image/png-stream.ts`                | `PngStream`: 줄 묶음씩 받아 PNG로 저장. canvas 크기 한계를 넘는 결과에 쓴다                                          |
+| `src/lib/crc32.ts`                           | PNG 조각 CRC (사진 정보·사진 꺼내기·`PngStream`)                                                                     |
 | `src/lib/zip.ts` + `zip.worker.ts`           | `makeZip()`: 여러 결과를 ZIP 하나로 (워커)                                                                           |
 | `src/frame/messages.ts`의 `images`           | 목록 화면 공통 문구 (한·영)                                                                                          |
 
@@ -105,6 +111,7 @@
 - [x] 모든 형식 받기 설정(`anyFormat`), 고르기 안내·못 읽은 안내 바꾸기(`hint`·`broken`)
 - [x] 원본과 결과 비교 화면 (`result`, `CompareSlider`)
 - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기)
+- [x] 이어 붙이기 (2026-10-22, 긴 PNG 저장 `PngStream`)
 - [ ] 배경 제거, 자르기·회전 같은 다음 이미지 도구 (CLAUDE.md 9단계)
 - [ ] 처리 중 그만두기(`signal`)를 도구 화면에서 쓰기 — 지금은 처리 중에 목록을 잠근다
 
