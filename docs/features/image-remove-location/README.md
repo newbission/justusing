@@ -1,9 +1,9 @@
 # 사진 위치 정보 지우기 (`image/remove-location`)
 
-쓴 날 2026-10-20 · 고친 날 2026-10-20
+쓴 날 2026-10-20 · 고친 날 2026-10-22
 
 - 주소: `/image/remove-location/` (영어 `/en/image/remove-location/`)
-- 상태: PR 진행 중 (2026-10-20)
+- 상태: live (2026-10-20 배포, PR #116·#117)
 - 관련 문서: [히스토리](./history.md), [이미지 공통](../../foundations/image-common/README.md),
   [PDF 문서 정보](../pdf-metadata/README.md)(PDF 안 JPEG의 정보 지우기를 같이 쓴다)
 
