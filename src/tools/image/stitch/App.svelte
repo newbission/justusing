@@ -121,13 +121,7 @@
     for (const item of ready) {
       if (requested.has(item.id)) continue;
       requested.add(item.id);
-      const scale = Math.min(1, PREVIEW_SIDE / Math.min(item.width, item.height));
-      createImageBitmap(item.file, {
-        imageOrientation: 'from-image',
-        resizeWidth: Math.max(1, Math.round(item.width * scale)),
-        resizeHeight: Math.max(1, Math.round(item.height * scale)),
-        resizeQuality: 'medium',
-      }).then(
+      previewOf(item).then(
         (bitmap) => {
           if (batch.items.includes(item)) previews[item.id] = bitmap;
           else bitmap.close();
@@ -136,6 +130,24 @@
       );
     }
   });
+
+  /**
+   * 바로 세운 뒤 줄인 사진. 바로 세우기와 줄이기를 한 번에 시키면 브라우저에 따라 줄이는 크기를 세우기 전
+   * 가로·세로로 보고 찌그러뜨릴 수 있어 두 번에 나눈다
+   */
+  async function previewOf(item: BatchItem): Promise<ImageBitmap> {
+    const upright = await createImageBitmap(item.file, { imageOrientation: 'from-image' });
+    try {
+      const scale = Math.min(1, PREVIEW_SIDE / Math.min(upright.width, upright.height));
+      return await createImageBitmap(upright, {
+        resizeWidth: Math.max(1, Math.round(upright.width * scale)),
+        resizeHeight: Math.max(1, Math.round(upright.height * scale)),
+        resizeQuality: 'medium',
+      });
+    } finally {
+      upright.close();
+    }
+  }
 
   const positive = (value: number | null, max: number, min = 1) =>
     value !== null && Number.isFinite(value) && value >= min && value <= max
