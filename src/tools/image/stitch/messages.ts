@@ -51,6 +51,8 @@ const ko = {
   tooLong: (format: string, max: number) =>
     `결과가 ${format} 한 장에 담기에 너무 깁니다 (${max.toLocaleString()} px까지). PNG로 저장하거나 나누어 저장하세요.`,
   tooBig: '결과가 너무 큽니다. 폭을 줄이거나 나누어 저장하세요.',
+  tooWide: (max: number, vertical: boolean) =>
+    `결과 폭이 너무 넓습니다 (${max.toLocaleString()} px까지). ${vertical ? '맞출 폭' : '맞출 높이나 이미지 수'}를 줄여 주세요.`,
   ready: (width: number, height: number) =>
     `결과 ${width.toLocaleString()} × ${height.toLocaleString()} px`,
   working: '잇는 중…',
@@ -130,6 +132,8 @@ const en: typeof ko = {
   tooLong: (format: string, max: number) =>
     `The result is too long for one ${format} (up to ${max.toLocaleString()} px). Save as PNG or split it.`,
   tooBig: 'The result is too large. Use a smaller width or split it.',
+  tooWide: (max: number, vertical: boolean) =>
+    `The result is too wide (up to ${max.toLocaleString()} px). Use a smaller ${vertical ? 'width' : 'height or fewer images'}.`,
   ready: (width: number, height: number) =>
     `Result ${width.toLocaleString()} × ${height.toLocaleString()} px`,
   working: 'Stitching…',
