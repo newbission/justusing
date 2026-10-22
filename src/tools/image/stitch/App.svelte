@@ -55,6 +55,11 @@
   };
   /** PNG도 이보다 크면 메모리가 모자랄 수 있어 받지 않는다 */
   const MAX_PIXELS = 400_000_000;
+  /**
+   * 결과 폭. 줄 묶음씩 그려도 canvas 폭은 결과 전체 폭이라 브라우저의 canvas 한 변 한계에 묶인다
+   * (PNG·나누기로도 피할 수 없다). 여러 브라우저가 확실히 그리는 값으로 둔다
+   */
+  const MAX_WIDTH = 16_384;
   /** 미리보기용으로 줄인 사진의 짧은 변 */
   const PREVIEW_SIDE = 600;
 
@@ -193,6 +198,7 @@
     if (vertical && split && format !== 'pdf' && splitValue === undefined) return t.invalidSplit;
     if (detecting) return t.detecting;
     if (!layout) return t.badCut;
+    if (layout.width > MAX_WIDTH) return t.tooWide(MAX_WIDTH, vertical);
     const tall = chunk ?? layout.height;
     if (layout.width > MAX_SIDE[format] || tall > MAX_SIDE[format]) {
       return t.tooLong(t.formats[format], MAX_SIDE[format]);
