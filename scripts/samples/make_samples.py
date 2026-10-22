@@ -61,6 +61,7 @@ TEXT = {
         'face': '예시-증명사진.jpg',
         'located': '예시-위치사진.jpg',
         'screen': '예시-화면캡처.png',
+        'scrolls': ['예시-대화캡처1.png', '예시-대화캡처2.png', '예시-대화캡처3.png'],
         'sample': '예시 파일 · 내용은 모두 지어낸 것입니다',
         'company': '예시상사',
         'title': '2026년 3분기 업무 보고서',
@@ -133,6 +134,32 @@ TEXT = {
         ],
         'screenTitle': '설정',
         'screenRows': ['알림 받기', '어두운 화면', '자동 저장', '위치 정보 사용'],
+        'chatTitle': '기획팀 (예시)',
+        'chatInput': '메시지 입력',
+        'chat': [
+            (0, '내일 회의 자료 다 됐나요?'),
+            (1, '네, 오늘 저녁까지 올릴게요.'),
+            (0, '좋아요. 3분기 숫자는 지난주 것으로 맞췄죠?'),
+            (1, '네, 매출표랑 그래프 모두 새로 그렸어요.'),
+            (0, '고객 의견 정리한 부분도 넣어 주세요.'),
+            (1, '알겠습니다. 한 쪽으로 요약해서 넣을게요.'),
+            (0, '회의실은 3층 큰 방으로 잡았어요.'),
+            (1, '몇 시부터인가요?'),
+            (0, '오전 10시요. 30분 전에 와서 화면 연결해 봐요.'),
+            (1, '네, 노트북 충전기도 챙길게요.'),
+            (0, '발표는 홍길동 님이 먼저 하고'),
+            (0, '질문은 마지막에 한꺼번에 받죠.'),
+            (1, '좋습니다. 질문 예상 목록도 만들어 둘까요?'),
+            (0, '네, 그러면 훨씬 편하겠어요.'),
+            (1, '그럼 다섯 개 정도 뽑아 둘게요.'),
+            (0, '자료 올리면 여기 알려 주세요.'),
+            (1, '방금 올렸어요. 공유 폴더 확인해 주세요.'),
+            (0, '확인했어요. 그래프 색이 보기 좋네요.'),
+            (0, '2쪽 표의 단위만 천 원으로 바꿔 주세요.'),
+            (1, '고쳐서 다시 올렸습니다.'),
+            (0, '고마워요. 내일 봬요!'),
+            (1, '네, 내일 뵙겠습니다.'),
+        ],
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -146,6 +173,7 @@ TEXT = {
         'face': 'sample-id-photo.jpg',
         'located': 'sample-photo-with-location.jpg',
         'screen': 'sample-screenshot.png',
+        'scrolls': ['sample-chat-1.png', 'sample-chat-2.png', 'sample-chat-3.png'],
         'sample': 'Sample file · Everything in it is made up',
         'company': 'Example Co.',
         'title': 'Q3 2026 Team Report',
@@ -218,6 +246,32 @@ TEXT = {
         ],
         'screenTitle': 'Settings',
         'screenRows': ['Notifications', 'Dark mode', 'Auto save', 'Use location'],
+        'chatTitle': 'Planning team (sample)',
+        'chatInput': 'Message',
+        'chat': [
+            (0, 'Are the slides for tomorrow ready?'),
+            (1, "Yes, I'll upload them tonight."),
+            (0, 'Great. Did you use last week\'s Q3 numbers?'),
+            (1, 'Yes, I redid the sales table and charts.'),
+            (0, 'Please add the customer feedback too.'),
+            (1, "Sure, I'll sum it up on one page."),
+            (0, 'I booked the big room on the 3rd floor.'),
+            (1, 'What time does it start?'),
+            (0, '10 a.m. Come 30 minutes early to test the screen.'),
+            (1, "OK, I'll bring my laptop charger."),
+            (0, 'Gildong presents first,'),
+            (0, 'and we take questions at the end.'),
+            (1, 'Sounds good. Should I list likely questions?'),
+            (0, 'Yes, that would help a lot.'),
+            (1, "I'll prepare about five."),
+            (0, 'Let me know here when you upload.'),
+            (1, 'Just uploaded. Check the shared folder.'),
+            (0, 'Got it. The chart colors look nice.'),
+            (0, 'Please change the units on page 2 to thousands.'),
+            (1, 'Fixed and uploaded again.'),
+            (0, 'Thanks. See you tomorrow!'),
+            (1, 'See you tomorrow.'),
+        ],
     },
 }
 
@@ -542,6 +596,40 @@ def screenshot(t) -> Image.Image:
     return image
 
 
+def chat_shots(t) -> list:
+    """메신저 대화를 내려 가며 찍은 캡처 3장 (이어 붙이기). 위 상태 표시줄(시계가 장마다 다름)·제목 막대와
+    아래 입력 막대는 고정이고, 가운데 대화가 장마다 560줄씩 올라간다 (518줄 겹침)"""
+    width, status, bar, bottom, view, step = 750, 44, 100, 112, 1078, 560
+    content = Image.new('RGB', (width, view + step * 2), (238, 241, 236))
+    draw = ImageDraw.Draw(content)
+    font = ImageFont.truetype(REGULAR, 30)
+    small = ImageFont.truetype(REGULAR, 22)
+    draw.text((width // 2, 40), t['sample'], font=small, fill=(130, 134, 128), anchor='mm')
+    y = 90
+    for side, text in t['chat']:
+        left, top, right, end = draw.textbbox((0, 0), text, font=font)
+        w, h = right - left + 48, end - top + 36
+        x = 24 if side == 0 else width - 24 - w
+        draw.rounded_rectangle([x, y, x + w, y + h], radius=26, fill=(255, 255, 255) if side == 0 else (47, 111, 85))
+        draw.text((x + 24, y + 18 - top), text, font=font, fill=(30, 30, 30) if side == 0 else (255, 255, 255))
+        y += h + 22
+    shots = []
+    for n in range(3):
+        shot = Image.new('RGB', (width, status + bar + view + bottom), (255, 255, 255))
+        shot.paste(content.crop((0, n * step, width, n * step + view)), (0, status + bar))
+        d = ImageDraw.Draw(shot)
+        d.text((40, 10), f'9:4{n + 1}', font=ImageFont.truetype(BOLD, 24), fill=(30, 30, 30))
+        d.rectangle([0, status, width, status + bar - 1], fill=(250, 250, 248))
+        d.line([0, status + bar - 1, width, status + bar - 1], fill=(220, 220, 216), width=2)
+        d.text((40, status + 30), t['chatTitle'], font=ImageFont.truetype(BOLD, 34), fill=(30, 30, 30))
+        top = shot.height - bottom
+        d.rectangle([0, top, width, shot.height], fill=(250, 250, 248))
+        d.rounded_rectangle([24, top + 24, width - 24, top + 88], radius=32, fill=(238, 238, 234))
+        d.text((56, top + 40), t['chatInput'], font=small, fill=(140, 140, 136))
+        shots.append(shot)
+    return shots
+
+
 def located_exif() -> bytes:
     """위치정보 지우기 견본의 촬영 정보. 위치는 공공장소(서울시청 앞), 기기 이름은 지어낸 것"""
     exif = Image.Exif()
@@ -585,6 +673,8 @@ def main():
         face.save(os.path.join(folder, t['face']), 'JPEG', quality=90)
         photo.save(os.path.join(folder, t['located']), 'JPEG', quality=90, exif=located_exif())
         screenshot(t).save(os.path.join(folder, t['screen']), 'PNG', optimize=True)
+        for name, shot in zip(t['scrolls'], chat_shots(t)):
+            shot.save(os.path.join(folder, name), 'PNG', optimize=True)
         for name in sorted(os.listdir(folder)):
             print(f'{locale}/{name}  {os.path.getsize(os.path.join(folder, name)) // 1024}KB')
 
