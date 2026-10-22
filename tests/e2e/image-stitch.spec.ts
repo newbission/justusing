@@ -142,6 +142,12 @@ test('가로로 이으면 가장 낮은 이미지 높이에 맞춘다', async ({
   expect(file.name).toBe('wide_이어붙임.jpg');
   const { width, height } = await pixels(page, file.bytes);
   expect([width, height]).toEqual([833, 400]);
+
+  // canvas 한 변 한계를 넘는 폭은 PNG로도 그릴 수 없어 미리 막는다
+  await frame.getByText('직접 입력').click();
+  await frame.getByLabel('높이 (px)').fill('8000');
+  await expect(frame.getByText('결과 폭이 너무 넓습니다', { exact: false })).toBeVisible();
+  await expect(frame.getByRole('button', { name: '이어 붙이기' })).toBeDisabled();
 });
 
 test('한 장이거나 열 수 없는 이미지는 빼고 알린다', async ({ page }) => {
