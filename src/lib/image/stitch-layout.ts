@@ -60,7 +60,8 @@ export function layoutStitch(
       const sh = source.height - top - bottom;
       if (top < 0 || bottom < 0 || sh < 1) return undefined;
       const dy = Math.round(along);
-      along += (sh * size) / source.width;
+      // 아주 작게 줄어도 1줄은 그린다. 그 1줄을 다음 자리에도 반영해 뒤 사진이 덮지 않게 한다
+      along = Math.max(along + (sh * size) / source.width, dy + 1);
       pieces.push({
         index,
         sx: 0,
@@ -70,11 +71,11 @@ export function layoutStitch(
         dx: 0,
         dy,
         dw: size,
-        dh: Math.max(1, Math.round(along) - dy),
+        dh: Math.round(along) - dy,
       });
     } else {
       const dx = Math.round(along);
-      along += (source.width * size) / source.height;
+      along = Math.max(along + (source.width * size) / source.height, dx + 1);
       pieces.push({
         index,
         sx: 0,
@@ -83,7 +84,7 @@ export function layoutStitch(
         sh: source.height,
         dx,
         dy: 0,
-        dw: Math.max(1, Math.round(along) - dx),
+        dw: Math.round(along) - dx,
         dh: size,
       });
     }
