@@ -50,6 +50,7 @@ export const CATEGORIES = {
     sections: {
       optimize: { ko: '용량·크기', en: 'Size' },
       convert: { ko: '변환', en: 'Convert' },
+      edit: { ko: '편집', en: 'Edit' },
       photo: { ko: '사진 다듬기', en: 'Photo' },
     },
   },
