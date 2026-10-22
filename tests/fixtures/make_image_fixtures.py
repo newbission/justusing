@@ -16,6 +16,10 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 
 - located.png  GPS·날짜·기기가 든 eXIf와 설명 글(tEXt)이 있는 PNG
 - located.webp GPS가 든 EXIF와 XMP가 있는 WebP (방향 6)
 - short-exif.jpg EXIF 조각이 머리 4바이트에서 끝난 JPEG (그림은 멀쩡함)
+- scroll-1~3.png 화면을 내려 가며 찍은 캡처 3장 (이어 붙이기). 360×640, 위 상태 표시줄(시계가 장마다 다름)
+               24줄과 제목 막대 48줄, 아래 탭 막대 56줄은 고정이고 가운데 512줄이 360줄씩 내려간다(152줄 겹침)
+- scroll-page.png 위 캡처를 제대로 이었을 때 나와야 하는 긴 화면 (360×1360)
+- scroll-2.jpg  scroll-2.png를 JPG로 (JPG 잡음이 있어도 겹침을 찾는지)
 - scan.png     글자를 찍은 그림 (글자 인식 도구). 한글 한 줄, 영어 한 줄. Pretendard로 그린다
 
 이 스크립트가 만들지 않는 것:
@@ -188,6 +192,46 @@ plain = buffer.getvalue()
 with open(path('short-exif.jpg'), 'wb') as file:
     file.write(plain[:2] + bytes([0xFF, 0xE1, 0, 12]) + b'Exif\0\0MM\0*' + plain[2:])
 
+
+
+def scroll_shots():
+    """긴 화면과 그것을 내려 가며 찍은 캡처 3장"""
+    rng = random.Random(7)
+    width, status, bar, tabs, view, step = 360, 24, 48, 56, 512, 360
+    content = Image.new('RGB', (width, view + step * 2), (250, 250, 250))
+    draw = ImageDraw.Draw(content)
+    y = 12
+    while y < content.height - 30:
+        if rng.random() < 0.25:  # 사진 칸
+            draw.rectangle((16, y, width - 16, y + 90), fill=(rng.randint(60, 200), 120, 160))
+            y += 104
+        else:  # 글 줄
+            draw.rectangle((16, y, rng.randint(120, width - 16), y + 10), fill=(40, 40, 40))
+            y += 22
+    def chrome(shot: Image.Image, n: int):
+        d = ImageDraw.Draw(shot)
+        d.rectangle((0, 0, width, status - 1), fill=(255, 255, 255))
+        d.text((14, 6), f'9:4{n}', fill=(0, 0, 0))
+        d.rectangle((0, status, width, status + bar - 1), fill=(30, 110, 70))
+        d.text((16, status + 18), 'Scroll sample', fill=(255, 255, 255))
+        d.rectangle((0, shot.height - tabs, width, shot.height), fill=(235, 235, 235))
+        for i in range(4):
+            d.ellipse((30 + i * 90, shot.height - 44, 54 + i * 90, shot.height - 20), fill=(90, 90, 90))
+    for n in range(3):
+        shot = Image.new('RGB', (width, status + bar + view + tabs))
+        shot.paste(content.crop((0, n * step, width, n * step + view)), (0, status + bar))
+        chrome(shot, n + 1)
+        shot.save(path(f'scroll-{n + 1}.png'))
+        if n == 1:
+            shot.save(path('scroll-2.jpg'), quality=85)
+    page = Image.new('RGB', (width, status + bar + content.height + tabs))
+    page.paste(content, (0, status + bar))
+    chrome(page, 1)
+    page.save(path('scroll-page.png'))
+
+
+scroll_shots()
+
 scan = Image.new('L', (1240, 600), 255)
 font = ImageFont.truetype(
     os.path.join(HERE, '../../node_modules/pretendard/dist/public/static/Pretendard-Regular.otf'), 56)
@@ -198,5 +242,6 @@ scan.save(path('scan.png'), optimize=True)
 
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
-             'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg']:
+             'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
+             'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg']:
     print(name, os.path.getsize(path(name)), 'bytes')
