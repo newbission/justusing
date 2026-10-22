@@ -25,6 +25,7 @@ import {
 import type { ExtractRequest, ExtractResponse, ExtractedImage } from './extract-images';
 import { inlineImageDict, tokenize, type Token } from './content-tokens';
 import { inflate, unpredict } from './image-pixels';
+import { crc32 } from '../crc32';
 
 const name = (value: string) => PDFName.of(value);
 
@@ -316,18 +317,6 @@ async function decodePixels(
     icc: colors.icc,
     gray: (indexed ? colors.paletteColors : colors.components) === 1,
   };
-}
-
-const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
-  let c = n;
-  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-  return c >>> 0;
-});
-
-function crc32(bytes: Uint8Array): number {
-  let c = 0xffffffff;
-  for (const byte of bytes) c = CRC_TABLE[(c ^ byte) & 0xff]! ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
 }
 
 /** PNG에 ICC 프로필(iCCP)을 넣는다. 머리(IHDR) 바로 뒤에 둔다 */
