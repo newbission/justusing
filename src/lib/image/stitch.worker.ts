@@ -22,7 +22,9 @@ class Failure extends Error {
   }
 }
 
-async function decode(file: Blob): Promise<ImageBitmap> {
+/** 바로 세워 읽는다. ImageBitmap이면 화면이 libheif로 이미 바로 세워 푼 HEIC다 */
+async function decode(file: Blob | ImageBitmap): Promise<ImageBitmap> {
+  if (file instanceof ImageBitmap) return file;
   try {
     return await createImageBitmap(file, { imageOrientation: 'from-image' });
   } catch {
@@ -36,9 +38,13 @@ function context(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2D {
   return ctx;
 }
 
-async function signatureOf(key: number, file: Blob): Promise<RowSignature> {
+async function signatureOf(key: number, file: Blob | ImageBitmap): Promise<RowSignature> {
   const cached = signatures.get(key);
-  if (cached) return cached;
+  if (cached) {
+    // 이미 읽은 사진이면 화면이 풀어 보낸 그림은 쓰지 않는다
+    if (file instanceof ImageBitmap) file.close();
+    return cached;
+  }
   const bitmap = await decode(file);
   try {
     const { width, height } = bitmap;
