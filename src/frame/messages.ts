@@ -133,6 +133,24 @@ const ko = {
     mine: (name: string) => `내 글꼴: ${name}`,
     choose: (name: string) => `${name} 고르기`,
   },
+  /** 글자 인식 언어·데이터 받기 (src/lib/ocr/OcrSetup.svelte) */
+  ocr: {
+    langGroup: '인식할 언어',
+    langs: { kor: '한국어', eng: '영어' },
+    needLang: '언어를 하나 이상 골라 주세요.',
+    dataTitle: '글자 인식 데이터',
+    dataSize: (size: string) => `처음 한 번 ${size}를 받습니다 (인식 엔진과 고른 언어 데이터).`,
+    dataNote:
+      '받은 데이터는 이 브라우저에만 보관되어 다음부터 바로 씁니다. 다른 브라우저·기기, 시크릿 창에서는 다시 받아야 하고, 브라우저 데이터를 지우면 사라집니다.',
+    dataRemoved: '전에 받은 데이터가 브라우저에서 지워졌습니다. 다시 받아 주세요.',
+    lowSpace: '브라우저 저장 공간이 부족해 보관하지 못할 수 있습니다.',
+    download: (size: string) => `데이터 받기 (${size})`,
+    downloading: (percent: number) => `데이터 받는 중 ${percent}%`,
+    dataFailed: '데이터를 받지 못했습니다. 인터넷 연결을 확인하고 다시 받아 주세요.',
+    dataReady: '글자 인식 데이터가 준비되었습니다.',
+    checking: '데이터를 확인하는 중…',
+    needData: '먼저 글자 인식 데이터를 받아 주세요.',
+  },
 };
 
 type FrameMessages = typeof ko;
@@ -264,6 +282,25 @@ const en: FrameMessages = {
     uploadFailed: 'Could not read the font file.',
     mine: (name: string) => `My font: ${name}`,
     choose: (name: string) => `Choose ${name}`,
+  },
+  ocr: {
+    langGroup: 'Languages to recognize',
+    langs: { kor: 'Korean', eng: 'English' },
+    needLang: 'Choose at least one language.',
+    dataTitle: 'Text recognition data',
+    dataSize: (size: string) =>
+      `${size} is downloaded once (the recognition engine and the chosen language data).`,
+    dataNote:
+      'The data is kept in this browser, so it is ready next time. Other browsers, devices and private windows need to download it again, and clearing browser data removes it.',
+    dataRemoved:
+      'The data you downloaded before was removed from this browser. Please download it again.',
+    lowSpace: 'Your browser may not have enough storage space to keep it.',
+    download: (size: string) => `Download data (${size})`,
+    downloading: (percent: number) => `Downloading data ${percent}%`,
+    dataFailed: 'Could not download the data. Check your internet connection and try again.',
+    dataReady: 'Text recognition data is ready.',
+    checking: 'Checking data…',
+    needData: 'Download the text recognition data first.',
   },
 };
 
