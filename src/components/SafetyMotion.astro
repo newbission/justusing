@@ -1,0 +1,511 @@
+---
+/**
+ * '안전한 이유' 움직이는 그림 (/safety/). 네 장면으로 도구 칸 격리와 파일이 지나가는 길을 보여 준다.
+ *   1 두 칸: 바깥 페이지(광고·방문 통계)와 격리된 도구 칸, 바깥 스크립트가 벽에 막힌다
+ *   2 막는 법: sandbox(출처 없는 칸)와 CSP(이 사이트 파일만 받고 다른 곳엔 연결 못 함)
+ *   3 처리: 끌어 온 파일을 도구 칸이 받고(화면 전체로 넓어짐) 작업자(Web Worker)가 처리, 서버로 가는 길은 없다
+ *   4 받기: 결과는 도구 칸에서 곧장 내 기기로(blob 다운로드), 바깥 페이지·인터넷을 거치지 않는다
+ *
+ * - 한 칸에 장면 하나씩 겹쳐 보인다. 모든 장면이 같은 칸에 겹쳐 있어 장면을 바꿔도 높이가 그대로다 (CLS 0).
+ *   장면 고르기는 라디오 버튼이라 스크립트 없이도 된다(그때는 각 장면의 마지막 그림).
+ *   본문의 인라인 스크립트는 CSP(<head>의 meta)에 막히므로 쓰지 않는다. 레이아웃은 CSS만으로 정한다.
+ * - 움직임 줄이기(prefers-reduced-motion)를 켠 사람은 장면 넷을 멈춘 그림 + 글로 차례로 본다.
+ * - 스크립트는 화면에 보일 때만 움직이고, 마지막 장면에서 멈춘다. 5초 넘게 움직이므로 일시정지 버튼을 둔다
+ *   (WCAG 2.2.2). 장면 길이는 장면 버튼의 진행 막대가 정한다: 막대가 다 차면 다음 장면으로 (일시정지하면 막대도 멈춘다).
+ * - 광고 칸 가까이에 두지 않는다 (/safety/: 첫 문단 다음, 제목 아래 배너와 떨어진 자리).
+ * - 실제 동작과 어긋나는 그림·글을 쓰지 않는다. 그림은 SafetyMotionArt, 글은 src/i18n/ui.ts의 safetyMotion.
+ */
+import SafetyMotionArt from './SafetyMotionArt.astro';
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+const t = ui(localeOf(Astro.url.pathname)).safetyMotion;
+const total = t.scenes.length;
+const sceneNumbers = [1, 2, 3, 4] as const;
+---
+
+<section
+  class="safety-motion"
+  id="how-it-works"
+  aria-labelledby="safety-motion-title"
+  data-safety-motion
+>
+  <h2 id="safety-motion-title">{t.title}</h2>
+  <p class="lead">{t.lead}</p>
+
+  <div class="player">
+    <ol class="scenes">
+      {t.scenes.map((scene, i) => (
+        <li
+          class="scene"
+          id={`safety-scene-${i + 1}`}
+          aria-labelledby={`safety-scene-${i + 1}-title`}
+        >
+          <div class="art" aria-hidden="true">
+            <SafetyMotionArt scene={sceneNumbers[i]!} />
+          </div>
+          <div class="copy">
+            <p class="step">{t.step(i + 1, total)}</p>
+            <h3 id={`safety-scene-${i + 1}-title`}>{scene.title}</h3>
+            {scene.text.map((item) => (
+              <p>
+                {'term' in item && item.term && <strong>{item.term}: </strong>}
+                {item.text}
+              </p>
+            ))}
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <div class="controls">
+      <fieldset class="segs">
+        <legend class="visually-hidden">{t.scenesLabel}</legend>
+        {t.scenes.map((scene, i) => (
+          <label class="seg">
+            <input
+              type="radio"
+              name="safety-scene"
+              id={`safety-scene-radio-${i + 1}`}
+              value={i}
+              checked={i === 0}
+              class="visually-hidden"
+              data-go
+            />
+            <span class="seg-name">
+              <span class="num">{i + 1}</span>
+              {scene.name}
+            </span>
+            <span class="bar">
+              <span class:list={['fill', `fill-${i + 1}`]} />
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      <button
+        type="button"
+        class="play"
+        data-play
+        data-state="pause"
+        aria-label={t.pause}
+        data-label-pause={t.pause}
+        data-label-play={t.play}
+        data-label-replay={t.replay}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="i-pause">
+          <path d="M9 6v12M15 6v12"></path>
+        </svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="i-play">
+          <path d="M8 5.5v13l10.5-6.5z"></path>
+        </svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="i-replay">
+          <path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<script>
+  type PlayState = 'pause' | 'play' | 'replay';
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-safety-motion]')) {
+    if (reduce.matches) continue;
+    const scenes = [...root.querySelectorAll<HTMLElement>('.scene')];
+    const radios = [...root.querySelectorAll<HTMLInputElement>('[data-go]')];
+    const segs = radios.map((radio) => radio.closest<HTMLElement>('.seg')!);
+    const play = root.querySelector<HTMLButtonElement>('[data-play]')!;
+    const last = scenes.length - 1;
+
+    /** 지금 장면 */
+    let current = 0;
+    /** 지금 장면이 움직이는 중인지 (아니면 그 장면의 마지막 그림) */
+    let running = true;
+    /** 사람이 일시정지를 눌렀는지 */
+    let held = false;
+    /** 그림이 화면에 보이는지 */
+    let visible = false;
+    /** 마지막 장면까지 다 봤는지 */
+    let ended = false;
+
+    const render = () => {
+      radios[current]!.checked = true;
+      segs.forEach((seg, i) => {
+        seg.classList.toggle('done', i < current || (i === current && !running));
+      });
+      root.classList.toggle('paused', held || !visible || document.hidden);
+      const state: PlayState = ended ? 'replay' : !running || held ? 'play' : 'pause';
+      play.dataset.state = state;
+      play.setAttribute('aria-label', play.getAttribute(`data-label-${state}`)!);
+    };
+
+    /** i번째 장면으로. run이면 처음부터 움직이고, 아니면 마지막 그림을 보인다 */
+    const go = (i: number, run: boolean) => {
+      current = i;
+      running = run;
+      ended = false;
+      for (const el of [...scenes, ...segs]) el.classList.remove('run');
+      // 애니메이션을 처음부터 다시 돌리려면 한 번 떼었다 붙여야 한다
+      void root.offsetWidth;
+      if (run) {
+        scenes[i]!.classList.add('run');
+        segs[i]!.classList.add('run');
+      }
+      render();
+    };
+
+    radios.forEach((radio, i) => {
+      // 사람이 장면을 고르면 그 장면을 처음부터 (일시정지 중이면 그 장면의 마지막 그림)
+      radio.addEventListener('change', () => go(i, !held));
+      // 진행 막대가 다 차면 다음 장면으로. 마지막 장면이면 그 그림에서 멈춘다
+      segs[i]!.querySelector('.fill')!.addEventListener('animationend', () => {
+        if (i !== current || !running) return;
+        if (i < last) {
+          go(i + 1, true);
+        } else {
+          running = false;
+          ended = true;
+          render();
+        }
+      });
+    });
+
+    play.addEventListener('click', () => {
+      if (ended) {
+        held = false;
+        go(0, true);
+      } else if (!running) {
+        held = false;
+        go(current, true);
+      } else {
+        held = !held;
+        render();
+      }
+    });
+
+    // 화면에 보일 때만 움직인다 (처음에는 첫 장면의 첫 그림에서 기다린다)
+    new IntersectionObserver(
+      (entries) => {
+        visible = entries.some((entry) => entry.isIntersecting);
+        render();
+      },
+      { threshold: 0.4 },
+    ).observe(root.querySelector('.player')!);
+    document.addEventListener('visibilitychange', render);
+
+    root.classList.add('ready');
+    go(0, true);
+  }
+</script>
+
+<style>
+  .safety-motion {
+    margin: 0 0 16px;
+    /* 한글이 낱말 가운데에서 끊기지 않게 */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  .safety-motion .lead {
+    color: var(--color-muted);
+  }
+  .player {
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    overflow: hidden;
+  }
+
+  /* 글 페이지(DocLayout)의 목록 모양(.doc ol·li 여백)을 받지 않게 한 단계 더 좁혀 쓴다 */
+  .safety-motion .scenes {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .safety-motion .scene {
+    margin: 0;
+  }
+  .scene {
+    display: grid;
+    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+    align-items: center;
+  }
+  .art {
+    align-self: stretch;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    border-right: 1px solid var(--color-line);
+    background: var(--color-bg);
+  }
+  .art :global(svg) {
+    max-width: 420px;
+  }
+  .copy {
+    padding: 20px 24px;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .copy .step {
+    margin: 0 0 4px;
+    color: var(--color-accent);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .safety-motion .copy h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    line-height: 1.4;
+  }
+  .safety-motion .copy p {
+    margin: 0 0 10px;
+  }
+  .safety-motion .copy p:last-child {
+    margin-bottom: 0;
+  }
+
+  /*
+   * 한 장면씩 겹쳐 보기: 모든 장면이 같은 칸에 있어 높이는 가장 긴 장면에 맞춰 고정된다.
+   * 고른 라디오 버튼의 장면만 보인다 (숨은 장면은 화면 읽기 프로그램도 건너뛴다).
+   */
+  .scene {
+    grid-area: 1 / 1;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.35s ease,
+      visibility 0s linear 0.35s;
+  }
+  .player:has(#safety-scene-radio-1:checked) #safety-scene-1,
+  .player:has(#safety-scene-radio-2:checked) #safety-scene-2,
+  .player:has(#safety-scene-radio-3:checked) #safety-scene-3,
+  .player:has(#safety-scene-radio-4:checked) #safety-scene-4 {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.35s ease;
+  }
+
+  /* 장면 버튼 + 일시정지 */
+  .controls {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--color-line);
+  }
+  .segs {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  /* 숨긴 라디오 버튼이 이 칸 안에 있게 (초점·화면 읽기 위치) */
+  .seg {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .seg:hover {
+    background: var(--color-hover);
+  }
+  .seg:has(input:checked) {
+    border-color: var(--color-line);
+    color: var(--color-text);
+  }
+  .seg:has(input:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .seg-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .num {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-line);
+    color: var(--color-text);
+    font-size: 11px;
+  }
+  .seg:has(input:checked) .num,
+  .seg.done .num {
+    background: var(--color-accent);
+    color: var(--color-surface);
+  }
+  .bar {
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-line);
+    overflow: hidden;
+  }
+  .fill {
+    display: block;
+    height: 100%;
+    background: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .seg.done .fill {
+    transform: none;
+  }
+  /* 장면 길이: 진행 막대가 다 차는 시간 (움직임이 끝난 뒤 글을 읽을 틈을 둔다) */
+  .seg.run .fill {
+    animation: fill linear both;
+  }
+  .seg.run .fill-1 {
+    animation-duration: 10s;
+  }
+  .seg.run .fill-2 {
+    animation-duration: 12s;
+  }
+  .seg.run .fill-3 {
+    animation-duration: 12.5s;
+  }
+  .seg.run .fill-4 {
+    animation-duration: 10s;
+  }
+  @keyframes fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  /* 재생·일시정지: 스크립트가 준비되면 보인다. 자리는 늘 차지해 장면 버튼이 밀리지 않는다 */
+  .play {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    min-height: 44px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    visibility: hidden;
+  }
+  .ready .play {
+    visibility: visible;
+  }
+  .play:hover {
+    background: var(--color-hover);
+  }
+  .play svg {
+    grid-area: 1 / 1;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .play .i-play path {
+    fill: currentColor;
+  }
+  .play:not([data-state='pause']) .i-pause,
+  .play:not([data-state='play']) .i-play,
+  .play:not([data-state='replay']) .i-replay {
+    display: none;
+  }
+
+  /* 멈춤: 사람이 멈췄거나, 화면 밖이거나, 탭이 숨었을 때 (그림과 진행 막대가 함께 멈춘다) */
+  .paused :global(*) {
+    animation-play-state: paused !important;
+  }
+
+  /* 움직임 줄이기: 장면 넷을 멈춘 그림 + 글로 차례로 */
+  @media (prefers-reduced-motion: reduce) {
+    .scene {
+      grid-area: auto;
+      opacity: 1;
+      visibility: visible;
+      transition: none;
+    }
+    .scene + .scene {
+      border-top: 1px solid var(--color-line);
+    }
+    .controls {
+      display: none;
+    }
+  }
+
+  /* 휴대폰·좁은 화면: 그림 위, 글 아래. 장면 버튼은 맨 위에 두어 그림과 한 화면에 보이게 한다 */
+  @media (max-width: 639px) {
+    .player {
+      display: flex;
+      flex-direction: column;
+    }
+    .controls {
+      order: -1;
+      border-top: 0;
+      border-bottom: 1px solid var(--color-line);
+    }
+    .scene {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+    .art {
+      padding: 12px;
+      border-right: 0;
+      border-bottom: 1px solid var(--color-line);
+    }
+    .copy {
+      padding: 16px;
+      font-size: 14.5px;
+    }
+    .safety-motion .copy h3 {
+      font-size: 17px;
+    }
+    .controls {
+      gap: 4px;
+      padding: 8px;
+    }
+    .segs {
+      gap: 4px;
+    }
+    .seg {
+      align-items: center;
+      padding: 6px 2px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .seg-name {
+      flex-direction: column;
+      gap: 3px;
+    }
+    .bar {
+      align-self: stretch;
+    }
+  }
+</style>
