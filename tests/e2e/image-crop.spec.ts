@@ -132,6 +132,11 @@ test('비율을 지킨 채 가장 작은 크기로 맞춘다', async ({ page }) 
   await frame.getByLabel('폭 (px)').fill('8');
   await frame.getByLabel('폭 (px)').press('Enter');
   await expect(frame.getByText('결과 14 × 8 px')).toBeVisible();
+  // 0을 적어도 영역이 사라지지 않고 가장 작은 크기가 된다
+  await frame.getByLabel('폭 (px)').fill('0');
+  await frame.getByLabel('폭 (px)').press('Enter');
+  await expect(frame.getByText('결과 14 × 8 px')).toBeVisible();
+  await expect(frame.getByLabel('폭 (px)')).toHaveValue('14');
 });
 
 test('영역과 손잡이를 방향키로 옮긴다', async ({ page }) => {
