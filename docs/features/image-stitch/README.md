@@ -3,7 +3,7 @@
 쓴 날 2026-10-22 · 고친 날 2026-10-22
 
 - 주소: `/image/stitch/` (영어 `/en/image/stitch/`)
-- 상태: PR 진행 중 (2026-10-22)
+- 상태: dev·main 반영 (PR #119, #120, 2026-10-22)
 - 관련 문서: [히스토리](./history.md), [이미지 공통](../../foundations/image-common/README.md)
 
 ## 1. 어떤 기능인지
