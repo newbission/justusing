@@ -21,9 +21,12 @@ Screenshots taken while scrolling repeat two things.
 
 [Stitch Images](/en/image/stitch/) compares rows at the same height in two screenshots to find the fixed bars at the top and bottom, then treats the longest stretch where the end of one shot matches the start of the next as the overlap. Parts that change on every shot, like the clock, are skipped, and matching blank background alone does not count as an overlap. Only the top bar of the first shot and the bottom bar of the last shot are kept.
 
-![Three chat screenshots (750×1334 each) and the stitched result (750×2454). The result has the title bar at the top and the message box at the bottom only once, and the conversation continues without gaps or repeats](../../../assets/guides/en/stitch-screenshots/stitched.png)
+<picture>
+  <source media="(prefers-reduced-motion: no-preference)" srcset="/guide-motion/en/stitch-screenshots/stitched.webp" type="image/webp" />
+  <img src="/guide-motion/en/stitch-screenshots/stitched-still.webp" alt="Three chat screenshots (750×1334 each) with the status bar, title bar, repeated content and message box marked in orange as the parts to remove. They disappear, and the remaining pieces gather into one stitched result (750×2454). The result has the title bar at the top and the message box at the bottom only once, and the conversation continues without gaps or repeats" width="784" height="653" loading="lazy" decoding="async" />
+</picture>
 
-This is the actual result of stitching the three sample chat screenshots with the tool. Stacked as they are, they would be 4002px tall, but without the bars and overlaps the result is 2454px.
+This is the actual result of stitching the three sample chat screenshots with the tool. The orange areas are the bars and overlaps that get removed, and the last panel is exactly what the tool produced. Stacked as they are, they would be 4002px tall, but without the bars and overlaps the result is 2454px.
 
 ## Tips for screenshots that join well
 

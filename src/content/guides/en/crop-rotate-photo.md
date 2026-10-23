@@ -18,9 +18,12 @@ With [Crop & Rotate Image](/en/image/crop/), this order saves you from redoing w
 
 The crop box turns and flips together with the photo, so you do not have to set it again if you cropped first.
 
-![The original tilted sea photo (1600×1200) and the result straightened by 4° and cropped to 4:5 (960×1200). The horizon in the result is level](../../../assets/guides/en/crop-rotate-photo/straightened.png)
+<picture>
+  <source media="(prefers-reduced-motion: no-preference)" srcset="/guide-motion/en/crop-rotate-photo/straightened.webp" type="image/webp" />
+  <img src="/guide-motion/en/crop-rotate-photo/straightened-still.webp" alt="The tilted sea photo (1600×1200) turns by 4° until the horizon is level, then everything outside the 4:5 box is cut away, leaving the result (960×1200)" width="733" height="400" loading="lazy" decoding="async" />
+</picture>
 
-This is the actual result of straightening the sample photo by 4° and cropping it to 4:5 with this tool.
+This is the actual result of straightening the sample photo by 4° and cropping it to 4:5 with this tool. The last panel is exactly what the tool produced.
 
 ## Why straightening trims the edges
 

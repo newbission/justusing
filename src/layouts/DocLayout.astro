@@ -94,7 +94,12 @@ const breadcrumb = Astro.props.breadcrumb ?? [
   .doc :global(p) {
     margin: 0 0 16px;
   }
-  /* 가이드 그림: 흰 종이 카드라 두 테마에서 같고, 테두리로 바탕과 나눈다 */
+  /* 가이드 그림: 흰 종이 카드라 두 테마에서 같고, 테두리로 바탕과 나눈다.
+     움직이는 그림은 <picture>로 감싼다 (움직임 줄이기를 켜면 멈춘 그림, docs/foundations/seo-and-guides) */
+  .doc :global(picture) {
+    display: block;
+    margin: 0 0 16px;
+  }
   .doc :global(img) {
     display: block;
     max-width: 100%;

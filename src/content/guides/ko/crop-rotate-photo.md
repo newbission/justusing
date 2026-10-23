@@ -18,9 +18,12 @@ order: 26
 
 자를 영역은 돌리고 뒤집을 때 사진과 함께 움직이므로, 먼저 잘라 두었어도 다시 맞출 필요가 없습니다.
 
-![기울어진 바다 사진 원본(1600×1200)과, 기울기를 4° 바로잡고 4:5로 자른 결과(960×1200). 결과에서는 수평선이 반듯하다](../../../assets/guides/ko/crop-rotate-photo/straightened.png)
+<picture>
+  <source media="(prefers-reduced-motion: no-preference)" srcset="/guide-motion/ko/crop-rotate-photo/straightened.webp" type="image/webp" />
+  <img src="/guide-motion/ko/crop-rotate-photo/straightened-still.webp" alt="기울어진 바다 사진 원본(1600×1200)이 기울기 4°만큼 돌아가 수평선이 반듯해지고, 4:5 상자 밖이 잘려 나가 결과(960×1200)가 되는 과정" width="708" height="400" loading="lazy" decoding="async" />
+</picture>
 
-견본 사진을 이 도구로 4° 바로잡고 4:5로 자른 실제 결과입니다.
+견본 사진을 이 도구로 4° 바로잡고 4:5로 자른 실제 결과입니다. 마지막 칸이 도구가 만든 결과 그대로입니다.
 
 ## 기울기를 바꾸면 가장자리가 잘리는 이유
 
