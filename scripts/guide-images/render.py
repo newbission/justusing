@@ -79,6 +79,8 @@ TEXT = {
         'straightened': '4° 바로잡고 4:5로 자름',
         'removed': '지워지는 곳',
         'angle': '기울기 바로잡기',
+        'car': '예시-번호판사진.jpg',
+        'hidden': {'original': '원본', 'blur': '흐리게', 'mosaic': '모자이크', 'fill': '검게 칠하기'},
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -125,6 +127,8 @@ TEXT = {
         'straightened': 'Straightened 4°, cropped to 4:5',
         'removed': 'Removed',
         'angle': 'Straighten',
+        'car': 'sample-license-plate.jpg',
+        'hidden': {'original': 'Original', 'blur': 'Blur', 'mosaic': 'Mosaic', 'fill': 'Black out'},
     },
 }
 
@@ -567,6 +571,16 @@ def crop_rotate_photo(t, cache, samples, fonts):
         items.append((small, label, f'{image.width}×{image.height}'))
     return 'crop-rotate-photo', 'straightened.png', tiles(items, *fonts, gap=20)
 
+def hide_info_in_photo(t, cache, samples, fonts):
+    # 견본의 번호판 둘레를 원본·흐림·모자이크·검게 칠하기 결과에서 같은 자리로 잘라 2칸씩 늘어놓는다
+    box = (560, 740, 1040, 930)
+    items = []
+    for key in ['original', 'blur', 'mosaic', 'fill']:
+        path = os.path.join(samples, t['car']) if key == 'original' else os.path.join(cache, f'mosaic-{key}.jpg')
+        image = Image.open(path).convert('RGB').crop(box)
+        items.append((fit_width(image, 320, Image.LANCZOS), t['hidden'][key], ''))
+    return 'hide-info-in-photo', 'compare.png', tiles(items, *fonts, gap=20, cols=2)
+
 # ---- 움직이는 그림 (2026-10-23) ----
 # 정지 그림과 같은 칸 자리·크기로 3~4초 움직이는 그림. 재료도 같다: 견본과 도구가 만든 실제 결과
 # (끝 화면은 도구가 만든 결과 그대로). 파일은 public/guide-motion/에 쓴다. Astro 이미지 처리를 거치지 않는
@@ -882,6 +896,7 @@ GUIDES = {
     'photo-location': photo_location,
     'stitch-screenshots': stitch_screenshots,
     'crop-rotate-photo': crop_rotate_photo,
+    'hide-info-in-photo': hide_info_in_photo,
 }
 
 
