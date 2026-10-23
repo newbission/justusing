@@ -1,8 +1,8 @@
 /** 이미지 형식 변환 도구 화면의 문구 (공통 문구는 src/frame/messages.ts) */
 import type { Locale } from '../../../i18n/locales';
-import type { OutputType } from '../../../lib/image/process';
+import type { ConvertMessages } from '../../../lib/image/ConvertTool.svelte';
 
-const ko = {
+const ko: ConvertMessages = {
   hint: 'JPG·PNG·WebP·GIF·BMP·AVIF 등 여러 장을 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다',
   bar: '형식 변환',
   formatGroup: '바꿀 형식',
@@ -10,13 +10,13 @@ const ko = {
     'image/jpeg': 'JPG',
     'image/png': 'PNG',
     'image/webp': 'WebP',
-  } satisfies Record<OutputType, string>,
+  },
   help: {
     'image/jpeg':
       '가장 널리 열리는 형식입니다. 투명한 부분은 흰색이 되고, 사진은 높은 화질로 저장합니다.',
     'image/png': '화질 손실 없이 저장하고 투명한 부분도 남깁니다. 사진은 용량이 커질 수 있습니다.',
     'image/webp': 'JPG보다 작고 투명도 지원합니다. 오래된 프로그램에서는 열리지 않을 수 있습니다.',
-  } satisfies Record<OutputType, string>,
+  },
   gifNote: '움직이는 GIF는 첫 장면만 바뀝니다.',
   reading: '이미지를 읽는 중입니다…',
   needOne: '바꿀 이미지를 넣어 주세요.',
@@ -37,7 +37,7 @@ const ko = {
     '이 브라우저가 읽지 못하는 형식입니다. HEIC(아이폰 사진)는 Safari에서 열 수 있습니다.',
 };
 
-const en: typeof ko = {
+const en: ConvertMessages = {
   hint: 'You can pick several JPG, PNG, WebP, GIF, BMP, AVIF or other images at once · Your files never leave this device',
   bar: 'Convert',
   formatGroup: 'Convert to',
@@ -73,4 +73,4 @@ const en: typeof ko = {
   unreadable: 'This browser cannot read this format. HEIC (iPhone photos) can be opened in Safari.',
 };
 
-export const MESSAGES: Record<Locale, typeof ko> = { ko, en };
+export const MESSAGES: Record<Locale, ConvertMessages> = { ko, en };

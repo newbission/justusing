@@ -53,10 +53,13 @@ export class ImageBatch {
   readonly #anyFormat: boolean;
   #nextId = 0;
 
-  /** anyFormat: JPG·PNG·WebP가 아니어도 브라우저가 읽을 수 있으면 받는다 (형식 변환) */
-  constructor({ anyFormat = false } = {}) {
+  /**
+   * anyFormat: JPG·PNG·WebP가 아니어도 읽을 수 있으면 받는다 (형식 변환)
+   * accept: 파일 고르기 창에 넘길 형식을 바꾼다 (HEIC 변환은 HEIC만 보이게). 끌어다 놓은 파일은 형식으로 거르지 않는다
+   */
+  constructor({ anyFormat = false, accept }: { anyFormat?: boolean; accept?: string } = {}) {
     this.#anyFormat = anyFormat;
-    this.accept = anyFormat ? ANY_ACCEPT : BATCH_ACCEPT;
+    this.accept = accept ?? (anyFormat ? ANY_ACCEPT : BATCH_ACCEPT);
   }
 
   /** 이미지 파일만 더한다. 더한 것이 있으면 true */
