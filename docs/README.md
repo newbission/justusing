@@ -94,6 +94,7 @@ PDF
 | [image-crop](./features/image-crop)                       | 자르기·회전      | live |
 | [image-mosaic](./features/image-mosaic)                   | 모자이크         | live |
 | [image-heic-to-jpg](./features/image-heic-to-jpg)         | HEIC JPG 변환    | live |
+| [image-ocr](./features/image-ocr)                         | 글자 추출(OCR)   | live |
 
 텍스트·CSV
 
