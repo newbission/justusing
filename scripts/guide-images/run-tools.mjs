@@ -11,7 +11,7 @@
  * 결과는 .cache/guide-images/<언어>/에 둔다 (커밋하지 않는다).
  */
 import { chromium } from 'playwright';
-import { mkdir, copyFile } from 'node:fs/promises';
+import { mkdir, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -442,6 +442,57 @@ const JOBS = {
     await open('/text/csv-encoding/', sample('utf8Csv'));
     await frame.getByRole('button', { name: '변환하기' }).click();
     await save('다운로드', `${out}csv-encoding.csv`);
+  },
+
+  // 이미지 글자 추출: 12° 기울여 찍은 서류 사진(견본을 돌려 만든다)과 대화 캡처에서 읽은 줄 자리
+  async 'image-ocr'({ sample, out, locale }) {
+    await page.goto(BASE + '/');
+    const tilted = await page.evaluate(
+      async (data) => {
+        const bitmap = await createImageBitmap(new Blob([new Uint8Array(data)]));
+        const radians = (12 * Math.PI) / 180;
+        const [cos, sin] = [Math.cos(radians), Math.sin(radians)];
+        const width = Math.round(bitmap.width * cos + bitmap.height * sin);
+        const height = Math.round(bitmap.width * sin + bitmap.height * cos);
+        const canvas = new OffscreenCanvas(width, height);
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#8c6a4c';
+        context.fillRect(0, 0, width, height);
+        context.translate(width / 2, height / 2);
+        context.rotate(radians);
+        context.drawImage(bitmap, -bitmap.width / 2, -bitmap.height / 2);
+        const blob = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.9 });
+        return Array.from(new Uint8Array(await blob.arrayBuffer()));
+      },
+      Array.from(await readFile(sample('docPhoto2'))),
+    );
+    await writeFile(`${out}ocr-tilted.jpg`, Buffer.from(tilted));
+    await open('/image/ocr/', [`${out}ocr-tilted.jpg`, sample('chat1')]);
+    // 견본의 언어만 고른다
+    const langs = frame.getByRole('group', { name: '인식할 언어' });
+    for (const [label, on] of [
+      ['한국어', locale === 'ko'],
+      ['영어', locale === 'en'],
+    ]) {
+      await langs.getByLabel(label).setChecked(on);
+    }
+    const data = frame.getByRole('button', { name: /^데이터 받기/ });
+    const run = frame.getByRole('button', { name: '글자 인식', exact: true });
+    await data.or(run).first().waitFor();
+    if (await data.isVisible()) await data.click();
+    await run.click();
+    await frame.getByRole('button', { name: 'TXT 다운로드' }).waitFor({ timeout: 120_000 });
+    // 이미지마다 읽은 줄의 네 꼭짓점 (이미지 화소 기준)
+    const lines = await frame
+      .locator('.figure svg')
+      .evaluateAll((svgs) =>
+        svgs.map((svg) =>
+          [...svg.querySelectorAll('polygon')].map((polygon) =>
+            polygon.getAttribute('points').split(' ').map(Number),
+          ),
+        ),
+      );
+    await writeFile(`${out}ocr-lines.json`, JSON.stringify(lines));
   },
 };
 
