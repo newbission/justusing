@@ -1,6 +1,8 @@
 /**
  * 도구 카테고리. 카테고리 ID는 URL 첫 경로가 된다 (pdf → /pdf/).
  * 새 카테고리는 여기에 추가한다. 순서가 곧 화면 노출 순서다.
+ * 카테고리 ID는 주소 첫 경로라 public/의 폴더(data·samples·vendor)나 다른 페이지(guide·en·brand 등)와
+ * 겹치면 안 된다 (예: /data/는 글꼴·OCR 데이터 자리라 텍스트 도구는 text로 했다).
  */
 import type { Locale } from '../i18n/locales';
 
@@ -58,6 +60,25 @@ export const CATEGORIES = {
       convert: { ko: '변환', en: 'Convert' },
       edit: { ko: '편집', en: 'Edit' },
       photo: { ko: '사진 다듬기', en: 'Photo' },
+    },
+  },
+  text: {
+    text: {
+      ko: {
+        name: '텍스트·CSV',
+        title: '무료 텍스트·CSV 도구 - CSV 한글 깨짐 고치기, 업로드 없이',
+        description:
+          'CSV·TXT 같은 글자 파일을 업로드 없이 고치는 도구. 엑셀에서 깨지는 한글을 바로잡습니다',
+      },
+      en: {
+        name: 'Text & CSV',
+        title: 'Free text and CSV tools - Fix garbled CSV text without uploading',
+        description:
+          'Fix text files such as CSV and TXT without uploading them, including text that shows up garbled in Excel',
+      },
+    },
+    sections: {
+      encoding: { ko: '인코딩', en: 'Encoding' },
     },
   },
 } as const satisfies Record<
