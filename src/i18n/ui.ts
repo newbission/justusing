@@ -118,6 +118,7 @@ const ko = {
     text: '파일을 고르면 이 기기의 브라우저가 바로 처리하고, 결과 파일도 브라우저 안에서 만들어 내 기기에 저장합니다. 그동안 파일은 서버로 가지 않습니다.',
     replay: '다시 보기',
     replayLabel: '그림 움직임 다시 보기',
+    more: '어떻게 떼어 놓는지 네 장면으로 보기',
   },
   safety: {
     title: '왜 안전한가요',
@@ -344,6 +345,7 @@ const en: Ui = {
     text: 'When you pick files, the browser on this device processes them right away, builds the result file there too, and saves it to your device. Your files are never sent to a server along the way.',
     replay: 'Replay',
     replayLabel: 'Replay the animation',
+    more: 'See how it is sealed off, in four scenes',
   },
   safety: {
     title: 'Why is it safe?',
