@@ -19,6 +19,7 @@
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
   import { ImageBatch, type BatchItem } from '../../../lib/image/batch.svelte';
+  import { decodeImage } from '../../../lib/image/heif';
   import {
     findSeam,
     forgetSeams,
@@ -144,7 +145,8 @@
    * 가로·세로로 보고 찌그러뜨릴 수 있어 두 번에 나눈다
    */
   async function previewOf(item: BatchItem): Promise<ImageBitmap> {
-    const upright = await createImageBitmap(item.file, { imageOrientation: 'from-image' });
+    // 브라우저가 못 읽는 HEIC는 libheif로 바로 세워 푼다
+    const upright = await decodeImage(item.file);
     try {
       const scale = Math.min(1, PREVIEW_SIDE / Math.min(upright.width, upright.height));
       return await createImageBitmap(upright, {
