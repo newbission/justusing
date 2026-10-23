@@ -1,7 +1,7 @@
 """
 '예시 파일로 해 보기'에 쓰는 견본 파일을 만든다. 결과는 public/samples/<언어>/에 쓰고 커밋한다.
 
-  python3 scripts/samples/make_samples.py   (PyMuPDF·Pillow 필요, 먼저 npm install)
+  python3 scripts/samples/make_samples.py   (PyMuPDF·Pillow·pillow-heif 필요, 먼저 npm install)
 
 - 내용은 모두 지어낸 것이다. 이름은 홍길동, 번호는 0으로 채우고, 회사는 '예시상사'처럼 없는 이름을 쓴다
 - 문서 안 글자가 있는 파일은 언어마다 따로 만든다. 사진은 두 언어가 같은 것을 쓴다(언어 폴더에 같이 둔다)
@@ -21,6 +21,7 @@ import random
 import fitz
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
+import pillow_heif
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -62,6 +63,7 @@ TEXT = {
         'located': '예시-위치사진.jpg',
         'tilted': '예시-기운사진.jpg',
         'car': '예시-번호판사진.jpg',
+        'heics': ['예시-아이폰사진1.heic', '예시-아이폰사진2.heic'],
         'plate': '00가 0000',
         'carCard': ('주차 시 연락처', '010-0000-0000'),
         'screen': '예시-화면캡처.png',
@@ -201,6 +203,7 @@ TEXT = {
         'located': 'sample-photo-with-location.jpg',
         'tilted': 'sample-tilted-photo.jpg',
         'car': 'sample-license-plate.jpg',
+        'heics': ['sample-iphone-photo-1.heic', 'sample-iphone-photo-2.heic'],
         'plate': 'ABC 0000',
         'carCard': ('Parking contact', '000-000-0000'),
         'screen': 'sample-screenshot.png',
@@ -795,12 +798,28 @@ def located_exif() -> bytes:
     return exif.tobytes()
 
 
+def iphone_photos() -> list:
+    """아이폰처럼 찍은 HEIC 두 장 (HEIC 변환). 둘째 장은 세로로 들고 찍은 사진처럼, 화소는 누운 가로로 두고
+    시계 방향으로 돌려 보라는 회전 표시(irot)를 단다 (pillow-heif가 EXIF 방향을 irot로 옮겨 적는다)"""
+    upright = landscape(1600, 1200, 51)
+    portrait = landscape(1200, 1600, 52).transpose(Image.Transpose.ROTATE_90)
+    photos = []
+    for image, orientation in ((upright, 1), (portrait, 6)):
+        buffer = io.BytesIO()
+        exif = Image.Exif()
+        exif[0x0112] = orientation
+        pillow_heif.from_pillow(image).save(buffer, quality=50, exif=exif.tobytes())
+        photos.append(buffer.getvalue())
+    return photos
+
+
 def main():
     hero = jpeg(landscape(1600, 1060, 7), 90)
     gallery = [jpeg(landscape(1400, 1050, seed), 92) for seed in (11, 12, 13)]
     photo = landscape(2000, 1500, 21)
     face = Image.open(os.path.join(HERE, 'face.jpg')).convert('RGB')
     sea = tilted_sea(1600, 1200, 4)
+    heics = iphone_photos()
     for locale, t in TEXT.items():
         folder = os.path.join(OUT, locale)
         os.makedirs(folder, exist_ok=True)
@@ -826,6 +845,9 @@ def main():
         photo.save(os.path.join(folder, t['located']), 'JPEG', quality=90, exif=located_exif())
         sea.save(os.path.join(folder, t['tilted']), 'JPEG', quality=90)
         parked_car(t).save(os.path.join(folder, t['car']), 'JPEG', quality=90)
+        for name, data in zip(t['heics'], heics):
+            with open(os.path.join(folder, name), 'wb') as f:
+                f.write(data)
         screenshot(t).save(os.path.join(folder, t['screen']), 'PNG', optimize=True)
         for name, shot in zip(t['scrolls'], chat_shots(t)):
             shot.save(os.path.join(folder, name), 'PNG', optimize=True)
