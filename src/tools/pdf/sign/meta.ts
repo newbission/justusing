@@ -7,12 +7,14 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 서명 넣기',
+      summary: '그리거나 올린 서명을 PDF에 넣습니다',
       title: 'PDF 서명 넣기 - 직접 그린 서명을 PDF에, 업로드 없이',
       description:
         '화면에 그린 서명이나 서명 이미지를 PDF 원하는 자리에 넣습니다. 서명과 파일은 브라우저 밖으로 나가지 않습니다.',
     },
     en: {
       name: 'Sign PDF',
+      summary: 'Draw or upload a signature and place it',
       title: 'Sign PDF - Add your handwritten signature to a PDF in your browser',
       description:
         'Draw your signature or upload a signature image and place it anywhere on a PDF. Your signature and file never leave your browser.',

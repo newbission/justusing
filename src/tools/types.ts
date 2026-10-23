@@ -11,6 +11,11 @@ import type { Locale } from '../i18n/locales';
 export interface ToolText {
   /** 화면 제목·카드 이름 (예: 'PDF 합치기') */
   name: string;
+  /**
+   * 머리글 메뉴에 이름 아래 붙는 짧은 설명 (한국어 25자·영어 40자 안팎).
+   * 도구가 실제로 하는 일만 쓴다 (예: '여러 PDF를 원하는 순서로 하나로 합칩니다')
+   */
+  summary: string;
   /** <title> (예: 'PDF 합치기 - 업로드 없이 브라우저에서') */
   title: string;
   /** 검색 결과 설명·카드 설명 */

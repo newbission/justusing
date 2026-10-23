@@ -11,12 +11,14 @@ export default defineTool({
   text: {
     ko: {
       name: '사진 위치 정보 지우기',
+      summary: '사진의 GPS 위치와 EXIF 정보를 지웁니다',
       title: '사진 위치 정보 지우기 - EXIF·GPS 삭제, 업로드 없이 브라우저에서',
       description:
         '사진에 담긴 촬영 위치(GPS)와 찍은 날짜·기기 같은 EXIF 정보를 지웁니다. 사진을 다시 저장하지 않아 화질이 그대로이고, 여러 장을 한 번에 지울 수 있습니다. 사진은 서버에 올라가지 않습니다.',
     },
     en: {
       name: 'Remove Photo Location',
+      summary: 'Strip GPS and EXIF data without re-saving',
       title: 'Remove photo location - Delete EXIF and GPS data in your browser',
       description:
         'Remove the GPS location, date taken, device and other EXIF data from photos. The photo is not saved again, so the quality stays the same, and you can clean many at once. Your photos are never uploaded.',

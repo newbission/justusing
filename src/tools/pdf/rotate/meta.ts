@@ -7,11 +7,13 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 회전',
+      summary: '눕거나 뒤집힌 쪽을 바로 돌립니다',
       title: 'PDF 회전 - 페이지 방향 바로잡기',
       description: '옆으로 눕거나 뒤집힌 PDF 페이지를 원하는 방향으로 돌립니다.',
     },
     en: {
       name: 'Rotate PDF',
+      summary: 'Turn sideways or upside-down pages',
       title: 'Rotate PDF - Fix the orientation of PDF pages',
       description: 'Rotate sideways or upside-down PDF pages to the orientation you want.',
     },

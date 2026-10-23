@@ -7,12 +7,14 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 쪽 번호 넣기',
+      summary: '모든 쪽에 쪽 번호를 넣습니다',
       title: 'PDF 쪽 번호 넣기 - 페이지 번호 매기기, 업로드 없이',
       description:
         'PDF의 모든 쪽에 원하는 위치와 모양으로 쪽 번호를 넣습니다. 모든 처리는 브라우저 안에서 이루어집니다.',
     },
     en: {
       name: 'Add Page Numbers',
+      summary: 'Add page numbers to every page',
       title: 'Add Page Numbers to PDF - Number PDF pages in your browser',
       description:
         'Add page numbers to every page of a PDF, in the position and style you choose. Everything happens inside your browser.',
