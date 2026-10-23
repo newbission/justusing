@@ -118,12 +118,14 @@ function overlaps(a: EngineLine, b: EngineLine): boolean {
 }
 
 /**
- * 바탕을 다시 그려 읽은 줄 가장자리에 붙는 부스러기(말풍선 모서리가 ( ) ' , 처럼 읽힌 것)를 뗀다.
- * 글자·숫자가 없는 조각, 한글 줄 끝의 영문 한 글자를 뺀다
+ * 줄 앞뒤에 홀로 붙은 부스러기를 뗀다: 스위치·아이콘이 [ @) 처럼, 말풍선 모서리가 ( ) ' , 처럼 읽힌 것.
+ * 괄호·세로줄·따옴표·쉼표·마침표 같은 모양 조각(NOISE)으로만 된 낱말만 떼고, 뜻이 있는 기호
+ * ($ ₩ % # + * : 등)는 글자·숫자가 없어도 남긴다. rounded(바탕을 다시 그려 읽은 줄)면 모서리가 i·l로 읽힌 조각도 뗀다
  */
+const NOISE = /^[[\](){}<>|'"`‘’“”,.~_=\\/@©®ㆍ·•-]+$/;
 function trimEdges(text: string, rounded: boolean): string {
   const junk = (word: string) =>
-    letters(word) === 0 || (rounded && /^[il|][^A-Za-z0-9가-힣]*$/.test(word));
+    NOISE.test(word) || (rounded && /^[il|][^A-Za-z0-9가-힣]*$/.test(word));
   let rest = text.trim();
   for (let first = rest.match(/^\S+/)?.[0]; first && junk(first); first = rest.match(/^\S+/)?.[0]) {
     rest = rest.slice(first.length).trimStart();
