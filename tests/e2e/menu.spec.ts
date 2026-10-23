@@ -83,9 +83,9 @@ test('Tab으로 판 밖으로 나가면 닫힌다', async ({ page }) => {
   const count = await links.count();
   for (let i = 0; i < count; i++) await page.keyboard.press('Tab');
   await expect(links.last()).toBeFocused();
-  // 다음 메뉴 버튼(가이드)으로 넘어가면 이미지 판은 닫힌다
+  // 다음 메뉴 버튼(텍스트·CSV)으로 넘어가면 이미지 판은 닫힌다
   await page.keyboard.press('Tab');
-  await expect(trigger(page, '가이드')).toBeFocused();
+  await expect(trigger(page, '텍스트·CSV')).toBeFocused();
   await expect(page.locator('#mega-image')).toBeHidden();
 });
 
@@ -114,11 +114,15 @@ test('마우스를 올리면 잠깐 뒤 열리고, 떠나면 닫힌다. 바깥�
   await expect(page.locator('#mega-pdf')).toBeHidden();
 });
 
-test('가이드 판은 PDF·이미지 가이드로 나뉘고 카테고리 가이드 페이지로 간다', async ({ page }) => {
+test('가이드 판은 카테고리별 가이드로 나뉘고 카테고리 가이드 페이지로 간다', async ({ page }) => {
   await page.goto('/');
   await trigger(page, '가이드').click();
   const panel = page.locator('#mega-guide');
-  await expect(panel.locator('.group-title')).toHaveText(['PDF 가이드', '이미지 가이드']);
+  await expect(panel.locator('.group-title')).toHaveText([
+    'PDF 가이드',
+    '이미지 가이드',
+    '텍스트·CSV 가이드',
+  ]);
   await expect(panel.getByRole('link', { name: '가이드 전체 보기' })).toHaveAttribute(
     'href',
     '/guide/',
