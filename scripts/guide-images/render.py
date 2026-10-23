@@ -9,6 +9,7 @@ src/assets/guides/<언어>/<글>/에 PNG를 쓴다 (커밋한다. 배포용 WebP
 - 그림은 흰 종이 카드 하나로 그린다. 두 테마에서 같은 모습이고, 가이드 글의 테두리·둥근 모서리는 CSS가 맡는다
 - 그림 안 글자는 꼬리표(단계 이름·용량)만 둔다. 설명은 가이드 글과 그림 설명(alt)이 맡는다
 """
+import csv
 import io
 import math
 import os
@@ -16,6 +17,7 @@ import sys
 import zipfile
 
 import fitz
+from fontTools.ttLib import TTFont
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageStat
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -81,6 +83,12 @@ TEXT = {
         'angle': '기울기 바로잡기',
         'car': '예시-번호판사진.jpg',
         'hidden': {'original': '원본', 'blur': '흐리게', 'mosaic': '모자이크', 'fill': '검게 칠하기'},
+        'utf8Csv': '예시-주문목록-UTF8.csv',
+        # 엑셀이 BOM 없는 CSV를 읽는 인코딩 (한국어 윈도우)과 그림에 보일 칸 (받는 분·상품·금액)
+        'excelCodec': 'cp949',
+        'csvColumns': (2, 4, 6),
+        'csvBefore': '엑셀에서 연 원본 (UTF-8, BOM 없음)',
+        'csvAfter': '엑셀용 UTF-8로 바꾼 뒤',
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -129,6 +137,12 @@ TEXT = {
         'angle': 'Straighten',
         'car': 'sample-license-plate.jpg',
         'hidden': {'original': 'Original', 'blur': 'Blur', 'mosaic': 'Mosaic', 'fill': 'Black out'},
+        'utf8Csv': 'sample-orders-utf8.csv',
+        # 서유럽 윈도우의 엑셀 기본 인코딩. 칸: Customer·City·Product
+        'excelCodec': 'cp1252',
+        'csvColumns': (2, 3, 4),
+        'csvBefore': 'Original opened in Excel (UTF-8, no BOM)',
+        'csvAfter': 'After converting to UTF-8 with BOM',
     },
 }
 
@@ -466,6 +480,99 @@ def photo_location(t, cache, samples, fonts):
             draw.text((x + 4, y + row_h / 2), text, font=font, fill=color, anchor='lm')
             x += widths[c]
     return 'photo-location', 'before-after.png', card
+
+
+# 깨진 글자(한자·�)는 Pretendard에 없어 macOS 글꼴로 그린다 (render.py는 맥에서 돌린다)
+FALLBACK_FONTS = [
+    (REGULAR, 0),
+    ('/System/Library/Fonts/AppleSDGothicNeo.ttc', 0),
+    ('/System/Library/Fonts/LucidaGrande.ttc', 0),
+]
+
+
+def mixed_fonts(size: int):
+    """글자마다 그 글자가 있는 첫 글꼴로 그리기 위한 (글꼴, 글자 표) 목록"""
+    out = []
+    for path, index in FALLBACK_FONTS:
+        tt = TTFont(path, fontNumber=index)
+        out.append((ImageFont.truetype(path, size, index=index), set(tt.getBestCmap())))
+    return out
+
+
+def runs(text: str, fonts):
+    """글자를 같은 글꼴끼리 묶는다"""
+    out = []
+    for char in text:
+        font = next((f for f, cmap in fonts if ord(char) in cmap), fonts[0][0])
+        if out and out[-1][0] is font:
+            out[-1][1] += char
+        else:
+            out.append([font, char])
+    return out
+
+
+def mixed_length(text: str, fonts) -> float:
+    return sum(font.getlength(part) for font, part in runs(text, fonts))
+
+
+def draw_mixed(draw, x, y, text, fonts, fill):
+    for font, part in runs(text, fonts):
+        draw.text((x, y), part, font=font, fill=fill, anchor='lm')
+        x += font.getlength(part)
+
+
+def sheet(rows, fonts, widths) -> Image.Image:
+    """엑셀처럼 칸 이름(A, B…)과 줄 번호를 단 표"""
+    row_h = 40
+    head_w = 40
+    width = head_w + sum(widths)
+    height = row_h * (len(rows) + 1)
+    image = Image.new('RGB', (width, height), BG)
+    draw = ImageDraw.Draw(image)
+    head = (244, 244, 241)
+    draw.rectangle([0, 0, width, row_h], fill=head)
+    draw.rectangle([0, 0, head_w, height], fill=head)
+    small = fonts[0][0].font_variant(size=15)
+    for c in range(len(widths)):
+        x = head_w + sum(widths[:c])
+        draw.text((x + widths[c] / 2, row_h / 2), chr(65 + c), font=small, fill=MUTED, anchor='mm')
+    for r, row in enumerate(rows):
+        y = row_h * (r + 1)
+        draw.text((head_w / 2, y + row_h / 2), str(r + 1), font=small, fill=MUTED, anchor='mm')
+        for c, text in enumerate(row):
+            x = head_w + sum(widths[:c])
+            draw_mixed(draw, x + 12, y + row_h / 2, text, fonts, INK)
+    for r in range(len(rows) + 2):
+        draw.line([0, r * row_h, width, r * row_h], fill=LINE)
+    for c in range(len(widths) + 1):
+        x = head_w + sum(widths[:c])
+        draw.line([x, 0, x, height], fill=LINE)
+    draw.line([0, 0, 0, height], fill=LINE)
+    return image
+
+
+def csv_encoding(t, cache, samples, fonts):
+    # 견본(BOM 없는 UTF-8)을 엑셀이 읽는 인코딩으로 읽은 모습과, 도구로 바꾼 파일을 읽은 모습
+    original = open(os.path.join(samples, t['utf8Csv']), 'rb').read()
+    converted = open(os.path.join(cache, 'csv-encoding.csv'), 'rb').read()
+    assert converted.startswith(b'\xef\xbb\xbf') and not original.startswith(b'\xef\xbb\xbf')
+
+    def table(text: str):
+        rows = list(csv.reader(io.StringIO(text)))[:4]
+        return [[row[c] for c in t['csvColumns']] for row in rows]
+
+    before = table(original.decode(t['excelCodec'], errors='replace'))
+    after = table(converted.decode('utf-8-sig'))
+    cell_fonts = mixed_fonts(18)
+    widths = [
+        round(max(mixed_length(row[c], cell_fonts) for row in before + after) + 24)
+        for c in range(len(t['csvColumns']))
+    ]
+    items = [
+        (sheet(before, cell_fonts, widths), t['csvBefore'], ''),
+        (sheet(after, cell_fonts, widths), t['csvAfter'], ''),
+    ]
+    return 'fix-csv-encoding', 'before-after.png', tiles(items, *fonts, cols=1)
 
 
 def fill_pdf_form(t, cache, samples, fonts):
@@ -897,6 +1004,7 @@ GUIDES = {
     'stitch-screenshots': stitch_screenshots,
     'crop-rotate-photo': crop_rotate_photo,
     'hide-info-in-photo': hide_info_in_photo,
+    'fix-csv-encoding': csv_encoding,
 }
 
 
