@@ -1,6 +1,6 @@
 # PDF 글자 인식 (`pdf/ocr`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-17
+쓴 날 2026-10-16 · 고친 날 2026-10-23
 
 - 주소: `/pdf/ocr/` (영어 `/en/pdf/ocr/`)
 - 상태: live (2026-10-17 배포, PR #56)
@@ -38,23 +38,25 @@
 
 ### 파일
 
-| 파일                              | 역할                                                                                |
-| --------------------------------- | ----------------------------------------------------------------------------------- |
-| `src/tools/pdf/ocr/meta.ts`       | 이름·설명·아이콘, 묶음 `convert`, 관련 도구(extract-text, compress)                 |
-| `src/tools/pdf/ocr/content.ts`    | 사용법·FAQ (한·영)                                                                  |
-| `src/tools/pdf/ocr/messages.ts`   | 화면 문구                                                                           |
-| `src/tools/pdf/ocr/Frame.astro`   | 격리 frame 페이지                                                                   |
-| `src/tools/pdf/ocr/App.svelte`    | 화면: 언어·건너뛰기, 데이터 받기 칸, 실행·다운로드                                  |
-| `src/lib/ocr/ocr.ts`              | 데이터 목록(`ocrFiles`, `OCR_CONSENT = 'ocr'`), 워커 풀 `OcrPool`                   |
-| `src/lib/ocr/ocr.worker.ts`       | Tesseract(WebAssembly) 실행. 쪽 그림 → 글자 + 투명 글자층 PDF                       |
-| `src/lib/ocr/catalog.json`        | 데이터 경로·크기·SHA-256 (빌드 때 만든다)                                           |
-| `src/lib/ocr/tesseract-core.d.ts` | 엔진 모듈 타입                                                                      |
-| `scripts/copy-ocr-data.mjs`       | `predev`·`prebuild`에서 node_modules → `public/data/ocr/` 복사, `catalog.json` 쓰기 |
-| `src/frame/data.ts`               | `dataStatus()`·`loadData()`: 바깥 보관소에 묻고 받은 바이트를 SHA-256·크기로 확인   |
-| `src/lib/data-store.ts`           | 바깥 페이지 보관소 (Cache API, `data-consent`)                                      |
-| `src/lib/pdf/render-image.ts`     | `renderPageBitmap()`: 쪽을 300 DPI 그림으로 (PDF를 이미지로와 같이 씀)              |
-| `src/lib/pdf/text-layer.ts`       | `addTextLayers()`: 글자층을 원래 쪽 위에 겹친다                                     |
-| `src/lib/pdf/modify.ts`(+워커)    | `{ kind: 'text-layer', layers }` 작업으로 위를 부른다                               |
+| 파일                              | 역할                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------- |
+| `src/tools/pdf/ocr/meta.ts`       | 이름·설명·아이콘, 묶음 `convert`, 관련 도구(extract-text, compress)                   |
+| `src/tools/pdf/ocr/content.ts`    | 사용법·FAQ (한·영)                                                                    |
+| `src/tools/pdf/ocr/messages.ts`   | 화면 문구                                                                             |
+| `src/tools/pdf/ocr/Frame.astro`   | 격리 frame 페이지                                                                     |
+| `src/tools/pdf/ocr/App.svelte`    | 화면: 언어·건너뛰기(`OcrSetup`), 실행·다운로드                                        |
+| `src/lib/ocr/ocr-data.svelte.ts`  | `OcrData`: 고른 언어, 보관 확인·받기, 엔진에 넘길 바이트 (이미지 글자 추출과 같이 씀) |
+| `src/lib/ocr/OcrSetup.svelte`     | 언어 고르기 + 데이터 받기 칸 (이미지 글자 추출과 같이 씀, 문구는 공통 `ocr`)          |
+| `src/lib/ocr/ocr.ts`              | 데이터 목록(`ocrFiles`, `OCR_CONSENT = 'ocr'`), 워커 풀 `OcrPool`                     |
+| `src/lib/ocr/ocr.worker.ts`       | Tesseract(WebAssembly) 실행. 쪽 그림 → 글자 + 투명 글자층 PDF                         |
+| `src/lib/ocr/catalog.json`        | 데이터 경로·크기·SHA-256 (빌드 때 만든다)                                             |
+| `src/lib/ocr/tesseract-core.d.ts` | 엔진 모듈 타입                                                                        |
+| `scripts/copy-ocr-data.mjs`       | `predev`·`prebuild`에서 node_modules → `public/data/ocr/` 복사, `catalog.json` 쓰기   |
+| `src/frame/data.ts`               | `dataStatus()`·`loadData()`: 바깥 보관소에 묻고 받은 바이트를 SHA-256·크기로 확인     |
+| `src/lib/data-store.ts`           | 바깥 페이지 보관소 (Cache API, `data-consent`)                                        |
+| `src/lib/pdf/render-image.ts`     | `renderPageBitmap()`: 쪽을 300 DPI 그림으로 (PDF를 이미지로와 같이 씀)                |
+| `src/lib/pdf/text-layer.ts`       | `addTextLayers()`: 글자층을 원래 쪽 위에 겹친다                                       |
+| `src/lib/pdf/modify.ts`(+워커)    | `{ kind: 'text-layer', layers }` 작업으로 위를 부른다                                 |
 
 ### 데이터 준비 (빌드)
 
@@ -99,6 +101,7 @@
 
 ### 주의할 점
 
+- 엔진·데이터·워커와 언어·받기 화면은 [이미지 글자 추출](../image-ocr/README.md)이 같이 쓴다. 바꾸면 두 도구를 함께 확인한다 (2026-10-23 공통 부품으로 옮김).
 - 엔진·언어 데이터를 바꾸면(패키지 버전 올림) `catalog.json`이 바뀐다. 개인정보처리방침의 "브라우저에 저장하는 것"과 FAQ·가이드의 크기를 같이 확인한다.
 - 데이터를 받는 동안 언어를 바꾸지 못하게 잠근다. 진행 콜백도 지금 고른 파일 묶음(`files === wanted`)일 때만 상태를 바꾼다.
 - `OcrPool`은 실패해도 `finally`에서 `dispose()`한다. 새 경로를 더할 때 워커가 남지 않게 한다.

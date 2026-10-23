@@ -6,7 +6,8 @@
   [형식 변환](../../features/image-convert/README.md), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만),
   [이어 붙이기](../../features/image-stitch/README.md)(목록 상태 `ImageBatch`, 저장 `saveDrawing`), [자르기·회전](../../features/image-crop/README.md)(`worker-canvas`·`EXTENSIONS`),
   [모자이크](../../features/image-mosaic/README.md)(`worker-canvas`·`EXTENSIONS`, 영역 계산은 `crop-geometry`의 `clampRect`·`resizeRect`),
-  [HEIC 변환](../../features/image-heic-to-jpg/README.md)(`ConvertTool`·`heif.ts`). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
+  [HEIC 변환](../../features/image-heic-to-jpg/README.md)(`ConvertTool`·`heif.ts`),
+  [글자 추출](../../features/image-ocr/README.md)(목록 상태 `ImageBatch`만, 처리는 `src/lib/ocr/`). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
   (이미지를 PDF로·이미지 넣기·서명 넣기)도 쓴다
 - 상태: dev·main 반영 (PR #36, #44, 2026-10-15)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../frame-isolation/README.md), [PDF 공통](../pdf-common/README.md)
@@ -160,6 +161,7 @@
 - [x] 모자이크 (2026-10-23, 원본을 든 워커의 열기·canvas 확인을 `worker-canvas.ts`로 묶음)
 - [x] canvas 한계를 넘는 JPG 저장 (2026-10-23, `JpegStream`, 저장 방식 고르기를 `saveDrawing`으로 묶음)
 - [ ] canvas 한계를 넘는 WebP 저장 (직접 만드는 WebP 인코더가 없다)
+- [x] 글자 추출(OCR) (2026-10-23, 목록 상태만 쓰고 이미지마다 그림·글자 칸을 나란히 그린다)
 - [ ] 배경 제거 같은 다음 이미지 도구 (CLAUDE.md 9단계)
 - [ ] 처리 중 그만두기(`signal`)를 도구 화면에서 쓰기 — 지금은 처리 중에 목록을 잠근다
 
