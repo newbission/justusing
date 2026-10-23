@@ -137,6 +137,8 @@ async function fit(
       : PNG_COLORS_KEEP_SIZE
     : qualitySteps(limit.resize ? RESIZE_FLOOR : KEEP_SIZE_FLOOR);
   const reference = png ? REFERENCE_COLORS : REFERENCE_QUALITY;
+  // 긴 변이 MIN_LONG_SIDE가 되는 배율. 이보다 작게는 줄이지 않고, 못 맞췄다고 하기 전에 이 크기에서 꼭 해 본다
+  const minScale = Math.min(1, MIN_LONG_SIDE / Math.max(bitmap.width, bitmap.height));
   let scale = 1;
   let flattened = false;
   let smallest = Infinity;
@@ -157,13 +159,13 @@ async function fit(
       }
       smallest = Math.min(smallest, found.smallest);
       if (!limit.resize) return { kind: 'over', smallest, reason: 'keep-size' };
-      // 어림 화질로 저장한 용량에서 다음 크기를 정한다 (줄인 크기에서 그 화질 안팎으로 맞는다)
+      // 가장 작게 허용하는 크기에서도 넘으면 목표가 너무 작다
+      if (scale <= minScale) return { kind: 'over', smallest, reason: 'too-small' };
+      // 어림 화질로 저장한 용량에서 다음 크기를 정한다 (줄인 크기에서 그 화질 안팎으로 맞는다).
+      // 어림은 빗나갈 수 있으므로 하한 아래로 가면 하한에서, 마지막 차례면 하한에서 한 번 더 해 본다
       const referenceBytes = (await encode(reference)).length;
       const next = nextScale(scale, referenceBytes, limit.bytes);
-      if (Math.max(bitmap.width, bitmap.height) * next < MIN_LONG_SIDE) {
-        return { kind: 'over', smallest, reason: 'too-small' };
-      }
-      scale = next;
+      scale = round === MAX_ROUNDS - 2 ? minScale : Math.max(minScale, next);
     } finally {
       release(canvas);
     }
