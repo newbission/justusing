@@ -1,5 +1,5 @@
 """
-E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 필요하다.
+E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow와 pillow-heif(HEIC)가 필요하다.
 
   python3 tests/fixtures/make_image_fixtures.py
 
@@ -23,6 +23,13 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 
 - scroll-page.png 위 캡처를 제대로 이었을 때 나와야 하는 긴 화면 (360×1360)
 - scroll-2.jpg  scroll-2.png를 JPG로 (JPG 잡음이 있어도 겹침을 찾는지)
 - scan.png     글자를 찍은 그림 (글자 인식 도구). 한글 한 줄, 영어 한 줄. Pretendard로 그린다
+- iphone.heic  아이폰 사진처럼 회전 표시(irot)가 든 HEIC (HEIC 변환). 화소는 가로 400×300 네 칸(왼쪽 위 빨강,
+               오른쪽 위 초록, 왼쪽 아래 파랑, 오른쪽 아래 흰색)이고 시계 방향 90°로 돌려 보라고 적혀 있다
+               → 바로 세우면 세로 300×400, 왼쪽 위 파랑·오른쪽 위 빨강·왼쪽 아래 흰색·오른쪽 아래 초록. 작은 미리보기 그림도 든다
+- burst.heic   그림 두 장이 든 HEIC (연사처럼). 첫 장은 파랑 200×100, 대표 그림(primary)은 둘째 장 빨강 120×160
+- deep.heic    10비트 HEIC 400×300 (HDR 사진처럼 8비트보다 깊다). 색은 (200, 40, 40)쯤
+- p3.heic      색 공간이 Display P3(nclx 12번)인 HEIC 200×150, 색 (200, 60, 60). 일반 화면 색으로 바꾸면 빨강이 더 짙다
+- broken.heic  머리만 HEIC이고 내용은 깨진 파일
 
 이 스크립트가 만들지 않는 것:
 - face.jpg     흰 배경 앞 얼굴 사진 (증명사진 도구). 얼굴 인식은 실제 사진이라야 해서 NASA 공개 사진
@@ -33,6 +40,7 @@ import io
 import math
 import os
 import random
+import struct
 import zlib
 
 from PIL import Image, ImageDraw, ImageFont, PngImagePlugin
@@ -253,9 +261,44 @@ noise = Image.new('RGB', (80, 60))
 noise.putdata([tuple(noise_rng.randrange(256) for _ in range(3)) for _ in range(80 * 60)])
 noise.save(path('noise.png'))
 
+
+def heic_fixtures():
+    """HEIC 사진들 (HEIC 변환). 크롬은 HEIC를 스스로 읽지 못해 libheif 경로를 시험한다"""
+    import pillow_heif
+
+    turned = Image.new('RGB', (400, 300), (255, 255, 255))
+    turned.paste((255, 0, 0), (0, 0, 200, 150))
+    turned.paste((0, 255, 0), (200, 0, 400, 150))
+    turned.paste((0, 0, 255), (0, 150, 200, 300))
+    exif = Image.Exif()
+    exif[0x0112] = 6
+    # pillow-heif는 EXIF 방향을 회전 표시(irot)로 옮겨 적고 EXIF 방향은 1로 둔다 (아이폰과 같다)
+    pillow_heif.from_pillow(turned).save(
+        path('iphone.heic'), quality=90, exif=exif.tobytes(), thumbnails=[64], color_primaries=1)
+
+    burst = pillow_heif.HeifFile()
+    burst.add_frombytes('RGB', (200, 100), Image.new('RGB', (200, 100), (0, 0, 255)).tobytes())
+    burst.add_frombytes('RGB', (120, 160), Image.new('RGB', (120, 160), (255, 0, 0)).tobytes())
+    burst.save(path('burst.heic'), quality=90, primary_index=1)
+
+    # 16비트 화소로 넘기면 10비트로 저장한다
+    deep = struct.pack('<3H', 200 * 257, 40 * 257, 40 * 257) * (400 * 300)
+    pillow_heif.from_bytes(mode='RGB;16', size=(400, 300), data=deep).save(path('deep.heic'), quality=90)
+
+    pillow_heif.from_pillow(Image.new('RGB', (200, 150), (200, 60, 60))).save(
+        path('p3.heic'), quality=90, color_primaries=12, transfer_characteristic=13, matrix_coefficients=6)
+
+    with open(path('iphone.heic'), 'rb') as f:
+        head = f.read(64)
+    with open(path('broken.heic'), 'wb') as f:
+        f.write(head + b'not really a photo' * 20)
+
+
+heic_fixtures()
+
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
              'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
              'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg', 'quadrants.png',
-             'noise.png']:
+             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic']:
     print(name, os.path.getsize(path(name)), 'bytes')
