@@ -54,6 +54,7 @@ const DOCS = {
   'features/image-stitch': { scopes: ['image-stitch'], prs: [] },
   'features/image-crop': { scopes: ['image-crop'], prs: [] },
   'features/image-mosaic': { scopes: ['image-mosaic'], prs: [] },
+  'features/image-heic-to-jpg': { scopes: ['image-heic-to-jpg'], prs: [] },
   'features/text-csv-encoding': { scopes: ['text-csv-encoding'], prs: [] },
   // 기반 (여러 도구·페이지가 같이 쓰는 것)
   'foundations/frame-isolation': { scopes: ['frame'], prs: [40] },

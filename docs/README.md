@@ -93,6 +93,7 @@ PDF
 | [image-stitch](./features/image-stitch)                   | 이어 붙이기      | live |
 | [image-crop](./features/image-crop)                       | 자르기·회전      | live |
 | [image-mosaic](./features/image-mosaic)                   | 모자이크         | live |
+| [image-heic-to-jpg](./features/image-heic-to-jpg)         | HEIC JPG 변환    | live |
 
 텍스트·CSV
 
