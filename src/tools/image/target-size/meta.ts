@@ -3,13 +3,14 @@ import { defineTool } from '../../types';
 export default defineTool({
   status: 'live',
   section: 'optimize',
-  // 사진 한 장이 아래로 줄어들어 상한 선 위에 멈춘다
+  // 바늘이 정한 눈금에서 멈춘 계기판 (정한 용량에 맞춘다)
   icon: [
-    'M4 3h16v10H4z',
-    'M4 10l4-3.5 3 2.5 3-2 6 4',
-    'M12 15v4',
-    'M9.5 16.5 12 19l2.5-2.5',
-    'M3 21h18',
+    'M3 15a9 9 0 0 1 18 0',
+    'M12 15l4.5-5.5',
+    'M12 6v1.5',
+    'M5.6 8.6l1.1 1.1',
+    'M18.4 8.6l-1.1 1.1',
+    'M3 18h18',
   ],
   text: {
     ko: {
