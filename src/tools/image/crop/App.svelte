@@ -133,7 +133,7 @@
   }
 
   function setRect(next: Rect) {
-    rect = clampRect(next, board);
+    rect = clampRect(next, board, ratioValue);
     edited();
   }
 
@@ -147,12 +147,13 @@
       flipX: turn.flipY,
       flipY: turn.flipX,
     };
-    rect = clampRect(turnRect(rect, before, direction), board);
+    // 비율을 먼저 돌려야 돌린 영역을 새 비율로 맞춘다
     if (ratio !== 'free' && ratio !== 'original') {
       const [w, h] = ratio.split(':');
       const swapped = `${h}:${w}` as Ratio;
       if (RATIOS.includes(swapped)) ratio = swapped;
     }
+    rect = clampRect(turnRect(rect, before, direction), board, ratioValue);
     edited();
   }
 
@@ -181,14 +182,9 @@
   /** 숫자 칸에서 하나를 바꿨다. 비율을 지킬 때는 폭·높이를 같이 바꾼다 */
   function setField(field: keyof Rect, value: number) {
     if (!Number.isFinite(value)) return;
-    let next = { ...rect, [field]: value };
-    if (ratioValue !== undefined && (field === 'width' || field === 'height')) {
-      if (field === 'width') next.height = next.width / ratioValue;
-      else next.width = next.height * ratioValue;
-      // 판을 넘으면 비율째 줄인다
-      const shrink = Math.min(1, board.width / next.width, board.height / next.height);
-      next = { ...next, width: next.width * shrink, height: next.height * shrink };
-    }
+    const next = { ...rect, [field]: value };
+    // 판을 넘거나 너무 작으면 setRect(clampRect)가 비율째 맞춘다
+    if (ratioValue !== undefined && field === 'height') next.width = next.height * ratioValue;
     setRect(next);
   }
 
