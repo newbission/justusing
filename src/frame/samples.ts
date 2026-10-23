@@ -25,7 +25,11 @@ type SampleKey =
   | 'screen'
   | 'chat1'
   | 'chat2'
-  | 'chat3';
+  | 'chat3'
+  /** 엑셀이 기본으로 읽지 않는 예전 인코딩의 CSV (한국어 CP949, 영어 Windows-1252) */
+  | 'legacyCsv'
+  /** BOM 없는 UTF-8 CSV (엑셀에서 깨짐) */
+  | 'utf8Csv';
 
 /** 언어별 파일 이름 (make_samples.py의 TEXT와 같게) */
 const NAMES: Record<Locale, Record<SampleKey, string>> = {
@@ -47,6 +51,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     chat1: '예시-대화캡처1.png',
     chat2: '예시-대화캡처2.png',
     chat3: '예시-대화캡처3.png',
+    legacyCsv: '예시-은행거래내역-CP949.csv',
+    utf8Csv: '예시-주문목록-UTF8.csv',
   },
   en: {
     report: 'sample-report.pdf',
@@ -66,6 +72,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     chat1: 'sample-chat-1.png',
     chat2: 'sample-chat-2.png',
     chat3: 'sample-chat-3.png',
+    legacyCsv: 'sample-contacts-windows-1252.csv',
+    utf8Csv: 'sample-orders-utf8.csv',
   },
 };
 
@@ -103,12 +111,14 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/stitch': ['chat1', 'chat2', 'chat3'],
   'image/crop': ['tilted'],
   'image/mosaic': ['car'],
+  'text/csv-encoding': ['utf8Csv', 'legacyCsv'],
 };
 
 const TYPES: Record<string, string> = {
   pdf: 'application/pdf',
   jpg: 'image/jpeg',
   png: 'image/png',
+  csv: 'text/csv',
 };
 
 /** 도구에 견본이 있는지 (바깥 페이지가 빌드 때 '따라 하기' 버튼을 그릴지 정한다) */
