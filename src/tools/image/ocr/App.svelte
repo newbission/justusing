@@ -242,15 +242,22 @@
           {blocker ?? t.ready(pending.length)}
         {/if}
       {/snippet}
-      {#if finished && done.length > 0}
-        <button type="button" class="btn" onclick={() => copy(combined())}>{t.copyAll}</button>
-        <button type="button" class="btn primary" onclick={saveText}>{t.downloadText}</button>
-      {:else}
+      <!-- 읽은 것이 있으면 받을 수 있고, 읽지 못했거나 새로 더한 이미지가 있으면 그것만 다시 읽을 수 있다 -->
+      {#if done.length === 0 || pending.length > 0}
         <button
           type="button"
-          class="btn primary"
+          class="btn"
+          class:primary={done.length === 0}
           disabled={busy || blocker !== undefined}
           onclick={run}>{t.run}</button
+        >
+      {/if}
+      {#if done.length > 0}
+        <button type="button" class="btn" disabled={busy} onclick={() => copy(combined())}
+          >{t.copyAll}</button
+        >
+        <button type="button" class="btn primary" disabled={busy} onclick={saveText}
+          >{t.downloadText}</button
         >
       {/if}
     </ActionBar>

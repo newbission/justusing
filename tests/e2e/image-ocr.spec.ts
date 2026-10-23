@@ -113,6 +113,23 @@ test('서류 사진과 대화 캡처의 글자를 읽어 복사하고 TXT로 받
   // 한 장만 복사
   await frame.getByRole('button', { name: `${CHAT}의 글자 복사` }).click();
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(chatText);
+
+  // 이미지를 더하면 받기 버튼은 그대로 두고 새 이미지만 읽는다 (고쳐 쓴 글자는 남는다)
+  await frame
+    .locator('.summary input[type=file]')
+    .setInputFiles(
+      fileURLToPath(new URL('../../public/samples/en/sample-screenshot.png', import.meta.url)),
+    );
+  await expect(frame.getByRole('button', { name: 'TXT 다운로드' })).toBeEnabled();
+  await frame.getByRole('button', { name: '글자 인식' }).click();
+  await expect(frame.getByText('이미지 3장에서 글자', { exact: false })).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(frame.getByRole('button', { name: '글자 인식' })).toHaveCount(0);
+  await expect(
+    frame.getByRole('textbox', { name: 'sample-screenshot.png에서 읽은 글자' }),
+  ).toHaveValue(/Dark mode/);
+  await expect(doc).toHaveValue(/고쳐 쓴 줄/);
 });
 
 test('옆으로 누운 이미지와 기운 이미지를 바로 세워 읽고, 못 여는 파일은 빼고 읽는다', async ({
