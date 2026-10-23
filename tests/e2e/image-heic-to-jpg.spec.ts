@@ -121,6 +121,14 @@ test('깨진 HEIC는 알려 주고 빼고 바꾼다', async ({ page }) => {
   await expect(frame.getByText('사진 1장을 JPG로 바꿉니다.')).toBeVisible();
 });
 
+test('HEIC 엔진을 받지 못하면 읽는 중에 멈추지 않고 모두 알린다', async ({ page }) => {
+  // 풀기 워커 수(최대 2)보다 많이 넣어, 기다리던 요청까지 실패로 끝나는지 본다
+  await page.route('**/libheif.*.wasm', (route) => route.abort());
+  const frame = await openTool(page, ['iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic']);
+  await expect(frame.getByText('읽지 못하는 사진입니다.', { exact: false })).toHaveCount(4);
+  await expect(frame.getByText('바꿀 사진을 넣어 주세요.')).toBeVisible();
+});
+
 test('예시 사진 두 장을 바꿔 받는다', async ({ page }) => {
   await page.goto('/image/heic-to-jpg/');
   const frame = page.frameLocator('iframe[data-tool-frame]');

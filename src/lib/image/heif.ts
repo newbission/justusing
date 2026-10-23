@@ -101,7 +101,9 @@ async function acquire(): Promise<Worker> {
   try {
     return await spawn();
   } catch (error) {
-    live--;
+    // 띄우지 못한 자리를 돌려준다. 기다리던 일은 그 자리에서 다시 띄워 보고, 또 실패하면 그 일도 실패로 끝난다
+    // (안 그러면 깨워 줄 워커가 없어 영원히 기다린다)
+    freeSlot();
     throw error;
   }
 }
@@ -112,12 +114,17 @@ function release(worker: Worker) {
   else idle.push(worker);
 }
 
-/** 죽은 워커를 버리고, 기다리던 일이 있으면 새 워커를 띄워 준다 */
-function discard(worker: Worker) {
-  worker.terminate();
+/** 워커 자리 하나를 비우고, 기다리던 일이 있으면 그 자리에 새 워커를 띄워 준다 */
+function freeSlot() {
   live--;
   const next = waiting.shift();
   if (next) acquire().then(next.resolve, next.reject);
+}
+
+/** 죽은 워커를 버린다 */
+function discard(worker: Worker) {
+  worker.terminate();
+  freeSlot();
 }
 
 async function call(file: Blob, jpeg?: { side?: number; quality: number }): Promise<HeifResponse> {
