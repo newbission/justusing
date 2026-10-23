@@ -1,5 +1,6 @@
 /**
  * 글자 인식 워커 (ocr.ts가 부른다). 인식 엔진(Tesseract, WebAssembly)을 이 워커 안에서 돌린다.
+ * PDF 쪽 그림(글자 + 투명 글자층)과 사진·화면 캡처(글자 + 줄 자리, image-read.ts)를 읽는다.
  *
  * 엔진과 언어 데이터는 화면이 보관소에서 받아 확인한 바이트를 넘겨준다. 워커는 아무 데서도 받지 않는다
  * (frame의 CSP가 우리 사이트 밖 연결을 막고, 엔진이 스스로 받으려 하지 않도록 wasmBinary를 직접 준다).
@@ -7,6 +8,8 @@
  */
 import createTesseract from 'tesseract.js-core/tesseract-core-simd-lstm.js';
 import type { OcrRequest, OcrResponse } from './ocr';
+import { toGray, type Gray } from './image-prep';
+import { readImage, type EngineLine } from './image-read';
 
 /** 엔진 모듈 중 이 워커가 쓰는 부분 */
 interface TessModule {
@@ -16,6 +19,9 @@ interface TessModule {
   _free(pointer: number): void;
   TessBaseAPI: new () => TessApi;
   TessPDFRenderer: new (base: string, dataDir: string, textOnly: boolean) => TessRenderer;
+  RIL_PARA: number;
+  RIL_TEXTLINE: number;
+  destroy(object: unknown): void;
 }
 interface TessApi {
   Init(dataDir: string, langs: string, engineMode: number): number;
@@ -29,7 +35,17 @@ interface TessApi {
   SetSourceResolution(dpi: number): void;
   Recognize(monitor: null): number;
   GetUTF8Text(): string;
+  GetIterator(): TessIterator;
   Clear(): void;
+}
+interface TessIterator {
+  Begin(): void;
+  Next(level: number): boolean;
+  Empty(level: number): boolean;
+  IsAtBeginningOf(level: number): boolean;
+  GetUTF8Text(level: number): string;
+  Confidence(level: number): number;
+  getBoundingBox(level: number): { x0: number; y0: number; x1: number; y1: number };
 }
 interface TessRenderer {
   BeginDocument(title: string): boolean;
@@ -90,6 +106,67 @@ function recognize(request: Extract<OcrRequest, { type: 'page' }>) {
   }
 }
 
+/** 회색 그림 하나를 읽어 줄마다 글자·자리·확실한 정도를 돌려준다 */
+function recognizeLines(gray: Gray): EngineLine[] {
+  if (!tess || !api) throw new Error('not initialized');
+  const pointer = tess._malloc(gray.data.length);
+  try {
+    tess.HEAPU8.set(gray.data, pointer);
+    api.SetImage(pointer, gray.width, gray.height, 1, gray.width);
+    api.Recognize(null);
+    const lines: EngineLine[] = [];
+    const iterator = api.GetIterator();
+    const level = tess.RIL_TEXTLINE;
+    iterator.Begin();
+    do {
+      if (iterator.Empty(level)) continue;
+      lines.push({
+        text: iterator.GetUTF8Text(level).replace(/\n+$/, ''),
+        ...iterator.getBoundingBox(level),
+        confidence: iterator.Confidence(level),
+        paragraph: iterator.IsAtBeginningOf(tess.RIL_PARA),
+      });
+    } while (iterator.Next(level));
+    tess.destroy(iterator);
+    return lines;
+  } finally {
+    tess._free(pointer);
+    api.Clear();
+  }
+}
+
+/** 처음부터 회색으로 읽어 들이는 그림 화소 수 한도. 더 큰 사진은 읽어 들일 때 줄인다 */
+const MAX_SOURCE_PIXELS = 12_000_000;
+
+/** 사진·화면 캡처 한 장을 읽는다 (방향은 사진에 적힌 대로 바로 세운다) */
+async function readPicture(request: Extract<OcrRequest, { type: 'image' }>) {
+  const bitmap = await createImageBitmap(request.image, { imageOrientation: 'from-image' });
+  const { width, height } = bitmap;
+  const shrink = Math.min(1, Math.sqrt(MAX_SOURCE_PIXELS / (width * height)));
+  const w = Math.max(1, Math.round(width * shrink));
+  const h = Math.max(1, Math.round(height * shrink));
+  const canvas = new OffscreenCanvas(w, h);
+  const context = canvas.getContext('2d', { willReadFrequently: true })!;
+  // 투명한 곳은 흰 바탕으로 (PNG 화면 캡처)
+  context.fillStyle = '#fff';
+  context.fillRect(0, 0, w, h);
+  context.imageSmoothingQuality = 'high';
+  context.drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
+  const gray = toGray(context.getImageData(0, 0, w, h).data, w, h);
+  canvas.width = canvas.height = 1;
+  const result = readImage(gray, recognizeLines);
+  return {
+    text: result.text,
+    lines: result.lines.map((line) => ({
+      ...line,
+      corners: line.corners.map((value) => Math.round((value / shrink) * 10) / 10),
+    })),
+    width,
+    height,
+  };
+}
+
 addEventListener('message', async (event: MessageEvent<OcrRequest>) => {
   const request = event.data;
   const send = (response: OcrResponse, transfer: Transferable[] = []) =>
@@ -98,6 +175,8 @@ addEventListener('message', async (event: MessageEvent<OcrRequest>) => {
     if (request.type === 'init') {
       await init(request);
       send({ id: request.id, kind: 'ready' });
+    } else if (request.type === 'image') {
+      send({ id: request.id, kind: 'image', ...(await readPicture(request)) });
     } else {
       const { text, layer } = recognize(request);
       send({ id: request.id, kind: 'page', text, layer }, [layer.buffer]);
