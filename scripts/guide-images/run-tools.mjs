@@ -359,6 +359,21 @@ const JOBS = {
     }
   },
 
+  // 용량 맞추기: 사진을 30KB로, 크기도 줄이기·화질만
+  async 'target-size'({ sample, out }) {
+    for (const [method, label] of [
+      ['resize', '필요하면 크기도 줄이기 (추천)'],
+      ['keep', '크기는 그대로, 화질만'],
+    ]) {
+      await open('/image/target-size/', sample('photo'));
+      await frame.getByText('직접 입력', { exact: true }).click();
+      await frame.getByLabel('목표 용량 숫자').fill('30');
+      await frame.getByText(label).click();
+      await frame.getByRole('button', { name: '용량 맞추기' }).click();
+      await save('다운로드', `${out}target-size-${method}.jpg`);
+    }
+  },
+
   // 이미지 크기: 사진을 50%·25%로
   async 'image-resize'({ sample, out }) {
     for (const percent of [50, 25]) {

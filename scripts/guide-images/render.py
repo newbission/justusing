@@ -97,6 +97,7 @@ TEXT = {
         'ocrTilted': '12° 기울여 찍은 서류',
         'ocrChat': '대화 캡처',
         'ocrLines': lambda n: f'읽은 줄 {n}개',
+        'fitted': {'original': '원본', 'resize': '크기도 줄이기', 'keep': '화질만'},
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -158,6 +159,7 @@ TEXT = {
         'ocrTilted': 'Paper shot at 12°',
         'ocrChat': 'Chat screenshot',
         'ocrLines': lambda n: f'{n} lines read',
+        'fitted': {'original': 'Original', 'resize': 'Also resize', 'keep': 'Quality only'},
     },
 }
 
@@ -640,6 +642,24 @@ def compress_image(t, cache, samples, fonts):
     return 'compress-image', 'levels.png', tiles(items, *fonts)
 
 
+def photo_size_limit(t, cache, samples, fonts):
+    # 30KB 목표: 크기도 줄인 것과 화질만 낮춘 것. 해 둘레와 하늘을 같은 크기로 잘라 놓는다
+    # (화질만 낮추면 하늘에 네모 얼룩이 생기고, 크기를 줄이면 조금 흐려질 뿐이다)
+    photo = os.path.join(samples, t['photo'])
+    paths = [
+        (photo, t['fitted']['original']),
+        (os.path.join(cache, 'target-size-resize.jpg'), t['fitted']['resize']),
+        (os.path.join(cache, 'target-size-keep.jpg'), t['fitted']['keep']),
+    ]
+    items = []
+    for path, label in paths:
+        image = Image.open(path).convert('RGB')
+        w, h = image.size
+        crop = image.crop((round(w * 0.44), round(h * 0.2), round(w * 0.58), round(h * 0.38)))
+        items.append((fit_width(crop, 220), label, f'{w}×{h} · {size_label(path)}'))
+    return 'photo-size-limit', 'compare.png', tiles(items, *fonts)
+
+
 def resize_image(t, cache, samples, fonts):
     # 원래 크기 대비 같은 비율로 줄여 그린다
     photo = os.path.join(samples, t['photo'])
@@ -1053,6 +1073,7 @@ GUIDES = {
     'extract-images-pdf': extract_images_pdf,
     'compress-image': compress_image,
     'resize-image': resize_image,
+    'photo-size-limit': photo_size_limit,
     'convert-image': convert_image,
     'heic-to-jpg': heic_to_jpg,
     'photo-location': photo_location,
