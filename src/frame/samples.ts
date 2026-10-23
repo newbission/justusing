@@ -113,6 +113,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/resize': ['photo', 'screen'],
   'image/convert': ['photo', 'screen'],
   'image/heic-to-jpg': ['heic1', 'heic2'],
+  'image/ocr': ['docPhoto2', 'chat1'],
   'image/id-photo': ['face'],
   'image/remove-location': ['located', 'screen'],
   'image/stitch': ['chat1', 'chat2', 'chat3'],

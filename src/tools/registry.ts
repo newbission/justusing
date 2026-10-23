@@ -44,6 +44,7 @@ const TOOL_IDS: readonly string[] = [
   'image/resize',
   'image/convert',
   'image/heic-to-jpg',
+  'image/ocr',
   'image/id-photo',
   'image/remove-location',
   'image/stitch',
