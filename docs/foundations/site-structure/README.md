@@ -4,7 +4,7 @@
 
 - 범위: 도구 레지스트리·카테고리·묶음, 페이지 라우트, 레이아웃(`BaseLayout`·`ToolLayout`·`DocLayout`·`RailShell`),
   테마(다크 모드), 로고, 사이트 설정, 이용 권한(`canUse`)
-- 상태: live (2026-10-10 골격, 2026-10-14 로고·글꼴, 2026-10-15 묶음·아이콘·이미지 카테고리)
+- 상태: live (2026-10-10 골격, 2026-10-14 로고·글꼴, 2026-10-15 묶음·아이콘·이미지 카테고리, 2026-10-23 텍스트·CSV 카테고리)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../frame-isolation/README.md), [다국어](../i18n/README.md),
   [광고](../ads-and-analytics/README.md), [검색·가이드](../seo-and-guides/README.md),
   [`CLAUDE.md`](../../../CLAUDE.md)의 "도구 레지스트리"·"주소 구조"·"로고"·"화면·접근성"
@@ -16,7 +16,7 @@
 
 - 주소: `/`(허브) → `/pdf/`(카테고리) → `/pdf/merge/`(도구) → `/pdf/merge/frame/`(격리 frame). 영어는 앞에 `/en`
 - 주소는 서브도메인이 아니라 경로로 나누고, 늘 끝 슬래시로 끝난다 (`trailingSlash: 'always'`)
-- 지금 카테고리 2개(PDF 6묶음, 이미지 4묶음), 도구 31개 모두 `live`
+- 지금 카테고리 3개(PDF 6묶음, 이미지 4묶음, 텍스트·CSV 1묶음), 도구 33개 모두 `live`
 
 ## 2. 어떻게 만드는지
 
@@ -125,6 +125,8 @@
 
 ### 주의할 점
 
+- 카테고리 ID는 주소 첫 경로다. `public/`의 폴더(`data`·`samples`·`vendor`)나 다른 페이지(`guide`·`en`·`brand` 등)와 겹치면 안 된다.
+  텍스트 도구 카테고리를 처음에 `data`로 만들었다가 글꼴·OCR 데이터 자리(`/data/`)와 겹쳐 `text`로 바꿨다 (2026-10-23)
 - 사이트명·도메인·메일 주소를 코드나 글에 직접 쓰지 않는다. `siteConfig`·`siteUrl`·`contactEmail`을 쓴다
   (안전 그림에 사이트명을 직접 써서 PR #17 리뷰에서 지적받고 고쳤다, `444ea03`)
 - 새 바깥 페이지는 `BaseLayout`(+`RailShell`)을 쓰고 영어판도 만든다. `BaseLayout`이 hreflang을 모든 언어로 단다
