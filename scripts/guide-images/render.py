@@ -1,6 +1,7 @@
 """
 가이드 그림 그리기. run-tools.mjs가 우리 도구로 만든 결과(.cache/guide-images/)와 견본(public/samples/)으로
 src/assets/guides/<언어>/<글>/에 PNG를 쓴다 (커밋한다. 배포용 WebP는 빌드가 만든다).
+움직이는 그림이 있는 글(MOTIONS)은 public/guide-motion/<언어>/<글>/에 애니메이션 WebP도 쓴다.
 
   python3 scripts/guide-images/render.py   (PyMuPDF·Pillow 필요)
 
@@ -8,12 +9,13 @@ src/assets/guides/<언어>/<글>/에 PNG를 쓴다 (커밋한다. 배포용 WebP
 - 그림 안 글자는 꼬리표(단계 이름·용량)만 둔다. 설명은 가이드 글과 그림 설명(alt)이 맡는다
 """
 import io
+import math
 import os
 import sys
 import zipfile
 
 import fitz
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageStat
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CACHE = os.path.join(ROOT, '.cache', 'guide-images')
@@ -74,6 +76,8 @@ TEXT = {
         'tilted': '예시-기운사진.jpg',
         'tiltedLabel': '원본: 수평선이 기울었음',
         'straightened': '4° 바로잡고 4:5로 자름',
+        'removed': '지워지는 곳',
+        'angle': '기울기 바로잡기',
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -118,6 +122,8 @@ TEXT = {
         'tilted': 'sample-tilted-photo.jpg',
         'tiltedLabel': 'Original: tilted horizon',
         'straightened': 'Straightened 4°, cropped to 4:5',
+        'removed': 'Removed',
+        'angle': 'Straighten',
     },
 }
 
@@ -560,6 +566,292 @@ def crop_rotate_photo(t, cache, samples, fonts):
         items.append((small, label, f'{image.width}×{image.height}'))
     return 'crop-rotate-photo', 'straightened.png', tiles(items, *fonts, gap=20)
 
+# ---- 움직이는 그림 (2026-10-23) ----
+# 정지 그림과 같은 칸 자리·크기로 3~4초 움직이는 그림. 재료도 같다: 견본과 도구가 만든 실제 결과
+# (끝 화면은 도구가 만든 결과 그대로). 파일은 public/guide-motion/에 쓴다. Astro 이미지 처리를 거치지 않는
+# 애니메이션 WebP다 (정지 그림은 '움직임 줄이기'를 켠 사람과 움직이는 그림을 못 쓰는 곳에 보인다).
+MOTION_OUT = os.path.join(ROOT, 'public', 'guide-motion')
+MOTION_QUALITY = 70
+FRAME_MS = 50  # 20fps. 멈춘 구간은 프레임 하나에 긴 시간을 준다
+WARN = (214, 96, 58)  # 지워지는 곳 표시색
+
+
+def ease(x: float) -> float:
+    """천천히 시작해 천천히 멈춘다 (0~1)"""
+    x = min(max(x, 0.0), 1.0)
+    return x * x * (3 - 2 * x)
+
+
+def span(now: float, start: float, end: float) -> float:
+    """now(ms)가 start~end 사이에서 0에서 1로 가는 정도"""
+    return min(max((now - start) / (end - start), 0.0), 1.0)
+
+
+def mix(color, alpha: float):
+    """배경(흰색)에서 color까지 alpha만큼 짙은 색"""
+    return tuple(round(BG[i] + (color[i] - BG[i]) * alpha) for i in range(3))
+
+
+def tint(image: Image.Image, color, alpha: float) -> Image.Image:
+    return Image.blend(image, Image.new('RGB', image.size, color), alpha)
+
+
+def dashed_box(draw: ImageDraw.ImageDraw, x, y, w, h, color):
+    """점선 상자 (아직 비어 있는 칸)"""
+    for px in range(x, x + w, 8):
+        draw.line([(px, y), (min(px + 3, x + w - 1), y)], fill=color)
+        draw.line([(px, y + h - 1), (min(px + 3, x + w - 1), y + h - 1)], fill=color)
+    for py in range(y, y + h, 8):
+        draw.line([(x, py), (x, min(py + 3, y + h - 1))], fill=color)
+        draw.line([(x + w - 1, py), (x + w - 1, min(py + 3, y + h - 1))], fill=color)
+
+
+def caption(draw, fonts, x, y, text, sub='', alpha=1.0):
+    bold, regular = fonts
+    draw.text((x, y), text, font=bold, fill=mix(INK, alpha))
+    if sub:
+        draw.text((x, y + 22), sub, font=regular, fill=mix(MUTED, alpha))
+
+
+def timeline(frame, steps, loop_ms):
+    """steps: (시작, 끝, 움직임 여부). 멈춘 구간은 프레임 하나에 긴 시간을, 움직이는 구간은 FRAME_MS마다 한 장씩.
+    마지막에 loop_ms 동안 끝 그림에서 처음 그림으로 서서히 바뀌어 반복이 끊기지 않는다"""
+    frames, durations = [], []
+    for start, end, moving in steps:
+        if moving:
+            now = start
+            while now < end:
+                frames.append(frame(now))
+                durations.append(min(FRAME_MS, round(end - now)))
+                now += FRAME_MS
+        else:
+            frames.append(frame(start))
+            durations.append(round(end - start))
+    last, first = frames[-1], frames[0]
+    count = max(1, round(loop_ms / FRAME_MS))
+    for i in range(1, count + 1):
+        frames.append(Image.blend(last, first, ease(i / count)))
+        durations.append(FRAME_MS)
+    return frames, durations
+
+
+def kept_rows(stitched: Image.Image, captures: list[Image.Image]):
+    """이은 결과가 캡처마다 어느 줄을 가져왔는지 되짚는다 (결과의 줄과 캡처의 줄이 같은지로 찾는다).
+    캡처마다 (가져온 줄 시작, 끝, 결과에서의 시작 줄). 겹친 부분은 앞 캡처가 가져가고,
+    다음 캡처는 그 아래부터 가져온다 (도구가 지우는 것과 같은 결과)"""
+
+    def rows(image):
+        data = image.tobytes()
+        step = image.width * 3
+        return [data[i * step : (i + 1) * step] for i in range(image.height)]
+
+    result = rows(stitched)
+    index: dict[bytes, list[int]] = {}
+    for y, row in enumerate(result):
+        index.setdefault(row, []).append(y)
+    found = []
+    for capture in captures:
+        lines = rows(capture)
+        votes: dict[int, int] = {}
+        for r, row in enumerate(lines):
+            hits = index.get(row, [])
+            if 0 < len(hits) <= 2:
+                for y in hits:
+                    votes[y - r] = votes.get(y - r, 0) + 1
+        offset = max(votes, key=votes.get)
+        best, start = (0, 0), None
+        for r in range(len(lines) + 1):
+            same = r < len(lines) and 0 <= r + offset < len(result) and result[r + offset] == lines[r]
+            if same and start is None:
+                start = r
+            if not same and start is not None:
+                if r - start > best[1] - best[0]:
+                    best = (start, r)
+                start = None
+        found.append((offset, best[0], best[1]))
+    kept = []
+    done = 0  # 결과에서 지금까지 채운 줄
+    for offset, first, last in found:
+        top = max(first, done - offset)
+        kept.append((top, last, top + offset))
+        done = last + offset
+    assert kept[0][2] == 0 and done == stitched.height, (kept, stitched.height)
+    return kept
+
+
+def stitch_motion(t, cache, samples, fonts):
+    """캡처 세 장에서 지워질 곳(고정 막대·겹친 부분)에 색이 입혀졌다 사라지고, 남은 조각이 한 장으로 모인다"""
+    bold, _ = fonts
+    scale = 300 / 1334
+    captures = [Image.open(os.path.join(samples, name)).convert('RGB') for name in t['scrolls']]
+    stitched = Image.open(os.path.join(cache, 'stitch.png')).convert('RGB')
+    kept = kept_rows(stitched, captures)
+    thumbs = [fit_width(image, round(image.width * scale), Image.LANCZOS) for image in captures]
+    final = fit_width(stitched, thumbs[0].width, Image.LANCZOS)
+    items = [(thumb, t['capture'](n + 1), f'{c.width}×{c.height}') for n, (thumb, c) in enumerate(zip(thumbs, captures))]
+    items.append((final, t['stitched'], f'{stitched.width}×{stitched.height}'))
+    width, height, origins, label_ys = tile_layout(items, *fonts, gap=20)
+    fx, fy = origins[3]
+
+    pieces = []
+    for n, (capture, thumb) in enumerate(zip(captures, thumbs)):
+        top, bottom, at = kept[n]
+        y0 = round(top * scale)
+        end_top = round(at * scale)
+        end_bottom = round((at + bottom - top) * scale)
+        # 결과 칸에서 조각끼리 빈틈이 없게, 도착했을 때의 높이로 만든다
+        keep = capture.crop((0, top, capture.width, bottom)).resize((thumb.width, end_bottom - end_top), Image.LANCZOS)
+        ox, oy = origins[n]
+        pieces.append({
+            'keep': keep,
+            'start': (ox, oy + y0),
+            'end': (fx, fy + end_top),
+            # 지워지는 줄 범위 (캡처 칸 안 y): 위쪽, 아래쪽
+            'cuts': [(0, y0), (y0 + keep.height, thumb.height)],
+        })
+
+    HOLD, TINT_END, MOVE_START, SLIDE, STAGGER = 500, 1000, 1250, 700, 100
+    MOVE_END = MOVE_START + SLIDE + 2 * STAGGER
+    FINAL_END = MOVE_END + 1000
+
+    def frame(now: float) -> Image.Image:
+        card = Image.new('RGB', (width, height), BG)
+        draw = ImageDraw.Draw(card)
+        warn = ease(span(now, HOLD, TINT_END))  # 지워질 곳에 색이 입혀진 정도
+        gone = ease(span(now, MOVE_START, MOVE_START + 500))  # 지워질 곳이 사라진 정도
+        arrived = now >= MOVE_END
+        if arrived:
+            card.paste(final, (fx, fy))  # 도착한 뒤에는 도구가 만든 실제 결과 그대로
+            draw.rectangle([fx, fy, fx + final.width - 1, fy + final.height - 1], outline=LINE)
+        else:
+            dashed_box(draw, fx, fy, final.width, final.height, LINE)
+        for n, piece in enumerate(pieces):
+            ox, oy = origins[n]
+            if gone < 1:
+                for a, b in piece['cuts']:
+                    region = tint(thumbs[n].crop((0, a, thumbs[n].width, b)), WARN, 0.55 * warn)
+                    card.paste(Image.blend(region, Image.new('RGB', region.size, BG), gone), (ox, oy + a))
+        if not arrived:
+            # 남는 조각은 캡처 3부터 차례로 결과 칸에 쌓인다 (늦게 떠나는 조각이 위에 그려진다)
+            for n in (2, 1, 0):
+                begin = MOVE_START + STAGGER * (2 - n)
+                slide = ease(span(now, begin, begin + SLIDE))
+                (sx, sy), (ex, ey) = pieces[n]['start'], pieces[n]['end']
+                card.paste(pieces[n]['keep'], (round(sx + (ex - sx) * slide), round(sy + (ey - sy) * slide)))
+        if gone < 1:
+            for n in range(3):
+                ox, oy = origins[n]
+                draw.rectangle([ox, oy, ox + thumbs[n].width - 1, oy + thumbs[n].height - 1], outline=mix(LINE, 1 - gone))
+        for n in range(3):
+            caption(draw, fonts, origins[n][0], label_ys[n], items[n][1], items[n][2])
+        legend = ease(span(now, HOLD, TINT_END)) * (1 - span(now, MOVE_START, MOVE_START + 300))
+        if legend > 0:
+            draw.rectangle([fx, label_ys[3] + 3, fx + 13, label_ys[3] + 16], fill=mix(WARN, legend * 0.8))
+            draw.text((fx + 22, label_ys[3]), t['removed'], font=bold, fill=mix(INK, legend))
+        shown = ease(span(now, MOVE_END - 350, MOVE_END))
+        if shown > 0:
+            caption(draw, fonts, fx, label_ys[3], items[3][1], items[3][2], shown)
+        return card
+
+    steps = [(0, HOLD, False), (HOLD, TINT_END, True), (TINT_END, MOVE_START, False), (MOVE_START, MOVE_END, True), (MOVE_END, FINAL_END, False)]
+    return 'stitch-screenshots', 'stitched.webp', *timeline(frame, steps, 300)
+
+
+def crop_motion(t, cache, samples, fonts):
+    """기운 사진이 바로 서고, 4:5 상자 밖이 사라지며 상자 안이 결과 칸으로 간다"""
+    original = Image.open(os.path.join(samples, t['tilted'])).convert('RGB')
+    result = Image.open(os.path.join(cache, 'crop.jpg')).convert('RGB')
+    base = fit_height(original, 300)
+    final = fit_height(result, 300)
+    items = [
+        (base, t['tiltedLabel'], f'{original.width}×{original.height}'),
+        (final, t['straightened'], f'{result.width}×{result.height}'),
+    ]
+    width, height, origins, label_ys = tile_layout(items, *fonts, gap=20)
+    (x1, y1), (x2, y2) = origins
+    bw, bh = base.size
+    ANGLE = 4.0  # run-tools.mjs가 도구에 넣는 값과 같다
+    work = original.resize((bw * 2, bh * 2), Image.LANCZOS)  # 두 배 크기로 줄여 두고 돌릴 때 한 번만 더 줄인다
+
+    def turned(angle):
+        """도구와 같은 계산(src/lib/image/crop-geometry.ts): 시계 방향으로 angle도 돌리고 귀퉁이가 비지 않게 키운다"""
+        if not angle:
+            return base
+        r = math.radians(angle)
+        k = max((bw * math.cos(r) + bh * math.sin(r)) / bw, (bw * math.sin(r) + bh * math.cos(r)) / bh) * (1 + 2 / min(bw, bh))
+        a, b = 2 * math.cos(r) / k, 2 * math.sin(r) / k
+        d, e = -b, a
+        data = (a, b, work.width / 2 - a * bw / 2 - b * bh / 2, d, e, work.height / 2 - d * bw / 2 - e * bh / 2)
+        return work.transform((bw, bh), Image.AFFINE, data, Image.BICUBIC)
+
+    # 자를 상자: 도구가 처음 정하는 4:5 (가운데)
+    box_w = final.width
+    box_x = (bw - box_w) // 2
+    # 돌린 모습이 도구의 실제 결과와 같은 곳인지 확인한다 (어긋나면 그림이 거짓이다)
+    check = turned(ANGLE).crop((box_x, 0, box_x + box_w, bh))
+    diff = sum(ImageStat.Stat(ImageChops.difference(check, final)).mean) / 3
+    assert diff < 8, f'돌린 모습이 도구 결과와 다르다 (평균 차이 {diff:.1f})'
+
+    HOLD, ROTATE_END, BOX_START, BOX_END, MOVE_START, MOVE_END = 350, 1150, 1250, 1600, 1750, 2300
+    FINAL_END = MOVE_END + 900
+
+    def frame(now: float) -> Image.Image:
+        card = Image.new('RGB', (width, height), BG)
+        draw = ImageDraw.Draw(card)
+        angle = ANGLE * ease(span(now, HOLD, ROTATE_END))
+        dim = ease(span(now, BOX_START, BOX_END))  # 상자 밖이 어두워진 정도
+        move = ease(span(now, MOVE_START, MOVE_END))
+        if now >= MOVE_END:
+            card.paste(final, (x2, y2))  # 도착한 뒤에는 도구가 만든 실제 결과 그대로
+            draw.rectangle([x2, y2, x2 + final.width - 1, y2 + final.height - 1], outline=LINE)
+        else:
+            dashed_box(draw, x2, y2, final.width, final.height, LINE)
+            photo = turned(angle)
+            inner = photo.crop((box_x, 0, box_x + box_w, bh))
+            # 상자 밖은 어두워졌다가 지워진다
+            outside = Image.blend(tint(photo, (0, 0, 0), 0.5 * dim), Image.new('RGB', photo.size, BG), move)
+            card.paste(outside, (x1, y1))
+            if move < 1:
+                draw.rectangle([x1, y1, x1 + bw - 1, y1 + bh - 1], outline=mix(LINE, 1 - move))
+            # 상자 안: 처음에는 제자리, 이어서 결과 칸으로
+            ix = round(x1 + box_x + (x2 - x1 - box_x) * move)
+            iy = round(y1 + (y2 - y1) * move)
+            card.paste(inner, (ix, iy))
+            if dim and move < 1:
+                draw.rectangle([ix, iy, ix + box_w - 1, iy + bh - 1], outline=mix(GREEN, 1 - move), width=2)
+        if now < HOLD:
+            caption(draw, fonts, x1, label_ys[0], items[0][1], items[0][2])
+        else:
+            caption(draw, fonts, x1, label_ys[0], f'{t["angle"]} {angle:.1f}°', '4:5' if dim else '')
+        shown = ease(span(now, MOVE_END - 350, MOVE_END))
+        if shown > 0:
+            caption(draw, fonts, x2, label_ys[1], items[1][1], items[1][2], shown)
+        return card
+
+    steps = [
+        (0, HOLD, False), (HOLD, ROTATE_END, True), (ROTATE_END, BOX_START, False), (BOX_START, BOX_END, True),
+        (BOX_END, MOVE_START, False), (MOVE_START, MOVE_END, True), (MOVE_END, FINAL_END, False),
+    ]
+    return 'crop-rotate-photo', 'straightened.webp', *timeline(frame, steps, 300)
+
+
+# 글 주소 → 움직이는 그림 함수. 파일은 public/guide-motion/<언어>/<글>/<이름>.webp
+MOTIONS = {
+    'stitch-screenshots': stitch_motion,
+    'crop-rotate-photo': crop_motion,
+}
+
+
+def save_motion(frames, durations, locale: str, slug: str, name: str, still: Image.Image):
+    # 정지 그림과 크기가 같아야 '움직임 줄이기'를 켠 사람과 글이 같은 자리에 선다
+    assert frames[0].size == still.size, (frames[0].size, still.size)
+    folder = os.path.join(MOTION_OUT, locale, slug)
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, name)
+    frames[0].save(path, 'WEBP', save_all=True, append_images=frames[1:], duration=durations, loop=0, quality=MOTION_QUALITY, method=6)
+    print(f'{locale}/{slug}/{name}  {frames[0].width}×{frames[0].height}  {len(frames)}장 {sum(durations) / 1000:.2f}초  {os.path.getsize(path) // 1024}KB')
+
+
 # 글 주소 → 그림 함수 (글을 골라 다시 그릴 때 다른 글의 재료가 없어도 되게 이름으로 고른다)
 GUIDES = {
     'compress-pdf': compress_pdf,
@@ -602,6 +894,10 @@ def main():
             folder, name, image = guide(t, cache, samples, fonts)
             assert folder == slug, (folder, slug)
             save(image, locale, slug, name)
+            if slug in MOTIONS:
+                folder, name, frames, durations = MOTIONS[slug](t, cache, samples, fonts)
+                assert folder == slug, (folder, slug)
+                save_motion(frames, durations, locale, slug, name, image)
 
 
 if __name__ == '__main__':
