@@ -7,12 +7,14 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 양식 채우기',
+      summary: '신청서의 입력 칸을 채워 저장합니다',
       title: 'PDF 양식 채우기 - 입력 칸에 한글로 적고 저장, 업로드 없이',
       description:
         '신청서·계약서 PDF의 입력 칸에 글자를 적고, 체크 상자와 선택 상자를 고른 뒤 저장합니다. 한글도 쓸 수 있고, 받는 사람이 고칠 수 없게 굳힐 수도 있습니다. 파일은 서버에 올라가지 않습니다.',
     },
     en: {
       name: 'Fill PDF Form',
+      summary: 'Type into form fields and tick boxes',
       title: 'Fill PDF Form - Type into form fields and save, in your browser',
       description:
         'Type into the fields of an application or contract PDF, tick checkboxes and pick options, then save. You can flatten the fields so others cannot change them. Your file is never uploaded.',
