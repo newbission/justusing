@@ -118,20 +118,25 @@ function overlaps(a: EngineLine, b: EngineLine): boolean {
 }
 
 /**
- * 줄 앞뒤에 홀로 붙은 부스러기를 뗀다: 스위치·아이콘이 [ @) 처럼, 말풍선 모서리가 ( ) ' , 처럼 읽힌 것.
- * 괄호·세로줄·따옴표·쉼표·마침표 같은 모양 조각(NOISE)으로만 된 낱말만 떼고, 뜻이 있는 기호
- * ($ ₩ % # + * : 등)는 글자·숫자가 없어도 남긴다. rounded(바탕을 다시 그려 읽은 줄)면 모서리가 i·l로 읽힌 조각도 뗀다
+ * 읽은 줄 하나를 다듬는다.
+ * - 영어 낱말 앞의 홀로 선 | 는 대문자 I를 잘못 읽은 것이다 ("| booked" → "I booked")
+ * - 줄 앞뒤에 홀로 붙은 부스러기를 뗀다: 스위치·아이콘이 [ @) 처럼, 말풍선 모서리가 ( ) ' , 처럼 읽힌 것.
+ *   괄호·세로줄·따옴표·쉼표·마침표 같은 모양 조각(NOISE)으로만 된 낱말만 떼고, 뜻이 있는 기호
+ *   ($ ₩ % # + * 등)는 글자·숫자가 없어도 남긴다. 줄 맨 앞에 홀로 선 : ; 는 뗀다 (줄 끝의 "합계 :"는 남긴다)
+ * - rounded(바탕을 다시 그려 읽은 줄)면 말풍선 모서리가 i·l이나 : ; 로 읽힌 조각을 앞뒤 모두에서 뗀다
  */
 const NOISE = /^[[\](){}<>|'"`‘’“”,.~_=\\/@©®ㆍ·•-]+$/;
-function trimEdges(text: string, rounded: boolean): string {
-  const junk = (word: string) =>
-    NOISE.test(word) || (rounded && /^[il|][^A-Za-z0-9가-힣]*$/.test(word));
-  let rest = text.trim();
-  for (let first = rest.match(/^\S+/)?.[0]; first && junk(first); first = rest.match(/^\S+/)?.[0]) {
-    rest = rest.slice(first.length).trimStart();
+function tidy(text: string, rounded: boolean): string {
+  const colon = (word: string) => /^[:;]+$/.test(word);
+  const corner = (word: string) => rounded && /^[il|][^A-Za-z0-9가-힣]*$/.test(word);
+  const leading = (word: string) => NOISE.test(word) || colon(word) || corner(word);
+  const trailing = (word: string) => NOISE.test(word) || (rounded && (colon(word) || corner(word)));
+  let rest = text.replace(/(^|\s)\|(?=\s+[A-Za-z])/g, '$1I').trim();
+  for (let word = rest.match(/^\S+/)?.[0]; word && leading(word); word = rest.match(/^\S+/)?.[0]) {
+    rest = rest.slice(word.length).trimStart();
   }
-  for (let last = rest.match(/\S+$/)?.[0]; last && junk(last); last = rest.match(/\S+$/)?.[0]) {
-    rest = rest.slice(0, -last.length).trimEnd();
+  for (let word = rest.match(/\S+$/)?.[0]; word && trailing(word); word = rest.match(/\S+$/)?.[0]) {
+    rest = rest.slice(0, -word.length).trimEnd();
   }
   return rest;
 }
@@ -198,9 +203,12 @@ export function readImage(source: Gray, recognize: Recognize): ImageText {
   if (mixedBackground(transform(source, Math.min(scale, PROBE_SIDE / longest), 0))) {
     const extra = read(source, recognize, scale, angle, contrastMap);
     for (const line of extra.lines) {
-      const text = trimEdges(line.text, true);
+      const text = tidy(line.text, true);
       if (line.confidence < 60 || letters(text) < 2) continue;
-      if (pass.lines.some((other) => overlaps(other, line))) continue;
+      // 남은 줄(잡음을 뺀 뒤)과 견준다. 같은 자리를 흐릿하게(50 미만) 읽은 줄뿐이면 그것을 빼고 이 줄로 바꾼다
+      const covered = lines.filter((other) => overlaps(other, line));
+      if (covered.some((other) => other.confidence >= 50)) continue;
+      for (const other of covered) lines.splice(lines.indexOf(other), 1);
       // 위에서부터 읽는 순서에 끼워 넣고, 다음 줄은 새 문단으로 둔다
       const at = lines.findIndex((other) => other.y0 > line.y0);
       const index = at < 0 ? lines.length : at;
@@ -224,8 +232,7 @@ const deskew = (gray: Gray) => {
 };
 
 /**
- * 영어 낱말 앞의 홀로 선 | 는 대문자 I를 잘못 읽은 것이다 ("| booked" → "I booked").
- * 줄 앞뒤의 기호 조각(스위치·아이콘을 [ @) 처럼 읽은 것)을 떼고, 빈 줄, 글자가 두 개 이하인 흐릿한 줄,
+ * 줄마다 다듬고(tidy), 빈 줄, 글자가 두 개 이하인 흐릿한 줄,
  * 더 확실한 줄과 겹치는 흐릿한 줄(큰 제목 일부를 따로 잘못 읽은 것)을 뺀다
  */
 function clean(lines: EngineLine[]): EngineLine[] {
@@ -238,7 +245,7 @@ function clean(lines: EngineLine[]): EngineLine[] {
     .filter((line) => !blurred(line))
     .map((line) => ({
       ...line,
-      text: trimEdges(line.text.replace(/(^|\s)\|(?=\s+[A-Za-z])/g, '$1I'), false),
+      text: tidy(line.text, false),
     }))
     .filter((line) => line.text && (letters(line.text) > 2 || line.confidence >= 70));
 }

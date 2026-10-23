@@ -84,6 +84,9 @@ test('서류 사진과 대화 캡처의 글자를 읽어 복사하고 TXT로 받
   const chatText = await chat.inputValue();
   expect(chatText.indexOf('내일 회의')).toBeLessThan(chatText.indexOf('오늘 저녁까지'));
   expect(chatText.indexOf('오늘 저녁까지')).toBeLessThan(chatText.indexOf('좋아요.'));
+  // 말풍선 모서리가 읽힌 조각(: ' ( i 등)이 줄 앞뒤에 붙지 않는다
+  expect(chatText).not.toMatch(/^[:;'"()[\]|i]\s/m);
+  expect(chatText).not.toMatch(/\s[:;'"()[\]|]$/m);
 
   // 읽은 줄을 이미지 위에 상자로 보여 준다
   const boxes = frame.getByRole('img', { name: `${DOC}에서 읽은 줄의 자리` });
