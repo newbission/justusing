@@ -85,9 +85,20 @@ export function fullRect(board: Size): Rect {
 }
 
 /** 판 밖으로 나가지 않게, 가장 작은 변보다 작지 않게 맞춘다 (정수 화소) */
-export function clampRect(rect: Rect, board: Size): Rect {
-  const width = clamp(Math.round(rect.width), Math.min(MIN_SIDE, board.width), board.width);
-  const height = clamp(Math.round(rect.height), Math.min(MIN_SIDE, board.height), board.height);
+export function clampRect(rect: Rect, board: Size, ratio?: number): Rect {
+  let width = rect.width;
+  let height = rect.height;
+  if (ratio !== undefined) {
+    // 비율을 지킬 때는 두 변을 함께 늘리고 줄인다 (한 변씩 맞추면 비율이 풀린다)
+    height = width / ratio;
+    const min = Math.min(MIN_SIDE, board.width, board.height);
+    const grow = Math.max(1, min / Math.min(width, height));
+    const shrink = Math.min(1, board.width / (width * grow), board.height / (height * grow));
+    width *= grow * shrink;
+    height *= grow * shrink;
+  }
+  width = clamp(Math.round(width), Math.min(MIN_SIDE, board.width), board.width);
+  height = clamp(Math.round(height), Math.min(MIN_SIDE, board.height), board.height);
   return {
     x: clamp(Math.round(rect.x), 0, board.width - width),
     y: clamp(Math.round(rect.y), 0, board.height - height),
@@ -120,7 +131,7 @@ export function fitRatio(rect: Rect, board: Size, ratio: number): Rect {
   }
   const cx = rect.x + rect.width / 2;
   const cy = rect.y + rect.height / 2;
-  return clampRect({ x: cx - width / 2, y: cy - height / 2, width, height }, board);
+  return clampRect({ x: cx - width / 2, y: cy - height / 2, width, height }, board, ratio);
 }
 
 export type Edge = 'n' | 's' | 'e' | 'w' | 'nw' | 'ne' | 'sw' | 'se';
@@ -182,5 +193,6 @@ export function resizeRect(
       height,
     },
     board,
+    ratio,
   );
 }
