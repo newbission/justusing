@@ -154,13 +154,16 @@ export function resizeRect(
     return clampRect({ x: left, y: top, width: right - left, height: bottom - top }, board);
   }
 
-  // 비율을 지킬 때: 더 많이 움직인 쪽을 따르고, 고정한 모서리에서 판 끝까지 들어가게 줄인다
+  // 비율을 지킬 때: 더 많이 움직인 축을 따르고(줄일 때도), 고정한 모서리에서 판 끝까지 들어가게 줄인다
   const anchorX = west ? start.x + start.width : start.x;
   const anchorY = north ? start.y + start.height : start.y;
   let width = right - left;
   let height = bottom - top;
-  if (width / height > ratio) height = width / ratio;
-  else width = height * ratio;
+  if (Math.abs(width - start.width) >= Math.abs(height - start.height) * ratio) {
+    height = width / ratio;
+  } else {
+    width = height * ratio;
+  }
   const roomX = west ? anchorX : board.width - anchorX;
   const roomY = north ? anchorY : board.height - anchorY;
   if (width > roomX) {
