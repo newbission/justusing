@@ -138,6 +138,28 @@ test('검게 칠하기는 가린 곳에 원래 화소를 남기지 않는다', a
   }
 });
 
+test('미리보기도 워커가 그린 같은 결과로 바뀐다', async ({ page }) => {
+  const frame = await openTool(page, 'noise.png');
+  const canvas = frame.locator('.view canvas');
+  /** 미리보기 canvas의 (x, y) 화소 (미리보기는 원본과 같은 80×60) */
+  const pixel = (x: number, y: number) =>
+    canvas.evaluate(
+      (node: HTMLCanvasElement, [px, py]) =>
+        Array.from(node.getContext('2d')!.getImageData(px!, py!, 1, 1).data),
+      [x, y],
+    );
+  const before = await pixel(AREA.x + 20, AREA.y + 15);
+  expect(before).not.toEqual([0, 0, 0, 255]);
+  await addArea(frame);
+  await frame.getByText('검게 칠하기', { exact: true }).click();
+  await expect.poll(() => pixel(AREA.x + 20, AREA.y + 15)).toEqual([0, 0, 0, 255]);
+  // 가린 곳 밖은 그대로
+  expect(await pixel(AREA.x - 2, AREA.y - 2)).not.toEqual([0, 0, 0, 255]);
+  // 지우면 원래 사진으로 돌아온다
+  await frame.getByRole('button', { name: '모두 지우기' }).click();
+  await expect.poll(() => pixel(AREA.x + 20, AREA.y + 15)).toEqual(before);
+});
+
 test('흐림은 가린 곳 안만 바꾼다', async ({ page }) => {
   const frame = await openTool(page, 'noise.png');
   await addArea(frame);
