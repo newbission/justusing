@@ -42,6 +42,7 @@ const TOOL_IDS: readonly string[] = [
   'pdf/fill-form',
   'image/compress',
   'image/resize',
+  'image/target-size',
   'image/convert',
   'image/heic-to-jpg',
   'image/ocr',
