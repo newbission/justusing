@@ -3,7 +3,7 @@
 쓴 날 2026-10-16 · 고친 날 2026-10-23
 
 - 쓰는 곳: [이미지 압축](../../features/image-compress/README.md), [크기 조절](../../features/image-resize/README.md),
-  [형식 변환](../../features/image-convert/README.md), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만),
+  [형식 변환](../../features/image-convert/README.md), [용량 맞추기](../../features/image-target-size/README.md)(`fitImage`), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만),
   [이어 붙이기](../../features/image-stitch/README.md)(목록 상태 `ImageBatch`, 저장 `saveDrawing`), [자르기·회전](../../features/image-crop/README.md)(`worker-canvas`·`EXTENSIONS`),
   [모자이크](../../features/image-mosaic/README.md)(`worker-canvas`·`EXTENSIONS`, 영역 계산은 `crop-geometry`의 `clampRect`·`resizeRect`),
   [HEIC 변환](../../features/image-heic-to-jpg/README.md)(`ConvertTool`·`heif.ts`),
@@ -39,8 +39,9 @@
 | `src/lib/image/ImageBatchTool.svelte`        | 여러 장 도구의 공통 화면. `bar`·`options`·`meta`·`actions` snippet과 `hint`·`broken`·`onremove`·`result`를 받는다                                       |
 | `src/lib/compare/CompareSlider.svelte`       | 원본·결과를 겹쳐 비교하는 부품. 문구를 넘겨받아 도구 화면·가이드 어디서나 쓴다                                                                          |
 | `src/lib/image/batch.svelte.ts`              | `ImageBatch` 클래스(목록 상태), `BATCH_ACCEPT`, `EXTENSIONS`(형식 → 확장자)                                                                             |
-| `src/lib/image/process.ts`                   | `processImage(file, options, signal?)`, 워커 풀, `ImageProcessError(reason: 'decode' \| 'encode')`                                                      |
-| `src/lib/image/process.worker.ts`            | 바로 세워 읽기 → 절반씩 줄이기 → 저장 (OffscreenCanvas, PNG 색 줄이기는 UPNG)                                                                           |
+| `src/lib/image/process.ts`                   | `processImage(file, options, signal?)`, `fitImage(file, { type, limit })`, 워커 풀, `ImageProcessError`                                                 |
+| `src/lib/image/process.worker.ts`            | 바로 세워 읽기 → 절반씩 줄이기 → 저장 (OffscreenCanvas, PNG 색 줄이기는 UPNG). `limit`이면 용량에 맞춰 화질·크기 탐색                                   |
+| `src/lib/image/fit-size.ts`                  | 용량 맞추기의 화질 사다리·이분 탐색(`highestFitting`)·다음 배율(`nextScale`)                                                                            |
 | `src/lib/image/upng-globals.ts`              | UPNG.js가 워커에서 찾는 `window`·`pako`를 fflate로 마련한다                                                                                             |
 | `src/lib/image/ConvertTool.svelte`           | 형식 변환·HEIC 변환이 같이 쓰는 화면 (문구 `ConvertMessages`, 고르기 형식만 다름)                                                                       |
 | `src/lib/image/heif.ts` + `heif.worker.ts`   | HEIC 읽기: 브라우저가 못 읽을 때만 libheif로 풀기 (`readable`·`decodeImage`·`readForDisplay`·`heifToJpeg`)                                              |
@@ -77,6 +78,9 @@
    - `scaleDown()`: 목표의 2배 이상이면 절반씩 줄인 뒤 마지막에 맞춘다
    - 저장: PNG + `pngColors > 0`이면 UPNG로 색을 줄이고, 그 밖에는 `convertToBlob`. JPG는 흰 바탕 위에 그린다
    - 받은 Blob의 형식이 요청과 다르면(브라우저가 몰래 PNG로 줌) `encode` 실패
+   - `limit`(용량 맞추기)이면 `fit()`: 크기마다 한 번 그리고 화질(PNG는 색 수)만 바꿔 저장해 상한에 드는 가장 높은 값을 찾고,
+     못 맞으면 크기를 줄여 다시 한다. 원본 비트맵은 `scaleDown()`이 닫지 않고 메시지 처리 끝에서 닫는다
+     ([용량 맞추기](../../features/image-target-size/README.md))
    - 결과 바이트는 transfer로 넘긴다
 5. 빼기 버튼 → `batch.remove(item)`(썸네일 주소 해제) + 도구의 `onremove`(그 이미지 결과 버리기)
 
@@ -162,6 +166,7 @@
 - [x] canvas 한계를 넘는 JPG 저장 (2026-10-23, `JpegStream`, 저장 방식 고르기를 `saveDrawing`으로 묶음)
 - [ ] canvas 한계를 넘는 WebP 저장 (직접 만드는 WebP 인코더가 없다)
 - [x] 글자 추출(OCR) (2026-10-23, 목록 상태만 쓰고 이미지마다 그림·글자 칸을 나란히 그린다)
+- [x] 용량 맞추기 (2026-10-23, 공통 워커에 `limit` 경로와 `fitImage()`)
 - [ ] 배경 제거 같은 다음 이미지 도구 (CLAUDE.md 9단계)
 - [ ] 처리 중 그만두기(`signal`)를 도구 화면에서 쓰기 — 지금은 처리 중에 목록을 잠근다
 
@@ -174,6 +179,7 @@
 - `tests/e2e/image-compress.spec.ts`: 같은 크기로 줄이기·로컬 처리, 결과 비교(경계 막대·확대·목록으로·설정 바꾸면 사라짐), ZIP·PNG 투명 유지, WebP 저장, EXIF 방향, 원본 유지·못 여는 파일
 - `tests/e2e/image-resize.spec.ts`: 비율·칸 맞추기·정확한 크기·너무 큰 결과
 - `tests/e2e/image-convert.spec.ts`: PNG→JPG 흰 바탕, GIF·BMP→WebP, JPG→PNG, 읽지 못하는 파일
+- `tests/e2e/image-target-size.spec.ts`: 목표 이하로 맞추기(크기도 줄임·화질만), 원본 유지, ZIP, PNG 색 줄이기, 못 맞춤 안내
 - 줄 묶음 저장(`saveDrawing`): 자르기·회전, 모자이크, 이어 붙이기 E2E가 `tests/e2e/canvas-limit.ts`로 한계를 낮춰 JPG가 만들어지고 canvas 저장·원본과 화소가 거의 같은지(평균 차이 2·3 미만), WebP는 PNG·JPG를 권하는지 본다
 - `tests/e2e/image-heic-to-jpg.spec.ts`: libheif 경로 (방향·대표 그림·10비트·P3·깨진 파일)
 - 테스트 파일은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`photo.jpg`, `rotated.jpg`, `screen.png`, `small.jpg`, `broken.png`, `moving.gif`, `green.bmp`,
