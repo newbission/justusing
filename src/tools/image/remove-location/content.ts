@@ -41,7 +41,7 @@ export default defineContent({
       },
       {
         q: '어떤 사진을 넣을 수 있나요?',
-        a: 'JPG·PNG·WebP 사진입니다. 아이폰의 HEIC 사진은 아직 넣을 수 없습니다. 아이폰 Safari에서 사진 보관함으로 고르면 보통 JPG로 바뀌어 들어옵니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다. 안드로이드의 HDR 사진(Ultra HDR)은 사진 뒤에 붙은 밝기 정보가 빠져 일반 사진으로 보입니다. 이런 사진을 넣으면 지우기 전에 화면에 알려 드립니다.',
+        a: 'JPG·PNG·WebP 사진입니다. 아이폰의 HEIC 사진은 아직 넣을 수 없습니다. 아이폰 Safari에서 사진 보관함으로 고르면 보통 JPG로 바뀌어 들어오고, HEIC JPG 변환 도구로 바꾸면 위치를 포함한 촬영 정보가 모두 빠집니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다. 안드로이드의 HDR 사진(Ultra HDR)은 사진 뒤에 붙은 밝기 정보가 빠져 일반 사진으로 보입니다. 이런 사진을 넣으면 지우기 전에 화면에 알려 드립니다.',
       },
       {
         q: '지운 뒤 사진이 옆으로 눕지 않나요?',
@@ -89,7 +89,7 @@ export default defineContent({
       },
       {
         q: 'Which photos can I add?',
-        a: 'JPG, PNG and WebP photos. iPhone HEIC photos are not supported yet. When you pick from your photo library in Safari on iPhone, photos usually arrive as JPG. For motion photos, the video attached after the picture is removed too, leaving only the still photo. Android HDR photos (Ultra HDR) lose the brightness data attached after the picture and show as regular photos. If you add such photos, the screen tells you before you remove anything.',
+        a: 'JPG, PNG and WebP photos. iPhone HEIC photos are not supported yet. When you pick from your photo library in Safari on iPhone, photos usually arrive as JPG, and converting with the HEIC to JPG tool removes all photo information, including the location. For motion photos, the video attached after the picture is removed too, leaving only the still photo. Android HDR photos (Ultra HDR) lose the brightness data attached after the picture and show as regular photos. If you add such photos, the screen tells you before you remove anything.',
       },
       {
         q: 'Will my photos turn sideways?',
