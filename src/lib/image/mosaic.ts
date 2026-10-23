@@ -13,10 +13,12 @@ export type MosaicFailure = 'decode' | 'tooLarge' | 'encode';
 
 export type MosaicRequest =
   | { id: number; kind: 'open'; file: Blob; previewSide: number }
+  | { id: number; kind: 'preview'; regions: Region[] }
   | { id: number; kind: 'export'; regions: Region[]; type: OutputType; quality: number };
 
 export type MosaicResponse =
   | { id: number; kind: 'opened'; width: number; height: number; preview: ImageBitmap }
+  | { id: number; kind: 'previewed'; image: ImageBitmap }
   | { id: number; kind: 'exported'; bytes: Uint8Array }
   | { id: number; kind: 'error'; reason: MosaicFailure };
 
@@ -73,6 +75,16 @@ async function ask(request: Ask): Promise<MosaicResponse> {
 export async function openImage(file: Blob, previewSide: number): Promise<OpenedImage> {
   const response = await ask({ kind: 'open', file, previewSide });
   if (response.kind === 'opened') return response;
+  throw new MosaicError(response.kind === 'error' ? response.reason : 'decode');
+}
+
+/**
+ * 마지막으로 연 사진의 미리보기(openImage가 준 것과 같은 크기)에 가릴 곳을 걸어 그린다.
+ * 계산은 저장과 같고(mosaic-effects.ts) 워커에서 하므로 화면이 멈추지 않는다
+ */
+export async function previewImage(regions: Region[]): Promise<ImageBitmap> {
+  const response = await ask({ kind: 'preview', regions });
+  if (response.kind === 'previewed') return response.image;
   throw new MosaicError(response.kind === 'error' ? response.reason : 'decode');
 }
 
