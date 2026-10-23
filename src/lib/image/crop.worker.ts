@@ -118,8 +118,17 @@ async function save(turn: Turn, rect: Rect, type: OutputType, quality: number) {
   }
 }
 
-addEventListener('message', async (event: MessageEvent<CropRequest>) => {
-  const request = event.data;
+/**
+ * 요청은 온 순서대로 하나씩 처리한다. 큰 사진 A를 여는 사이 B를 열면 B가 먼저 끝나고
+ * 늦게 끝난 A가 원본을 덮어써, 화면은 B인데 A를 저장하게 된다
+ */
+let queue: Promise<void> = Promise.resolve();
+
+addEventListener('message', (event: MessageEvent<CropRequest>) => {
+  queue = queue.then(() => handle(event.data)).catch(() => undefined);
+});
+
+async function handle(request: CropRequest) {
   const send = (response: CropResponse, transfer: Transferable[] = []) =>
     postMessage(response, { transfer });
   try {
@@ -138,4 +147,4 @@ addEventListener('message', async (event: MessageEvent<CropRequest>) => {
         error instanceof Failure ? error.reason : request.kind === 'open' ? 'decode' : 'tooLarge',
     });
   }
-});
+}
