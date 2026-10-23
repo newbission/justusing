@@ -5,6 +5,9 @@
  * (겹치면 뒤의 것이 앞의 결과 위에 걸린다). 결과를 canvas 하나에 그리지 못하는 크기면
  * (아이폰은 약 1,670만 화소까지) PNG는 줄 묶음씩 그려 이어 쓰고, JPG·WebP는 실패로 알린다.
  * 다시 그려 저장하므로 EXIF(촬영 위치·기기 정보 등)는 결과에 남지 않는다.
+ *
+ * 화면 미리보기도 여기서 그린다. 큰 곳을 흐리면 한 번에 1초가 넘게 걸려, 화면 스레드에서 하면 끄는 동안 멈춘다.
+ * 줄인 사진을 따로 들고 있다가 같은 계산(paint)을 줄인 만큼 작게 걸어 그림으로 돌려준다.
  */
 import type { Rect } from './crop-geometry';
 import type { MosaicFailure, MosaicRequest, MosaicResponse } from './mosaic';
@@ -17,6 +20,10 @@ import { openUpright, usableContext, type UprightImage } from './worker-canvas';
 const STRIP_PIXELS = 4_000_000;
 
 let source: ImageBitmap | undefined;
+/** 화면에 넘긴 것과 같은 미리보기 사진 (미리보기를 그릴 때 바탕) */
+let previewBase: ImageBitmap | undefined;
+/** 미리보기를 그리는 canvas (크기가 같으면 다시 쓴다) */
+let previewCanvas: OffscreenCanvas | undefined;
 
 class Failure extends Error {
   constructor(readonly reason: MosaicFailure) {
@@ -27,6 +34,8 @@ class Failure extends Error {
 async function open(file: Blob, previewSide: number) {
   source?.close();
   source = undefined;
+  previewBase?.close();
+  previewBase = undefined;
   let opened: UprightImage;
   try {
     opened = await openUpright(file, previewSide);
@@ -34,15 +43,47 @@ async function open(file: Blob, previewSide: number) {
     throw new Failure('decode');
   }
   source = opened.source;
+  // 화면에 넘기는 미리보기는 옮겨지므로(transfer) 미리보기를 그릴 바탕을 하나 더 둔다
+  previewBase = await createImageBitmap(opened.preview);
   return { width: source.width, height: source.height, preview: opened.preview };
 }
 
-/** 가릴 곳 하나를 canvas에 건다 (그 자리의 화소만 읽어 고쳐 다시 쓴다) */
-function applyRegion(ctx: OffscreenCanvasRenderingContext2D, region: Region, size: Rect) {
-  const box = boundsOf(region, size.width, size.height);
+/** 미리보기 사진에 가릴 곳을 걸어 그림으로 돌려준다 (자리·칸 크기는 줄인 만큼 작게) */
+function renderPreview(regions: Region[]): ImageBitmap {
+  if (!source || !previewBase) throw new Failure('decode');
+  const { width, height } = previewBase;
+  if (previewCanvas?.width !== width || previewCanvas.height !== height) {
+    previewCanvas = new OffscreenCanvas(width, height);
+  }
+  const ctx = previewCanvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.clearRect(0, 0, width, height);
+  ctx.drawImage(previewBase, 0, 0);
+  const scale = width / source.width;
+  const size = { x: 0, y: 0, width, height };
+  for (const region of regions) applyRegion(ctx, region, size, scale);
+  return previewCanvas.transferToImageBitmap();
+}
+
+/**
+ * 가릴 곳 하나를 canvas에 건다 (그 자리의 화소만 읽어 고쳐 다시 쓴다).
+ * scale은 canvas가 원본보다 줄어든 비율 (저장은 1, 미리보기는 미리보기 폭 / 원본 폭)
+ */
+function applyRegion(
+  ctx: OffscreenCanvasRenderingContext2D,
+  region: Region,
+  size: Rect,
+  scale = 1,
+) {
+  const area = {
+    x: region.x * scale,
+    y: region.y * scale,
+    width: region.width * scale,
+    height: region.height * scale,
+  };
+  const box = boundsOf(area, size.width, size.height);
   if (box.width === 0 || box.height === 0) return;
   const pixels = ctx.getImageData(box.x, box.y, box.width, box.height);
-  paint(pixels, shift(region, box), region.shape, region.effect, amountOf(region));
+  paint(pixels, shift(area, box), region.shape, region.effect, amountOf(region) * scale);
   ctx.putImageData(pixels, box.x, box.y);
 }
 
@@ -170,6 +211,9 @@ async function handle(request: MosaicRequest) {
     if (request.kind === 'open') {
       const opened = await open(request.file, request.previewSide);
       send({ id: request.id, kind: 'opened', ...opened }, [opened.preview]);
+    } else if (request.kind === 'preview') {
+      const image = renderPreview(request.regions);
+      send({ id: request.id, kind: 'previewed', image }, [image]);
     } else {
       const bytes = await save(request.regions, request.type, request.quality);
       send({ id: request.id, kind: 'exported', bytes }, [bytes.buffer]);

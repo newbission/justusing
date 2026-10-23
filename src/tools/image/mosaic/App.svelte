@@ -5,7 +5,7 @@
 -->
 <script lang="ts">
   import '../../../frame/controls.css';
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, untrack } from 'svelte';
   import { pick } from '../../../frame/locale';
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
@@ -21,14 +21,13 @@
     MosaicError,
     exportImage,
     openImage,
+    previewImage,
     type MosaicFailure,
   } from '../../../lib/image/mosaic';
   import {
     MAX_STRENGTH,
     MIN_STRENGTH,
     amountOf,
-    boundsOf,
-    paint,
     type Effect,
     type Region,
     type Shape,
@@ -203,7 +202,7 @@
     setRect(selected.id, { ...selected, [field]: value });
   }
 
-  // 미리보기: 줄인 사진에 같은 계산을 걸어 그린다 (칸 크기·흐리는 거리도 줄인 만큼)
+  // 미리보기: 줄인 사진에 저장과 같은 계산을 걸어 그린다 (칸 크기·흐리는 거리도 줄인 만큼, 워커에서)
   let stageWidth = $state(0);
   const view = $derived.by(() => {
     if (stageWidth === 0) return { width: 0, height: 0 };
@@ -211,35 +210,67 @@
     return { width: board.width * scale, height: board.height * scale };
   });
   let canvas: HTMLCanvasElement | undefined = $state();
+
+  /** 미리보기 그림을 canvas에 그린다 (canvas는 미리보기 크기, CSS가 칸에 맞춰 늘인다) */
+  function show(image: ImageBitmap) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0);
+  }
+
+  // 사진이 바뀌면 canvas 크기를 맞추고 가리지 않은 사진부터 그린다
   $effect(() => {
     if (!canvas || !photo) return;
-    const { preview } = photo;
-    canvas.width = preview.width;
-    canvas.height = preview.height;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(preview, 0, 0);
-    const scale = preview.width / photo.width;
-    for (const region of regions) {
-      const area = {
-        x: region.x * scale,
-        y: region.y * scale,
-        width: region.width * scale,
-        height: region.height * scale,
-      };
-      const box = boundsOf(area, canvas.width, canvas.height);
-      if (box.width === 0 || box.height === 0) continue;
-      const pixels = ctx.getImageData(box.x, box.y, box.width, box.height);
-      paint(
-        pixels,
-        { ...area, x: area.x - box.x, y: area.y - box.y },
-        region.shape,
-        region.effect,
-        amountOf(region) * scale,
-      );
-      ctx.putImageData(pixels, box.x, box.y);
-    }
+    canvas.width = photo.preview.width;
+    canvas.height = photo.preview.height;
+    show(photo.preview);
+    untrack(refresh);
   });
+
+  // 가릴 곳이 바뀌면 효과를 다시 그린다. 테두리·손잡이는 DOM이라 바로 따라오고 효과만 조금 늦게 바뀐다
+  $effect(() => {
+    void regions;
+    untrack(refresh);
+  });
+
+  /**
+   * 미리보기 효과는 워커가 그린다 (큰 곳을 흐리면 1초가 넘게 걸려 화면 스레드에서는 끄는 동안 멈춘다).
+   * 한 번에 하나만 보내고, 그사이 바뀐 것은 끝난 뒤 가장 최근 것 하나만 다시 그린다. 늦게 온 예전 사진의 그림은 버린다
+   */
+  let rendering = false;
+  let stale = false;
+  async function refresh() {
+    if (rendering) {
+      stale = true;
+      return;
+    }
+    rendering = true;
+    try {
+      do {
+        stale = false;
+        const ticket = generation;
+        const wanted = regions;
+        if (!photo) break;
+        if (wanted.length === 0) {
+          show(photo.preview);
+          continue;
+        }
+        let image: ImageBitmap;
+        try {
+          image = await previewImage(wanted);
+        } catch {
+          // 워커가 죽었으면 저장할 때 다시 열라고 알린다. 미리보기는 지난 그림 그대로 둔다
+          break;
+        }
+        // 끄는 동안에도 지난 그림보다는 새것이니 그린다 (그사이 사진이 바뀌었으면 버린다)
+        if (ticket === generation) show(image);
+        image.close();
+      } while (stale);
+    } finally {
+      rendering = false;
+    }
+  }
 
   // 끌기: 화면 픽셀을 원본 화소로 바꾼다
   type Drag =
