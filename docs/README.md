@@ -92,3 +92,4 @@ PDF
 | [image-remove-location](./features/image-remove-location) | 위치 정보 지우기 | live |
 | [image-stitch](./features/image-stitch)                   | 이어 붙이기      | live |
 | [image-crop](./features/image-crop)                       | 자르기·회전      | live |
+| [image-mosaic](./features/image-mosaic)                   | 모자이크         | live |
