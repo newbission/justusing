@@ -4,6 +4,7 @@
  */
 import workerUrl from './crop.worker.ts?worker&url';
 import { createWorker } from '../worker';
+import { readable } from './heif';
 import type { Rect, Turn } from './crop-geometry';
 import type { OutputType } from './process';
 
@@ -11,7 +12,7 @@ import type { OutputType } from './process';
 export type CropFailure = 'decode' | 'tooLarge' | 'encode';
 
 export type CropRequest =
-  | { id: number; kind: 'open'; file: Blob; previewSide: number }
+  | { id: number; kind: 'open'; file: Blob | ImageBitmap; previewSide: number }
   | { id: number; kind: 'export'; turn: Turn; rect: Rect; type: OutputType; quality: number };
 
 export type CropResponse =
@@ -60,13 +61,25 @@ async function ask(request: Ask): Promise<CropResponse> {
     };
     worker.addEventListener('message', listener);
     worker.addEventListener('error', onError);
-    worker.postMessage({ ...request, id } as CropRequest);
+    // libheif로 푼 HEIC 그림은 옮겨 준다 (복사하지 않게)
+    const transfer =
+      request.kind === 'open' && request.file instanceof ImageBitmap ? [request.file] : [];
+    worker.postMessage({ ...request, id } as CropRequest, transfer);
   });
 }
 
-/** 사진을 연다. 워커가 원본을 들고 있다가 저장에 쓴다 (새로 열면 바뀐다) */
+/**
+ * 사진을 연다. 워커가 원본을 들고 있다가 저장에 쓴다 (새로 열면 바뀐다).
+ * 브라우저가 못 읽는 HEIC는 libheif로 풀어 넘긴다
+ */
 export async function openImage(file: Blob, previewSide: number): Promise<OpenedImage> {
-  const response = await ask({ kind: 'open', file, previewSide });
+  let source: Blob | ImageBitmap;
+  try {
+    source = await readable(file);
+  } catch {
+    throw new CropError('decode');
+  }
+  const response = await ask({ kind: 'open', file: source, previewSide });
   if (response.kind === 'opened') return response;
   throw new CropError(response.kind === 'error' ? response.reason : 'decode');
 }

@@ -13,10 +13,19 @@ export interface UprightImage {
   preview: ImageBitmap;
 }
 
-/** 사진을 EXIF 방향대로 바로 세워 읽고 미리보기를 만든다. 읽지 못하면 예외 */
-export async function openUpright(file: Blob, previewSide: number): Promise<UprightImage> {
+/**
+ * 사진을 EXIF 방향대로 바로 세워 읽고 미리보기를 만든다. 읽지 못하면 예외.
+ * file이 ImageBitmap이면 화면이 libheif로 이미 바로 세워 푼 HEIC다 (heif.ts의 readable)
+ */
+export async function openUpright(
+  file: Blob | ImageBitmap,
+  previewSide: number,
+): Promise<UprightImage> {
   // 휴대폰 사진의 EXIF 방향을 적용해 바로 세운다
-  const source = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const source =
+    file instanceof ImageBitmap
+      ? file
+      : await createImageBitmap(file, { imageOrientation: 'from-image' });
   const { width, height } = source;
   const scale = Math.min(1, previewSide / Math.max(width, height));
   try {
