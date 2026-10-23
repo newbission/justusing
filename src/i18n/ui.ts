@@ -17,6 +17,9 @@ const ko = {
     guides: '가이드',
     allTools: (name: string) => `${name} 도구 전체 보기`,
     allGuides: '가이드 전체 보기',
+    menu: '메뉴',
+    openMenu: '메뉴 열기',
+    closeMenu: '메뉴 닫기',
   },
   theme: {
     toggle: '테마 전환',
@@ -153,6 +156,9 @@ const en: Ui = {
     guides: 'Guides',
     allTools: (name: string) => `See all ${name} tools`,
     allGuides: 'See all guides',
+    menu: 'Menu',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
   },
   theme: {
     toggle: 'Toggle theme',

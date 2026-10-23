@@ -1,0 +1,270 @@
+---
+/**
+ * 휴대폰 메뉴 (768px 미만). 머리글의 ☰ 버튼을 누르면 화면 전체를 덮는 창이 열리고,
+ * 카테고리(PDF·이미지·가이드)마다 눌러서 펼치는 칸(아코디언)에 묶음별 도구가 있다.
+ *
+ * - 창은 <dialog>의 showModal()로 연다. 맨 위 층(top layer)이라 하단 고정 광고(mobile-anchor)보다 위에 뜨고,
+ *   뒤 화면은 누를 수 없으며 Esc로 닫힌다. 닫으면 ☰ 버튼으로 포커스를 돌린다
+ * - 칸은 <details name>이라 스크립트 없이 펼쳐지고 한 번에 하나만 열린다. 지금 페이지의 카테고리를 열어 둔다
+ * - 창 안에는 광고를 두지 않는다 (광고 슬롯 규칙: 메뉴·오버레이 안 금지)
+ */
+import ToolIcon from './ToolIcon.astro';
+import type { Menu } from './site-menu';
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+
+interface Props {
+  menus: Menu[];
+}
+
+const { menus } = Astro.props;
+const t = ui(localeOf(Astro.url.pathname)).nav;
+---
+
+<button
+  type="button"
+  class="open"
+  aria-label={t.openMenu}
+  aria-haspopup="dialog"
+  aria-controls="mobile-menu"
+  data-mobile-menu-open
+>
+  <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+    <path d="M4 7h16M4 12h16M4 17h16"></path>
+  </svg>
+</button>
+
+<dialog class="sheet" id="mobile-menu" aria-label={t.menu} data-mobile-menu>
+  <div class="head">
+    <p class="title">{t.menu}</p>
+    <button type="button" class="close" aria-label={t.closeMenu} data-mobile-menu-close>
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18"></path>
+      </svg>
+    </button>
+  </div>
+  <nav class="body" aria-label={t.categories}>
+    {menus.map((menu) => (
+      <details class="section" name="mobile-menu" open={menu.current}>
+        <summary>
+          {menu.name}
+          <svg class="caret" viewBox="0 0 10 10" width="12" height="12" aria-hidden="true">
+            <path d="M2 3.5 5 6.5 8 3.5" />
+          </svg>
+        </summary>
+        <div class="section-body">
+          {menu.groups.map((group, g) => (
+            <div class="group">
+              <p class="group-title" id={`mobile-${menu.id}-${g}`}>
+                {group.href ? <a href={group.href}>{group.title}</a> : group.title}
+              </p>
+              <ul aria-labelledby={`mobile-${menu.id}-${g}`}>
+                {group.items.map((item) => (
+                  <li>
+                    <a
+                      class="item"
+                      href={item.href}
+                      aria-current={item.current ? 'page' : undefined}
+                    >
+                      <span class="item-icon">
+                        <ToolIcon paths={item.icon} size={18} />
+                      </span>
+                      {item.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <a class="all" href={menu.all.href}>
+            {menu.all.label} <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </details>
+    ))}
+  </nav>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-mobile-menu]');
+  const openButton = document.querySelector<HTMLButtonElement>('[data-mobile-menu-open]');
+
+  if (dialog && openButton) {
+    openButton.addEventListener('click', () => dialog.showModal());
+    dialog
+      .querySelector('[data-mobile-menu-close]')
+      ?.addEventListener('click', () => dialog.close());
+    // Esc·닫기 버튼 어느 쪽으로 닫아도 연 버튼으로 돌아간다
+    dialog.addEventListener('close', () => openButton.focus());
+    // 화면이 넓어져 펼침 메뉴로 바뀌면 닫는다
+    matchMedia('(min-width: 768px)').addEventListener('change', (event) => {
+      if (event.matches && dialog.open) dialog.close();
+    });
+  }
+</script>
+
+<style>
+  .open {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    .open {
+      display: inline-grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 1px solid var(--color-line);
+      border-radius: var(--radius);
+      background: transparent;
+      cursor: pointer;
+    }
+  }
+  .open path,
+  .close path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  /* 화면 전체를 덮는 창. 안에서 스크롤하고 뒤 화면은 움직이지 않는다 */
+  .sheet {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: 0 0 calc(24px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+  .sheet::backdrop {
+    background: var(--color-bg);
+  }
+  :global(html:has(dialog[data-mobile-menu][open])) {
+    overflow: hidden;
+  }
+
+  /* 머리글과 같은 높이의 윗줄. 스크롤해도 닫기 버튼이 보이게 붙여 둔다 */
+  .head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 var(--gutter);
+    border-bottom: 1px solid var(--color-line);
+    background: var(--color-bg);
+  }
+  .title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .close {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .body {
+    padding: 0 var(--gutter);
+  }
+  .section {
+    border-bottom: 1px solid var(--color-line);
+  }
+  summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  .caret {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    transition: transform 0.12s;
+  }
+  .section[open] .caret {
+    transform: rotate(180deg);
+  }
+  .section-body {
+    padding-bottom: 16px;
+  }
+  .group + .group {
+    margin-top: 12px;
+  }
+  .group-title {
+    margin: 0 0 2px;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .group-title a {
+    display: inline-block;
+    padding: 6px 0;
+    color: inherit;
+  }
+  .group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 6px 0;
+    color: var(--color-text);
+    font-size: 15px;
+    line-height: 1.4;
+    text-decoration: none;
+    /* 한글은 낱말 단위로 줄을 바꾼다 */
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+  .item[aria-current='page'] {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .item-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+  .all {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-top: 8px;
+    color: var(--color-accent);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+</style>
