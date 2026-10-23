@@ -133,9 +133,9 @@ def size_label(path: str) -> str:
     return f'{kb / 1024:.1f}MB' if kb >= 1024 else f'{kb:.0f}KB'
 
 
-def tiles(items, label_font, sub_font, gap=16, cols=None):
-    """그림 여러 장을 cols칸 격자로 늘어놓고 아래에 꼬리표(굵게)와 작은 설명을 단다.
-    휴대폰에서는 그림이 화면 폭으로 줄어드므로, 꼬리표가 읽히게 칸 수를 적게 잡는다"""
+def tile_layout(items, label_font, sub_font, gap=16, cols=None):
+    """tiles()의 자리 계산: (카드 가로, 카드 세로, 칸마다 그림 왼쪽 위 (x, y), 칸마다 꼬리표 y).
+    움직이는 그림도 같은 자리를 쓴다"""
     cols = cols or len(items)
     rows = (len(items) + cols - 1) // cols
     # 꼬리표가 하나도 없으면 아래 칸을 두지 않는다
@@ -154,17 +154,29 @@ def tiles(items, label_font, sub_font, gap=16, cols=None):
     heights = [max(image.height for image, _, _ in items[row * cols : (row + 1) * cols]) for row in range(rows)]
     width = PAD * 2 + sum(widths) + gap * (cols - 1)
     height = PAD * 2 + sum(heights) + label_h * rows + gap * (rows - 1)
-    card = Image.new('RGB', (width, height), BG)
-    draw = ImageDraw.Draw(card)
-    for index, (image, label, sub) in enumerate(items):
+    origins = []
+    label_ys = []
+    for index in range(len(items)):
         row, col = divmod(index, cols)
         x = PAD + sum(widths[:col]) + col * gap
         y = PAD + sum(heights[:row]) + row * (label_h + gap)
+        origins.append((x, y))
+        label_ys.append(y + heights[row] + 12)
+    return width, height, origins, label_ys
+
+
+def tiles(items, label_font, sub_font, gap=16, cols=None):
+    """그림 여러 장을 cols칸 격자로 늘어놓고 아래에 꼬리표(굵게)와 작은 설명을 단다.
+    휴대폰에서는 그림이 화면 폭으로 줄어드므로, 꼬리표가 읽히게 칸 수를 적게 잡는다"""
+    width, height, origins, label_ys = tile_layout(items, label_font, sub_font, gap, cols)
+    card = Image.new('RGB', (width, height), BG)
+    draw = ImageDraw.Draw(card)
+    for (image, label, sub), (x, y), label_y in zip(items, origins, label_ys):
         card.paste(image, (x, y))
         draw.rectangle([x, y, x + image.width - 1, y + image.height - 1], outline=LINE)
-        draw.text((x, y + heights[row] + 12), label, font=label_font, fill=INK)
+        draw.text((x, label_y), label, font=label_font, fill=INK)
         if sub:
-            draw.text((x, y + heights[row] + 34), sub, font=sub_font, fill=MUTED)
+            draw.text((x, label_y + 22), sub, font=sub_font, fill=MUTED)
     return card
 
 
