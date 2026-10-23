@@ -379,6 +379,10 @@ Co-Authored-By: ...
   - 공통: 여러 장 목록 화면 `src/lib/image/ImageBatchTool.svelte`(+`batch.svelte.ts`), 처리는
     `src/lib/image/process.ts`(읽기 → 크기 바꾸기 → 저장, CPU 수에 맞춘 워커 여러 개).
     PNG 색 줄이기는 UPNG.js (`upng-globals.ts`가 워커에서 zlib을 마련한다)
+  - 큰 결과 저장 (2026-10-23): 다시 그려 저장하는 워커(자르기·회전, 모자이크, 이어 붙이기)는
+    `src/lib/image/worker-canvas.ts`의 `saveDrawing()`을 쓴다. canvas 하나에 그릴 수 있으면 브라우저 저장, 못 그리면
+    (아이폰 약 1,670만 화소) PNG·JPG를 줄 묶음씩 직접 만든다(`png-stream.ts`, `jpeg-stream.ts`). WebP만 실패로 알린다.
+    E2E는 워커 전역 `__canvasPixelLimit`으로 한계를 낮춰 시험한다(`tests/e2e/canvas-limit.ts`)
   - [x] 압축 (`/image/compress/`): JPG·WebP는 화질, PNG는 색 수로 줄인다. 원본보다 크면 원본 그대로
   - [x] 크기 조절 (`/image/resize/`): 비율(%) 또는 가로·세로 픽셀(비율 유지·정확히)
   - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF, Safari의 HEIC)를 JPG·PNG·WebP로
@@ -392,7 +396,7 @@ Co-Authored-By: ...
         JPEG 끝 뒤에 덧붙은 자료(움직이는 사진 영상)는 두 방식 모두 뺀다. 지운 결과를 다시 읽어 위치가 남았으면 실패로 알린다
   - [x] 이어 붙이기 (`/image/stitch/`, 2026-10-22): 세로·가로로 잇기. 세로로 이을 때 화면 캡처의 고정 막대와 겹친 부분을
         줄 모양(칸 밝기 평균) 비교로 찾고 이음마다 고칠 수 있다(`src/lib/image/stitch-detect.ts`). 결과는 워커가 줄 묶음씩 그리고
-        PNG는 직접 이어 써서(`png-stream.ts`) canvas 크기 한계(아이폰 약 1,670만 화소)에 묶이지 않는다. 나누기·PDF는 빈 줄에서 자른다
+        PNG·JPG는 직접 이어 써서 canvas 크기 한계(아이폰 약 1,670만 화소)에 묶이지 않는다(위 "큰 결과 저장"). 나누기·PDF는 빈 줄에서 자른다
   - [x] 자르기·회전 (`/image/crop/`, 2026-10-23): 한 장을 90°씩 돌리기·뒤집기·기울기 바로잡기(사진을 키워 귀퉁이를 채움)·비율 자르기.
         미리보기와 저장 워커가 같은 변환(`src/lib/image/crop-geometry.ts`)을 쓰고, 원본은 워커가 들고 있다
   - [x] 모자이크 (`/image/mosaic/`, 2026-10-23): 가릴 곳(사각형·타원)마다 모자이크·흐림·검게 칠하기. 흐림·작은 모자이크는

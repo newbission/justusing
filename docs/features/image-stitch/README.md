@@ -1,6 +1,6 @@
 # 이미지 이어 붙이기 (`image/stitch`)
 
-쓴 날 2026-10-22 · 고친 날 2026-10-22
+쓴 날 2026-10-22 · 고친 날 2026-10-23
 
 - 주소: `/image/stitch/` (영어 `/en/image/stitch/`)
 - 상태: dev·main 반영 (PR #119, #120, 2026-10-22)
@@ -22,7 +22,7 @@
 - 하지 않는 것·한계
   - 겹침은 폭이 같은 사진끼리만, 위아래(세로)로만 찾는다. 옆으로 돌려 찍은 파노라마 맞추기는 하지 않는다
   - 겹친 줄을 화소가 아니라 줄 모양(칸 평균)으로 비교한다. 같은 줄이 되풀이되는 화면(같은 목록 줄)은 겹침을 길게 잡을 수 있어 고칠 수 있게 했다
-  - JPG 한 장은 32,767px, WebP는 16,383px까지. 넘으면 실행 전에 PNG나 나누기를 권한다. PNG는 4억 화소까지 받는다
+  - JPG 한 장은 65,500px(2026-10-23, 예전 32,767px), WebP는 16,383px까지. 넘으면 실행 전에 PNG나 나누기를 권한다. PNG는 4억 화소까지 받는다
   - 결과 폭은 16,384px까지 (모든 형식). 줄 묶음씩 그려도 canvas 폭은 결과 전체 폭이라 나누기로 피할 수 없다
   - 움직이는 GIF는 첫 장면만 쓴다
 
@@ -30,19 +30,21 @@
 
 ### 파일
 
-| 파일                                         | 역할                                                                                                  |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `src/tools/image/stitch/meta.ts`             | 이름·설명·아이콘(두 칸과 이음 선)·관련 도구, 흐름 그림 PNG 3장(`lines`) → PNG 1장(`stitch`)           |
-| `src/tools/image/stitch/content.ts`          | 쓰임새·사용법·FAQ (한·영)                                                                             |
-| `src/tools/image/stitch/messages.ts`         | 화면 문구 (한·영)                                                                                     |
-| `src/tools/image/stitch/App.svelte`          | 설정·목록(이음 칸)·미리보기·실행 막대. `ImageBatchTool`은 순서 바꾸기·이음 칸이 없어 쓰지 않는다      |
-| `src/lib/image/stitch-layout.ts`             | `layoutStitch()`: 사진마다 원본의 어느 부분을 결과의 어디에 그릴지 (`Piece`). 화면과 워커가 같이 쓴다 |
-| `src/lib/image/stitch-detect.ts`             | `SignatureBuilder`(줄 모양), `detectSeam()`(고정 막대·겹침 찾기)                                      |
-| `src/lib/image/stitch.ts` + `.worker.ts`     | `findSeam()`·`forgetSeams()`·`stitchImages()`. 요청은 한 번에 하나씩                                  |
-| `src/lib/image/png-stream.ts`                | `PngStream`: 줄 묶음씩 받아 PNG로 저장 (필터 + `CompressionStream('deflate')`)                        |
-| `src/lib/crc32.ts`                           | PNG 조각 CRC (사진 정보·사진 꺼내기와 같이 씀)                                                        |
-| `tests/e2e/image-stitch.spec.ts`             | E2E                                                                                                   |
-| `src/content/guides/*/stitch-screenshots.md` | 가이드 글 (그림: 견본 대화 캡처 세 장과 이은 결과)                                                    |
+| 파일                                         | 역할                                                                                                                          |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `src/tools/image/stitch/meta.ts`             | 이름·설명·아이콘(두 칸과 이음 선)·관련 도구, 흐름 그림 PNG 3장(`lines`) → PNG 1장(`stitch`)                                   |
+| `src/tools/image/stitch/content.ts`          | 쓰임새·사용법·FAQ (한·영)                                                                                                     |
+| `src/tools/image/stitch/messages.ts`         | 화면 문구 (한·영)                                                                                                             |
+| `src/tools/image/stitch/App.svelte`          | 설정·목록(이음 칸)·미리보기·실행 막대. `ImageBatchTool`은 순서 바꾸기·이음 칸이 없어 쓰지 않는다                              |
+| `src/lib/image/stitch-layout.ts`             | `layoutStitch()`: 사진마다 원본의 어느 부분을 결과의 어디에 그릴지 (`Piece`). 화면과 워커가 같이 쓴다                         |
+| `src/lib/image/stitch-detect.ts`             | `SignatureBuilder`(줄 모양), `detectSeam()`(고정 막대·겹침 찾기)                                                              |
+| `src/lib/image/stitch.ts` + `.worker.ts`     | `findSeam()`·`forgetSeams()`·`stitchImages()`. 요청은 한 번에 하나씩                                                          |
+| `src/lib/image/worker-canvas.ts`             | `saveDrawing()`: canvas 하나로 저장할지 줄 묶음으로 저장할지 고른다 ([이미지 공통](../../foundations/image-common/README.md)) |
+| `src/lib/image/png-stream.ts`                | `PngStream`: 줄 묶음씩 받아 PNG로 저장 (필터 + `CompressionStream('deflate')`)                                                |
+| `src/lib/image/jpeg-stream.ts`               | `JpegStream`: 16줄씩 받아 JPG로 저장 (canvas 하나에 그리지 못하는 JPG)                                                        |
+| `src/lib/crc32.ts`                           | PNG 조각 CRC (사진 정보·사진 꺼내기와 같이 씀)                                                                                |
+| `tests/e2e/image-stitch.spec.ts`             | E2E                                                                                                                           |
+| `src/content/guides/*/stitch-screenshots.md` | 가이드 글 (그림: 견본 대화 캡처 세 장과 이은 결과)                                                                            |
 
 ### 처리 흐름
 
@@ -54,7 +56,7 @@
 4. "이어 붙이기" → `stitchImages({ files, layout, background, format, quality, chunk })`
    - 워커가 모든 사진을 바로 세워 읽는다
    - `chunk`가 있으면 나눌 곳을 정한다: 목표 높이 앞 4분의 1 안에서(지금 장의 첫 줄은 빼고) 줄 묶음씩 아래에서부터 한 색 줄을 찾고, 없으면 목표 높이에서 자른다. 다음 장은 그 줄에서 시작한다
-   - 장마다: PNG는 `PngStream`에 줄 묶음씩 그려 쓴다. JPG·WebP는 그 장 크기의 canvas 하나에 그려 `convertToBlob`
+   - 장마다 `saveDrawing()`: PNG는 늘 `PngStream`에 줄 묶음씩 그려 쓴다(`pngStrips`). JPG·WebP는 그 장 크기의 canvas 하나에 그려 `convertToBlob`하고, canvas를 만들 수 없으면 JPG는 `JpegStream`에 줄 묶음씩, WebP는 `tooLarge`
 5. PDF는 A4 비율 높이(`폭 × 297 / 210`)로 나눈 JPG를 `imagesToPdf({ size: 'fit', margin: 0 })`로 묶는다
 6. 결과는 설정 문자열(사진 순서·배치·바탕·형식·나누기)과 함께 둔다. 하나라도 바뀌면 이전 결과를 쓰지 않는다
 
@@ -72,7 +74,7 @@
 - **겹침을 찾지 못하면 아무것도 자르지 않는다**: 상세페이지 사진처럼 흰 여백이 같은 사진에서 막대를 잘못 잘라 내용을 잃는 것보다 덜 자르는 편이 낫다. 사용자가 숫자로 자를 수 있다
 - **가장 긴 겹침이 아니라 다른 줄이 가장 적은 겹침**: 다른 줄을 조금 허용하자 가장 긴 것을 고르면 1~4줄을 더 잘랐다(시험 캡처로 확인)
 - **PNG는 줄 묶음씩 저장**: 아이폰 Safari는 canvas가 약 1,670만 화소를 넘으면 오류 없이 아무것도 그리지 않는다. 1170px 캡처 열 장이면 쉽게 넘는다. PNG를 직접 만들면 결과 크기에 묶이지 않는다
-- **JPG·WebP는 canvas 하나**: 브라우저 저장을 써야 해서 나눌 수 없다. 그리기 전에 맨 끝 화소를 칠하고 읽어 보아 canvas가 실제로 되는지 확인하고, 안 되면 `tooLarge`로 PNG·나누기를 권한다
+- **JPG·WebP는 되면 canvas 하나**: 브라우저 저장이 빠르다. 그리기 전에 맨 끝 화소를 칠하고 읽어 보아 canvas가 실제로 되는지 확인하고, 안 되면 JPG는 직접 만든 JPEG(`JpegStream`, 2026-10-23)으로 줄 묶음씩 쓴다. 그래서 JPG 한 장 길이는 canvas 한 변(32,767px)이 아니라 JPEG 형식 한계(65,500px)까지다. WebP는 직접 만들 수 없어 `tooLarge`로 PNG·JPG·나누기를 권한다
 - **나눌 곳은 빈 줄**: 글 줄 중간을 자르면 두 장 모두에서 읽을 수 없다. 앞 4분의 1까지만 찾아 한 장이 너무 짧아지지 않게 한다
 - **미리보기는 줄인 사진**: 원래 크기로 매번 그리면 숫자를 고칠 때마다 느리다. 결과는 워커가 원래 크기로 같은 배치(`layoutStitch`)로 그린다
 - **배치는 소수 자리까지 이어 더하고 칸마다 반올림**: 사진마다 따로 반올림하면 사진 사이에 1px 틈이나 겹침이 생긴다
@@ -90,6 +92,7 @@
 
 - [x] 폴더(`meta.ts`·`content.ts`·`Frame.astro`·`App.svelte`·`messages.ts`)와 레지스트리 등록, 이미지 '편집' 묶음
 - [x] 겹침 찾기·잇기 워커, 긴 PNG 저장, 나누기·PDF
+- [x] canvas 한계를 넘는 긴 JPG 저장 (2026-10-23, `JpegStream`)
 - [x] 한·영 문구, 사용법·FAQ, 가이드 글(그림 1장)
 - [x] 견본(대화 캡처 세 장, 시계가 장마다 다름)과 '예시 파일로 해 보기'
 - [x] E2E (로컬 처리 약속은 `test.ts`가 끝에 확인)
@@ -104,6 +107,7 @@
 
 - `tests/e2e/image-stitch.spec.ts`
   - 시험 캡처 세 장을 PNG로 이으면 원래 긴 화면(`scroll-page.png`)과 화소까지 같다
+  - canvas 한계를 낮추면(`canvas-limit.ts`) 줄 묶음 JPG로 잇고 원래 긴 화면과 평균 화소 차이 3 미만. WebP는 PNG·JPG를 권한다
   - 견본 대화 캡처 세 장에서 이음 둘을 찾고 결과가 750 × 2,454px
   - 가운데 장이 JPG여도 겹침을 찾는다
   - 이음 값을 고치면 결과 크기가 바뀌고 '자동 값으로'로 돌아간다. 자동을 끄면 그대로 잇는다
