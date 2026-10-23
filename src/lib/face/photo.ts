@@ -4,12 +4,20 @@
  * 휴대폰 사진은 수천만 화소라 읽기·줄이기·결과 그리기·JPG 만들기를 화면 스레드에서 하면 화면이 멈춘다.
  * 워커가 원본을 들고 있고, 화면에는 미리보기용 작은 사진과 살피기용 픽셀만 넘긴다.
  */
+import { readable } from '../image/heif';
 import { createWorker } from '../worker';
 import type { Matte, Output, Placement, Thumb } from './id-photo';
 import workerUrl from './photo.worker.ts?worker&url';
 
 export type PhotoRequest =
-  | { id: number; type: 'open'; file: File; previewSide: number; thumbSide: number }
+  | {
+      id: number;
+      type: 'open';
+      /** 원본 파일, 또는 브라우저가 못 읽는 HEIC를 libheif로 바로 세워 푼 그림 */
+      file: Blob | ImageBitmap;
+      previewSide: number;
+      thumbSide: number;
+    }
   | {
       id: number;
       type: 'export';
@@ -52,7 +60,7 @@ let nextId = 0;
 export class PhotoWorker {
   private worker: Promise<Worker> | undefined;
 
-  private async call(request: PhotoRequest): Promise<PhotoResponse> {
+  private async call(request: PhotoRequest, transfer: Transferable[] = []): Promise<PhotoResponse> {
     this.worker ??= createWorker(workerUrl);
     const worker = await this.worker;
     return new Promise((resolve) => {
@@ -73,13 +81,20 @@ export class PhotoWorker {
       };
       worker.addEventListener('message', onMessage);
       worker.addEventListener('error', onError);
-      worker.postMessage(request);
+      worker.postMessage(request, transfer);
     });
   }
 
-  /** 사진을 연다. 워커가 원본을 들고 있다가 export에 쓴다 (새로 열면 바뀐다) */
+  /**
+   * 사진을 연다. 워커가 원본을 들고 있다가 export에 쓴다 (새로 열면 바뀐다).
+   * 브라우저가 못 읽는 HEIC(아이폰 사진)는 libheif로 풀어 넘긴다
+   */
   async open(file: File, previewSide: number, thumbSide: number): Promise<OpenedPhoto> {
-    const response = await this.call({ id: nextId++, type: 'open', file, previewSide, thumbSide });
+    const source = await readable(file);
+    const response = await this.call(
+      { id: nextId++, type: 'open', file: source, previewSide, thumbSide },
+      source instanceof ImageBitmap ? [source] : [],
+    );
     if (response.kind !== 'opened')
       throw new Error(response.kind === 'error' ? response.message : 'unexpected');
     return response;
