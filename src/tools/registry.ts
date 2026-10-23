@@ -48,6 +48,7 @@ const TOOL_IDS: readonly string[] = [
   'image/stitch',
   'image/crop',
   'image/mosaic',
+  'text/csv-encoding',
 ];
 
 export interface Tool extends ToolMeta {
