@@ -77,6 +77,15 @@ test('오른쪽으로 돌리고 좌우로 뒤집은 결과를 받는다', async 
   expect((await corners(page, flipped.bytes)).corners).toEqual(['red', 'blue', 'green', 'white']);
 });
 
+test('뒤집은 뒤에 돌려도 보이는 그림이 돌아간다', async ({ page }) => {
+  const frame = await openTool(page, 'quadrants.png');
+  await frame.getByRole('button', { name: '좌우 뒤집기' }).click();
+  await frame.getByRole('button', { name: '오른쪽으로 90°' }).click();
+  const file = await download(page, frame);
+  // 좌우로 뒤집으면 초록·빨강 / 흰색·파랑, 그것을 시계 방향으로 돌리면 왼쪽 아래(흰색)가 왼쪽 위로 온다
+  expect((await corners(page, file.bytes)).corners).toEqual(['white', 'green', 'blue', 'red']);
+});
+
 test('숫자로 적은 영역만 남긴다', async ({ page }) => {
   const frame = await openTool(page, 'quadrants.png');
   await frame.getByLabel('폭 (px)').fill('20');
