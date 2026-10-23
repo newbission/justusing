@@ -6,6 +6,7 @@
  */
 import workerUrl from './process.worker.ts?worker&url';
 import { createWorker } from '../worker';
+import { readable } from './heif';
 
 export type OutputType = 'image/jpeg' | 'image/png' | 'image/webp';
 
@@ -21,7 +22,8 @@ export interface ProcessOptions {
 
 export interface ProcessRequest {
   id: number;
-  file: Blob;
+  /** 원본 파일, 또는 브라우저가 못 읽는 HEIC를 libheif로 풀어 바로 세운 그림 (heif.ts) */
+  file: Blob | ImageBitmap;
   options: ProcessOptions;
 }
 
@@ -76,10 +78,22 @@ function pump() {
 }
 
 async function run(task: Task) {
+  // 브라우저가 못 읽는 HEIC는 일을 시작할 때 푼다 (한꺼번에 미리 풀면 큰 그림이 모두 메모리에 남는다)
+  let file: Blob | ImageBitmap;
+  try {
+    file = await readable(task.request.file as Blob);
+  } catch {
+    task.resolve({ id: task.request.id, kind: 'error', reason: 'decode' });
+    return;
+  }
+  const release = () => {
+    if (file instanceof ImageBitmap) file.close();
+  };
   let worker: Worker;
   try {
     worker = await take();
   } catch (error) {
+    release();
     task.reject(error);
     return;
   }
@@ -111,8 +125,14 @@ async function run(task: Task) {
     worker.addEventListener('message', listener);
     worker.addEventListener('error', onError);
     task.signal?.addEventListener('abort', onAbort, { once: true });
-    if (task.signal?.aborted) onAbort();
-    else worker.postMessage(task.request);
+    if (task.signal?.aborted) {
+      release();
+      onAbort();
+    } else {
+      worker.postMessage({ ...task.request, file } satisfies ProcessRequest, {
+        transfer: file instanceof ImageBitmap ? [file] : [],
+      });
+    }
   });
 }
 

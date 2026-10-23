@@ -80,8 +80,11 @@ addEventListener('message', async (event: MessageEvent<ProcessRequest>) => {
 
   let bitmap: ImageBitmap;
   try {
-    // 휴대폰 사진의 EXIF 방향을 적용해 바로 세운다
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    // 휴대폰 사진의 EXIF 방향을 적용해 바로 세운다 (libheif로 푼 HEIC는 이미 바로 선 그림으로 온다)
+    bitmap =
+      file instanceof ImageBitmap
+        ? file
+        : await createImageBitmap(file, { imageOrientation: 'from-image' });
   } catch {
     send({ id, kind: 'error', reason: 'decode' });
     return;
