@@ -33,6 +33,7 @@ const SAMPLES = {
     chat3: '예시-대화캡처3.png',
     tilted: '예시-기운사진.jpg',
     car: '예시-번호판사진.jpg',
+    utf8Csv: '예시-주문목록-UTF8.csv',
   },
   en: {
     report: 'sample-report.pdf',
@@ -50,6 +51,7 @@ const SAMPLES = {
     chat3: 'sample-chat-3.png',
     tilted: 'sample-tilted-photo.jpg',
     car: 'sample-license-plate.jpg',
+    utf8Csv: 'sample-orders-utf8.csv',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -424,6 +426,13 @@ const JOBS = {
       await drag('.view canvas', [0.385, 0.645], [0.615, 0.745]);
       await save('가린 이미지 받기', `${out}mosaic-${effect}.jpg`);
     }
+  },
+
+  // CSV 한글 깨짐 고치기: BOM 없는 UTF-8 견본을 엑셀용 UTF-8(기본)로
+  async 'csv-encoding'({ sample, out }) {
+    await open('/text/csv-encoding/', sample('utf8Csv'));
+    await frame.getByRole('button', { name: '변환하기' }).click();
+    await save('다운로드', `${out}csv-encoding.csv`);
   },
 };
 
