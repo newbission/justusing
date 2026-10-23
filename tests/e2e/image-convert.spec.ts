@@ -91,8 +91,27 @@ test('사진을 PNG로 바꾸면 크기가 그대로인 PNG가 된다', async ({
 
 test('브라우저가 읽지 못하는 파일은 알려 주고 빼고 바꾼다', async ({ page }) => {
   const frame = await openTool(page, ['broken.png', 'wide.png']);
-  await expect(
-    frame.getByText('이 브라우저가 읽지 못하는 형식입니다.', { exact: false }),
-  ).toBeVisible();
+  await expect(frame.getByText('읽지 못하는 이미지입니다.', { exact: false })).toBeVisible();
   await expect(frame.getByText('이미지 1장을 JPG로 바꿉니다.')).toBeVisible();
+});
+
+test('아이폰 사진(HEIC)도 크롬에서 바로 세운 JPG로 바뀐다', async ({ page, baseURL }) => {
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다. 화소는 가로이고 회전 표시(irot)가 붙어 있다
+  const frame = await openTool(page, ['iphone.heic']);
+  await expect(frame.getByText('HEIC → JPG', { exact: false })).toBeVisible();
+  await frame.getByRole('button', { name: '변환하기' }).click();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const file = await event;
+  expect(file.suggestedFilename()).toBe('iphone.jpg');
+  const bytes = new Uint8Array(await readFile(await file.path()));
+  expect(isJpeg(bytes)).toBe(true);
+  const { width, height, pixel } = await inspect(page, bytes);
+  expect({ width, height }).toEqual({ width: 300, height: 400 });
+  // 시계 방향으로 돌아 원래 왼쪽 아래(파랑)가 왼쪽 위로 온다
+  expect(pixel[2]).toBeGreaterThan(200);
+  expect(pixel[0]).toBeLessThan(60);
+  expectLocalOnly(page, requests, baseURL!);
 });
