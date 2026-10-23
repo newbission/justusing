@@ -34,7 +34,7 @@ class Failure extends Error {
   }
 }
 
-async function open(file: Blob, previewSide: number) {
+async function open(file: Blob | ImageBitmap, previewSide: number) {
   source?.close();
   source = undefined;
   previewBase?.close();

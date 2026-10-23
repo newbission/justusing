@@ -162,6 +162,19 @@ test('휴대폰 사진의 방향 정보대로 세워 연다', async ({ page }) =
   expect([result.width, result.height]).toEqual([300, 400]);
 });
 
+test('아이폰 사진(HEIC)도 바로 세워 열고 JPG로 받는다', async ({ page }) => {
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다 (회전 표시 irot을 적용한다)
+  const frame = await openTool(page, 'iphone.heic');
+  await expect(frame.getByText('결과 300 × 400 px · JPG')).toBeVisible();
+  const file = await download(page, frame);
+  expect(file.name).toBe('iphone_편집.jpg');
+  expect(await corners(page, file.bytes)).toEqual({
+    width: 300,
+    height: 400,
+    corners: ['blue', 'red', 'white', 'green'],
+  });
+});
+
 test('예시 사진의 기울기를 바로잡아 같은 크기로 받는다', async ({ page }) => {
   await page.goto('/image/crop/');
   const frame = page.frameLocator('iframe[data-tool-frame]');
