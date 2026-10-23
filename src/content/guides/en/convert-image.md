@@ -3,7 +3,7 @@ title: How to convert WebP and PNG to JPG
 description: When a saved WebP will not open, or a PNG is too big. The differences between JPG, PNG and WebP, which to choose, and how to handle iPhone HEIC photos.
 tool: image/convert
 published: 2026-10-15
-updated: 2026-10-19
+updated: 2026-10-23
 order: 7
 ---
 
@@ -45,10 +45,9 @@ This is text enlarged from the actual results of converting a screenshot. Images
 
 iPhones take photos in HEIC by default. HEIC is smaller than JPG, but many Windows PCs and websites cannot open it.
 
-- Open this tool in **Safari (iPhone, iPad or Mac)**, which can read HEIC, and convert it to JPG there.
-- Other browsers such as Chrome and Edge cannot read HEIC, so the list marks it as a format the browser cannot read.
+- Add HEIC files to this tool as they are and convert them to JPG. Safari reads HEIC by itself; Chrome, Edge and Firefox first load a HEIC reader once and open the photo inside the browser.
+- If you only have iPhone photos, see the [HEIC to JPG](/en/image/heic-to-jpg/) tool and [How to convert HEIC photos to JPG](/en/guide/heic-to-jpg/).
 - To get JPG for future photos, choose **Settings → Camera → Formats → Most Compatible** on your iPhone.
-- When you send photos from an iPhone by email or to other apps, they are usually converted to JPG along the way.
 
 ## Is it safe to convert in the browser?
 
