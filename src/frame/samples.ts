@@ -29,7 +29,9 @@ type SampleKey =
   /** 엑셀이 기본으로 읽지 않는 예전 인코딩의 CSV (한국어 CP949, 영어 Windows-1252) */
   | 'legacyCsv'
   /** BOM 없는 UTF-8 CSV (엑셀에서 깨짐) */
-  | 'utf8Csv';
+  | 'utf8Csv'
+  | 'heic1'
+  | 'heic2';
 
 /** 언어별 파일 이름 (make_samples.py의 TEXT와 같게) */
 const NAMES: Record<Locale, Record<SampleKey, string>> = {
@@ -53,6 +55,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     chat3: '예시-대화캡처3.png',
     legacyCsv: '예시-은행거래내역-CP949.csv',
     utf8Csv: '예시-주문목록-UTF8.csv',
+    heic1: '예시-아이폰사진1.heic',
+    heic2: '예시-아이폰사진2.heic',
   },
   en: {
     report: 'sample-report.pdf',
@@ -74,6 +78,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     chat3: 'sample-chat-3.png',
     legacyCsv: 'sample-contacts-windows-1252.csv',
     utf8Csv: 'sample-orders-utf8.csv',
+    heic1: 'sample-iphone-photo-1.heic',
+    heic2: 'sample-iphone-photo-2.heic',
   },
 };
 
@@ -106,6 +112,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/compress': ['photo', 'screen'],
   'image/resize': ['photo', 'screen'],
   'image/convert': ['photo', 'screen'],
+  'image/heic-to-jpg': ['heic1', 'heic2'],
   'image/id-photo': ['face'],
   'image/remove-location': ['located', 'screen'],
   'image/stitch': ['chat1', 'chat2', 'chat3'],
@@ -119,6 +126,7 @@ const TYPES: Record<string, string> = {
   jpg: 'image/jpeg',
   png: 'image/png',
   csv: 'text/csv',
+  heic: 'image/heic',
 };
 
 /** 도구에 견본이 있는지 (바깥 페이지가 빌드 때 '따라 하기' 버튼을 그릴지 정한다) */
