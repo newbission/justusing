@@ -10,8 +10,11 @@
  */
 import { defineConfig, devices } from '@playwright/test';
 
-/** npm run preview(4322)와 겹치지 않게 (겹치면 로컬에서 그 서버를 재사용해 버린다) */
-const PORT = 8788;
+/**
+ * npm run preview(4322)와 겹치지 않게 (겹치면 로컬에서 그 서버를 재사용해 버린다).
+ * 작업 공간 여러 곳에서 동시에 돌릴 때는 E2E_PORT 로 다르게 준다 (wrangler 검사 포트는 포트+1).
+ */
+const PORT = Number(process.env.E2E_PORT ?? 8788);
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -26,7 +29,7 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `npx wrangler dev --port ${PORT}`,
+    command: `npx wrangler dev --port ${PORT} --inspector-port ${PORT + 1}`,
     port: PORT,
     reuseExistingServer: !process.env.CI,
   },
