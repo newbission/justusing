@@ -55,20 +55,33 @@ function decodes(bytes: Uint8Array, encoding: SourceEncoding, complete: boolean)
   }
 }
 
-/** BOM 없는 UTF-16: ASCII 글자의 0 바이트가 짝수·홀수 자리 한쪽에 몰려 있다 */
-function utf16Without(bytes: Uint8Array): 'utf-16le' | 'utf-16be' | undefined {
-  const length = Math.min(bytes.length, 4096) & ~1;
+/**
+ * BOM 없는 UTF-16: 0 바이트가 대부분 짝수·홀수 자리 한쪽에 있고(ASCII 글자의 높은 바이트), 그쪽으로 읽으면
+ * 깨짐도 조절 문자도 없다. 한글이 많은 파일은 0 바이트가 적어(쉼표·줄바꿈 정도) 비율이 아니라 몰림으로 본다.
+ * '가'(U+AC00)처럼 낮은 바이트가 0인 글자도 있어 모두 한쪽이기를 바라지 않는다
+ */
+function utf16Without(bytes: Uint8Array, complete: boolean): 'utf-16le' | 'utf-16be' | undefined {
+  const length = Math.min(bytes.length, 65536) & ~1;
   if (length < 4) return undefined;
   let even = 0;
   let odd = 0;
   for (let i = 0; i < length; i += 2) {
-    if (bytes[i] === 0 && bytes[i + 1] !== 0) even++;
-    if (bytes[i + 1] === 0 && bytes[i] !== 0) odd++;
+    if (bytes[i] === 0) even++;
+    if (bytes[i + 1] === 0) odd++;
   }
-  const pairs = length / 2;
-  if (odd > pairs * 0.3 && even < pairs * 0.05) return 'utf-16le';
-  if (even > pairs * 0.3 && odd < pairs * 0.05) return 'utf-16be';
-  return undefined;
+  const zeros = even + odd;
+  if (zeros < Math.max(2, (length / 2) * 0.02)) return undefined;
+  const side = odd >= zeros * 0.8 ? 'utf-16le' : even >= zeros * 0.8 ? 'utf-16be' : undefined;
+  if (!side) return undefined;
+  try {
+    const text = new TextDecoder(side, { fatal: true }).decode(bytes.subarray(0, length), {
+      stream: !complete || length < bytes.length,
+    });
+    // 글자 파일에 없는 조절 문자가 나오면 UTF-16이 아니다 (탭·줄바꿈·폼피드만 허용)
+    return /[\u0000-\u0008\u000b\u000e-\u001f]/.test(text) ? undefined : side;
+  } catch {
+    return undefined;
+  }
 }
 
 /** 글자 파일에는 거의 없는 조절 문자(NUL 등)가 많으면 글자 파일이 아니다 */
@@ -105,7 +118,7 @@ export function detectEncoding(sample: Uint8Array, complete: boolean): Detection
   }
   if (startsWith(sample, [0xff, 0xfe])) return text('utf-16le', true);
   if (startsWith(sample, [0xfe, 0xff])) return text('utf-16be', true);
-  const utf16 = utf16Without(sample);
+  const utf16 = utf16Without(sample, complete);
   if (utf16) return text(utf16);
   if (looksBinary(sample)) return { kind: 'binary', encoding: 'utf-8', bom: false, ascii: false };
   // 앞부분만 읽었으면 뒤에 한글이 있을 수 있어 ASCII라고 단정하지 않는다 (UTF-8로 본다)
