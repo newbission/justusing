@@ -20,6 +20,8 @@ type SampleKey =
   | 'photo'
   | 'face'
   | 'located'
+  | 'tilted'
+  | 'car'
   | 'screen'
   | 'chat1'
   | 'chat2'
@@ -39,6 +41,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     photo: '예시-사진.jpg',
     face: '예시-증명사진.jpg',
     located: '예시-위치사진.jpg',
+    tilted: '예시-기운사진.jpg',
+    car: '예시-번호판사진.jpg',
     screen: '예시-화면캡처.png',
     chat1: '예시-대화캡처1.png',
     chat2: '예시-대화캡처2.png',
@@ -56,6 +60,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     photo: 'sample-photo.jpg',
     face: 'sample-id-photo.jpg',
     located: 'sample-photo-with-location.jpg',
+    tilted: 'sample-tilted-photo.jpg',
+    car: 'sample-license-plate.jpg',
     screen: 'sample-screenshot.png',
     chat1: 'sample-chat-1.png',
     chat2: 'sample-chat-2.png',
@@ -95,6 +101,8 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/id-photo': ['face'],
   'image/remove-location': ['located', 'screen'],
   'image/stitch': ['chat1', 'chat2', 'chat3'],
+  'image/crop': ['tilted'],
+  'image/mosaic': ['car'],
 };
 
 const TYPES: Record<string, string> = {

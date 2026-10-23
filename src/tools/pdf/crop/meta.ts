@@ -7,12 +7,14 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 자르기',
+      summary: '남길 영역을 골라 여백을 잘라 냅니다',
       title: 'PDF 자르기 - 쪽 여백 잘라 내기, 업로드 없이',
       description:
         'PDF 쪽에서 남길 영역을 골라 여백이나 필요 없는 가장자리를 잘라 냅니다. 모든 처리는 브라우저 안에서 이루어집니다.',
     },
     en: {
       name: 'Crop PDF',
+      summary: 'Trim margins by choosing the area to keep',
       title: 'Crop PDF - Trim the margins of PDF pages in your browser',
       description:
         'Choose the area to keep on a PDF page and trim away margins or unwanted edges. Everything happens inside your browser.',

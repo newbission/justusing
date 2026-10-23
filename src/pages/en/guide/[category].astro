@@ -1,0 +1,12 @@
+---
+/**
+ * 영어 카테고리 가이드 페이지 (/en/guide/pdf/). 한국어 페이지가 주소의 언어로 글을 고른다.
+ */
+import type { GetStaticPaths } from 'astro';
+import GuideCategoryPage from '../../guide/[category].astro';
+import { guideCategoryPaths } from '../../../guides';
+
+export const getStaticPaths = guideCategoryPaths satisfies GetStaticPaths;
+---
+
+<GuideCategoryPage {...Astro.props} />

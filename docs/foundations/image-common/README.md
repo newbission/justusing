@@ -1,10 +1,11 @@
 # 이미지 도구 공통 (`src/lib/image/`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-22
+쓴 날 2026-10-16 · 고친 날 2026-10-23
 
 - 쓰는 곳: [이미지 압축](../../features/image-compress/README.md), [크기 조절](../../features/image-resize/README.md),
   [형식 변환](../../features/image-convert/README.md), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만),
-  [이어 붙이기](../../features/image-stitch/README.md)(목록 상태 `ImageBatch`만). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
+  [이어 붙이기](../../features/image-stitch/README.md)(목록 상태 `ImageBatch`만), [자르기·회전](../../features/image-crop/README.md)(`PngStream`·`EXTENSIONS`만),
+  [모자이크](../../features/image-mosaic/README.md)(`PngStream`·`EXTENSIONS`·`worker-canvas`, 영역 계산은 `crop-geometry`의 `clampRect`·`resizeRect`). 사진 준비(`prepare.ts`·`embed.ts`)는 PDF 도구
   (이미지를 PDF로·이미지 넣기·서명 넣기)도 쓴다
 - 상태: dev·main 반영 (PR #36, #44, 2026-10-15)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../frame-isolation/README.md), [PDF 공통](../pdf-common/README.md)
@@ -48,6 +49,11 @@
 | `src/lib/image/stitch-detect.ts`             | `detectSeam()`: 화면 캡처의 고정 막대·겹친 부분 찾기                                                                 |
 | `src/lib/image/stitch.ts` + `.worker.ts`     | `findSeam()`·`stitchImages()`: 위 둘을 워커에서, 나누기·저장까지                                                     |
 | `src/lib/image/png-stream.ts`                | `PngStream`: 줄 묶음씩 받아 PNG로 저장. canvas 크기 한계를 넘는 결과에 쓴다                                          |
+| `src/lib/image/crop-geometry.ts`             | 돌리기·뒤집기·기울기 변환(`applyTurn`)과 자를 영역 계산 (자르기·회전)                                                |
+| `src/lib/image/crop.ts` + `.worker.ts`       | `openImage()`·`exportImage()`: 원본을 워커에 두고 돌리고 잘라 저장 (자르기·회전)                                     |
+| `src/lib/image/worker-canvas.ts`             | `openUpright()`(바로 세워 열고 미리보기), `usableContext()`(canvas를 만들었는지 맨 끝 화소로 확인). 워커 안에서만    |
+| `src/lib/image/mosaic-effects.ts`            | `paint()`: 가릴 곳(사각형·타원) 안 화소를 모자이크·흐림·검게 칠하기로 고친다 (미리보기·워커 공통)                    |
+| `src/lib/image/mosaic.ts` + `.worker.ts`     | `openImage()`·`exportImage()`: 원본을 워커에 두고 가릴 곳을 고쳐 저장 (모자이크)                                     |
 | `src/lib/crc32.ts`                           | PNG 조각 CRC (사진 정보·사진 꺼내기·`PngStream`)                                                                     |
 | `src/lib/zip.ts` + `zip.worker.ts`           | `makeZip()`: 여러 결과를 ZIP 하나로 (워커)                                                                           |
 | `src/frame/messages.ts`의 `images`           | 목록 화면 공통 문구 (한·영)                                                                                          |
@@ -112,7 +118,9 @@
 - [x] 원본과 결과 비교 화면 (`result`, `CompareSlider`)
 - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기)
 - [x] 이어 붙이기 (2026-10-22, 긴 PNG 저장 `PngStream`)
-- [ ] 배경 제거, 자르기·회전 같은 다음 이미지 도구 (CLAUDE.md 9단계)
+- [x] 자르기·회전 (2026-10-23)
+- [x] 모자이크 (2026-10-23, 원본을 든 워커의 열기·canvas 확인을 `worker-canvas.ts`로 묶음)
+- [ ] 배경 제거 같은 다음 이미지 도구 (CLAUDE.md 9단계)
 - [ ] 처리 중 그만두기(`signal`)를 도구 화면에서 쓰기 — 지금은 처리 중에 목록을 잠근다
 
 ## 4. 검증과 히스토리

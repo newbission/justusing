@@ -1,24 +1,18 @@
 ---
 import { siteConfig } from '../site.config';
-import { CATEGORIES } from '../tools/categories';
-import { visibleCategories } from '../tools/registry';
 import ThemeToggle from './ThemeToggle.astro';
 import LocaleSwitch from './LocaleSwitch.astro';
 import Logo from './Logo.astro';
+import MegaMenu from './MegaMenu.astro';
+import MobileMenu from './MobileMenu.astro';
+import { siteMenus } from './site-menu';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 
-const currentPath = Astro.url.pathname;
-const locale = localeOf(currentPath);
+const locale = localeOf(Astro.url.pathname);
 const t = ui(locale);
 // 도구 분류들, 그리고 맨 뒤에 가이드
-const links = [
-  ...visibleCategories.map((category) => ({
-    href: localizePath(`/${category}/`, locale),
-    name: CATEGORIES[category].text[locale].name,
-  })),
-  { href: localizePath('/guide/', locale), name: t.nav.guides },
-];
+const menus = siteMenus(Astro.url.pathname);
 ---
 
 <header class="site-header">
@@ -26,26 +20,21 @@ const links = [
     <a class="logo" href={localizePath('/', locale)} aria-label={siteConfig.name}>
       <Logo />
     </a>
-    <nav class="nav" aria-label={t.nav.categories}>
-      <ul>
-        {links.map(({ href, name }) => (
-          <li>
-            <a href={href} aria-current={currentPath.startsWith(href) ? 'page' : undefined}>
-              {name}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <div class="nav">
+      <MegaMenu {menus} label={t.nav.categories} />
+    </div>
     <div class="actions">
       <LocaleSwitch />
       <ThemeToggle />
+      <MobileMenu {menus} />
     </div>
   </div>
 </header>
 
 <style>
+  /* 펼침 메뉴의 판이 머리글 폭 전체에 걸리게 기준을 잡는다 */
   .site-header {
+    position: relative;
     border-bottom: 1px solid var(--color-line);
   }
   .inner {
@@ -68,39 +57,18 @@ const links = [
   }
   .nav {
     flex: 1;
+    align-self: stretch;
     min-width: 0;
   }
-  /* 메뉴가 넘치면 옆으로 밀어 본다 (좁은 화면에서 언어 버튼과 겹치지 않게) */
-  .nav {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .nav ul {
-    display: flex;
-    gap: 16px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    white-space: nowrap;
-  }
-  .nav a {
-    color: var(--color-muted);
-    font-size: 15px;
-    text-decoration: none;
-  }
-  .nav a:hover,
-  .nav a[aria-current='page'] {
-    color: var(--color-text);
-  }
-  @media (max-width: 480px) {
+  @media (max-width: 767px) {
     .inner {
       gap: 14px;
     }
-    .nav ul {
-      gap: 12px;
+    .nav {
+      display: none;
     }
-    .nav a {
-      font-size: 14px;
+    .actions {
+      margin-left: auto;
     }
   }
 </style>

@@ -1,6 +1,9 @@
 /**
  * 검색엔진용 구조화 데이터 E2E. 화면에 보이는 내용과 어긋나면 검색엔진이 잘못된 정보로 본다.
  */
+import { execFileSync } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from './test';
 
 interface JsonLd {
@@ -46,4 +49,38 @@ test('구조화 데이터가 문서 틀(<html>) 안에 있고 페이지가 표�
     await page.goto(path);
     expect(await page.evaluate(() => document.compatMode), path).toBe('CSS1Compat');
   }
+});
+
+test('사이트맵의 고친 날은 가이드 머리말 날짜이고, git 기록이 잘렸으면 도구 날짜를 적지 않는다', async ({
+  request,
+}) => {
+  const sitemap = await (await request.get('/sitemap.xml')).text();
+  const entries = new Map(
+    [...sitemap.matchAll(/<loc>([^<]+)<\/loc>(?:<lastmod>([^<]+)<\/lastmod>)?/g)].map((match) => [
+      new URL(match[1]!).pathname,
+      match[2],
+    ]),
+  );
+
+  // 가이드: 한국어 글 머리말의 updated, 없으면 published (두 언어 주소 모두)
+  const folder = fileURLToPath(new URL('../../src/content/guides/ko/', import.meta.url));
+  const files = readdirSync(folder).filter((name) => name.endsWith('.md'));
+  expect(files.length).toBeGreaterThan(0);
+  for (const file of files) {
+    const head = readFileSync(`${folder}${file}`, 'utf8');
+    const date = (head.match(/^updated: (\S+)/m) ?? head.match(/^published: (\S+)/m))![1];
+    const slug = file.replace(/\.md$/, '');
+    expect(entries.get(`/guide/${slug}/`), slug).toBe(date);
+    expect(entries.get(`/en/guide/${slug}/`), slug).toBe(date);
+  }
+
+  // 도구: git 기록이 다 있으면 날짜(YYYY-MM-DD), 얕은 clone(CI 등)이면 적지 않는다
+  const shallow =
+    execFileSync('git', ['rev-parse', '--is-shallow-repository'], { encoding: 'utf8' }).trim() ===
+    'true';
+  const tool = entries.get('/pdf/merge/');
+  if (shallow) expect(tool).toBeUndefined();
+  else expect(tool).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  // 날짜를 확실히 모르는 페이지(홈 등)에는 적지 않는다
+  expect(entries.get('/')).toBeUndefined();
 });

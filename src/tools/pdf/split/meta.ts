@@ -7,15 +7,17 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 나누기',
-      title: 'PDF 나누기 - 페이지 범위별로 여러 파일로',
+      summary: '쪽 범위대로 여러 파일로 나눕니다',
+      title: 'PDF 나누기 - 페이지 범위별·한 장씩 분리, 무료·업로드 없이',
       description:
-        '한 PDF를 페이지 범위별로 여러 파일로 나눕니다. 모든 처리는 브라우저 안에서 이루어집니다.',
+        'PDF를 페이지 범위별로 나누거나, 한 장씩 따로 저장하거나, 고른 페이지만 뽑아 새 PDF로 만듭니다. 여러 파일은 ZIP 하나로 받습니다. 모든 처리는 브라우저 안에서 이루어집니다.',
     },
     en: {
       name: 'Split PDF',
-      title: 'Split PDF - Split a PDF into several files by page range',
+      summary: 'Split one PDF into files by page range',
+      title: 'Split PDF - Split by page range or extract pages, free and without uploading',
       description:
-        'Split one PDF into several files by page range. Everything happens inside your browser.',
+        'Split a PDF by page range, save every page as its own file, or extract only the pages you pick into a new PDF. Several files come as one ZIP. Everything happens inside your browser.',
     },
   },
   related: ['pdf/merge', 'pdf/organize'],

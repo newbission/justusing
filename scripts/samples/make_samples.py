@@ -60,6 +60,10 @@ TEXT = {
         'photo': '예시-사진.jpg',
         'face': '예시-증명사진.jpg',
         'located': '예시-위치사진.jpg',
+        'tilted': '예시-기운사진.jpg',
+        'car': '예시-번호판사진.jpg',
+        'plate': '00가 0000',
+        'carCard': ('주차 시 연락처', '010-0000-0000'),
         'screen': '예시-화면캡처.png',
         'scrolls': ['예시-대화캡처1.png', '예시-대화캡처2.png', '예시-대화캡처3.png'],
         'sample': '예시 파일 · 내용은 모두 지어낸 것입니다',
@@ -172,6 +176,10 @@ TEXT = {
         'photo': 'sample-photo.jpg',
         'face': 'sample-id-photo.jpg',
         'located': 'sample-photo-with-location.jpg',
+        'tilted': 'sample-tilted-photo.jpg',
+        'car': 'sample-license-plate.jpg',
+        'plate': 'ABC 0000',
+        'carCard': ('Parking contact', '000-000-0000'),
         'screen': 'sample-screenshot.png',
         'scrolls': ['sample-chat-1.png', 'sample-chat-2.png', 'sample-chat-3.png'],
         'sample': 'Sample file · Everything in it is made up',
@@ -311,6 +319,99 @@ def landscape(width: int, height: int, seed: int) -> Image.Image:
     image = image.filter(ImageFilter.GaussianBlur(0.6))
     noise = Image.effect_noise((width, height), 18).convert('RGB')
     return Image.blend(image, noise, 0.06)
+
+
+def tilted_sea(width: int, height: int, degrees: float) -> Image.Image:
+    """수평선이 기울어진 바다 사진 (자르기·회전의 기울기 바로잡기). 크게 그려 돌린 뒤 가운데를 잘라 귀퉁이가 비지 않는다"""
+    rng = random.Random(41)
+    big_w, big_h = int(width * 1.4), int(height * 1.4)
+    image = Image.new('RGB', (big_w, big_h))
+    draw = ImageDraw.Draw(image)
+    horizon = int(big_h * 0.5)
+    for y in range(horizon):
+        t = y / horizon
+        draw.line([(0, y), (big_w, y)], fill=(int(90 + 120 * t), int(150 + 80 * t), int(215 + 25 * t)))
+    for y in range(horizon, big_h):
+        t = (y - horizon) / (big_h - horizon)
+        draw.line([(0, y), (big_w, y)], fill=(int(30 + 20 * t), int(95 + 30 * t), int(140 + 20 * t)))
+    sun_x, sun_y, radius = int(big_w * 0.62), int(horizon * 0.55), big_w // 22
+    draw.ellipse([sun_x - radius, sun_y - radius, sun_x + radius, sun_y + radius], fill=(255, 240, 200))
+    # 먼 섬과 등대
+    island = [(int(big_w * 0.18), horizon)]
+    for step in range(0, 21):
+        x = big_w * (0.18 + step * 0.012)
+        island.append((x, horizon - math.sin(step / 20 * math.pi) * big_h * 0.05 - rng.random() * 3))
+    island.append((int(big_w * 0.42), horizon))
+    draw.polygon(island, fill=(52, 82, 78))
+    tower_x = int(big_w * 0.74)
+    draw.rectangle([tower_x - 9, horizon - 120, tower_x + 9, horizon], fill=(240, 240, 236))
+    draw.rectangle([tower_x - 9, horizon - 80, tower_x + 9, horizon - 64], fill=(200, 60, 50))
+    draw.polygon([(tower_x - 14, horizon - 120), (tower_x + 14, horizon - 120), (tower_x, horizon - 140)], fill=(200, 60, 50))
+    for _ in range(big_w * 3):
+        x = rng.randrange(big_w)
+        y = rng.randrange(horizon + 4, big_h)
+        length = rng.randint(6, 10 + (y - horizon) // 12)
+        shade = rng.randint(150, 230)
+        draw.line([(x, y), (x + length, y)], fill=(shade, shade, min(255, shade + 20)))
+    image = image.filter(ImageFilter.GaussianBlur(0.8))
+    noise = Image.effect_noise(image.size, 14).convert('RGB')
+    image = Image.blend(image, noise, 0.05)
+    image = image.rotate(degrees, resample=Image.BICUBIC)
+    left, top = (big_w - width) // 2, (big_h - height) // 2
+    return image.crop((left, top, left + width, top + height))
+
+
+def parked_car(t, width: int = 1600, height: int = 1200) -> Image.Image:
+    """주차장에 선 차를 앞에서 본 그림 (모자이크). 번호판과 앞 유리 안 연락처 카드는 지어낸 글자다"""
+    image = Image.new('RGB', (width, height))
+    draw = ImageDraw.Draw(image)
+    ground = 560
+    # 뒤쪽 건물 벽과 창
+    for y in range(ground):
+        shade = int(214 - 30 * y / ground)
+        draw.line([(0, y), (width, y)], fill=(shade, shade - 4, shade - 10))
+    for col in range(6):
+        for row in range(2):
+            x, y = 70 + col * 260, 60 + row * 220
+            draw.rectangle([x, y, x + 170, y + 140], fill=(120, 140, 156))
+            draw.line([(x + 85, y), (x + 85, y + 140)], fill=(200, 200, 196), width=6)
+    # 바닥과 주차선
+    for y in range(ground, height):
+        shade = int(92 + 30 * (y - ground) / (height - ground))
+        draw.line([(0, y), (width, y)], fill=(shade, shade, shade + 2))
+    for x in (120, 1480):
+        draw.polygon([(x - 8, ground), (x + 8, ground), (x + (x - 800) * 0.4 + 14, height), (x + (x - 800) * 0.4 - 14, height)], fill=(232, 232, 226))
+    # 차 그림자
+    shadow = Image.new('L', (width, height), 0)
+    ImageDraw.Draw(shadow).ellipse([250, 940, 1350, 1080], fill=150)
+    image = Image.composite(Image.new('RGB', image.size, (30, 30, 32)), image, shadow.filter(ImageFilter.GaussianBlur(30)))
+    draw = ImageDraw.Draw(image)
+    body = (48, 86, 138)
+    # 바퀴, 지붕·앞 유리, 몸통
+    draw.rounded_rectangle([350, 900, 520, 1050], radius=24, fill=(28, 28, 30))
+    draw.rounded_rectangle([1080, 900, 1250, 1050], radius=24, fill=(28, 28, 30))
+    draw.polygon([(500, 290), (1100, 290), (1230, 570), (370, 570)], fill=body)
+    draw.polygon([(520, 320), (1080, 320), (1190, 560), (410, 560)], fill=(44, 58, 72))
+    draw.polygon([(560, 330), (700, 330), (520, 550), (430, 550)], fill=(70, 88, 104))
+    draw.rounded_rectangle([290, 540, 1310, 980], radius=60, fill=body)
+    # 앞 유리 안쪽 연락처 카드 (유리 너머라 조금 어둡게)
+    label, phone = t['carCard']
+    draw.rectangle([860, 470, 1130, 552], fill=(214, 216, 210))
+    draw.text((995, 492), label, font=ImageFont.truetype(REGULAR, 22), fill=(70, 72, 70), anchor='mm')
+    draw.text((995, 530), phone, font=ImageFont.truetype(BOLD, 32), fill=(30, 30, 32), anchor='mm')
+    # 전조등, 그릴, 범퍼, 번호판
+    for x in (340, 1060):
+        draw.rounded_rectangle([x, 610, x + 200, 690], radius=30, fill=(236, 238, 232))
+        draw.ellipse([x + 20 if x < 800 else x + 120, 625, x + 80 if x < 800 else x + 180, 675], fill=(255, 250, 220))
+    draw.rounded_rectangle([600, 640, 1000, 750], radius=26, fill=(26, 30, 36))
+    for y in range(662, 740, 18):
+        draw.line([(630, y), (970, y)], fill=(70, 76, 84), width=5)
+    draw.rounded_rectangle([300, 880, 1300, 960], radius=30, fill=(36, 62, 100))
+    draw.rounded_rectangle([630, 790, 970, 880], radius=10, fill=(250, 250, 248), outline=(30, 30, 30), width=5)
+    draw.text((800, 835), t['plate'], font=ImageFont.truetype(BOLD, 62), fill=(20, 20, 22), anchor='mm')
+    image = image.filter(ImageFilter.GaussianBlur(0.8))
+    noise = Image.effect_noise(image.size, 16).convert('RGB')
+    return Image.blend(image, noise, 0.05)
 
 
 def jpeg(image: Image.Image, quality: int = 92) -> bytes:
@@ -649,6 +750,7 @@ def main():
     gallery = [jpeg(landscape(1400, 1050, seed), 92) for seed in (11, 12, 13)]
     photo = landscape(2000, 1500, 21)
     face = Image.open(os.path.join(HERE, 'face.jpg')).convert('RGB')
+    sea = tilted_sea(1600, 1200, 4)
     for locale, t in TEXT.items():
         folder = os.path.join(OUT, locale)
         os.makedirs(folder, exist_ok=True)
@@ -672,6 +774,8 @@ def main():
         photo.save(os.path.join(folder, t['photo']), 'JPEG', quality=95)
         face.save(os.path.join(folder, t['face']), 'JPEG', quality=90)
         photo.save(os.path.join(folder, t['located']), 'JPEG', quality=90, exif=located_exif())
+        sea.save(os.path.join(folder, t['tilted']), 'JPEG', quality=90)
+        parked_car(t).save(os.path.join(folder, t['car']), 'JPEG', quality=90)
         screenshot(t).save(os.path.join(folder, t['screen']), 'PNG', optimize=True)
         for name, shot in zip(t['scrolls'], chat_shots(t)):
             shot.save(os.path.join(folder, name), 'PNG', optimize=True)

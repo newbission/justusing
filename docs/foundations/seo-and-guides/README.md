@@ -1,6 +1,6 @@
 # 검색과 가이드 글 (seo-and-guides)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-19
+쓴 날 2026-10-16 · 고친 날 2026-10-23
 
 - 범위: 사이트맵·robots, `<head>` 검색 정보(설명·canonical·hreflang·Open Graph·소유 확인), 구조화 데이터(JSON-LD),
   가이드 글(`/guide/`), 글 페이지(소개·안전한 이유·이용약관·문의. 개인정보처리방침은 [광고와 통계](../ads-and-analytics/README.md))
@@ -23,28 +23,29 @@
 
 ### 파일
 
-| 파일                                                                    | 역할                                                                                                                                                                            |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/pages/sitemap.xml.ts`                                              | 홈·카테고리·live 도구·가이드 목록·가이드 글·소개·방침·약관·문의를 모든 언어 주소로                                                                                              |
-| `src/pages/robots.txt.ts`                                               | 모두 허용 + 사이트맵 주소 (도메인은 설정에서)                                                                                                                                   |
-| `src/layouts/BaseLayout.astro`                                          | `<title>`(`제목 - 사이트명`), description, canonical, `hreflang`(모든 언어 + `x-default` 한국어), 네이버·AdSense 확인 태그, OG(`og:locale`, `/og.png` 1200×630), `twitter:card` |
-| `src/pages/index.astro`                                                 | `WebSite`                                                                                                                                                                       |
-| `src/components/Breadcrumb.astro`                                       | `BreadcrumbList`                                                                                                                                                                |
-| `src/layouts/ToolLayout.astro`                                          | `WebApplication` (무료, `UtilitiesApplication`, 가격 0)                                                                                                                         |
-| `src/components/ToolFaq.astro`                                          | `FAQPage` (화면의 공통 FAQ + 도구 FAQ와 같은 내용). `<details>`라 JavaScript 없이 열린다                                                                                        |
-| `src/content.config.ts`                                                 | 가이드 모음 스키마: `title`, `description`, `tool`, `published`, `updated?`, `order`                                                                                            |
-| `src/content/guides/<언어>/<주소>.md`                                   | 가이드 글. 지금 dev에 22편 × 2언어                                                                                                                                              |
-| `src/guides.ts`                                                         | `guidesIn()`, `guideSlugs`, `guidePaths()`, `guidesForTool()`, 빌드 때 검사                                                                                                     |
-| `src/pages/guide/index.astro`, `[slug].astro` (+ `src/pages/en/guide/`) | 목록(카드 + 도구 아이콘), 글(위 도구 링크, 본문, 아래 도구 버튼·다른 글, `Article` 구조화 데이터, 작성/수정 날짜)                                                               |
-| `src/components/ToolGuides.astro`                                       | 도구 페이지의 "관련 가이드" (없으면 안 그림)                                                                                                                                    |
-| `src/components/GuideDialog.astro`                                      | 도구 제목 아래 "가이드 보기": 누르면 그 도구의 첫 가이드를 받아 창으로 띄운다 (`data-doc-body` 안만, `data-dialog-skip` 줄은 뺌)                                                |
-| `src/assets/guides/<언어>/<주소>/`                                      | 가이드 그림 (PNG·SVG). 마크다운에서 상대 경로로 부르면 빌드가 WebP로 바꾸고 가로·세로를 적는다                                                                                  |
-| `scripts/guide-images/run-tools.mjs`, `render.py`                       | 견본을 미리보기 사이트의 실제 도구에 넣어 결과를 받고(`.cache/guide-images/`), 잘라 붙여 그림을 그린다                                                                          |
-| `src/layouts/DocLayout.astro`                                           | 글 페이지 틀 (위치 표시 → 제목 → 작은 글씨 → 배너 → 본문 → `after`)                                                                                                             |
-| `src/pages/about.astro`, `terms.astro`, `contact.astro` (+ `en/`)       | 소개(사이트명·만든 이유·처리 방식·live 도구 목록·무료), 약관(시행일), 문의(`contactEmail`)                                                                                      |
-| `src/pages/safety.astro` (+ `en/`)                                      | 안전한 이유: 보통 온라인 도구와 비교표, 서버 없이 처리하는 원리, 광고 격리, 개발자 도구로 직접 확인하는 법, 공개 코드(`sourceUrl`), 약속할 수 없는 것                           |
-| `src/components/Header.astro`, `Footer.astro`                           | 머리글·바닥글의 가이드 링크, 바닥글의 글 페이지 링크                                                                                                                            |
-| `public/og.png`                                                         | 링크 미리보기 그림 (`scripts/make-brand-images.mjs`가 만든다)                                                                                                                   |
+| 파일                                                                                        | 역할                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/pages/sitemap.xml.ts`                                                                  | 홈·카테고리·live 도구·가이드 목록·카테고리 가이드·가이드 글·소개·방침·약관·문의를 모든 언어 주소로                                                                                                     |
+| `src/pages/robots.txt.ts`                                                                   | 모두 허용 + 사이트맵 주소 (도메인은 설정에서)                                                                                                                                                          |
+| `src/layouts/BaseLayout.astro`                                                              | `<title>`(`제목 - 사이트명`), description, canonical, `hreflang`(모든 언어 + `x-default` 한국어), 네이버·AdSense 확인 태그, OG(`og:locale`, `/og.png` 1200×630), `twitter:card`                        |
+| `src/pages/index.astro`                                                                     | `WebSite`                                                                                                                                                                                              |
+| `src/components/Breadcrumb.astro`                                                           | `BreadcrumbList`                                                                                                                                                                                       |
+| `src/layouts/ToolLayout.astro`                                                              | `WebApplication` (무료, `UtilitiesApplication`, 가격 0)                                                                                                                                                |
+| `src/components/ToolFaq.astro`                                                              | `FAQPage` (화면의 공통 FAQ + 도구 FAQ와 같은 내용). `<details>`라 JavaScript 없이 열린다                                                                                                               |
+| `src/content.config.ts`                                                                     | 가이드 모음 스키마: `title`, `description`, `tool`, `published`, `updated?`, `order`                                                                                                                   |
+| `src/content/guides/<언어>/<주소>.md`                                                       | 가이드 글. 지금 dev에 22편 × 2언어                                                                                                                                                                     |
+| `src/guides.ts`                                                                             | `guidesIn()`, `guideSlugs`, `guidePaths()`, `guidesForTool()`, `guideCategories`, `guidesInCategory()`, `guideSectionsIn()`(도구 묶음별), 빌드 때 검사                                                 |
+| `src/pages/guide/index.astro`, `[category].astro`, `[slug].astro` (+ `src/pages/en/guide/`) | 목록(카테고리별 소제목 + 카드), 카테고리 가이드(`/guide/pdf/`, 도구 묶음별 소제목), 글(위 도구 링크, 본문, 아래 도구 버튼·다른 글, `Article` 구조화 데이터, 작성/수정 날짜). 카드는 `GuideCards.astro` |
+| `src/components/ToolGuides.astro`                                                           | 도구 페이지의 "관련 가이드" (없으면 안 그림)                                                                                                                                                           |
+| `src/components/GuideDialog.astro`                                                          | 도구 제목 아래 "가이드 보기": 누르면 그 도구의 첫 가이드를 받아 창으로 띄운다 (`data-doc-body` 안만, `data-dialog-skip` 줄은 뺌)                                                                       |
+| `src/assets/guides/<언어>/<주소>/`                                                          | 가이드 그림 (PNG·SVG). 마크다운에서 상대 경로로 부르면 빌드가 WebP로 바꾸고 가로·세로를 적는다                                                                                                         |
+| `public/guide-motion/<언어>/<주소>/`                                                        | 움직이는 가이드 그림 (`<이름>.webp` 애니메이션, `<이름>-still.webp` 멈춘 그림). 글이 `<picture>`로 부른다                                                                                              |
+| `scripts/guide-images/run-tools.mjs`, `render.py`                                           | 견본을 미리보기 사이트의 실제 도구에 넣어 결과를 받고(`.cache/guide-images/`), 잘라 붙여 그림을 그린다                                                                                                 |
+| `src/layouts/DocLayout.astro`                                                               | 글 페이지 틀 (위치 표시 → 제목 → 작은 글씨 → 배너 → 본문 → `after`)                                                                                                                                    |
+| `src/pages/about.astro`, `terms.astro`, `contact.astro` (+ `en/`)                           | 소개(사이트명·만든 이유·처리 방식·live 도구 목록·무료), 약관(시행일), 문의(`contactEmail`)                                                                                                             |
+| `src/pages/safety.astro` (+ `en/`)                                                          | 안전한 이유: 보통 온라인 도구와 비교표, 서버 없이 처리하는 원리, 광고 격리, 개발자 도구로 직접 확인하는 법, 공개 코드(`sourceUrl`), 약속할 수 없는 것                                                  |
+| `src/components/Header.astro`, `Footer.astro`                                               | 머리글·바닥글의 가이드 링크, 바닥글의 글 페이지 링크                                                                                                                                                   |
+| `public/og.png`                                                                             | 링크 미리보기 그림 (`scripts/make-brand-images.mjs`가 만든다)                                                                                                                                          |
 
 ### 가이드 글 목록 (`order` 순)
 
@@ -81,10 +82,15 @@
 - 가이드 폴더 이름이 언어(`ko`·`en`)가 아니면 멈춘다
 - `tool`이 레지스트리의 **live** 도구가 아니면 멈춘다
 - 한 주소 이름에 모든 언어판이 없으면 멈춘다
+- 주소 이름이 카테고리 ID(`pdf`, `image`, `categories.ts`의 키)와 같으면 멈춘다. 카테고리 가이드 페이지(`/guide/pdf/`)와 같은 자리라서다 (2026-10-23)
 
 ### 결정과 이유
 
 - **사이트맵·도구 목록을 레지스트리에서 만든다**: 도구를 더해도 사이트맵을 따로 고치지 않는다. 글 페이지만 직접 더한다
+- **사이트맵 lastmod는 확실한 날만** (2026-10-23): 가이드는 머리말 `updated`/`published`, 도구는 폴더의 마지막 커밋 날짜.
+  얕은 clone(git 기록이 잘림)이면 도구 날짜를 적지 않는다. 틀린 날짜를 적으면 검색엔진이 lastmod를 무시한다
+- **카테고리 페이지 검색 제목** (2026-10-23): `categories.ts`의 `title`. 화면 제목(h1)은 'PDF 도구' 그대로 두고, 검색 결과 제목에 작업 이름과
+  '무료·업로드 없이'를 담는다. 카테고리 페이지 아래에 그 카테고리 가이드 링크를 단다 (Search Console에서 /pdf/ 등이 '발견됨 - 색인 안 됨'이었다)
 - **구조화 데이터는 화면과 같은 내용**: 어긋나면 검색엔진이 잘못된 정보로 본다. FAQ·`WebApplication` 이름·가이드 날짜를 E2E가 화면과 맞춰 본다
 - **JSON-LD는 레이아웃 안(슬롯)에** (PR #16 리뷰, `3b037dd`): 틀 밖에 두면 `<html>`보다 먼저 출력된다.
   `<html>` 안에 있고 페이지가 표준 모드(`CSS1Compat`)로 그려지는지 E2E로 확인한다
@@ -100,6 +106,12 @@
   말로만 하지 않고 방문자가 직접 확인하게 한다. **"인터넷을 끊어도 된다"고 쓰지 않는다**: 도구 프로그램 일부를 쓸 때 받아 와
   파일을 연 뒤 연결을 끊으면 합치기·압축·이미지로·이미지 압축이 모두 멈췄다(2026-10-18 Playwright `setOffline`으로 확인)
 
+- **카테고리 가이드 페이지** (2026-10-23, 사용자 요청): 가이드가 26편으로 늘어 한 목록에서 찾기 어려웠다. `/guide/pdf/`, `/guide/image/`에
+  그 카테고리 글을 도구 묶음별로 나누고, `/guide/` 목록은 카테고리 소제목으로 나눠 각 페이지로 잇는다. 가이드 글의 위치 표시는
+  홈 › 가이드 › PDF 가이드 › 글. 머리글 가이드 메뉴도 PDF·이미지 가이드로 나뉜다 (→ [사이트 구조](../site-structure/README.md)).
+  **도구별 가이드 페이지는 만들지 않는다**: 도구마다 글이 1편 안팎이라 내용 없는 얇은 페이지가 된다(광고 심사 '가치 없는 콘텐츠' 위험).
+  라우트 `[category].astro`와 `[slug].astro`가 같은 자리지만 `getStaticPaths`가 겹치지 않아 Astro가 둘 다 만든다(빌드 때 검사로 보장)
+
 - **도구 페이지의 가이드 창** (2026-10-19): 도구를 쓰다 바로 읽게 한다. 글을 도구 페이지 HTML에 미리 넣으면 같은 글이 두 주소에 있어
   중복 글이 되므로 누를 때 가이드 페이지를 받아 넣는다. 사용자가 누를 때만 열린다 (저절로 뜨는 창은 '과도한 팝업' 위험). 창 안에 광고는 없다
 
@@ -109,6 +121,18 @@
   시범 4편(나누기·모아찍기·PDF 압축·가리기) 뒤 22편 모두에 넣었다. 실제 결과 그림은 `run-tools.mjs`의 작업과
   `render.py`의 글별 함수가 짝을 이룬다 (작업·글 이름을 적으면 그것만 다시 만든다). 도구를 돌려 보이기 어려운 것
   (스캔본 정리·암호 걸기·암호 없애기)은 원리 SVG로 그렸다
+- **움직이는 가이드 그림** (2026-10-23, 사용자 결정): 이어 붙이기(겹친 부분이 빠지며 한 장이 됨)와 자르기(기운 수평선이 서고
+  4:5로 잘림) 2편만. 방법과 이유:
+  - `render.py`의 `MOTIONS`가 정지 그림과 같은 칸 자리(`tile_layout`)·크기로 20fps 애니메이션 WebP를 그린다 (Pillow).
+    멈춘 구간은 프레임 하나에 긴 시간을 줘 파일을 줄인다. 3.5초, 한 편 약 340~380KB(품질 70), 끝에 처음 그림으로 서서히 바뀌어 반복이 끊기지 않는다
+  - 이어 붙이기: 이은 결과의 줄을 캡처의 줄과 견주어 도구가 어느 줄을 가져왔는지 되짚고(`kept_rows`) 지워진 곳에 색을 입혔다 걷어 낸다.
+    자르기: 도구와 같은 `coverScale` 계산으로 돌리고, 도구 결과(`crop.jpg`)와 평균 차이가 크면 `render.py`가 멈춘다
+  - 끝 화면은 도구가 만든 실제 결과(`stitch.png`·`crop.jpg`)를 그대로 붙인다. 견본과 결과만 쓰고 꾸미는 그림은 없다
+  - 파일은 `src/assets`가 아니라 `public/guide-motion/`에 두고 글이 `<picture>`로 부른다. 이유: 마크다운 이미지는 Astro가 처리해
+    `<source media>`를 붙일 수 없고, '움직임 줄이기'를 켠 사람에게 멈춘 그림을 보이려면 두 파일이 모두 필요하다. Astro는 WebP→WebP를
+    애니메이션째 통과시키는 것을 확인했지만 짝(`<picture>`)을 만들 방법이 없어 쓰지 않았다. 해시 없는 주소지만 Cloudflare가 ETag로 다시 확인한다
+  - 규칙: width·height는 두 파일 크기와 같게(CLS 0), alt는 언어마다 과정을 설명, 정지 그림은 `-still.webp`.
+    E2E(`guide.spec.ts`, `guide-dialog.spec.ts`)가 움직임 표시(VP8X)·프레임 수·크기·용량과 `reducedMotion` 두 경우, 가이드 창 안 그림을 본다
 - 그림 설명 문단에는 그림에서 읽은 사실(용량·화소)만 쓴다. 글의 일반 설명과 어긋나면 글을 고친다
   (예: 300 DPI "용량 4배" → 실제 2.6배라 "화소 4배, 용량 2~4배"로)
 
@@ -132,6 +156,7 @@
 - [x] 가이드 모음·목록·글 페이지, 빌드 때 검사, 도구 페이지 관련 가이드, 머리글·바닥글 링크
 - [x] 가이드 16편 (2026-10-17 배포)
 - [x] 가이드 22편 (2026-10-18, 쓰임새 가이드 6편)
+- [x] 카테고리 가이드 페이지, 목록 카테고리별 나눔, 글 위치 표시에 카테고리 (2026-10-23)
 - [x] 검색 등록: Google Search Console, 네이버 서치어드바이저 + 사이트맵 제출 (2026-10-13, 사용자가 직접)
 - [ ] 가이드가 없는 live 도구: 보기, 글자 추출, 회전, 쪽 번호, 이미지 넣기
 
@@ -151,6 +176,9 @@
   - 영어 가이드는 영어로 쓰여 있고 글 안 링크가 모두 `/en/`이며 영어 도구로 이어진다
   - 가이드 글의 `Article` 제목이 h1과 같고 날짜가 화면("2026년 10월 15일 작성")과 같다
   - 모든 가이드가 두 언어로 사이트맵에 있다
+  - 목록이 PDF·이미지 가이드로 나뉘고 카테고리 가이드 페이지로 간다
+  - `/guide/pdf/`가 묶음 순서 소제목으로 PDF 가이드만 보이고 위치 표시가 홈 › 가이드 › PDF 가이드, 영어판 링크는 `/en/guide/`
+  - 가이드 글 위치 표시에서 카테고리 가이드로 간다, 카테고리 가이드 페이지가 두 언어로 사이트맵에 있다
 - `tests/e2e/pages.spec.ts`
   - 도구 페이지 바닥글에서 소개·안전한 이유·방침·약관·문의로 간다
   - 글 페이지가 모두 사이트맵에 있다

@@ -1,0 +1,342 @@
+---
+/**
+ * 머리글의 펼침 메뉴 (768px 이상). PDF·이미지·가이드 버튼을 누르거나 마우스를 잠깐 올리면 머리글 아래로 넓은 판이 열린다.
+ * 판은 묶음(categories.ts의 sections) 순서대로 칸을 나누고, 도구마다 아이콘·이름·짧은 설명(meta.ts의 summary)을 보인다.
+ *
+ * - 버튼은 aria-expanded로 열림을 알리고 판은 버튼 바로 뒤에 있어 Tab으로 판 안 링크를 차례로 지난다
+ * - Esc로 닫고 버튼으로 포커스를 돌린다. 바깥을 누르거나 포커스가 메뉴 밖으로 나가면 닫는다
+ * - 스치듯 지나갈 때 열리지 않게 마우스는 잠깐 머물러야 열고, 판으로 내려가는 동안 닫히지 않게 조금 늦게 닫는다
+ * - 도구가 늘면 칸(columns)이 늘고, 판이 화면보다 길면 판 안에서 스크롤한다
+ * 광고는 판 안에 두지 않는다 (광고 슬롯 규칙: 메뉴·오버레이 안 금지).
+ */
+import ToolIcon from './ToolIcon.astro';
+import type { Menu } from './site-menu';
+
+interface Props {
+  menus: Menu[];
+  label: string;
+}
+
+const { menus, label } = Astro.props;
+---
+
+<nav class="mega" aria-label={label}>
+  <ul class="bar">
+    {menus.map((menu) => (
+      <li class="entry" data-mega>
+        <button
+          type="button"
+          class="trigger"
+          aria-expanded="false"
+          aria-controls={`mega-${menu.id}`}
+          data-current={menu.current ? '' : undefined}
+          data-mega-trigger
+        >
+          {menu.name}
+          <svg class="caret" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+            <path d="M2 3.5 5 6.5 8 3.5" />
+          </svg>
+        </button>
+        <div class="panel" id={`mega-${menu.id}`} hidden data-mega-panel>
+          <div class="panel-inner">
+            <div class:list={['columns', { flow: menu.flow }]}>
+              {menu.groups.map((group, g) => (
+                <div class="group">
+                  <p class="group-title" id={`mega-${menu.id}-${g}`}>
+                    {group.href ? <a href={group.href}>{group.title}</a> : group.title}
+                  </p>
+                  <ul aria-labelledby={`mega-${menu.id}-${g}`}>
+                    {group.items.map((item) => (
+                      <li>
+                        <a
+                          class:list={['item', { plain: !item.summary }]}
+                          href={item.href}
+                          aria-current={item.current ? 'page' : undefined}
+                        >
+                          <span class="item-icon">
+                            <ToolIcon paths={item.icon} size={20} />
+                          </span>
+                          <span class="item-text">
+                            <span class="item-name">{item.name}</span>
+                            {item.summary && <span class="item-summary">{item.summary}</span>}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <p class="all">
+              <a href={menu.all.href}>
+                {menu.all.label} <span aria-hidden="true">→</span>
+              </a>
+            </p>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<script>
+  /** 마우스가 이만큼 머물러야 연다 (스치듯 지나갈 때 열리지 않게) */
+  const OPEN_DELAY = 150;
+  /** 판으로 내려가는 사이 닫히지 않게 늦게 닫는다 */
+  const CLOSE_DELAY = 250;
+
+  interface Entry {
+    root: HTMLElement;
+    trigger: HTMLButtonElement;
+    panel: HTMLElement;
+  }
+
+  const entries: Entry[] = [...document.querySelectorAll<HTMLElement>('[data-mega]')].map(
+    (root) => ({
+      root,
+      trigger: root.querySelector<HTMLButtonElement>('[data-mega-trigger]')!,
+      panel: root.querySelector<HTMLElement>('[data-mega-panel]')!,
+    }),
+  );
+
+  let open: Entry | null = null;
+  /** 눌러서 열었다: 마우스가 나가도 닫지 않는다 (바깥 누르기·Esc로 닫는다) */
+  let pinned = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  function show(entry: Entry, byClick: boolean) {
+    if (open && open !== entry) hide(open);
+    entry.trigger.setAttribute('aria-expanded', 'true');
+    entry.panel.hidden = false;
+    open = entry;
+    pinned = byClick;
+  }
+
+  function hide(entry: Entry) {
+    entry.trigger.setAttribute('aria-expanded', 'false');
+    entry.panel.hidden = true;
+    if (open === entry) open = null;
+  }
+
+  for (const entry of entries) {
+    entry.trigger.addEventListener('click', () => {
+      clearTimeout(timer);
+      if (open !== entry) show(entry, true);
+      // 마우스를 올려 열린 판을 누르면 닫지 않고 그대로 둔다 (열리자마자 닫히지 않게)
+      else if (!pinned) pinned = true;
+      else hide(entry);
+    });
+
+    entry.root.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      clearTimeout(timer);
+      if (open === entry) return;
+      // 다른 판이 열려 있으면 기다리지 않고 바꾼다
+      if (open) show(entry, false);
+      else timer = setTimeout(() => show(entry, false), OPEN_DELAY);
+    });
+
+    entry.root.addEventListener('pointerleave', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      clearTimeout(timer);
+      if (open === entry && !pinned) timer = setTimeout(() => hide(entry), CLOSE_DELAY);
+    });
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !open) return;
+    const entry = open;
+    const hadFocus = entry.root.contains(document.activeElement);
+    hide(entry);
+    if (hadFocus) entry.trigger.focus();
+  });
+
+  document.addEventListener('pointerdown', (event) => {
+    if (open && !open.root.contains(event.target as Node)) hide(open);
+  });
+
+  // Tab으로 메뉴 밖에 나가면 닫는다
+  document.addEventListener('focusin', (event) => {
+    if (open && !open.root.contains(event.target as Node)) hide(open);
+  });
+</script>
+
+<style>
+  .mega {
+    height: 100%;
+  }
+  .bar {
+    display: flex;
+    height: 100%;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* 머리글 높이를 다 채워, 버튼에서 판으로 내려가는 길이 메뉴 밖으로 나가지 않게 한다 */
+  .entry {
+    display: flex;
+    align-items: center;
+  }
+  .trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 15px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .trigger:hover,
+  .trigger[aria-expanded='true'] {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+  .trigger[data-current] {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .caret {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    transition: transform 0.12s;
+  }
+  .trigger[aria-expanded='true'] .caret {
+    transform: rotate(180deg);
+  }
+
+  /* 머리글(.site-header) 폭 전체에 걸친 판. 화면보다 길면 판 안에서 스크롤한다 */
+  .panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    z-index: 40;
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-dialog);
+  }
+  .panel-inner {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 20px var(--gutter) 12px;
+  }
+  /* 칸 폭을 정하고 들어가는 만큼 칸을 늘린다. 도구 묶음은 칸을 넘어가지 않게 한 칸에 둔다 */
+  .columns {
+    column-gap: 24px;
+    column-width: 260px;
+  }
+  .group {
+    break-inside: avoid;
+    padding-bottom: 16px;
+  }
+  /* 가이드처럼 묶음 하나가 긴 판은 칸을 넘어 이어진다 */
+  .columns.flow .group {
+    break-inside: auto;
+  }
+  .group-title {
+    margin: 0 0 4px;
+    padding: 0 8px;
+    color: var(--color-muted);
+    font-size: 13px;
+    font-weight: 600;
+    break-after: avoid;
+  }
+  .group-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .group-title a:hover {
+    color: var(--color-text);
+    text-decoration: underline;
+  }
+  .group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .group li {
+    break-inside: avoid;
+  }
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: var(--radius);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+  .item:hover {
+    background: var(--color-hover);
+  }
+  .item-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+  .item-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding-top: 1px;
+  }
+  /* 한글은 낱말 단위로 줄을 바꾼다 (글자 하나만 다음 줄로 넘어가지 않게) */
+  .item-text,
+  .group-title {
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+  }
+  .item-name {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+  }
+  /* 설명 없는 항목(가이드 제목)은 한 덩어리 글이라 덜 굵게, 아이콘과 가운데를 맞춘다 */
+  .item.plain {
+    align-items: center;
+  }
+  .item.plain .item-name {
+    font-weight: 500;
+  }
+  .item-summary {
+    color: var(--color-muted);
+    font-size: 13px;
+    line-height: 1.45;
+    text-wrap: pretty;
+  }
+  .item[aria-current='page'] .item-name {
+    color: var(--color-accent);
+  }
+  .all {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-line);
+  }
+  .all a {
+    color: var(--color-accent);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .all a:hover {
+    text-decoration: underline;
+  }
+</style>

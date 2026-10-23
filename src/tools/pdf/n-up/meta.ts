@@ -7,12 +7,14 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 모아찍기 (한 장에 여러 쪽)',
+      summary: '한 장에 2·4·6·9쪽씩 모아 담습니다',
       title: 'PDF 모아찍기 - 한 장에 2쪽·4쪽·6쪽·9쪽, 업로드 없이',
       description:
         'PDF 여러 쪽을 종이 한 장에 2쪽·4쪽·6쪽·9쪽씩 모아 새 PDF를 만듭니다. 강의 자료를 아껴 인쇄할 때 좋습니다. 파일은 서버에 올라가지 않습니다.',
     },
     en: {
       name: 'N-up PDF',
+      summary: 'Put 2, 4, 6 or 9 pages on one sheet',
       title: 'N-up PDF - 2, 4, 6 or 9 pages per sheet in your browser',
       description:
         'Put 2, 4, 6 or 9 PDF pages on each sheet and save it as a new PDF, handy for printing slides and handouts on less paper. Your file is never uploaded.',

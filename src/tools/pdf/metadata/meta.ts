@@ -7,12 +7,14 @@ export default defineTool({
   text: {
     ko: {
       name: 'PDF 문서 정보 고치기',
+      summary: '제목·작성자를 고치거나 숨은 정보를 지웁니다',
       title: 'PDF 문서 정보 고치기 - 제목·작성자 바꾸기, 숨은 정보 지우기',
       description:
         'PDF의 제목·작성자·주제·키워드를 고치거나, 작성자 이름·사용한 프로그램·만든 날짜처럼 파일에 숨어 있는 정보를 모두 지웁니다. 파일은 서버에 올라가지 않습니다.',
     },
     en: {
       name: 'Edit PDF Metadata',
+      summary: 'Edit the title and author or clear hidden info',
       title: 'Edit PDF Metadata - Change title and author, remove hidden info',
       description:
         'Change the title, author, subject and keywords of a PDF, or remove hidden information such as the author name, apps used and creation date. Your file is never uploaded.',

@@ -52,6 +52,8 @@ const DOCS = {
   'features/image-id-photo': { scopes: ['image-id-photo'], prs: [] },
   'features/image-remove-location': { scopes: ['image-remove-location'], prs: [116] },
   'features/image-stitch': { scopes: ['image-stitch'], prs: [] },
+  'features/image-crop': { scopes: ['image-crop'], prs: [] },
+  'features/image-mosaic': { scopes: ['image-mosaic'], prs: [] },
   // 기반 (여러 도구·페이지가 같이 쓰는 것)
   'foundations/frame-isolation': { scopes: ['frame'], prs: [40] },
   'foundations/pdf-common': { scopes: ['pdf'], prs: [76, 77] },

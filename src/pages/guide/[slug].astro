@@ -8,10 +8,11 @@ import { render } from 'astro:content';
 import DocLayout from '../../layouts/DocLayout.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import ToolIcon from '../../components/ToolIcon.astro';
-import { guidePaths, guidesIn, slugOf } from '../../guides';
+import { categoryOfGuide, guidePaths, guidesIn, slugOf } from '../../guides';
 import { localeOf, localizePath } from '../../i18n/locales';
 import { ui } from '../../i18n/ui';
 import { siteConfig } from '../../site.config';
+import { CATEGORIES } from '../../tools/categories';
 import { getTool } from '../../tools/registry';
 
 export const getStaticPaths = guidePaths satisfies GetStaticPaths;
@@ -28,6 +29,7 @@ const { Content } = await render(guide);
 const tool = getTool(guide.data.tool)!;
 const toolName = tool.text[locale].name;
 const toolHref = localizePath(tool.href, locale);
+const category = categoryOfGuide(guide);
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'Asia/Seoul' }).format(date);
@@ -58,6 +60,10 @@ const jsonLd = {
   breadcrumb={[
     { name: t.nav.home, href: localizePath('/', locale) },
     { name: t.guide.indexTitle, href: localizePath('/guide/', locale) },
+    {
+      name: t.guide.categoryTitle(CATEGORIES[category].text[locale].name),
+      href: localizePath(`/guide/${category}/`, locale),
+    },
     { name: guide.data.title },
   ]}
 >

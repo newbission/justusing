@@ -22,6 +22,7 @@ npm run check         # 타입 검사 (astro check + svelte-check)
 npm run format        # 포맷 정리
 npm run format:check  # 포맷 검사 (CI에서 실행)
 npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
+E2E_PORT=8790 npm run test:e2e  # 다른 작업 공간과 동시에 돌릴 때 포트 변경 (기본 8788, 검사 포트는 +1)
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
 python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow, 먼저 npm install)
@@ -97,7 +98,8 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 새 도구 추가 방법:
 
 1. `src/tools/<카테고리>/<이름>/` 폴더를 만든다.
-   - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, title, description } }, related })`
+   - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, summary, title, description } }, related })`
+     - `summary`: 머리글 펼침 메뉴에서 이름 아래 붙는 한 줄 (한국어 25자·영어 40자 안팎, 실제로 하는 일만, 2026-10-23)
      - `section`: 카테고리 안의 묶음 (`categories.ts`의 `sections` 키). 목록 페이지·홈이 묶음별 소제목으로 나눠 보여준다
      - `icon`: 목록 카드 아이콘. 24×24 칸에 선으로 그린 SVG path의 `d` 값들. 다른 도구와 한눈에 구분되게 그린다
      - `flow`: 제목 아래 '넣는 것 → 나오는 것' 그림 (`ToolFlow`). 종이 종류·장수·종이 위 표시(`mark`)만 적는다 (2026-10-19)
@@ -181,6 +183,12 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   원리를 보여 주는 단순한 그림만 쓴다. `src/assets/guides/<언어>/<주소>/`에 두고 마크다운에서 상대 경로로 부른다
   (빌드가 WebP로 바꾸고 크기를 적는다). 실제 결과 그림은 `scripts/guide-images/`(도구 실행 → 그리기)로 다시 만든다.
   화면 문구는 그림에 넣지 않고 글로 쓰며, 그림을 설명하는 alt를 언어마다 쓴다. 휴대폰 폭에서 그림 속 글자가 읽히는지 본다
+- 움직이는 그림 (2026-10-23): 과정이 중요한 글만(지금 이어 붙이기·자르기 2편). 같은 재료(견본·도구 결과)로 3~4초,
+  한 편 몇백 KB 이하의 애니메이션 WebP를 `render.py`의 `MOTIONS`가 `public/guide-motion/<언어>/<글>/`에 만든다
+  (`<이름>.webp` 움직임, `<이름>-still.webp` 멈춘 그림, 둘은 크기가 같다). 마크다운 이미지는 Astro가 정지 WebP로
+  다시 만들 뿐 `prefers-reduced-motion`으로 고를 수 없어서, 글에 `<picture>`를 직접 쓴다
+  (`<source media="(prefers-reduced-motion: no-preference)">` + 멈춘 그림 `<img>`, width·height·alt 필수).
+  끝 화면은 도구가 만든 결과 그대로이고 중간은 같은 계산으로 그린다 (어긋나면 `render.py`가 멈춘다)
 
 ### 글 페이지와 방문 통계
 
@@ -385,8 +393,13 @@ Co-Authored-By: ...
   - [x] 이어 붙이기 (`/image/stitch/`, 2026-10-22): 세로·가로로 잇기. 세로로 이을 때 화면 캡처의 고정 막대와 겹친 부분을
         줄 모양(칸 밝기 평균) 비교로 찾고 이음마다 고칠 수 있다(`src/lib/image/stitch-detect.ts`). 결과는 워커가 줄 묶음씩 그리고
         PNG는 직접 이어 써서(`png-stream.ts`) canvas 크기 한계(아이폰 약 1,670만 화소)에 묶이지 않는다. 나누기·PDF는 빈 줄에서 자른다
+  - [x] 자르기·회전 (`/image/crop/`, 2026-10-23): 한 장을 90°씩 돌리기·뒤집기·기울기 바로잡기(사진을 키워 귀퉁이를 채움)·비율 자르기.
+        미리보기와 저장 워커가 같은 변환(`src/lib/image/crop-geometry.ts`)을 쓰고, 원본은 워커가 들고 있다
+  - [x] 모자이크 (`/image/mosaic/`, 2026-10-23): 가릴 곳(사각형·타원)마다 모자이크·흐림·검게 칠하기. 흐림·작은 모자이크는
+        되살릴 수 있다고 밝히고 검게 칠하기를 권한다. 미리보기와 워커가 같은 계산(`src/lib/image/mosaic-effects.ts`).
+        얼굴 자동 찾기는 나중 (증명사진 얼굴 데이터의 받기 동의·용량)
   - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기), 배경 제거(누끼, 모델 데이터 크기를
-        밝히고 캐시), 자르기·회전 등
+        밝히고 캐시) 등
   - [x] 가이드 글 (`/guide/`, 2026-10-15): 검색 유입과 광고 심사용. 첫 6편 (PDF 압축·합치기·이미지로·서명,
         이미지 압축·크기 조절). 도구를 만들 때마다 그 도구의 가이드를 함께 쓴다
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)

@@ -21,9 +21,12 @@ order: 25
 
 [이미지 이어 붙이기](/image/stitch/)는 두 캡처의 같은 높이 줄을 비교해 위아래 고정 막대를 찾고, 앞 장의 끝부분과 다음 장의 첫 부분이 같은 가장 긴 구간을 겹친 부분으로 봅니다. 시계처럼 장마다 바뀌는 곳은 건너뛰고, 흰 바탕만 같아 보이는 경우는 겹침으로 보지 않습니다. 첫 장의 위 막대와 마지막 장의 아래 막대만 남기고 나머지는 잘라 냅니다.
 
-![대화 캡처 세 장(각 750×1334)과 이은 결과(750×2454). 이은 결과에는 위 제목 막대와 아래 입력 칸이 한 번씩만 있고 대화가 끊기거나 겹치지 않고 이어진다](../../../assets/guides/ko/stitch-screenshots/stitched.png)
+<picture>
+  <source media="(prefers-reduced-motion: no-preference)" srcset="/guide-motion/ko/stitch-screenshots/stitched.webp" type="image/webp" />
+  <img src="/guide-motion/ko/stitch-screenshots/stitched-still.webp" alt="대화 캡처 세 장(각 750×1334)에서 위쪽 상태 표시줄과 제목 막대, 겹친 내용, 아래쪽 입력 칸이 지워질 곳으로 주황색 표시된 뒤 사라지고, 남은 조각이 한 장으로 모여 이은 결과(750×2454)가 되는 과정. 이은 결과에는 위 제목 막대와 아래 입력 칸이 한 번씩만 있고 대화가 끊기거나 겹치지 않고 이어진다" width="784" height="653" loading="lazy" decoding="async" />
+</picture>
 
-견본 대화 캡처 세 장을 이 도구로 이은 실제 결과입니다. 세 장을 그냥 쌓으면 4002px이지만, 막대와 겹친 부분이 빠져 2454px이 되었습니다.
+견본 대화 캡처 세 장을 이 도구로 이은 실제 결과입니다. 주황색으로 칠해진 곳이 지워지는 막대와 겹친 부분이고, 마지막 칸이 도구가 만든 결과 그대로입니다. 세 장을 그냥 쌓으면 4002px이지만, 막대와 겹친 부분이 빠져 2454px이 되었습니다.
 
 ## 잘 이어지게 캡처하는 요령
 
