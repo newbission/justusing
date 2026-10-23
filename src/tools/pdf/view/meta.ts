@@ -9,14 +9,15 @@ export default defineTool({
       name: 'PDF 보기',
       summary: '페이지를 넘기며 PDF를 바로 봅니다',
       title: 'PDF 보기 - 설치·업로드 없이 브라우저에서 열기',
-      description: 'PDF 파일을 업로드하지 않고 브라우저에서 바로 열어 페이지를 넘겨 봅니다.',
+      description:
+        'PDF 파일을 업로드하지 않고 브라우저에서 바로 열어 페이지를 넘겨 봅니다. 프로그램을 설치할 수 없는 컴퓨터나 휴대폰에서도 열리고, 암호가 걸린 PDF는 암호를 넣어 봅니다.',
     },
     en: {
       name: 'View PDF',
       summary: 'Open a PDF and flip through its pages',
       title: 'View PDF - Open PDFs in your browser, no install or upload',
       description:
-        'Open a PDF right in your browser and flip through its pages, without uploading it.',
+        'Open a PDF right in your browser and flip through its pages, without uploading it. Works on computers where you cannot install software and on phones, and opens password-protected PDFs once you enter the password.',
     },
   },
   related: ['pdf/merge', 'pdf/split'],
