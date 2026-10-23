@@ -16,7 +16,7 @@
 
 - 주소: `/`(허브) → `/pdf/`(카테고리) → `/pdf/merge/`(도구) → `/pdf/merge/frame/`(격리 frame). 영어는 앞에 `/en`
 - 주소는 서브도메인이 아니라 경로로 나누고, 늘 끝 슬래시로 끝난다 (`trailingSlash: 'always'`)
-- 지금 카테고리 2개(PDF 6묶음, 이미지 2묶음), 도구 24개 모두 `live`
+- 지금 카테고리 2개(PDF 6묶음, 이미지 4묶음), 도구 31개 모두 `live`
 
 ## 2. 어떻게 만드는지
 
@@ -26,7 +26,7 @@
 | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/site.config.ts`                                                                        | 사이트명·도메인·언어별 설명/홈 제목·검색 소유 확인값·통계 토큰·광고 설정의 **유일한 출처**. `siteUrl`, `contactEmail`                                                |
 | `src/tools/registry.ts`                                                                     | `TOOL_IDS`(노출 순서) → `tools`, `liveTools`, `getTool()`, `toolsInCategory()`, `sectionsInCategory()`, `visibleCategories`                                          |
-| `src/tools/types.ts`                                                                        | `ToolMeta`(status·text·section·icon·related), `defineTool()`, `ToolContent`(uses·howTo·faq), `defineContent()`                                                       |
+| `src/tools/types.ts`                                                                        | `ToolMeta`(status·text(name·summary·title·description)·section·icon·related), `defineTool()`, `ToolContent`(uses·howTo·faq), `defineContent()`                       |
 | `src/tools/categories.ts`                                                                   | `CATEGORIES`: 카테고리 이름·설명(언어별)과 묶음(`sections`, 순서 = 화면 순서)                                                                                        |
 | `src/tools/common-faq.ts`                                                                   | 모든 도구 FAQ 맨 뒤에 붙는 공통 질문 2개 (업로드 여부, 광고가 있어도 안전한지)                                                                                       |
 | `src/tools/paths.ts`                                                                        | `categoryPaths()`, `toolPaths()`: 한국어·영어 라우트가 함께 쓰는 `getStaticPaths`                                                                                    |
@@ -40,7 +40,10 @@
 | `src/layouts/ToolLayout.astro`                                                              | 도구 페이지 틀: 브레드크럼 → 제목 → `top-banner` → 도구 칸 → 로컬 처리 안내 → `below-tool` → 쓰임새·사용법 → `in-content` → FAQ → 관련. WebApplication 구조화 데이터 |
 | `src/layouts/DocLayout.astro`                                                               | 글 페이지 틀 (소개·방침·약관·문의·가이드): 위치 표시 → 제목 → 작은 글씨(시행일 등) → 배너 → 본문 → `after` 칸                                                        |
 | `src/components/RailShell.astro`                                                            | 본문 폭·여백 + 넓은 화면(1400px 이상)에서 양옆 160px 세로 광고                                                                                                       |
-| `src/components/Header.astro`, `Footer.astro`                                               | 로고·카테고리 메뉴·가이드·언어 바꾸기·테마 버튼 / 글 페이지 링크                                                                                                     |
+| `src/components/Header.astro`, `Footer.astro`                                               | 로고·펼침 메뉴·언어 바꾸기·테마 버튼·☰ 버튼 / 글 페이지 링크                                                                                                        |
+| `src/components/site-menu.ts`                                                               | `siteMenus(주소)`: 머리글 메뉴 목록. 카테고리마다 묶음별 live 도구(이름·`summary`·아이콘), 가이드는 카테고리별 글. 전체 보기 링크                                    |
+| `src/components/MegaMenu.astro`                                                             | 768px 이상 펼침 메뉴: 버튼(`aria-expanded`) + 머리글 폭 판. 누르기·마우스 머무름(150ms)으로 열고 Esc·바깥 누르기·포커스 이탈로 닫음                                  |
+| `src/components/MobileMenu.astro`                                                           | 768px 미만 ☰ 버튼 → 전체 화면 `<dialog>`(showModal) + 카테고리별 `<details name>` 아코디언                                                                          |
 | `src/components/Breadcrumb.astro`                                                           | 위치 표시 + BreadcrumbList 구조화 데이터, 도구 페이지에서는 같은 카테고리 도구로 넘어가는 메뉴                                                                       |
 | `src/components/ToolSections.astro`, `ToolGrid.astro`, `ToolCard.astro`, `ToolIcon.astro`   | 묶음별 목록·카드·아이콘. `soon` 도구는 '준비 중'으로 누를 수 없게                                                                                                    |
 | `src/components/ToolHowTo.astro`, `ToolFaq.astro`, `RelatedTools.astro`, `ToolGuides.astro` | 도구 페이지 아래쪽 글                                                                                                                                                |
@@ -66,6 +69,19 @@
 
 새 도구를 더하는 순서는 [`CLAUDE.md`](../../../CLAUDE.md)의 "도구 레지스트리"를 따른다.
 
+### 머리글 메뉴 (2026-10-23)
+
+- 데스크톱(768px 이상): PDF·이미지·가이드 버튼. 누르거나 마우스를 150ms 머물면 머리글 아래로 판이 열린다. 마우스가 메뉴를 떠나면
+  250ms 뒤 닫는다(판으로 내려가는 사이 닫히지 않게). 눌러서 연 판은 마우스가 떠나도 남는다. 다른 버튼에 올리면 바로 바뀐다
+- 판은 `categories.ts` 묶음 순서로 칸을 나누고(`column-width: 260px`, 칸이 들어가는 만큼 늘어남), 도구마다 아이콘·이름·`summary`.
+  가이드 판은 PDF 가이드·이미지 가이드(제목이 카테고리 가이드 페이지 링크)이고 묶음이 칸을 넘어 이어진다.
+  판이 화면보다 길면 판 안에서 스크롤한다. 판 아래 '<카테고리> 도구 전체 보기 →' / '가이드 전체 보기 →'
+- 키보드: 판은 버튼 바로 뒤에 있어 Tab이 판 안 링크를 차례로 지나고, 판 밖으로 나가면 닫힌다. Esc는 닫고 버튼으로 돌아간다
+- 휴대폰(768px 미만, 하단 광고와 같은 기준): ☰ → 전체 화면 창. `showModal()`이라 맨 위 층에 떠서 하단 고정 광고보다 위에 있고
+  뒤 화면을 누를 수 없다. 카테고리마다 `<details name="mobile-menu">`(한 번에 하나), 지금 페이지의 카테고리를 열어 둔다
+- 메뉴·창 안에는 광고를 두지 않는다. 열고 닫아도 페이지 레이아웃은 움직이지 않는다(판은 겹쳐 뜬다)
+- 한글은 `word-break: keep-all`로 낱말 단위로 줄을 바꾼다
+
 ### 테마
 
 - 저장값(`localStorage`의 `theme`)이 있으면 `ThemeInit`이 `<head>`에서 `data-theme`을 붙이고, 없으면 OS 설정을 따른다
@@ -75,6 +91,10 @@
   종이 위 글자 같은 도구용 색도 토큰으로 더했다
 
 ### 결정과 이유
+
+- **펼침 메뉴와 `summary`** (2026-10-23, 사용자 요청): 도구가 31개로 늘어 카테고리 링크만으로는 도구까지 두 번 이동해야 했다.
+  검색용 `description`은 메뉴 칸에 길어 메뉴용 한 줄(`summary`, 한국어 25자·영어 40자 안팎, 하는 일만)을 필수로 더했다.
+  모바일 판은 공간이 없어 이름만 보인다. 링크는 데스크톱 판과 모바일 창에 두 번 있지만 판은 `hidden`, 창은 닫혀 있어 화면 읽기에는 한 번만 보인다
 
 - **도구마다 '넣는 것 → 나오는 것' 그림** (2026-10-19): 글을 읽기 전에 하는 일을 한눈에. 27개를 손으로 그리지 않고 `meta.ts`의 `flow`
   한 줄로 같은 부품이 그린다. 종이는 두 테마 모두 흰색, 나오는 쪽만 초록 테두리. 뜻은 제목·설명 글이 맡아 화면 읽기에서는 뺀다
@@ -123,6 +143,7 @@
 - [x] 허브·카테고리·도구·frame 라우트, 브레드크럼(+같은 분류 도구 메뉴)
 - [x] 도구 페이지 틀(쓰임새·사용법·FAQ·공통 FAQ·관련 가이드·관련 도구), 글 페이지 틀
 - [x] 묶음별 소제목, 도구 아이콘 (홈·카테고리)
+- [x] 머리글 펼침 메뉴(데스크톱)·전체 화면 메뉴(휴대폰), 도구 `summary` (2026-10-23)
 - [x] 다크 모드: OS 설정 + 전환 버튼 + 깜빡임 방지 + frame에 알리기
 - [x] 본문 글꼴 Pretendard 직접 호스팅
 - [x] 로고(심볼·글자), favicon·홈 화면 아이콘·og:image·내려받기 파일, 점핏과 겹치지 않게 수정
@@ -143,6 +164,13 @@
   - 로고·아이콘 파일(`/favicon.svg`, PNG, `/brand/...`)을 이미지로 내려준다
   - 페이지 머리말이 아이콘과 링크 미리보기 이미지를 가리킨다
   - 머리글 로고가 홈으로 가는 이름 있는 링크다
+- `tests/e2e/menu.spec.ts`
+  - PDF 버튼 → 묶음 순서 칸, 도구 이름·`summary`·아이콘, 전체 보기 링크, 지금 페이지 표시
+  - 판에 카테고리의 모든 도구가 `summary`와 함께 있다 (카테고리 목록과 같은 주소들)
+  - 키보드: Enter로 열기 → Tab으로 판 안 → Esc로 닫고 버튼으로, Tab으로 판 밖에 나가면 닫힘
+  - 마우스 머무름으로 열기·다른 버튼으로 바꾸기·판 위에서 유지·떠나면 닫기, 눌러 연 판은 남고 바깥 누르기로 닫기
+  - 가이드 판의 카테고리 묶음과 링크, 영어 메뉴
+  - 휴대폰(390×844): ☰ → 화면 전체를 덮는 모달(`:modal`), 지금 카테고리 펼침, 아코디언 하나만, Esc·닫기 버튼 뒤 ☰로 포커스
 - `tests/e2e/tool-pages.spec.ts`: 사이트맵의 모든 도구 페이지(한·영)에 쓰임새 3개가 사용법 앞에 있고, FAQ가 공통 질문이 아닌 도구 질문으로 시작한다
 - `tests/e2e/home-motion.spec.ts`: 홈 설명 그림이 움직임 줄이기에서는 멈춘 완성 그림, 아니면 보일 때 움직여 완성 그림에서 멈춘다 (한·영)
 - `tests/e2e/pages.spec.ts`: 바닥글에서 글 페이지로 간다 (→ [검색·가이드](../seo-and-guides/README.md))

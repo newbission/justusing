@@ -98,7 +98,8 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 새 도구 추가 방법:
 
 1. `src/tools/<카테고리>/<이름>/` 폴더를 만든다.
-   - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, title, description } }, related })`
+   - `meta.ts`: `defineTool({ status, section, icon, text: { ko: { name, summary, title, description } }, related })`
+     - `summary`: 머리글 펼침 메뉴에서 이름 아래 붙는 한 줄 (한국어 25자·영어 40자 안팎, 실제로 하는 일만, 2026-10-23)
      - `section`: 카테고리 안의 묶음 (`categories.ts`의 `sections` 키). 목록 페이지·홈이 묶음별 소제목으로 나눠 보여준다
      - `icon`: 목록 카드 아이콘. 24×24 칸에 선으로 그린 SVG path의 `d` 값들. 다른 도구와 한눈에 구분되게 그린다
      - `flow`: 제목 아래 '넣는 것 → 나오는 것' 그림 (`ToolFlow`). 종이 종류·장수·종이 위 표시(`mark`)만 적는다 (2026-10-19)
