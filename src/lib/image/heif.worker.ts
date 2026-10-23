@@ -118,26 +118,32 @@ async function handle(request: Extract<HeifRequest, { type: 'decode' }>): Promis
     const bytes = new Uint8Array(await request.file.arrayBuffer());
     const { pixels, width, height } = await decodePrimary(heif, bytes);
     const data = imageData(pixels, width, height, heifColorSpace(bytes));
-    if (request.preview === undefined) {
+    if (!request.jpeg) {
       const bitmap = await createImageBitmap(data);
       send({ id: request.id, kind: 'image', bitmap }, [bitmap]);
       return;
     }
-    // 목록·비교 화면용으로 줄인 JPG (브라우저가 HEIC를 그리지 못해 <img>에 원본을 쓸 수 없다)
-    const scale = Math.min(1, request.preview / Math.max(width, height));
-    const small = await createImageBitmap(data, {
-      resizeWidth: Math.max(1, Math.round(width * scale)),
-      resizeHeight: Math.max(1, Math.round(height * scale)),
-      resizeQuality: 'high',
-    });
-    const canvas = new OffscreenCanvas(small.width, small.height);
+    // 화면에 그리거나(브라우저가 HEIC를 그리지 못해 <img>에 원본을 쓸 수 없다) PDF에 넣을 JPG
+    const scale = Math.min(1, (request.jpeg.side ?? Infinity) / Math.max(width, height));
+    const picture =
+      scale < 1
+        ? await createImageBitmap(data, {
+            resizeWidth: Math.max(1, Math.round(width * scale)),
+            resizeHeight: Math.max(1, Math.round(height * scale)),
+            resizeQuality: 'high',
+          })
+        : await createImageBitmap(data);
+    const canvas = new OffscreenCanvas(picture.width, picture.height);
     const context = canvas.getContext('2d')!;
+    // JPG에는 투명이 없어 흰 바탕을 깐다
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(small, 0, 0);
-    small.close();
-    const preview = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.85 });
-    send({ id: request.id, kind: 'preview', width, height, preview });
+    context.drawImage(picture, 0, 0);
+    picture.close();
+    const jpeg = await canvas.convertToBlob({ type: 'image/jpeg', quality: request.jpeg.quality });
+    canvas.width = 0;
+    canvas.height = 0;
+    send({ id: request.id, kind: 'jpeg', width, height, jpeg });
   } catch (error) {
     send({
       id: request.id,
