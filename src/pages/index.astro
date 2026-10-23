@@ -8,6 +8,7 @@ import RailShell from '../components/RailShell.astro';
 import AdSlot from '../components/AdSlot.astro';
 import Promises from '../components/Promises.astro';
 import SafetyDiagram from '../components/SafetyDiagram.astro';
+import LocalProcessing from '../components/LocalProcessing.astro';
 import { siteConfig } from '../site.config';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
@@ -46,6 +47,11 @@ const jsonLd = {
     <section class="promises-section">
       <Promises />
     </section>
+
+    <!-- 파일이 브라우저 안에서 처리되는 모습을 움직이는 그림으로. 광고 칸과 떨어진 자리에 둔다 -->
+    <div class="motion-section">
+      <LocalProcessing />
+    </div>
 
     <!-- 약속을 그림으로: 왜 안전한지 한눈에 -->
     <div class="safety-section">
@@ -87,6 +93,7 @@ const jsonLd = {
   .promises-section {
     margin-bottom: 40px;
   }
+  .motion-section,
   .safety-section {
     margin-bottom: 40px;
   }
