@@ -9,7 +9,8 @@
  * 개발 서버(npm run dev)는 출처 없는 frame의 요청을 막기 때문에 개발 중에만 격리를 끈다.
  * 격리 상태는 빌드 결과로 도는 E2E 테스트에서 확인한다.
  *
- * allow="fullscreen": 도구가 스스로 전체 화면으로 볼 수 있게 한다 (PDF 보기의 전체 화면 버튼).
+ * allow="fullscreen; clipboard-write": 도구가 스스로 전체 화면으로 볼 수 있고(PDF 보기의 전체 화면 버튼)
+ *   읽은 글자를 클립보드에 쓸 수 있게 한다(이미지 글자 추출의 복사 버튼, 쓰기만이고 읽기는 허용하지 않는다).
  *   격리(sandbox)와는 별개라 바깥 페이지 접근은 여전히 막혀 있다.
  *
  * 높이는 고정이다. frame 안에서 스크롤하므로 처리 전후로 바깥 레이아웃(광고 위치)이 밀리지 않는다.
@@ -44,7 +45,7 @@ import { ui } from '../i18n/ui';
     data-src={src}
     title={title}
     sandbox={sandbox}
-    allow="fullscreen"
+    allow="fullscreen; clipboard-write"
   ></iframe>
 </div>
 <noscript>
