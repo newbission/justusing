@@ -6,6 +6,8 @@ import type { Locale } from '../i18n/locales';
 
 export interface CategoryText {
   name: string;
+  /** 검색 결과에 보이는 페이지 제목 (사이트 이름은 뒤에 붙는다) */
+  title: string;
   description: string;
 }
 
@@ -17,10 +19,12 @@ export const CATEGORIES = {
     text: {
       ko: {
         name: 'PDF',
+        title: '무료 PDF 도구 모음 - 합치기·나누기·압축·변환, 업로드 없이',
         description: 'PDF를 업로드 없이 보고, 합치고, 나누고, 고치고, 변환하는 도구',
       },
       en: {
         name: 'PDF',
+        title: 'Free PDF tools - Merge, split, compress and convert PDFs without uploading',
         description: 'View, merge, split, edit and convert PDFs without uploading them',
       },
     },
@@ -38,11 +42,13 @@ export const CATEGORIES = {
     text: {
       ko: {
         name: '이미지',
+        title: '무료 이미지 도구 모음 - 사진 압축·크기 조절·변환·증명사진, 업로드 없이',
         description:
           '이미지를 업로드 없이 줄이고, 크기를 바꾸고, 변환하고, 이어 붙이고, 자르고 돌리고, 증명사진으로 맞추고, 위치 정보를 지우는 도구',
       },
       en: {
         name: 'Image',
+        title: 'Free image tools - Compress, resize and convert photos without uploading',
         description:
           'Compress, resize, convert, stitch, crop, rotate, make ID photos and remove location data without uploading',
       },
