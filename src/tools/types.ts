@@ -43,7 +43,7 @@ export interface ToolMeta {
 /** 그림 속 종이 한 묶음 */
 export interface FlowDoc {
   /** 종이 아래 꼬리표 */
-  kind: 'pdf' | 'jpg' | 'png' | 'txt' | 'zip';
+  kind: 'pdf' | 'jpg' | 'png' | 'txt' | 'csv' | 'zip';
   /** 겹친 장수 (1~3, 기본 1) */
   count?: number;
   /** 종이 위 그림 (기본: 글 줄) */
@@ -77,7 +77,11 @@ export type FlowMark =
   /** 이은 자리 (이어 붙이기) */
   | 'stitch'
   /** 사진 위 잘게 나뉜 칸 (모자이크) */
-  | 'mosaic';
+  | 'mosaic'
+  /** 표 칸 속 글자 (CSV) */
+  | 'table'
+  /** 표 칸 속 깨진 글자 (인코딩이 맞지 않는 CSV) */
+  | 'garbled';
 
 export function defineTool(meta: ToolMeta): ToolMeta {
   return meta;
