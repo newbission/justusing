@@ -47,6 +47,7 @@ const TOOL_IDS: readonly string[] = [
   'image/remove-location',
   'image/stitch',
   'image/crop',
+  'image/mosaic',
 ];
 
 export interface Tool extends ToolMeta {
