@@ -27,6 +27,6 @@ export default defineTool({
         'Convert images to JPG, PNG or WebP, such as WebP to JPG or PNG to JPG. Convert many at once and download them as a ZIP. Your images are never uploaded.',
     },
   },
-  related: ['image/compress', 'image/resize'],
+  related: ['image/heic-to-jpg', 'image/compress', 'image/resize'],
   flow: { from: { kind: 'png' }, to: { kind: 'jpg' } },
 });
