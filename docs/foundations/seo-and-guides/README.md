@@ -1,6 +1,6 @@
 # 검색과 가이드 글 (seo-and-guides)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-19
+쓴 날 2026-10-16 · 고친 날 2026-10-23
 
 - 범위: 사이트맵·robots, `<head>` 검색 정보(설명·canonical·hreflang·Open Graph·소유 확인), 구조화 데이터(JSON-LD),
   가이드 글(`/guide/`), 글 페이지(소개·안전한 이유·이용약관·문의. 개인정보처리방침은 [광고와 통계](../ads-and-analytics/README.md))
@@ -39,6 +39,7 @@
 | `src/components/ToolGuides.astro`                                       | 도구 페이지의 "관련 가이드" (없으면 안 그림)                                                                                                                                    |
 | `src/components/GuideDialog.astro`                                      | 도구 제목 아래 "가이드 보기": 누르면 그 도구의 첫 가이드를 받아 창으로 띄운다 (`data-doc-body` 안만, `data-dialog-skip` 줄은 뺌)                                                |
 | `src/assets/guides/<언어>/<주소>/`                                      | 가이드 그림 (PNG·SVG). 마크다운에서 상대 경로로 부르면 빌드가 WebP로 바꾸고 가로·세로를 적는다                                                                                  |
+| `public/guide-motion/<언어>/<주소>/`                                    | 움직이는 가이드 그림 (`<이름>.webp` 애니메이션, `<이름>-still.webp` 멈춘 그림). 글이 `<picture>`로 부른다                                                                       |
 | `scripts/guide-images/run-tools.mjs`, `render.py`                       | 견본을 미리보기 사이트의 실제 도구에 넣어 결과를 받고(`.cache/guide-images/`), 잘라 붙여 그림을 그린다                                                                          |
 | `src/layouts/DocLayout.astro`                                           | 글 페이지 틀 (위치 표시 → 제목 → 작은 글씨 → 배너 → 본문 → `after`)                                                                                                             |
 | `src/pages/about.astro`, `terms.astro`, `contact.astro` (+ `en/`)       | 소개(사이트명·만든 이유·처리 방식·live 도구 목록·무료), 약관(시행일), 문의(`contactEmail`)                                                                                      |
@@ -109,6 +110,18 @@
   시범 4편(나누기·모아찍기·PDF 압축·가리기) 뒤 22편 모두에 넣었다. 실제 결과 그림은 `run-tools.mjs`의 작업과
   `render.py`의 글별 함수가 짝을 이룬다 (작업·글 이름을 적으면 그것만 다시 만든다). 도구를 돌려 보이기 어려운 것
   (스캔본 정리·암호 걸기·암호 없애기)은 원리 SVG로 그렸다
+- **움직이는 가이드 그림** (2026-10-23, 사용자 결정): 이어 붙이기(겹친 부분이 빠지며 한 장이 됨)와 자르기(기운 수평선이 서고
+  4:5로 잘림) 2편만. 방법과 이유:
+  - `render.py`의 `MOTIONS`가 정지 그림과 같은 칸 자리(`tile_layout`)·크기로 20fps 애니메이션 WebP를 그린다 (Pillow).
+    멈춘 구간은 프레임 하나에 긴 시간을 줘 파일을 줄인다. 3.5초, 한 편 약 340~380KB(품질 70), 끝에 처음 그림으로 서서히 바뀌어 반복이 끊기지 않는다
+  - 이어 붙이기: 이은 결과의 줄을 캡처의 줄과 견주어 도구가 어느 줄을 가져왔는지 되짚고(`kept_rows`) 지워진 곳에 색을 입혔다 걷어 낸다.
+    자르기: 도구와 같은 `coverScale` 계산으로 돌리고, 도구 결과(`crop.jpg`)와 평균 차이가 크면 `render.py`가 멈춘다
+  - 끝 화면은 도구가 만든 실제 결과(`stitch.png`·`crop.jpg`)를 그대로 붙인다. 견본과 결과만 쓰고 꾸미는 그림은 없다
+  - 파일은 `src/assets`가 아니라 `public/guide-motion/`에 두고 글이 `<picture>`로 부른다. 이유: 마크다운 이미지는 Astro가 처리해
+    `<source media>`를 붙일 수 없고, '움직임 줄이기'를 켠 사람에게 멈춘 그림을 보이려면 두 파일이 모두 필요하다. Astro는 WebP→WebP를
+    애니메이션째 통과시키는 것을 확인했지만 짝(`<picture>`)을 만들 방법이 없어 쓰지 않았다. 해시 없는 주소지만 Cloudflare가 ETag로 다시 확인한다
+  - 규칙: width·height는 두 파일 크기와 같게(CLS 0), alt는 언어마다 과정을 설명, 정지 그림은 `-still.webp`.
+    E2E(`guide.spec.ts`, `guide-dialog.spec.ts`)가 움직임 표시(VP8X)·프레임 수·크기·용량과 `reducedMotion` 두 경우, 가이드 창 안 그림을 본다
 - 그림 설명 문단에는 그림에서 읽은 사실(용량·화소)만 쓴다. 글의 일반 설명과 어긋나면 글을 고친다
   (예: 300 DPI "용량 4배" → 실제 2.6배라 "화소 4배, 용량 2~4배"로)
 

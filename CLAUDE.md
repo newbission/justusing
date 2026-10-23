@@ -181,6 +181,12 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   원리를 보여 주는 단순한 그림만 쓴다. `src/assets/guides/<언어>/<주소>/`에 두고 마크다운에서 상대 경로로 부른다
   (빌드가 WebP로 바꾸고 크기를 적는다). 실제 결과 그림은 `scripts/guide-images/`(도구 실행 → 그리기)로 다시 만든다.
   화면 문구는 그림에 넣지 않고 글로 쓰며, 그림을 설명하는 alt를 언어마다 쓴다. 휴대폰 폭에서 그림 속 글자가 읽히는지 본다
+- 움직이는 그림 (2026-10-23): 과정이 중요한 글만(지금 이어 붙이기·자르기 2편). 같은 재료(견본·도구 결과)로 3~4초,
+  한 편 몇백 KB 이하의 애니메이션 WebP를 `render.py`의 `MOTIONS`가 `public/guide-motion/<언어>/<글>/`에 만든다
+  (`<이름>.webp` 움직임, `<이름>-still.webp` 멈춘 그림, 둘은 크기가 같다). 마크다운 이미지는 Astro가 정지 WebP로
+  다시 만들 뿐 `prefers-reduced-motion`으로 고를 수 없어서, 글에 `<picture>`를 직접 쓴다
+  (`<source media="(prefers-reduced-motion: no-preference)">` + 멈춘 그림 `<img>`, width·height·alt 필수).
+  끝 화면은 도구가 만든 결과 그대로이고 중간은 같은 계산으로 그린다 (어긋나면 `render.py`가 멈춘다)
 
 ### 글 페이지와 방문 통계
 
