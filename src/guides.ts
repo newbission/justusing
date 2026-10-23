@@ -4,6 +4,7 @@
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { LOCALES, type Locale } from './i18n/locales';
+import { isCategoryId } from './tools/categories';
 import { getTool } from './tools/registry';
 
 export type Guide = CollectionEntry<'guides'>;
@@ -26,6 +27,12 @@ for (const guide of all) {
   }
 }
 for (const slug of new Set(all.map(slugOf))) {
+  // /guide/pdf/ 같은 카테고리별 가이드 페이지와 주소가 겹치면 안 된다
+  if (isCategoryId(slug)) {
+    throw new Error(
+      `가이드 주소가 카테고리 이름과 같아 카테고리 가이드 페이지와 겹칩니다: src/content/guides/*/${slug}.md`,
+    );
+  }
   for (const locale of LOCALES) {
     if (!all.some((guide) => slugOf(guide) === slug && localeOfGuide(guide) === locale)) {
       throw new Error(`가이드의 ${locale} 글이 없습니다: src/content/guides/${locale}/${slug}.md`);
