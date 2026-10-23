@@ -4,6 +4,7 @@ import ThemeToggle from './ThemeToggle.astro';
 import LocaleSwitch from './LocaleSwitch.astro';
 import Logo from './Logo.astro';
 import MegaMenu from './MegaMenu.astro';
+import MobileMenu from './MobileMenu.astro';
 import { siteMenus } from './site-menu';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
@@ -25,6 +26,7 @@ const menus = siteMenus(Astro.url.pathname);
     <div class="actions">
       <LocaleSwitch />
       <ThemeToggle />
+      <MobileMenu {menus} />
     </div>
   </div>
 </header>
@@ -61,6 +63,12 @@ const menus = siteMenus(Astro.url.pathname);
   @media (max-width: 767px) {
     .inner {
       gap: 14px;
+    }
+    .nav {
+      display: none;
+    }
+    .actions {
+      margin-left: auto;
     }
   }
 </style>
