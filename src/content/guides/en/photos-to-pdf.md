@@ -3,7 +3,7 @@ title: How to turn phone photos of documents into one PDF
 description: No scanner? Photograph forms, receipts or homework with your phone and turn them into one PDF ready to submit. Tips for clear photos, choosing page size and margins, page order, and what to do when the file is too big.
 tool: pdf/from-image
 published: 2026-10-18
-updated: 2026-10-19
+updated: 2026-10-23
 order: 17
 ---
 
@@ -61,7 +61,7 @@ These are actual results from the same document photo. On the left the photo is 
 - Shrink the finished PDF with [Compress PDF](/en/pdf/compress/). PDFs made from photos often get much smaller. For document photos, start with **Balanced** and check that small text is still readable.
 - Or shrink the photos first with [Resize Image](/en/image/resize/) or [Compress Image](/en/image/compress/), then create the PDF.
 
-**"This image cannot be opened."** Your browser cannot read that format. iPhone HEIC photos are the usual cause; browsers other than Safari may not open them. In iPhone Settings → Camera → Formats, "Most Compatible" makes future photos JPG. For photos you already took, convert them to JPG with [Convert Image](/en/image/convert/) in Safari first. Images that cannot be opened are left out of the PDF.
+**"This image cannot be opened."** The format is not supported or the file is damaged. iPhone HEIC photos can be added as they are, even in Chrome or Edge (the page loads a HEIC reader and opens them inside your browser). Images that cannot be opened are left out of the PDF.
 
 **The text looks blurry.** In most cases the photo itself was blurry; converting to PDF does not blur it. Retaking the photo with the tips above is the surest fix.
 
