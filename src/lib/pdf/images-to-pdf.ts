@@ -3,7 +3,11 @@
  * 실제 처리는 워커(images-to-pdf.worker.ts)에서 pdf-lib로 한다. 이 모듈을 import한 도구 frame에서만 로드된다.
  */
 import workerUrl from './images-to-pdf.worker.ts?worker&url';
+import { heifToJpeg, needsHeifDecoder } from '../image/heif';
 import { createWorker } from '../worker';
+
+/** 브라우저가 못 읽는 HEIC를 JPG로 바꿀 때의 화질 (prepare.ts가 사진을 다시 만들 때와 같다) */
+const HEIF_JPEG_QUALITY = 0.92;
 
 /** 쪽 크기. fit은 이미지 크기 그대로 (96 DPI로 보고 pt로 바꾼다) */
 export type PageSize = 'a4' | 'letter' | 'fit';
@@ -32,11 +36,23 @@ export type ImagesToPdfResponse =
 let workerPromise: Promise<Worker> | undefined;
 let nextId = 0;
 
-/** onProgress는 이미지 한 장을 넣을 때마다 불린다. */
+/**
+ * onProgress는 이미지 한 장을 넣을 때마다 불린다.
+ * 브라우저가 못 읽는 HEIC(아이폰 사진)는 먼저 libheif로 바로 세워 JPG로 바꿔 넘긴다 (워커는 브라우저로 읽는다)
+ */
 export async function imagesToPdf(
-  job: ImagesToPdfJob,
+  original: ImagesToPdfJob,
   onProgress?: (done: number, total: number) => void,
 ): Promise<Uint8Array> {
+  const images: Blob[] = [];
+  for (const file of original.images) {
+    images.push(
+      (await needsHeifDecoder(file))
+        ? (await heifToJpeg(file, { quality: HEIF_JPEG_QUALITY })).jpeg
+        : file,
+    );
+  }
+  const job = { ...original, images };
   const worker = await (workerPromise ??= createWorker(workerUrl));
   const id = nextId++;
 
