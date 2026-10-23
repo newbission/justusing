@@ -111,6 +111,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'pdf/fill-form': ['form'],
   'image/compress': ['photo', 'screen'],
   'image/resize': ['photo', 'screen'],
+  'image/target-size': ['photo', 'screen'],
   'image/convert': ['photo', 'screen'],
   'image/heic-to-jpg': ['heic1', 'heic2'],
   'image/ocr': ['docPhoto2', 'chat1'],
