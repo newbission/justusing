@@ -25,6 +25,7 @@ npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크�
 E2E_PORT=8790 npm run test:e2e  # 다른 작업 공간과 동시에 돌릴 때 포트 변경 (기본 8788, 검사 포트는 +1)
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
+python3 tests/fixtures/make_text_fixtures.py  # 테스트용 CSV(CP949·Shift_JIS) 다시 만들기
 python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow, 먼저 npm install)
 PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
 ```
@@ -406,6 +407,10 @@ Co-Authored-By: ...
         밝히고 캐시) 등
   - [x] 가이드 글 (`/guide/`, 2026-10-15): 검색 유입과 광고 심사용. 첫 6편 (PDF 압축·합치기·이미지로·서명,
         이미지 압축·크기 조절). 도구를 만들 때마다 그 도구의 가이드를 함께 쓴다
+- [ ] 10단계: 텍스트·CSV 도구 (2026-10-23) — 카테고리 `text`(`/data/`는 데이터 파일 자리라 피함). 도구마다 멈추고 확인
+  - [x] CSV 한글 깨짐 고치기 (`/text/csv-encoding/`): 인코딩 자동 판단(BOM·UTF-16·UTF-8·CP949·Windows-1252) + 직접 고르기,
+        지금 열리는 모습·바꾼 뒤 미리보기 표, 엑셀용 UTF-8(BOM)·UTF-8·CP949로 저장, 줄바꿈. 워커가 조각씩 읽어 수백 MB도 된다
+        (`src/lib/text/`). CP949 쓰기 표는 브라우저의 euc-kr 디코더로 만들고, 없는 글자는 ?로 바꿔 줄 번호와 알린다
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)
