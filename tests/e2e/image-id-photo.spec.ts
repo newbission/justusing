@@ -157,6 +157,20 @@ test('데이터를 받지 않아도 직접 맞춰 받을 수 있다', async ({ p
   await expect(frame.getByText('머리 길이 약', { exact: false })).toHaveCount(0);
 });
 
+test('아이폰 사진(HEIC)도 열어 직접 맞춰 받는다', async ({ page }) => {
+  await page.goto('/image/id-photo/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다
+  await frame
+    .locator('input[type=file]')
+    .setInputFiles(fileURLToPath(new URL('../fixtures/iphone.heic', import.meta.url)));
+  await expect(frame.getByRole('button', { name: /^데이터 받기/ })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: 'JPG 다운로드' }).click();
+  const bytes = await readFile(await (await event).path());
+  expect(await jpegSize(page, bytes)).toEqual({ width: 413, height: 531 });
+});
+
 test('배경을 하늘색으로 바꾸고 좌우를 뒤집는다', async ({ page }) => {
   test.setTimeout(120_000);
   const frame = await open(page);
