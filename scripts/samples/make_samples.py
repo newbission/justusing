@@ -60,6 +60,7 @@ TEXT = {
         'photo': '예시-사진.jpg',
         'face': '예시-증명사진.jpg',
         'located': '예시-위치사진.jpg',
+        'tilted': '예시-기운사진.jpg',
         'screen': '예시-화면캡처.png',
         'scrolls': ['예시-대화캡처1.png', '예시-대화캡처2.png', '예시-대화캡처3.png'],
         'sample': '예시 파일 · 내용은 모두 지어낸 것입니다',
@@ -172,6 +173,7 @@ TEXT = {
         'photo': 'sample-photo.jpg',
         'face': 'sample-id-photo.jpg',
         'located': 'sample-photo-with-location.jpg',
+        'tilted': 'sample-tilted-photo.jpg',
         'screen': 'sample-screenshot.png',
         'scrolls': ['sample-chat-1.png', 'sample-chat-2.png', 'sample-chat-3.png'],
         'sample': 'Sample file · Everything in it is made up',
@@ -311,6 +313,46 @@ def landscape(width: int, height: int, seed: int) -> Image.Image:
     image = image.filter(ImageFilter.GaussianBlur(0.6))
     noise = Image.effect_noise((width, height), 18).convert('RGB')
     return Image.blend(image, noise, 0.06)
+
+
+def tilted_sea(width: int, height: int, degrees: float) -> Image.Image:
+    """수평선이 기울어진 바다 사진 (자르기·회전의 기울기 바로잡기). 크게 그려 돌린 뒤 가운데를 잘라 귀퉁이가 비지 않는다"""
+    rng = random.Random(41)
+    big_w, big_h = int(width * 1.4), int(height * 1.4)
+    image = Image.new('RGB', (big_w, big_h))
+    draw = ImageDraw.Draw(image)
+    horizon = int(big_h * 0.5)
+    for y in range(horizon):
+        t = y / horizon
+        draw.line([(0, y), (big_w, y)], fill=(int(90 + 120 * t), int(150 + 80 * t), int(215 + 25 * t)))
+    for y in range(horizon, big_h):
+        t = (y - horizon) / (big_h - horizon)
+        draw.line([(0, y), (big_w, y)], fill=(int(30 + 20 * t), int(95 + 30 * t), int(140 + 20 * t)))
+    sun_x, sun_y, radius = int(big_w * 0.62), int(horizon * 0.55), big_w // 22
+    draw.ellipse([sun_x - radius, sun_y - radius, sun_x + radius, sun_y + radius], fill=(255, 240, 200))
+    # 먼 섬과 등대
+    island = [(int(big_w * 0.18), horizon)]
+    for step in range(0, 21):
+        x = big_w * (0.18 + step * 0.012)
+        island.append((x, horizon - math.sin(step / 20 * math.pi) * big_h * 0.05 - rng.random() * 3))
+    island.append((int(big_w * 0.42), horizon))
+    draw.polygon(island, fill=(52, 82, 78))
+    tower_x = int(big_w * 0.74)
+    draw.rectangle([tower_x - 9, horizon - 120, tower_x + 9, horizon], fill=(240, 240, 236))
+    draw.rectangle([tower_x - 9, horizon - 80, tower_x + 9, horizon - 64], fill=(200, 60, 50))
+    draw.polygon([(tower_x - 14, horizon - 120), (tower_x + 14, horizon - 120), (tower_x, horizon - 140)], fill=(200, 60, 50))
+    for _ in range(big_w * 3):
+        x = rng.randrange(big_w)
+        y = rng.randrange(horizon + 4, big_h)
+        length = rng.randint(6, 10 + (y - horizon) // 12)
+        shade = rng.randint(150, 230)
+        draw.line([(x, y), (x + length, y)], fill=(shade, shade, min(255, shade + 20)))
+    image = image.filter(ImageFilter.GaussianBlur(0.8))
+    noise = Image.effect_noise(image.size, 14).convert('RGB')
+    image = Image.blend(image, noise, 0.05)
+    image = image.rotate(degrees, resample=Image.BICUBIC)
+    left, top = (big_w - width) // 2, (big_h - height) // 2
+    return image.crop((left, top, left + width, top + height))
 
 
 def jpeg(image: Image.Image, quality: int = 92) -> bytes:
@@ -649,6 +691,7 @@ def main():
     gallery = [jpeg(landscape(1400, 1050, seed), 92) for seed in (11, 12, 13)]
     photo = landscape(2000, 1500, 21)
     face = Image.open(os.path.join(HERE, 'face.jpg')).convert('RGB')
+    sea = tilted_sea(1600, 1200, 4)
     for locale, t in TEXT.items():
         folder = os.path.join(OUT, locale)
         os.makedirs(folder, exist_ok=True)
@@ -672,6 +715,7 @@ def main():
         photo.save(os.path.join(folder, t['photo']), 'JPEG', quality=95)
         face.save(os.path.join(folder, t['face']), 'JPEG', quality=90)
         photo.save(os.path.join(folder, t['located']), 'JPEG', quality=90, exif=located_exif())
+        sea.save(os.path.join(folder, t['tilted']), 'JPEG', quality=90)
         screenshot(t).save(os.path.join(folder, t['screen']), 'PNG', optimize=True)
         for name, shot in zip(t['scrolls'], chat_shots(t)):
             shot.save(os.path.join(folder, name), 'PNG', optimize=True)
