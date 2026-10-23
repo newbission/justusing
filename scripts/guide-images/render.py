@@ -11,6 +11,7 @@ src/assets/guides/<언어>/<글>/에 PNG를 쓴다 (커밋한다. 배포용 WebP
 """
 import csv
 import io
+import json
 import math
 import os
 import sys
@@ -92,6 +93,10 @@ TEXT = {
         'heic': '예시-아이폰사진2.heic',
         'heicStored': 'HEIC 안의 화소 (누운 채)',
         'heicResult': 'JPG로 바꾼 결과',
+        'chat1': '예시-대화캡처1.png',
+        'ocrTilted': '12° 기울여 찍은 서류',
+        'ocrChat': '대화 캡처',
+        'ocrLines': lambda n: f'읽은 줄 {n}개',
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -149,6 +154,10 @@ TEXT = {
         'heic': 'sample-iphone-photo-2.heic',
         'heicStored': 'Pixels inside the HEIC (lying)',
         'heicResult': 'Converted to JPG',
+        'chat1': 'sample-chat-1.png',
+        'ocrTilted': 'Paper shot at 12°',
+        'ocrChat': 'Chat screenshot',
+        'ocrLines': lambda n: f'{n} lines read',
     },
 }
 
@@ -708,6 +717,31 @@ def hide_info_in_photo(t, cache, samples, fonts):
         items.append((fit_width(image, 320, Image.LANCZOS), t['hidden'][key], ''))
     return 'hide-info-in-photo', 'compare.png', tiles(items, *fonts, gap=20, cols=2)
 
+def image_ocr(t, cache, samples, fonts):
+    # 도구가 읽은 줄 자리(.cache의 ocr-lines.json)를 원래 이미지 위에 상자로 그린다 (초록 말풍선 위에서도 보이게 테두리는 검게).
+    # 기운 사진은 바로 세워 읽은 줄이 이미지 위에서는 기운 상자로 돌아온다
+    with open(os.path.join(cache, 'ocr-lines.json'), encoding='utf-8') as file:
+        found = json.load(file)
+    sources = [
+        (os.path.join(cache, 'ocr-tilted.jpg'), t['ocrTilted']),
+        (os.path.join(samples, t['chat1']), t['ocrChat']),
+    ]
+    items = []
+    for (path, label), lines in zip(sources, found):
+        image = Image.open(path).convert('RGB')
+        height = 420
+        scale = height / image.height
+        image = image.resize((round(image.width * scale), height), Image.LANCZOS).convert('RGBA')
+        marks = Image.new('RGBA', image.size)
+        draw = ImageDraw.Draw(marks)
+        for points in lines:
+            polygon = [(points[i] * scale, points[i + 1] * scale) for i in range(0, len(points), 2)]
+            draw.polygon(polygon, fill=GREEN + (70,), outline=INK + (255,), width=2)
+        image = Image.alpha_composite(image, marks).convert('RGB')
+        items.append((image, label, t['ocrLines'](len(lines))))
+    return 'image-to-text', 'lines.png', tiles(items, *fonts, gap=24)
+
+
 # ---- 움직이는 그림 (2026-10-23) ----
 # 정지 그림과 같은 칸 자리·크기로 3~4초 움직이는 그림. 재료도 같다: 견본과 도구가 만든 실제 결과
 # (끝 화면은 도구가 만든 결과 그대로). 파일은 public/guide-motion/에 쓴다. Astro 이미지 처리를 거치지 않는
@@ -1026,6 +1060,7 @@ GUIDES = {
     'crop-rotate-photo': crop_rotate_photo,
     'hide-info-in-photo': hide_info_in_photo,
     'fix-csv-encoding': csv_encoding,
+    'image-to-text': image_ocr,
 }
 
 
