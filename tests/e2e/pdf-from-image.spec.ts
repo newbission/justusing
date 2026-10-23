@@ -90,6 +90,21 @@ test('휴대폰 사진의 방향 정보를 읽어 바로 세워 넣는다 (이�
   expect(await pageSizes((await download(page, frame)).bytes)).toEqual([[297, 372]]);
 });
 
+test('아이폰 사진(HEIC)도 바로 세워 JPG로 넣는다', async ({ page }) => {
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다. 화소는 가로이고 회전 표시(irot)가 붙어 있다
+  const frame = await openTool(page, ['iphone.heic']);
+  await expect(frame.getByText('300×400', { exact: false })).toBeVisible();
+  await frame.getByText('이미지에 맞춤', { exact: true }).click();
+  await frame.getByRole('button', { name: 'PDF 만들기' }).click();
+  const { name, bytes } = await download(page, frame);
+  expect(name).toBe('iphone.pdf');
+  const pdfText = new TextDecoder('latin1').decode(bytes);
+  expect(pdfText).toMatch(/\/Filter \/DCTDecode/);
+  expect(pdfText).toMatch(/\/Width 300\b/);
+  expect(pdfText).toMatch(/\/Height 400\b/);
+  expect(await pageSizes(bytes)).toEqual([[225, 300]]);
+});
+
 test('JPG는 다시 압축하지 않고 넣되, 촬영 위치 같은 정보 조각은 뺀다', async ({ page }) => {
   const photo = await readFile(fixture('small.jpg'));
   const segment = (marker: number, text: string) => {
