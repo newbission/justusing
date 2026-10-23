@@ -24,9 +24,9 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
 npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
 E2E_PORT=8790 npm run test:e2e  # 다른 작업 공간과 동시에 돌릴 때 포트 변경 (기본 8788, 검사 포트는 +1)
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
-python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
+python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow·pillow-heif 필요)
 python3 tests/fixtures/make_text_fixtures.py  # 테스트용 CSV(CP949·Shift_JIS) 다시 만들기
-python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow, 먼저 npm install)
+python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow·pillow-heif, 먼저 npm install)
 PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
 ```
 
@@ -386,7 +386,7 @@ Co-Authored-By: ...
     E2E는 워커 전역 `__canvasPixelLimit`으로 한계를 낮춰 시험한다(`tests/e2e/canvas-limit.ts`)
   - [x] 압축 (`/image/compress/`): JPG·WebP는 화질, PNG는 색 수로 줄인다. 원본보다 크면 원본 그대로
   - [x] 크기 조절 (`/image/resize/`): 비율(%) 또는 가로·세로 픽셀(비율 유지·정확히)
-  - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF, Safari의 HEIC)를 JPG·PNG·WebP로
+  - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF)와 HEIC를 JPG·PNG·WebP로
   - [x] 증명사진 (`/image/id-photo/`, 2026-10-20): MediaPipe Face Landmarker로 얼굴을 찾아 여권 규격(3.5×4.5cm,
         머리 3.2~3.6cm)에 맞게 자르기·크기·기울기를 바꾼다(`src/lib/face/`). 얼굴 보정은 하지 않는다(여권 규정).
         배경은 고를 때만 바꾸고(Selfie Segmenter) 여권에는 원래 사진을 쓰라고 알린다. 좌우 반전(앞 카메라).
@@ -403,8 +403,13 @@ Co-Authored-By: ...
   - [x] 모자이크 (`/image/mosaic/`, 2026-10-23): 가릴 곳(사각형·타원)마다 모자이크·흐림·검게 칠하기. 흐림·작은 모자이크는
         되살릴 수 있다고 밝히고 검게 칠하기를 권한다. 미리보기와 워커가 같은 계산(`src/lib/image/mosaic-effects.ts`).
         얼굴 자동 찾기는 나중 (증명사진 얼굴 데이터의 받기 동의·용량)
-  - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기), 배경 제거(누끼, 모델 데이터 크기를
-        밝히고 캐시) 등
+  - [x] HEIC를 모든 브라우저에서 (2026-10-23, 사용자가 LGPL·HEVC 특허 우려를 감수하고 결정): libheif-js(libheif+libde265
+        WebAssembly)를 브라우저가 HEIC를 못 읽을 때만 워커에서 쓴다(`src/lib/image/heif.ts`). 엔진은 압축 전송 약 0.5MB라
+        데이터 보관(동의) 없이 빌드 자산으로 필요할 때 받는다. 대표 그림만, irot·imir 적용, 8비트, P3 → sRGB.
+        새 도구 HEIC JPG 변환(`/image/heic-to-jpg/`, 화면은 형식 변환과 같은 `ConvertTool`)과 형식 변환·자르기·모자이크·
+        증명사진·이어 붙이기·이미지를 PDF로가 HEIC를 연다. LGPL 허가서·안내는 `scripts/copy-libheif-notice.mjs`가
+        `public/vendor/libheif/`에 둔다. 압축·크기 조절·위치 정보 지우기는 아직 (docs/features/image-heic-to-jpg)
+  - [ ] 배경 제거(누끼, 모델 데이터 크기를 밝히고 캐시) 등
   - [x] 가이드 글 (`/guide/`, 2026-10-15): 검색 유입과 광고 심사용. 첫 6편 (PDF 압축·합치기·이미지로·서명,
         이미지 압축·크기 조절). 도구를 만들 때마다 그 도구의 가이드를 함께 쓴다
 - [ ] 10단계: 텍스트·CSV 도구 (2026-10-23) — 카테고리 `text`(`/data/`는 데이터 파일 자리라 피함). 도구마다 멈추고 확인
