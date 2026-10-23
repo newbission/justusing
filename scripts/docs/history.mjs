@@ -48,6 +48,7 @@ const DOCS = {
   'features/pdf-metadata': { scopes: ['pdf-metadata'], prs: [61, 76, 77] },
   'features/image-compress': { scopes: ['image-compress'], prs: [36] },
   'features/image-resize': { scopes: ['image-resize'], prs: [36] },
+  'features/image-target-size': { scopes: ['image-target-size'], prs: [] },
   'features/image-convert': { scopes: ['image-convert'], prs: [44] },
   'features/image-id-photo': { scopes: ['image-id-photo'], prs: [] },
   'features/image-remove-location': { scopes: ['image-remove-location'], prs: [116] },
