@@ -8,6 +8,7 @@
 import { applyTurn, type Rect, type Turn } from './crop-geometry';
 import type { CropFailure, CropRequest, CropResponse } from './crop';
 import { PngStream } from './png-stream';
+import { openUpright, usableContext, type UprightImage } from './worker-canvas';
 import type { OutputType } from './process';
 
 /** 한 번에 그려 읽는 화소 수 (PNG를 줄 묶음씩 쓸 때) */
@@ -24,22 +25,14 @@ class Failure extends Error {
 async function open(file: Blob, previewSide: number) {
   source?.close();
   source = undefined;
-  let bitmap: ImageBitmap;
+  let opened: UprightImage;
   try {
-    // 휴대폰 사진의 EXIF 방향을 적용해 바로 세운다
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    opened = await openUpright(file, previewSide);
   } catch {
     throw new Failure('decode');
   }
-  source = bitmap;
-  const { width, height } = bitmap;
-  const scale = Math.min(1, previewSide / Math.max(width, height));
-  const preview = await createImageBitmap(bitmap, {
-    resizeWidth: Math.max(1, Math.round(width * scale)),
-    resizeHeight: Math.max(1, Math.round(height * scale)),
-    resizeQuality: 'high',
-  });
-  return { width, height, preview };
+  source = opened.source;
+  return { width: source.width, height: source.height, preview: opened.preview };
 }
 
 /** 결과의 [top, top + rows) 줄을 ctx에 그린다 */
@@ -64,22 +57,10 @@ function draw(
   ctx.drawImage(image, -image.width / 2, -image.height / 2);
 }
 
-/** canvas를 만들었는지 맨 끝 화소로 확인한다. 한계를 넘으면 오류 없이 아무것도 그리지 않는다 (Safari) */
-function usable(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2D | undefined {
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return undefined;
-  const x = canvas.width - 1;
-  const y = canvas.height - 1;
-  ctx.fillStyle = '#010203';
-  ctx.fillRect(x, y, 1, 1);
-  const probe = ctx.getImageData(x, y, 1, 1).data;
-  return probe[0] === 1 && probe[1] === 2 && probe[2] === 3 ? ctx : undefined;
-}
-
 /** canvas 하나에 그리지 못하는 PNG: 줄 묶음씩 그려 이어 쓴다 */
 async function pngInStrips(image: ImageBitmap, turn: Turn, rect: Rect): Promise<Uint8Array> {
   const rows = Math.max(1, Math.min(1024, Math.floor(STRIP_PIXELS / rect.width)));
-  const ctx = usable(new OffscreenCanvas(rect.width, Math.min(rows, rect.height)));
+  const ctx = usableContext(new OffscreenCanvas(rect.width, Math.min(rows, rect.height)));
   if (!ctx) throw new Failure('tooLarge');
   const png = new PngStream(rect.width, rect.height, true);
   for (let top = 0; top < rect.height; top += rows) {
@@ -94,7 +75,7 @@ async function save(turn: Turn, rect: Rect, type: OutputType, quality: number) {
   // 워커가 죽었다 살아났으면 원본이 없다 (화면은 사진을 다시 열게 한다)
   if (!source) throw new Failure('decode');
   const canvas = new OffscreenCanvas(rect.width, rect.height);
-  const ctx = usable(canvas);
+  const ctx = usableContext(canvas);
   if (!ctx) {
     canvas.width = 0;
     canvas.height = 0;
