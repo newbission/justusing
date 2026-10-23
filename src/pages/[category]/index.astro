@@ -12,6 +12,7 @@ import { CATEGORIES, type CategoryId } from '../../tools/categories';
 import { categoryPaths } from '../../tools/paths';
 import { localeOf, localizePath } from '../../i18n/locales';
 import { ui } from '../../i18n/ui';
+import { guidesIn, slugOf } from '../../guides';
 
 export const getStaticPaths = categoryPaths satisfies GetStaticPaths;
 
@@ -24,9 +25,11 @@ const locale = localeOf(Astro.url.pathname);
 const t = ui(locale);
 const text = CATEGORIES[category].text[locale];
 const title = t.category.title(text.name);
+// 이 카테고리 도구를 안내하는 가이드 (도구 목록 아래 링크로 단다)
+const guides = guidesIn(locale).filter((guide) => guide.data.tool.startsWith(`${category}/`));
 ---
 
-<BaseLayout title={title} description={text.description}>
+<BaseLayout title={text.title} description={text.description}>
   <RailShell>
     <div class="category-page">
       <Breadcrumb
@@ -39,6 +42,20 @@ const title = t.category.title(text.name);
         <AdSlot id="top-banner" />
       </div>
       <ToolSections {category} headingLevel={2} />
+
+      {guides.length > 0 && (
+        <section class="guides">
+          <h2>{t.guide.forCategory(text.name)}</h2>
+          <ul>
+            {guides.map((guide) => (
+              <li>
+                <a href={localizePath(`/guide/${slugOf(guide)}/`, locale)}>{guide.data.title}</a>
+                <p>{guide.data.description}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <!-- 도구 목록 아래 본문 광고 (홈과 같은 이유로 목록 아래, 48px 띄움) -->
       <div class="in-content">
@@ -70,5 +87,29 @@ const title = t.category.title(text.name);
   }
   .in-content {
     margin: 48px 0;
+  }
+  .guides {
+    margin-top: 48px;
+  }
+  .guides h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+  }
+  .guides ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .guides li {
+    margin-bottom: 16px;
+  }
+  .guides a {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .guides p {
+    margin: 4px 0 0;
+    color: var(--color-muted);
+    font-size: 14px;
   }
 </style>
