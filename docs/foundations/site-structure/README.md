@@ -1,6 +1,6 @@
 # 사이트 구조 (site-structure)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-19
+쓴 날 2026-10-16 · 고친 날 2026-10-23
 
 - 범위: 도구 레지스트리·카테고리·묶음, 페이지 라우트, 레이아웃(`BaseLayout`·`ToolLayout`·`DocLayout`·`RailShell`),
   테마(다크 모드), 로고, 사이트 설정, 이용 권한(`canUse`)
@@ -31,7 +31,7 @@
 | `src/tools/common-faq.ts`                                                                   | 모든 도구 FAQ 맨 뒤에 붙는 공통 질문 2개 (업로드 여부, 광고가 있어도 안전한지)                                                                                       |
 | `src/tools/paths.ts`                                                                        | `categoryPaths()`, `toolPaths()`: 한국어·영어 라우트가 함께 쓰는 `getStaticPaths`                                                                                    |
 | `src/tools/<카테고리>/<이름>/`                                                              | 도구 하나: `meta.ts`, `content.ts`, `Frame.astro`, `App.svelte`, (`messages.ts`)                                                                                     |
-| `src/pages/index.astro`                                                                     | 허브: 대표 문구, 가로 배너, 약속 카드(`Promises`), 안전 그림(`SafetyDiagram`), 카테고리별 도구 목록, 본문 광고                                                       |
+| `src/pages/index.astro`                                                                     | 허브: 대표 문구, 가로 배너, 약속 카드(`Promises`), 움직이는 설명 그림(`LocalProcessing`), 안전 그림(`SafetyDiagram`), 카테고리별 도구 목록, 본문 광고                |
 | `src/pages/[category]/index.astro`                                                          | 카테고리 목록 (`ToolSections`, 묶음별 소제목)                                                                                                                        |
 | `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: 넣는 것 → 나오는 것 그림(`ToolFlow`) + 가이드 보기·따라 하기 + `ToolFrame` + 쓰임새(`ToolUses`) + 사용법 + FAQ(도구 + 공통) + 관련 가이드 + 관련 도구   |
 | `src/components/ToolFlow.astro`                                                             | 제목 아래 작은 그림. `meta.ts`의 `flow`(종이 종류·장수·표시)로 그린다. 없으면 안 그림 (PDF 보기)                                                                     |
@@ -112,6 +112,9 @@
 - 구조화 데이터 `<script type="application/ld+json">`은 레이아웃 **안**(슬롯)에 둔다. 밖에 두면 `<html>`보다 먼저 출력된다
 - 로고를 바꾸면 `make-brand-images.mjs`로 PNG·ICO를 다시 만들어 커밋한다
 - `soon` 상태는 목록에 '준비 중' 카드만 보이고 페이지는 만들지 않는다 (지금은 모든 도구가 `live`)
+- 홈의 움직이는 설명 그림(`LocalProcessing`, 2026-10-23): 파일이 브라우저 안에서 처리되고 서버로 가는 길은 끊긴 모습. CSS 애니메이션으로
+  보일 때 한 번(약 4초)만 움직이고 완성 그림에서 멈춘다('다시 보기'). 움직임 줄이기·스크립트 없음이면 완성 그림만 보인다.
+  opacity·transform만 움직여 CLS 0, 광고 칸에서 떨어진 약속 카드 아래에 둔다
 
 ## 3. 구현 체크리스트
 
@@ -141,6 +144,7 @@
   - 페이지 머리말이 아이콘과 링크 미리보기 이미지를 가리킨다
   - 머리글 로고가 홈으로 가는 이름 있는 링크다
 - `tests/e2e/tool-pages.spec.ts`: 사이트맵의 모든 도구 페이지(한·영)에 쓰임새 3개가 사용법 앞에 있고, FAQ가 공통 질문이 아닌 도구 질문으로 시작한다
+- `tests/e2e/home-motion.spec.ts`: 홈 설명 그림이 움직임 줄이기에서는 멈춘 완성 그림, 아니면 보일 때 움직여 완성 그림에서 멈춘다 (한·영)
 - `tests/e2e/pages.spec.ts`: 바닥글에서 글 페이지로 간다 (→ [검색·가이드](../seo-and-guides/README.md))
 - 각 도구 E2E가 도구 페이지·frame 라우트를 함께 거친다
 
