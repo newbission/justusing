@@ -18,6 +18,7 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow가 
 - short-exif.jpg EXIF 조각이 머리 4바이트에서 끝난 JPEG (그림은 멀쩡함)
 - scroll-1~3.png 화면을 내려 가며 찍은 캡처 3장 (이어 붙이기). 360×640, 위 상태 표시줄(시계가 장마다 다름)
                24줄과 제목 막대 48줄, 아래 탭 막대 56줄은 고정이고 가운데 512줄이 360줄씩 내려간다(152줄 겹침)
+- quadrants.png 40×30을 네 칸으로 나눈 색 (자르기·회전). 왼쪽 위 빨강, 오른쪽 위 초록, 왼쪽 아래 파랑, 오른쪽 아래 흰색
 - scroll-page.png 위 캡처를 제대로 이었을 때 나와야 하는 긴 화면 (360×1360)
 - scroll-2.jpg  scroll-2.png를 JPG로 (JPG 잡음이 있어도 겹침을 찾는지)
 - scan.png     글자를 찍은 그림 (글자 인식 도구). 한글 한 줄, 영어 한 줄. Pretendard로 그린다
@@ -240,8 +241,14 @@ draw.text((80, 120), '다람쥐 헌 쳇바퀴에 타고파', font=font, fill=0)
 draw.text((80, 300), 'The quick brown fox 2026', font=font, fill=0)
 scan.save(path('scan.png'), optimize=True)
 
+quadrants = Image.new('RGB', (40, 30), (255, 255, 255))
+quadrants.paste((255, 0, 0), (0, 0, 20, 15))
+quadrants.paste((0, 255, 0), (20, 0, 40, 15))
+quadrants.paste((0, 0, 255), (0, 15, 20, 30))
+quadrants.save(path('quadrants.png'))
+
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
              'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
-             'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg']:
+             'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg', 'quadrants.png']:
     print(name, os.path.getsize(path(name)), 'bytes')
