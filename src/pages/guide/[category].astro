@@ -1,0 +1,70 @@
+---
+/**
+ * 카테고리 가이드 페이지 (/guide/pdf/). 그 카테고리의 가이드를 도구 묶음별 소제목으로 나눠 보여준다.
+ * 가이드 글(/guide/<주소>/)과 같은 자리라, 주소가 카테고리 이름인 글은 src/guides.ts가 빌드에서 막는다.
+ * 도구별 가이드 페이지는 만들지 않는다 (도구마다 글이 1편 안팎이라 내용 없는 페이지가 된다).
+ */
+import type { GetStaticPaths } from 'astro';
+import DocLayout from '../../layouts/DocLayout.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import GuideCards from '../../components/GuideCards.astro';
+import { guideCategoryPaths, guideSectionsIn } from '../../guides';
+import { localeOf, localizePath } from '../../i18n/locales';
+import { ui } from '../../i18n/ui';
+import { CATEGORIES, type CategoryId } from '../../tools/categories';
+
+export const getStaticPaths = guideCategoryPaths satisfies GetStaticPaths;
+
+interface Props {
+  category: CategoryId;
+}
+
+const { category } = Astro.props;
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale);
+const name = CATEGORIES[category].text[locale].name;
+const title = t.guide.categoryTitle(name);
+const description = t.guide.categoryDescription(name);
+---
+
+<DocLayout
+  {title}
+  {description}
+  breadcrumb={[
+    { name: t.nav.home, href: localizePath('/', locale) },
+    { name: t.guide.indexTitle, href: localizePath('/guide/', locale) },
+    { name: title },
+  ]}
+>
+  <p>{description}</p>
+  <p class="tools-link">
+    <a href={localizePath(`/${category}/`, locale)}>{t.nav.allTools(name)}</a>
+  </p>
+  {guideSectionsIn(category, locale).map((section) => (
+    <section class="section">
+      <h2>{section.text[locale]}</h2>
+      <GuideCards guides={section.guides} />
+    </section>
+  ))}
+
+  <Fragment slot="after">
+    <div class="in-content">
+      <AdSlot id="in-content" />
+    </div>
+  </Fragment>
+</DocLayout>
+
+<style>
+  .tools-link {
+    margin-bottom: 32px;
+  }
+  .section + .section {
+    margin-top: 32px;
+  }
+  .in-content {
+    margin: 48px 0;
+  }
+  .in-content:not(:has(.ad-slot)) {
+    margin: 0;
+  }
+</style>

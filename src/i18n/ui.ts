@@ -15,6 +15,7 @@ const ko = {
     soon: '준비 중',
     language: '언어',
     guides: '가이드',
+    allTools: (name: string) => `${name} 도구 전체 보기`,
   },
   theme: {
     toggle: '테마 전환',
@@ -62,6 +63,9 @@ const ko = {
     tour: '예시로 따라 하기',
     tourTitle: (name: string) => `${name} 예시로 따라 하기`,
     tourFrame: (name: string) => `${name} 따라 하기 화면`,
+    categoryTitle: (name: string) => `${name} 가이드`,
+    categoryDescription: (name: string) =>
+      `${name} 도구로 하는 일을 도구 묶음별로 나눠 설명합니다. 설치·업로드 없이 브라우저에서 바로 따라 할 수 있습니다.`,
   },
   category: {
     title: (name: string) => `${name} 도구`,
@@ -145,6 +149,7 @@ const en: Ui = {
     soon: 'Coming soon',
     language: 'Language',
     guides: 'Guides',
+    allTools: (name: string) => `See all ${name} tools`,
   },
   theme: {
     toggle: 'Toggle theme',
@@ -193,6 +198,9 @@ const en: Ui = {
     tour: 'Walk through with a sample',
     tourTitle: (name: string) => `${name}: walk through with a sample`,
     tourFrame: (name: string) => `${name} walkthrough`,
+    categoryTitle: (name: string) => `${name} guides`,
+    categoryDescription: (name: string) =>
+      `Step-by-step guides for the ${name} tools, grouped by task. Follow along right in your browser, with nothing to install or upload.`,
   },
   category: {
     title: (name: string) => `${name} tools`,

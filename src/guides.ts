@@ -4,8 +4,8 @@
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { LOCALES, type Locale } from './i18n/locales';
-import { isCategoryId } from './tools/categories';
-import { getTool } from './tools/registry';
+import { isCategoryId, type CategoryId, type SectionText } from './tools/categories';
+import { getTool, sectionsInCategory, visibleCategories } from './tools/registry';
 
 export type Guide = CollectionEntry<'guides'>;
 
@@ -56,4 +56,39 @@ export const guidePaths = () => guideSlugs.map((slug) => ({ params: { slug }, pr
 /** 이 도구를 안내하는 가이드들 (도구 페이지 아래에 단다) */
 export function guidesForTool(toolId: string, locale: Locale): Guide[] {
   return guidesIn(locale).filter((guide) => guide.data.tool === toolId);
+}
+
+/** 가이드가 안내하는 도구의 카테고리 */
+export const categoryOfGuide = (guide: Guide): CategoryId => getTool(guide.data.tool)!.category;
+
+/** 가이드가 하나라도 있는 카테고리 (categories.ts 순서). 카테고리 가이드 페이지와 메뉴가 쓴다 */
+export const guideCategories: CategoryId[] = visibleCategories.filter((category) =>
+  all.some((guide) => categoryOfGuide(guide) === category),
+);
+
+/** 카테고리 가이드 페이지들 (/guide/pdf/, 한국어·영어 라우트가 같이 쓴다) */
+export const guideCategoryPaths = () =>
+  guideCategories.map((category) => ({ params: { category }, props: { category } }));
+
+/** 한 카테고리의 가이드 (order 순) */
+export function guidesInCategory(category: CategoryId, locale: Locale): Guide[] {
+  return guidesIn(locale).filter((guide) => categoryOfGuide(guide) === category);
+}
+
+export interface GuideSection {
+  id: string;
+  text: SectionText;
+  guides: Guide[];
+}
+
+/** 한 카테고리의 가이드를 도구 묶음별로 (categories.ts의 sections 순서, 가이드 없는 묶음은 뺀다) */
+export function guideSectionsIn(category: CategoryId, locale: Locale): GuideSection[] {
+  const guides = guidesInCategory(category, locale);
+  return sectionsInCategory(category)
+    .map(({ id, text }) => ({
+      id,
+      text,
+      guides: guides.filter((guide) => getTool(guide.data.tool)!.section === id),
+    }))
+    .filter((section) => section.guides.length > 0);
 }
