@@ -3,6 +3,7 @@
  * 영어 안전한 이유 페이지 (/en/safety/). 한국어판(src/pages/safety.astro)과 같은 내용을 영어로 쓴다.
  */
 import DocLayout from '../../layouts/DocLayout.astro';
+import SafetyMotion from '../../components/SafetyMotion.astro';
 import { siteConfig } from '../../site.config';
 
 const localOnlyTest = `${siteConfig.sourceUrl}/blob/main/tests/e2e/local-only.ts`;
@@ -17,6 +18,8 @@ const localOnlyTest = `${siteConfig.sourceUrl}/blob/main/tests/e2e/local-only.ts
     processes them at all. This page explains how that works, and how you can check it yourself
     instead of taking our word for it.
   </p>
+
+  <SafetyMotion />
 
   <h2>How is this different from typical online tools?</h2>
   <p>
