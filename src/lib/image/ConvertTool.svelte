@@ -30,6 +30,8 @@
     itemFailed: string;
     noWebp: string;
     unreadable: string;
+    /** 설정 아래 늘 보이는 안내 (HEIC 변환: 대표 사진만, 촬영 정보 없음) */
+    note?: string;
   }
 </script>
 
@@ -211,7 +213,7 @@
         </label>
       {/each}
     </div>
-    <p class="help">{t.help[format]} {hasGif ? t.gifNote : ''}</p>
+    <p class="help">{t.help[format]} {t.note ?? ''} {hasGif ? t.gifNote : ''}</p>
   {/snippet}
 
   {#snippet meta(item: BatchItem)}
