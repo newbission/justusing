@@ -194,7 +194,8 @@ function stack(doc: FlowDoc) {
   const scale = doc.small ? 0.78 : 1;
   const width = (W + STEP * (count - 1)) * scale;
   const height = (H + STEP * (count - 1)) * scale;
-  const drawn = marks(doc.mark ?? (doc.kind === 'jpg' || doc.kind === 'png' ? 'photo' : 'lines'));
+  const photo = doc.kind === 'jpg' || doc.kind === 'png' || doc.kind === 'heic';
+  const drawn = marks(doc.mark ?? (photo ? 'photo' : 'lines'));
   return { count, scale, width, height, drawn, label: doc.kind.toUpperCase() };
 }
 

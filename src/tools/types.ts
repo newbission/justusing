@@ -43,7 +43,7 @@ export interface ToolMeta {
 /** 그림 속 종이 한 묶음 */
 export interface FlowDoc {
   /** 종이 아래 꼬리표 */
-  kind: 'pdf' | 'jpg' | 'png' | 'txt' | 'csv' | 'zip';
+  kind: 'pdf' | 'jpg' | 'png' | 'heic' | 'txt' | 'csv' | 'zip';
   /** 겹친 장수 (1~3, 기본 1) */
   count?: number;
   /** 종이 위 그림 (기본: 글 줄) */
