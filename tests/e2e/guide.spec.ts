@@ -5,10 +5,9 @@ import { expect, test } from './test';
 
 test('머리글의 가이드에서 목록으로 가고, 글을 열어 도구로 간다', async ({ page }) => {
   await page.goto('/');
-  await page
-    .getByRole('navigation', { name: '도구 분류' })
-    .getByRole('link', { name: '가이드' })
-    .click();
+  const nav = page.getByRole('navigation', { name: '도구 분류' });
+  await nav.getByRole('button', { name: '가이드', exact: true }).click();
+  await nav.getByRole('link', { name: '가이드 전체 보기' }).click();
   await expect(page).toHaveURL(/\/guide\/$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('가이드');
 
@@ -155,3 +154,59 @@ for (const prefix of ['', '/en']) {
     });
   }
 }
+
+test('가이드 목록은 카테고리별로 나뉘고 카테고리 가이드 페이지로 간다', async ({ page }) => {
+  await page.goto('/guide/');
+  await expect(page.locator('main h2')).toHaveText(['PDF 가이드', '이미지 가이드']);
+  await page.getByRole('link', { name: '이미지 가이드 묶음별로 보기' }).click();
+  await expect(page).toHaveURL(/\/guide\/image\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('이미지 가이드');
+});
+
+test('카테고리 가이드 페이지는 그 카테고리 가이드를 도구 묶음별로 보인다', async ({ page }) => {
+  await page.goto('/guide/pdf/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('PDF 가이드');
+  // 묶음 소제목은 categories.ts 순서다 (가이드 없는 묶음은 빠진다)
+  await expect(page.locator('main h2')).toHaveText([
+    '보기·추출',
+    '페이지 정리',
+    '편집',
+    '변환',
+    '최적화',
+    '보안',
+  ]);
+  const optimize = page.locator('section', { has: page.getByRole('heading', { name: '최적화' }) });
+  await expect(optimize.getByRole('link', { name: /PDF 용량 줄이는 방법/ })).toHaveAttribute(
+    'href',
+    '/guide/compress-pdf/',
+  );
+  // 이미지 가이드는 없다
+  await expect(page.getByRole('link', { name: /이미지 크기\(픽셀\) 바꾸는 방법/ })).toHaveCount(0);
+  // 위치 표시: 홈 › 가이드 › PDF 가이드
+  const breadcrumb = page.getByRole('navigation', { name: '현재 위치' });
+  await expect(breadcrumb.getByRole('listitem')).toHaveText(['홈', '가이드', 'PDF 가이드']);
+
+  // 영어판
+  await page.goto('/en/guide/image/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Image guides');
+  const links = await page
+    .locator('.guides a')
+    .evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href')));
+  expect(links.length).toBeGreaterThan(0);
+  for (const href of links) expect(href).toMatch(/^\/en\/guide\//);
+});
+
+test('가이드 글의 위치 표시가 카테고리 가이드를 거친다', async ({ page }) => {
+  await page.goto('/guide/resize-image/');
+  const breadcrumb = page.getByRole('navigation', { name: '현재 위치' });
+  await breadcrumb.getByRole('link', { name: '이미지 가이드' }).click();
+  await expect(page).toHaveURL(/\/guide\/image\/$/);
+});
+
+test('카테고리 가이드 페이지가 두 언어로 사이트맵에 있다', async ({ request }) => {
+  const sitemap = await (await request.get('/sitemap.xml')).text();
+  for (const path of ['/guide/pdf/', '/guide/image/']) {
+    expect(sitemap).toContain(`${path}</loc>`);
+    expect(sitemap).toContain(`/en${path}</loc>`);
+  }
+});
