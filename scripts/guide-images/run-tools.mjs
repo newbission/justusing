@@ -34,6 +34,7 @@ const SAMPLES = {
     tilted: '예시-기운사진.jpg',
     car: '예시-번호판사진.jpg',
     utf8Csv: '예시-주문목록-UTF8.csv',
+    heic: '예시-아이폰사진2.heic',
   },
   en: {
     report: 'sample-report.pdf',
@@ -52,6 +53,7 @@ const SAMPLES = {
     tilted: 'sample-tilted-photo.jpg',
     car: 'sample-license-plate.jpg',
     utf8Csv: 'sample-orders-utf8.csv',
+    heic: 'sample-iphone-photo-2.heic',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -381,6 +383,13 @@ const JOBS = {
       await frame.getByRole('button', { name: '변환하기' }).click();
       await save('다운로드', `${out}image-convert.${ext}`);
     }
+  },
+
+  // HEIC 변환: 세로로 들고 찍은 견본(화소는 누워 있고 회전 표시가 붙음)을 JPG로
+  async 'heic-to-jpg'({ sample, out }) {
+    await open('/image/heic-to-jpg/', sample('heic'));
+    await frame.getByRole('button', { name: '변환하기' }).click();
+    await save('다운로드', `${out}heic-to-jpg.jpg`);
   },
 
   // 위치 정보 지우기: 위치가 든 견본을 모두 지우기·위치만 지우기로
