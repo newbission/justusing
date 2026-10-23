@@ -4,7 +4,7 @@
 import type { APIRoute } from 'astro';
 import { LOCALES, localizePath } from '../i18n/locales';
 import { liveTools, visibleCategories } from '../tools/registry';
-import { guideSlugs } from '../guides';
+import { guideCategories, guideSlugs } from '../guides';
 
 export const GET: APIRoute = ({ site }) => {
   const paths = [
@@ -12,6 +12,7 @@ export const GET: APIRoute = ({ site }) => {
     ...visibleCategories.map((category) => `/${category}/`),
     ...liveTools.map((tool) => tool.href),
     '/guide/',
+    ...guideCategories.map((category) => `/guide/${category}/`),
     ...guideSlugs.map((slug) => `/guide/${slug}/`),
     '/about/',
     '/safety/',
