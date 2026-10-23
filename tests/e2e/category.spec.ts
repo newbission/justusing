@@ -12,6 +12,7 @@ test('PDF 목록은 묶음별 소제목 아래 도구를 보여준다', async ({
     '변환',
     '최적화',
     '보안',
+    'PDF 가이드',
   ]);
   const convert = page.locator('section', {
     has: page.getByRole('heading', { level: 2, name: '변환' }),
@@ -21,6 +22,13 @@ test('PDF 목록은 묶음별 소제목 아래 도구를 보여준다', async ({
     '이미지를 PDF로',
     'PDF 글자 인식 (OCR)',
   ]);
+  // 도구 목록 아래 이 카테고리 가이드로 가는 링크
+  const guides = page.locator('section', {
+    has: page.getByRole('heading', { level: 2, name: 'PDF 가이드' }),
+  });
+  await expect(
+    guides.getByRole('link', { name: 'PDF 용량 줄이는 방법 (업로드 없이)' }),
+  ).toBeVisible();
   // 모든 카드에 아이콘이 있다
   const cards = page.locator('.card');
   await expect(cards.locator('svg.tool-icon')).toHaveCount(await cards.count());
@@ -37,5 +45,6 @@ test('홈에서도 묶음별로 나누고, 영어판은 영어 소제목을 쓴�
     'Convert',
     'Optimize',
     'Security',
+    'PDF guides',
   ]);
 });
