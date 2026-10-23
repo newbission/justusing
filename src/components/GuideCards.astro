@@ -32,14 +32,15 @@ const locale = localeOf(Astro.url.pathname);
 </ul>
 
 <style>
-  .guides {
+  /* 글 페이지 본문(.doc)의 목록 들여쓰기·간격을 쓰지 않는다 */
+  :global(.doc) .guides {
     display: grid;
     gap: 12px;
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  .guides li {
+  :global(.doc) .guides li {
     margin: 0;
   }
   .card {
