@@ -655,8 +655,8 @@ def photo_size_limit(t, cache, samples, fonts):
     for path, label in paths:
         image = Image.open(path).convert('RGB')
         w, h = image.size
-        crop = image.crop((round(w * 0.44), round(h * 0.2), round(w * 0.58), round(h * 0.38)))
-        items.append((fit_width(crop, 220), label, f'{w}×{h} · {size_label(path)}'))
+        crop = image.crop((round(w * 0.47), round(h * 0.22), round(w * 0.56), round(h * 0.34)))
+        items.append((fit_width(crop, 200), label, f'{w}×{h} · {size_label(path)}'))
     return 'photo-size-limit', 'compare.png', tiles(items, *fonts)
 
 
