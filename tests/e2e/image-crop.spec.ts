@@ -124,6 +124,16 @@ test('비율을 고르면 그 비율로 자르고, 돌리면 비율도 돌아간
   await expect(frame.getByRole('button', { name: '위쪽 변' })).toBeVisible();
 });
 
+test('비율을 지킨 채 가장 작은 크기로 맞춘다', async ({ page }) => {
+  const frame = await openTool(page, 'quadrants.png');
+  await frame.getByText('16:9', { exact: true }).click();
+  await expect(frame.getByText('결과 40 × 23 px')).toBeVisible();
+  // 폭 8이면 높이가 최소 8px보다 작아지므로 비율째 키운다 (정사각형으로 풀리지 않는다)
+  await frame.getByLabel('폭 (px)').fill('8');
+  await frame.getByLabel('폭 (px)').press('Enter');
+  await expect(frame.getByText('결과 14 × 8 px')).toBeVisible();
+});
+
 test('영역과 손잡이를 방향키로 옮긴다', async ({ page }) => {
   const frame = await openTool(page, 'quadrants.png');
   const corner = frame.getByRole('button', { name: '오른쪽 아래 모서리' });
