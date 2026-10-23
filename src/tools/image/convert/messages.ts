@@ -3,7 +3,7 @@ import type { Locale } from '../../../i18n/locales';
 import type { ConvertMessages } from '../../../lib/image/ConvertTool.svelte';
 
 const ko: ConvertMessages = {
-  hint: 'JPG·PNG·WebP·GIF·BMP·AVIF 등 여러 장을 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다',
+  hint: 'JPG·PNG·WebP·HEIC·GIF·BMP·AVIF 등 여러 장을 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다',
   bar: '형식 변환',
   formatGroup: '바꿀 형식',
   formats: {
@@ -33,12 +33,11 @@ const ko: ConvertMessages = {
   itemDone: (to: string, size: string) => `완료: ${to} · ${size}`,
   itemFailed: '바꾸지 못했습니다.',
   noWebp: '이 브라우저는 WebP로 저장하지 못합니다. 다른 형식을 고르세요.',
-  unreadable:
-    '이 브라우저가 읽지 못하는 형식입니다. HEIC(아이폰 사진)는 Safari에서 열 수 있습니다.',
+  unreadable: '읽지 못하는 이미지입니다. 지원하지 않는 형식이거나 파일이 깨졌습니다.',
 };
 
 const en: ConvertMessages = {
-  hint: 'You can pick several JPG, PNG, WebP, GIF, BMP, AVIF or other images at once · Your files never leave this device',
+  hint: 'You can pick several JPG, PNG, WebP, HEIC, GIF, BMP, AVIF or other images at once · Your files never leave this device',
   bar: 'Convert',
   formatGroup: 'Convert to',
   formats: {
@@ -70,7 +69,7 @@ const en: ConvertMessages = {
   itemDone: (to: string, size: string) => `Done: ${to} · ${size}`,
   itemFailed: 'Could not convert.',
   noWebp: 'This browser cannot save WebP. Choose another format.',
-  unreadable: 'This browser cannot read this format. HEIC (iPhone photos) can be opened in Safari.',
+  unreadable: 'Cannot read this image. The format is not supported or the file is damaged.',
 };
 
 export const MESSAGES: Record<Locale, ConvertMessages> = { ko, en };
