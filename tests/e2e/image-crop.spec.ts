@@ -6,6 +6,7 @@
  */
 import type { FrameLocator } from '@playwright/test';
 import { expect, test, type Page } from './test';
+import { difference, isJpeg, limitCanvas } from './canvas-limit';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -175,6 +176,34 @@ test('예시 사진의 기울기를 바로잡아 같은 크기로 받는다', as
   expect([result.width, result.height]).toEqual([1600, 1200]);
   await frame.getByRole('button', { name: '0°로' }).click();
   await expect(frame.getByText('0.0°')).toBeVisible();
+});
+
+test('canvas 하나에 그리지 못하는 크기도 JPG로 받는다', async ({ page }) => {
+  await page.goto('/image/crop/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.getByRole('button', { name: '예시 파일로 해 보기' }).click();
+  await expect(frame.getByText('결과 1,600 × 1,200 px · JPG')).toBeVisible();
+  const whole = await download(page, frame);
+
+  // 결과(192만 화소)보다 작은 canvas만 되게 하면 줄 묶음씩 그려 직접 만든 JPG가 된다
+  await limitCanvas(page, 1_000_000);
+  const strips = await download(page, frame);
+  expect(strips.name).toBe('예시-기운사진_편집.jpg');
+  expect(isJpeg(strips.bytes)).toBe(true);
+  expect(Buffer.from(strips.bytes).equals(Buffer.from(whole.bytes))).toBe(false);
+  const diff = await difference(page, whole.bytes, strips.bytes);
+  expect(diff.sizes).toEqual([
+    [1600, 1200],
+    [1600, 1200],
+  ]);
+  expect(diff.mean).toBeLessThan(2);
+
+  // WebP는 줄 묶음으로 만들 수 없어 PNG·JPG를 권한다
+  await frame.getByText('WebP', { exact: true }).click();
+  await frame.getByRole('button', { name: '자른 이미지 받기' }).click();
+  await expect(
+    frame.getByText('이 브라우저가 이렇게 큰 이미지를 만들지 못했습니다. PNG나 JPG로'),
+  ).toBeVisible();
 });
 
 test('열 수 없는 파일은 알린다', async ({ page }) => {

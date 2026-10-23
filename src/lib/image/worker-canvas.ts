@@ -32,10 +32,20 @@ export async function openUpright(file: Blob, previewSide: number): Promise<Upri
   }
 }
 
+/**
+ * 시험(E2E)에서만 쓰는 canvas 화소 한계. 워커 전역에 `__canvasPixelLimit`(숫자)를 넣으면 그보다 큰 canvas는
+ * 만들지 못한 것으로 본다. 아이폰 Safari의 한계를 크롬 시험에서 작은 이미지로 흉내 낸다. 없으면 한계를 두지 않는다
+ */
+function testPixelLimit(): number {
+  const limit = (globalThis as { __canvasPixelLimit?: unknown }).__canvasPixelLimit;
+  return typeof limit === 'number' && limit > 0 ? limit : Infinity;
+}
+
 /** canvas를 만들었는지 맨 끝 화소로 확인한다. 한계를 넘으면 오류 없이 아무것도 그리지 않는다 (Safari) */
 export function usableContext(
   canvas: OffscreenCanvas,
 ): OffscreenCanvasRenderingContext2D | undefined {
+  if (canvas.width * canvas.height > testPixelLimit()) return undefined;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return undefined;
   const x = canvas.width - 1;
@@ -51,7 +61,8 @@ const STRIP_PIXELS = 4_000_000;
 
 /** 폭이 width인 결과를 줄 묶음으로 그릴 때 한 묶음의 줄 수 */
 export function stripRows(width: number): number {
-  return Math.max(1, Math.min(1024, Math.floor(STRIP_PIXELS / width)));
+  const pixels = Math.min(STRIP_PIXELS, testPixelLimit());
+  return Math.max(1, Math.min(1024, Math.floor(pixels / width)));
 }
 
 /** tooLarge: 이 브라우저가 그리지 못하는 크기, encode: 그 형식으로 저장하지 못함 */
