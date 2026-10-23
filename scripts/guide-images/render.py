@@ -1,7 +1,8 @@
 """
 가이드 그림 그리기. run-tools.mjs가 우리 도구로 만든 결과(.cache/guide-images/)와 견본(public/samples/)으로
 src/assets/guides/<언어>/<글>/에 PNG를 쓴다 (커밋한다. 배포용 WebP는 빌드가 만든다).
-움직이는 그림이 있는 글(MOTIONS)은 public/guide-motion/<언어>/<글>/에 애니메이션 WebP도 쓴다.
+움직이는 그림이 있는 글(MOTIONS)은 PNG 대신 public/guide-motion/<언어>/<글>/에 움직이는 WebP와 멈춘 WebP를 쓴다
+(Astro 이미지 처리가 애니메이션을 지킨다고 믿지 않고, 글이 <picture>로 직접 부른다. docs/foundations/seo-and-guides).
 
   python3 scripts/guide-images/render.py   (PyMuPDF·Pillow 필요)
 
@@ -569,9 +570,10 @@ def crop_rotate_photo(t, cache, samples, fonts):
 # ---- 움직이는 그림 (2026-10-23) ----
 # 정지 그림과 같은 칸 자리·크기로 3~4초 움직이는 그림. 재료도 같다: 견본과 도구가 만든 실제 결과
 # (끝 화면은 도구가 만든 결과 그대로). 파일은 public/guide-motion/에 쓴다. Astro 이미지 처리를 거치지 않는
-# 애니메이션 WebP다 (정지 그림은 '움직임 줄이기'를 켠 사람과 움직이는 그림을 못 쓰는 곳에 보인다).
+# 애니메이션 WebP다. 같은 곳에 멈춘 그림(<이름>-still.webp)도 쓴다: '움직임 줄이기'를 켠 사람에게 보인다.
 MOTION_OUT = os.path.join(ROOT, 'public', 'guide-motion')
 MOTION_QUALITY = 70
+STILL_QUALITY = 88
 FRAME_MS = 50  # 20fps. 멈춘 구간은 프레임 하나에 긴 시간을 준다
 WARN = (214, 96, 58)  # 지워지는 곳 표시색
 
@@ -754,7 +756,7 @@ def stitch_motion(t, cache, samples, fonts):
         return card
 
     steps = [(0, HOLD, False), (HOLD, TINT_END, True), (TINT_END, MOVE_START, False), (MOVE_START, MOVE_END, True), (MOVE_END, FINAL_END, False)]
-    return 'stitch-screenshots', 'stitched.webp', *timeline(frame, steps, 300)
+    return 'stitch-screenshots', 'stitched', *timeline(frame, steps, 300)
 
 
 def crop_motion(t, cache, samples, fonts):
@@ -832,7 +834,7 @@ def crop_motion(t, cache, samples, fonts):
         (0, HOLD, False), (HOLD, ROTATE_END, True), (ROTATE_END, BOX_START, False), (BOX_START, BOX_END, True),
         (BOX_END, MOVE_START, False), (MOVE_START, MOVE_END, True), (MOVE_END, FINAL_END, False),
     ]
-    return 'crop-rotate-photo', 'straightened.webp', *timeline(frame, steps, 300)
+    return 'crop-rotate-photo', 'straightened', *timeline(frame, steps, 300)
 
 
 # 글 주소 → 움직이는 그림 함수. 파일은 public/guide-motion/<언어>/<글>/<이름>.webp
@@ -842,14 +844,19 @@ MOTIONS = {
 }
 
 
-def save_motion(frames, durations, locale: str, slug: str, name: str, still: Image.Image):
-    # 정지 그림과 크기가 같아야 '움직임 줄이기'를 켠 사람과 글이 같은 자리에 선다
+def save_motion(frames, durations, still: Image.Image, locale: str, slug: str, name: str):
+    """움직이는 그림 <이름>.webp와 멈춘 그림 <이름>-still.webp. 둘은 크기가 같아야 글이 밀리지 않는다"""
     assert frames[0].size == still.size, (frames[0].size, still.size)
     folder = os.path.join(MOTION_OUT, locale, slug)
     os.makedirs(folder, exist_ok=True)
-    path = os.path.join(folder, name)
+    path = os.path.join(folder, f'{name}.webp')
     frames[0].save(path, 'WEBP', save_all=True, append_images=frames[1:], duration=durations, loop=0, quality=MOTION_QUALITY, method=6)
-    print(f'{locale}/{slug}/{name}  {frames[0].width}×{frames[0].height}  {len(frames)}장 {sum(durations) / 1000:.2f}초  {os.path.getsize(path) // 1024}KB')
+    still_path = os.path.join(folder, f'{name}-still.webp')
+    still.save(still_path, 'WEBP', quality=STILL_QUALITY, method=6)
+    print(
+        f'{locale}/{slug}/{name}.webp  {still.width}×{still.height}  {len(frames)}장 {sum(durations) / 1000:.2f}초  '
+        f'{os.path.getsize(path) // 1024}KB (멈춘 그림 {os.path.getsize(still_path) // 1024}KB)'
+    )
 
 
 # 글 주소 → 그림 함수 (글을 골라 다시 그릴 때 다른 글의 재료가 없어도 되게 이름으로 고른다)
@@ -893,11 +900,13 @@ def main():
                 continue
             folder, name, image = guide(t, cache, samples, fonts)
             assert folder == slug, (folder, slug)
-            save(image, locale, slug, name)
             if slug in MOTIONS:
+                # 멈춘 그림은 움직이는 그림 옆에 둔다 (움직임 줄이기를 켠 사람과 움직임을 못 쓰는 곳에 보인다)
                 folder, name, frames, durations = MOTIONS[slug](t, cache, samples, fonts)
                 assert folder == slug, (folder, slug)
-                save_motion(frames, durations, locale, slug, name, image)
+                save_motion(frames, durations, image, locale, slug, name)
+            else:
+                save(image, locale, slug, name)
 
 
 if __name__ == '__main__':
