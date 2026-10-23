@@ -89,6 +89,9 @@ TEXT = {
         'csvColumns': (2, 4, 6),
         'csvBefore': '엑셀에서 연 원본 (UTF-8, BOM 없음)',
         'csvAfter': '엑셀용 UTF-8로 바꾼 뒤',
+        'heic': '예시-아이폰사진2.heic',
+        'heicStored': 'HEIC 안의 화소 (누운 채)',
+        'heicResult': 'JPG로 바꾼 결과',
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -143,6 +146,9 @@ TEXT = {
         'csvColumns': (2, 3, 4),
         'csvBefore': 'Original opened in Excel (UTF-8, no BOM)',
         'csvAfter': 'After converting to UTF-8 with BOM',
+        'heic': 'sample-iphone-photo-2.heic',
+        'heicStored': 'Pixels inside the HEIC (lying)',
+        'heicResult': 'Converted to JPG',
     },
 }
 
@@ -658,6 +664,20 @@ def convert_image(t, cache, samples, fonts):
 CONVERT_CROP = (52, 160, 116, 206)
 
 
+def heic_to_jpg(t, cache, samples, fonts):
+    # 세로로 들고 찍은 견본: HEIC 안의 화소는 누워 있고 회전 표시(irot)만 붙어 있다. 바꾼 JPG는 바로 서 있다.
+    # 왼쪽은 결과를 회전 표시만큼 되돌려 그린 것이다 (HEIC에 담긴 화소의 모습, 그림 크기는 원본 파일 크기를 적는다)
+    heic = os.path.join(samples, t['heic'])
+    result = os.path.join(cache, 'heic-to-jpg.jpg')
+    upright = Image.open(result).convert('RGB')
+    stored = upright.transpose(Image.Transpose.ROTATE_90)
+    items = [
+        (fit_height(stored, 225), t['heicStored'], f'HEIC · {stored.width}×{stored.height} · {size_label(heic)}'),
+        (fit_height(upright, 300), t['heicResult'], f'JPG · {upright.width}×{upright.height} · {size_label(result)}'),
+    ]
+    return 'heic-to-jpg', 'upright.png', tiles(items, *fonts, gap=24)
+
+
 def stitch_screenshots(t, cache, samples, fonts):
     # 캡처 세 장과 이은 결과를 같은 비율로 줄여 나란히 둔다 (겹친 부분과 막대가 빠져 세 장 합보다 짧다)
     scale = 300 / 1334
@@ -1000,6 +1020,7 @@ GUIDES = {
     'compress-image': compress_image,
     'resize-image': resize_image,
     'convert-image': convert_image,
+    'heic-to-jpg': heic_to_jpg,
     'photo-location': photo_location,
     'stitch-screenshots': stitch_screenshots,
     'crop-rotate-photo': crop_rotate_photo,
