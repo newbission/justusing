@@ -4,12 +4,13 @@
  */
 import workerUrl from './stitch.worker.ts?worker&url';
 import { createWorker } from '../worker';
+import type { OutputType } from './process';
 import type { Seam, StitchLayout } from './stitch-layout';
 
 export type StitchFormat = 'jpg' | 'png' | 'webp';
 export type Background = 'white' | 'black' | 'transparent';
 
-export const STITCH_TYPES: Record<StitchFormat, string> = {
+export const STITCH_TYPES: Record<StitchFormat, OutputType> = {
   jpg: 'image/jpeg',
   png: 'image/png',
   webp: 'image/webp',
