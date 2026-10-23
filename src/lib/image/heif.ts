@@ -12,16 +12,18 @@
 import wasmUrl from 'libheif-js/libheif-wasm/libheif.wasm?url';
 import { createWorker } from '../worker';
 import { isHeifHead } from './heif-container';
+import { readImageInfo } from './prepare';
 import workerUrl from './heif.worker.ts?worker&url';
 
 export type HeifRequest =
   | { type: 'init'; wasm: ArrayBuffer }
-  /** preview: 긴 변을 이만큼 줄인 JPG를 달라 (없으면 원래 크기 ImageBitmap) */
-  | { type: 'decode'; id: number; file: Blob; preview?: number };
+  /** jpeg: 긴 변을 side 이하로 줄인 JPG로 달라 (없으면 원래 크기 ImageBitmap) */
+  | { type: 'decode'; id: number; file: Blob; jpeg?: { side?: number; quality: number } };
 
 export type HeifResponse =
   | { id: number; kind: 'image'; bitmap: ImageBitmap }
-  | { id: number; kind: 'preview'; width: number; height: number; preview: Blob }
+  /** width·height: 원래(바로 세운) 크기 */
+  | { id: number; kind: 'jpeg'; width: number; height: number; jpeg: Blob }
   /** decode: 깨졌거나 풀 수 없는 파일, engine: 엔진을 띄우지 못함·메모리 부족 */
   | { id: number; kind: 'error'; message: 'decode' | 'engine' };
 
@@ -118,7 +120,7 @@ function discard(worker: Worker) {
   if (next) acquire().then(next.resolve, next.reject);
 }
 
-async function call(file: Blob, preview?: number): Promise<HeifResponse> {
+async function call(file: Blob, jpeg?: { side?: number; quality: number }): Promise<HeifResponse> {
   let worker: Worker;
   try {
     worker = await acquire();
@@ -145,7 +147,7 @@ async function call(file: Blob, preview?: number): Promise<HeifResponse> {
     };
     worker.addEventListener('message', onMessage);
     worker.addEventListener('error', onError);
-    worker.postMessage({ type: 'decode', id, file, preview } satisfies HeifRequest);
+    worker.postMessage({ type: 'decode', id, file, jpeg } satisfies HeifRequest);
   });
 }
 
@@ -156,14 +158,32 @@ export async function decodeHeif(file: Blob): Promise<ImageBitmap> {
   throw new HeifError(response.kind === 'error' ? response.message : 'decode');
 }
 
-/** HEIC를 libheif로 풀어 가로·세로와 긴 변을 side로 줄인 JPG 미리보기를 만든다. 실패하면 HeifError */
-export async function previewHeif(
+/**
+ * HEIC를 libheif로 풀어 JPG로 다시 저장한다. side를 주면 긴 변을 그만큼 줄인다 (화면에 그릴 미리보기).
+ * width·height는 원래 크기. 실패하면 HeifError
+ */
+export async function heifToJpeg(
+  file: Blob,
+  options: { side?: number; quality: number },
+): Promise<{ width: number; height: number; jpeg: Blob }> {
+  const response = await call(file, options);
+  if (response.kind === 'jpeg') return response;
+  throw new HeifError(response.kind === 'error' ? response.message : 'decode');
+}
+
+/**
+ * 크기와 화면에 그릴 수 있는 그림 (목록 썸네일·비교 화면). 브라우저가 못 읽는 HEIC는 긴 변을 side로 줄인
+ * JPG, 나머지는 파일 그대로. 읽지 못하면 예외
+ */
+export async function readForDisplay(
   file: Blob,
   side: number,
-): Promise<{ width: number; height: number; preview: Blob }> {
-  const response = await call(file, side);
-  if (response.kind === 'preview') return response;
-  throw new HeifError(response.kind === 'error' ? response.message : 'decode');
+): Promise<{ width: number; height: number; display: Blob }> {
+  if (await needsHeifDecoder(file)) {
+    const { width, height, jpeg } = await heifToJpeg(file, { side, quality: 0.85 });
+    return { width, height, display: jpeg };
+  }
+  return { ...(await readImageInfo(file)), display: file };
 }
 
 /**

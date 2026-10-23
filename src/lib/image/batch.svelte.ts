@@ -2,8 +2,7 @@
  * 여러 이미지를 받아 목록으로 들고 있는다 (이미지 압축·크기 조절 같은 여러 장 도구).
  * 크기를 읽고 썸네일 주소를 만들고, 빼면 썸네일 메모리를 돌려준다. 파일은 어디로도 보내지 않는다.
  */
-import { needsHeifDecoder, previewHeif } from './heif';
-import { readImageInfo } from './prepare';
+import { readForDisplay } from './heif';
 import type { OutputType } from './process';
 
 export interface BatchItem {
@@ -89,15 +88,12 @@ export class ImageBatch {
   async #load(item: BatchItem) {
     try {
       // 브라우저가 못 읽는 HEIC(크롬 등의 아이폰 사진)는 libheif로 풀어 크기와 줄인 미리보기를 얻는다
-      const heif = this.#anyFormat && (await needsHeifDecoder(item.file));
-      const info = heif
-        ? await previewHeif(item.file, HEIF_PREVIEW_SIDE)
-        : { ...(await readImageInfo(item.file)), preview: item.file };
+      const info = await readForDisplay(item.file, HEIF_PREVIEW_SIDE);
       // 읽는 동안 목록에서 뺐으면 썸네일 주소를 만들지 않는다 (해제할 곳이 없어 메모리에 남는다)
       if (!this.items.includes(item)) return;
       item.width = info.width;
       item.height = info.height;
-      item.thumb = URL.createObjectURL(info.preview);
+      item.thumb = URL.createObjectURL(info.display);
       item.status = 'ready';
     } catch {
       item.status = 'error';
