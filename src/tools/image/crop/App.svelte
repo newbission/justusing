@@ -140,7 +140,13 @@
   /** 90° 돌리기. 자를 영역과 고른 비율도 같이 돌린다 */
   function rotate(direction: 1 | -1) {
     const before = board;
-    turn = { ...turn, quarter: (turn.quarter + direction + 4) % 4 };
+    // 뒤집기는 90° 회전 바깥(판 기준)에 걸리므로, 보이는 그림을 돌리려면 두 축을 서로 바꾼다
+    turn = {
+      ...turn,
+      quarter: (turn.quarter + direction + 4) % 4,
+      flipX: turn.flipY,
+      flipY: turn.flipX,
+    };
     rect = clampRect(turnRect(rect, before, direction), board);
     if (ratio !== 'free' && ratio !== 'original') {
       const [w, h] = ratio.split(':');
