@@ -50,7 +50,7 @@ const ko = {
   guide: {
     indexTitle: '가이드',
     indexDescription:
-      'PDF와 이미지를 다루는 방법을 단계별로 설명합니다. 설치·업로드 없이 브라우저에서 바로 따라 할 수 있습니다.',
+      'PDF·이미지·CSV 파일을 다루는 방법을 단계별로 설명합니다. 설치·업로드 없이 브라우저에서 바로 따라 할 수 있습니다.',
     published: (date: string) => `${date} 작성`,
     updated: (date: string) => `${date} 고침`,
     tryTool: '이 글의 도구',
@@ -190,7 +190,7 @@ const en: Ui = {
   guide: {
     indexTitle: 'Guides',
     indexDescription:
-      'Step-by-step guides for working with PDFs and images. Follow along right in your browser, with nothing to install or upload.',
+      'Step-by-step guides for working with PDFs, images and CSV files. Follow along right in your browser, with nothing to install or upload.',
     published: (date: string) => `Published ${date}`,
     updated: (date: string) => `Updated ${date}`,
     tryTool: 'Tool for this guide',
