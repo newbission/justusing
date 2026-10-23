@@ -98,6 +98,12 @@ test('비율을 고르면 그 비율로 자르고, 돌리면 비율도 돌아간
   const frame = await openTool(page, 'quadrants.png');
   await frame.getByText('1:1', { exact: true }).click();
   await expect(frame.getByText('결과 30 × 30 px')).toBeVisible();
+  // 비율을 지킬 때도 모서리를 방향키로 한 축씩 줄일 수 있다
+  const corner = frame.getByRole('button', { name: '오른쪽 아래 모서리' });
+  await corner.press('ArrowLeft');
+  await expect(frame.getByText('결과 29 × 29 px')).toBeVisible();
+  await corner.press('ArrowUp');
+  await expect(frame.getByText('결과 28 × 28 px')).toBeVisible();
   await frame.getByText('4:3', { exact: true }).click();
   await expect(frame.getByText('결과 40 × 30 px')).toBeVisible();
   await frame.getByRole('button', { name: '왼쪽으로 90°' }).click();
