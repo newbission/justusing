@@ -32,6 +32,7 @@ const SAMPLES = {
     chat2: '예시-대화캡처2.png',
     chat3: '예시-대화캡처3.png',
     tilted: '예시-기운사진.jpg',
+    car: '예시-번호판사진.jpg',
   },
   en: {
     report: 'sample-report.pdf',
@@ -48,6 +49,7 @@ const SAMPLES = {
     chat2: 'sample-chat-2.png',
     chat3: 'sample-chat-3.png',
     tilted: 'sample-tilted-photo.jpg',
+    car: 'sample-license-plate.jpg',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -405,6 +407,23 @@ const JOBS = {
     await frame.getByLabel('기울기 바로잡기').fill('4');
     await frame.getByText('4:5', { exact: true }).click();
     await save('자른 이미지 받기', `${out}crop.jpg`);
+  },
+
+  // 모자이크: 견본의 번호판을 흐리게·모자이크·검게 칠하기로 (세기는 기본 5)
+  async mosaic({ sample, out }) {
+    for (const [effect, label] of [
+      ['blur', '흐리게'],
+      ['mosaic', '모자이크'],
+      ['fill', '검게 칠하기'],
+    ]) {
+      await open('/image/mosaic/', sample('car'));
+      await frame.locator('.view canvas').waitFor();
+      // 사진을 열면 바깥 페이지가 도구 칸으로 스크롤한다. 끝난 뒤에 끌어 그린다
+      await page.waitForFunction(() => scrollY > 0);
+      await frame.getByText(label, { exact: true }).click();
+      await drag('.view canvas', [0.385, 0.645], [0.615, 0.745]);
+      await save('가린 이미지 받기', `${out}mosaic-${effect}.jpg`);
+    }
   },
 };
 
