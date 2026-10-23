@@ -3,6 +3,7 @@ title: How to stitch long screenshots into one image
 description: When you capture a chat or a long page in several screenshots, here is how to join them into one long image. Learn how overlapping parts are removed, how to take screenshots that join well, and which format to choose or when to split.
 tool: image/stitch
 published: 2026-10-22
+updated: 2026-10-23
 order: 25
 ---
 
@@ -45,7 +46,7 @@ If the automatic result is wrong, each seam in the list shows how many pixels ar
 | WebP   | You want it smaller than JPG. Some programs cannot open it                   |
 | PDF    | You print it or send it as a document. Split into A4-shaped pages in one PDF |
 
-Screenshots are mostly text and flat colors, so PNG files are often not large. One JPG can hold up to 32,767px and one WebP up to 16,383px, so for longer results save as PNG or split them.
+Screenshots are mostly text and flat colors, so PNG files are often not large. One JPG can hold up to 65,500px and one WebP up to 16,383px, so for longer results save as PNG or split them.
 
 ## Split it if it is too long
 

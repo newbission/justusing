@@ -46,9 +46,12 @@
   const FORMATS: Format[] = ['jpg', 'png', 'webp', 'pdf'];
   /** JPG·WebP 화질. 글자가 많은 캡처라 눈에 띄는 손실이 없게 높게 둔다 */
   const QUALITY = 0.92;
-  /** 한 장의 가장 긴 변: JPG는 canvas 한계, WebP는 형식 한계 */
+  /**
+   * 한 장의 가장 긴 변: JPG는 형식 한계(jpeg-stream.ts의 JPEG_MAX_SIDE, canvas보다 길면 줄 묶음으로 만든다),
+   * WebP는 형식 한계, PDF는 쪽마다 나눈 JPG의 canvas 한계
+   */
   const MAX_SIDE: Record<Format, number> = {
-    jpg: 32_767,
+    jpg: 65_500,
     png: Infinity,
     webp: 16_383,
     pdf: 32_767,
