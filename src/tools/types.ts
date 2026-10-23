@@ -75,7 +75,9 @@ export type FlowMark =
   | 'form'
   | 'order'
   /** 이은 자리 (이어 붙이기) */
-  | 'stitch';
+  | 'stitch'
+  /** 사진 위 잘게 나뉜 칸 (모자이크) */
+  | 'mosaic';
 
 export function defineTool(meta: ToolMeta): ToolMeta {
   return meta;
