@@ -36,3 +36,21 @@ test('영어 도구 페이지는 영어 가이드를 연다', async ({ page }) =
   );
   await expect(dialog.locator('[data-guide-body] h2').first()).toBeVisible();
 });
+
+test('가이드 창 안의 움직이는 그림도 깨지지 않고 움직임 줄이기를 따른다', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/image/stitch/');
+  await page.getByRole('button', { name: '가이드 보기' }).click();
+  const image = page.getByRole('dialog').locator('[data-guide-body] picture img');
+  const currentSrc = () => image.evaluate((node: HTMLImageElement) => node.currentSrc);
+  await image.scrollIntoViewIfNeeded();
+  await expect.poll(currentSrc).toContain('/guide-motion/ko/stitch-screenshots/stitched.webp');
+  await expect
+    .poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth))
+    .toBeGreaterThan(0);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect
+    .poll(currentSrc)
+    .toContain('/guide-motion/ko/stitch-screenshots/stitched-still.webp');
+});

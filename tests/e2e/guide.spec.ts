@@ -98,3 +98,60 @@ test('가이드 그림은 설명(alt)과 크기가 있고 실제로 열린다', 
   // 시범으로 그림을 넣은 4편 (나누기·모아찍기·압축·가리기) × 두 언어
   expect(total).toBeGreaterThanOrEqual(8);
 });
+
+// 움직이는 그림이 있는 가이드: [글 주소, 그림 이름]
+const MOTION_GUIDES = [
+  ['stitch-screenshots', 'stitched'],
+  ['crop-rotate-photo', 'straightened'],
+] as const;
+
+for (const prefix of ['', '/en']) {
+  for (const [slug, name] of MOTION_GUIDES) {
+    const locale = prefix ? 'en' : 'ko';
+    test(`${locale} ${slug} 가이드 그림은 움직이고, 움직임 줄이기를 켜면 멈춘 그림이다`, async ({
+      page,
+      request,
+    }) => {
+      const motionUrl = `/guide-motion/${locale}/${slug}/${name}.webp`;
+      const stillUrl = `/guide-motion/${locale}/${slug}/${name}-still.webp`;
+      const image = page.locator('.doc picture img');
+      const currentSrc = () => image.evaluate((node: HTMLImageElement) => node.currentSrc);
+      const naturalSize = () =>
+        image.evaluate((node: HTMLImageElement) => [node.naturalWidth, node.naturalHeight]);
+
+      // 움직임을 줄이지 않았을 때: 움직이는 그림을 그린다
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.goto(`${prefix}/guide/${slug}/`);
+      await image.scrollIntoViewIfNeeded();
+      await expect.poll(currentSrc).toContain(motionUrl);
+      await expect.poll(async () => (await naturalSize())[0]).toBeGreaterThan(0);
+
+      // 움직임 줄이기: 멈춘 그림
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.reload();
+      await image.scrollIntoViewIfNeeded();
+      await expect.poll(currentSrc).toContain(stillUrl);
+      await expect.poll(async () => (await naturalSize())[0]).toBeGreaterThan(0);
+
+      // 멈춘 그림 크기가 적어 둔 width/height와 같아 글이 밀리지 않는다
+      const width = Number(await image.getAttribute('width'));
+      const height = Number(await image.getAttribute('height'));
+      expect(await naturalSize()).toEqual([width, height]);
+      const still = await (await request.get(stillUrl)).body();
+      expect(still.length).toBeLessThan(150 * 1024);
+
+      // 움직이는 파일은 정말 애니메이션이고 크기가 같으며, 한 편에 몇백 KB 이하다
+      const bytes = await (await request.get(motionUrl)).body();
+      expect(bytes.subarray(0, 4).toString()).toBe('RIFF');
+      expect(bytes.subarray(8, 12).toString()).toBe('WEBP');
+      expect(bytes.subarray(12, 16).toString()).toBe('VP8X');
+      expect(bytes[20]! & 0x02, '애니메이션 표시').toBe(0x02);
+      expect(1 + bytes.readUIntLE(24, 3)).toBe(width);
+      expect(1 + bytes.readUIntLE(27, 3)).toBe(height);
+      expect(bytes.toString('latin1').split('ANMF').length - 1, '프레임 수').toBeGreaterThanOrEqual(
+        10,
+      );
+      expect(bytes.length).toBeLessThan(500 * 1024);
+    });
+  }
+}
