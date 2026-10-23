@@ -387,6 +387,8 @@ Co-Authored-By: ...
   - [x] 압축 (`/image/compress/`): JPG·WebP는 화질, PNG는 색 수로 줄인다. 원본보다 크면 원본 그대로
   - [x] 크기 조절 (`/image/resize/`): 비율(%) 또는 가로·세로 픽셀(비율 유지·정확히)
   - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF)와 HEIC를 JPG·PNG·WebP로
+  - [x] 용량 맞추기 (`/image/target-size/`, 2026-10-23): "200KB 이하"처럼 정한 용량 이하로. 화질을 이분 탐색으로 낮추고(크기를 줄여도 되면 60%까지),
+        그래도 크면 가로·세로를 줄인다. 공통 워커의 `limit` 경로(`fitImage`, `src/lib/image/fit-size.ts`). 1KB = 1,000바이트로 센다
   - [x] 증명사진 (`/image/id-photo/`, 2026-10-20): MediaPipe Face Landmarker로 얼굴을 찾아 여권 규격(3.5×4.5cm,
         머리 3.2~3.6cm)에 맞게 자르기·크기·기울기를 바꾼다(`src/lib/face/`). 얼굴 보정은 하지 않는다(여권 규정).
         배경은 고를 때만 바꾸고(Selfie Segmenter) 여권에는 원래 사진을 쓰라고 알린다. 좌우 반전(앞 카메라).
