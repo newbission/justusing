@@ -31,6 +31,7 @@ const SAMPLES = {
     chat1: '예시-대화캡처1.png',
     chat2: '예시-대화캡처2.png',
     chat3: '예시-대화캡처3.png',
+    tilted: '예시-기운사진.jpg',
   },
   en: {
     report: 'sample-report.pdf',
@@ -46,6 +47,7 @@ const SAMPLES = {
     chat1: 'sample-chat-1.png',
     chat2: 'sample-chat-2.png',
     chat3: 'sample-chat-3.png',
+    tilted: 'sample-tilted-photo.jpg',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -397,6 +399,12 @@ const JOBS = {
     await frame.getByText('PNG', { exact: true }).click();
     await frame.getByRole('button', { name: '이어 붙이기' }).click();
     await save('다운로드', `${out}stitch.png`);
+  },
+  async crop({ sample, out }) {
+    await open('/image/crop/', sample('tilted'));
+    await frame.getByLabel('기울기 바로잡기').fill('4');
+    await frame.getByText('4:5', { exact: true }).click();
+    await save('자른 이미지 받기', `${out}crop.jpg`);
   },
 };
 

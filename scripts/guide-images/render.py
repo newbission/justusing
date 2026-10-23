@@ -71,6 +71,9 @@ TEXT = {
         'scrolls': ['예시-대화캡처1.png', '예시-대화캡처2.png', '예시-대화캡처3.png'],
         'capture': lambda n: f'캡처 {n}',
         'stitched': '이은 결과',
+        'tilted': '예시-기운사진.jpg',
+        'tiltedLabel': '원본: 수평선이 기울었음',
+        'straightened': '4° 바로잡고 4:5로 자름',
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -112,6 +115,9 @@ TEXT = {
         'scrolls': ['sample-chat-1.png', 'sample-chat-2.png', 'sample-chat-3.png'],
         'capture': lambda n: f'Screenshot {n}',
         'stitched': 'Stitched',
+        'tilted': 'sample-tilted-photo.jpg',
+        'tiltedLabel': 'Original: tilted horizon',
+        'straightened': 'Straightened 4°, cropped to 4:5',
     },
 }
 
@@ -533,6 +539,15 @@ def stitch_screenshots(t, cache, samples, fonts):
         items.append((fit_width(image, round(image.width * scale), Image.LANCZOS), label, f'{image.width}×{image.height}'))
     return 'stitch-screenshots', 'stitched.png', tiles(items, *fonts, gap=20)
 
+def crop_rotate_photo(t, cache, samples, fonts):
+    # 기운 원본과 기울기를 바로잡아 4:5로 자른 결과를 같은 높이로 나란히 둔다
+    items = []
+    for path, label in [(os.path.join(samples, t['tilted']), t['tiltedLabel']), (os.path.join(cache, 'crop.jpg'), t['straightened'])]:
+        image = Image.open(path).convert('RGB')
+        small = image.resize((round(image.width * 300 / image.height), 300), Image.LANCZOS)
+        items.append((small, label, f'{image.width}×{image.height}'))
+    return 'crop-rotate-photo', 'straightened.png', tiles(items, *fonts, gap=20)
+
 # 글 주소 → 그림 함수 (글을 골라 다시 그릴 때 다른 글의 재료가 없어도 되게 이름으로 고른다)
 GUIDES = {
     'compress-pdf': compress_pdf,
@@ -555,6 +570,7 @@ GUIDES = {
     'convert-image': convert_image,
     'photo-location': photo_location,
     'stitch-screenshots': stitch_screenshots,
+    'crop-rotate-photo': crop_rotate_photo,
 }
 
 
