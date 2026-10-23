@@ -142,6 +142,91 @@ const ko = {
       '파일을 다루는 도구 화면은 브라우저가 따로 떼어 놓은 잠긴 방입니다. 바깥의 광고는 방 안을 들여다볼 수 없고, 방 안에서는 이 사이트 말고 다른 곳으로 연결할 수 없습니다.',
     more: '직접 확인하는 법 보기',
   },
+  /** /safety/의 장면 넷짜리 움직이는 그림 (SafetyMotion). 그림 속 글은 짧게, 설명은 장면 글에 */
+  safetyMotion: {
+    title: '그림으로 보기: 파일이 지나가는 길',
+    lead: '도구 칸을 어떻게 떼어 놓는지, 파일이 어디로 들어가 어디로 나오는지 네 장면으로 보여 드립니다.',
+    scenesLabel: '장면 고르기',
+    step: (n: number, total: number) => `장면 ${n} / ${total}`,
+    pause: '일시정지',
+    play: '재생',
+    replay: '처음부터 다시 보기',
+    // 그림 속 이름표
+    outerPage: '바깥 페이지',
+    ad: '광고',
+    analytics: '방문 통계',
+    toolArea: '도구 칸 · 격리된 iframe',
+    myFile: '내 파일',
+    downloads: '다운로드 폴더',
+    myDevice: '내 기기',
+    thisSite: '이 사이트',
+    otherSites: '다른 사이트',
+    internet: '인터넷',
+    noOrigin: 'allow-same-origin 없음 → 출처 없는 칸',
+    onlyOurFiles: '이 사이트 파일만 받고, 다른 곳엔 연결 못 함',
+    ourFilesOnly: '이 사이트 파일만',
+    blocked: '연결 막힘',
+    dropHere: '여기에 놓으세요',
+    frameFills: '도구 칸이 화면 전체로 넓어졌어요',
+    worker: '작업자 (Web Worker)',
+    program: '처리 프로그램',
+    noUpload: '파일 전송 없음',
+    download: '다운로드',
+    savedDirectly: '바로 저장',
+    noInternet: '인터넷 전송 없음',
+    scenes: [
+      {
+        name: '두 칸',
+        title: '한 페이지 안의 두 칸',
+        text: [
+          {
+            text: '도구 페이지는 두 칸으로 나뉩니다. 바깥 페이지에서는 광고와 방문 통계 스크립트가 돌고, 파일을 고르고 처리하는 도구 칸은 그 안에 끼워 넣은 따로 된 문서(iframe)입니다.',
+          },
+          {
+            text: '바깥 스크립트가 도구 칸 안의 파일 이름이나 내용을 읽으려 해도 브라우저가 막습니다.',
+          },
+        ],
+      },
+      {
+        name: '막는 법',
+        title: '벽을 세우는 두 가지',
+        text: [
+          {
+            term: 'sandbox',
+            text: '도구 칸에 allow-same-origin을 주지 않아 ‘출처 없는’ 문서로 만듭니다. 브라우저는 출처가 다른 문서끼리 서로의 내용을 읽지 못하게 하므로, 바깥 페이지와 도구 칸은 서로 안을 볼 수 없습니다.',
+          },
+          {
+            term: '보안 정책(CSP)',
+            text: "도구 칸은 모든 연결을 막아 둔 상태(default-src 'none')에서 이 사이트의 파일을 받는 것만 열어 둡니다. 도구 코드 자신도 다른 주소로는 연결할 수 없습니다.",
+          },
+        ],
+      },
+      {
+        name: '처리',
+        title: '파일은 도구 칸 안에서만',
+        text: [
+          {
+            text: '파일을 끌고 페이지에 들어오면 도구 칸이 잠깐 화면 전체로 넓어져, 어디에 놓든 도구 칸이 받습니다. 바깥에 떨어지더라도 페이지가 가장 먼저 가로채 다른 스크립트에 넘기지 않습니다.',
+          },
+          {
+            text: '처리는 도구 칸 안의 작업자(Web Worker)가 이 기기에서 합니다. 이 사이트에서 받는 것은 처리 프로그램뿐이고, 파일을 받아 줄 서버 프로그램은 없습니다.',
+          },
+        ],
+      },
+      {
+        name: '받기',
+        title: '결과 파일은 곧장 내 기기로',
+        text: [
+          {
+            text: '다운로드를 누르면 도구 칸 안에서 만든 결과 파일을 브라우저가 바로 내 기기에 저장합니다. 바깥 페이지나 광고를 거치지 않고, 인터넷으로도 나가지 않습니다.',
+          },
+          {
+            text: '저장된 파일은 내 기기의 보통 파일이라 이 사이트가 다시 읽거나 지울 수 없습니다. 그 뒤의 관리는 기기의 보안에 달려 있습니다.',
+          },
+        ],
+      },
+    ],
+  },
 };
 
 type Ui = typeof ko;
@@ -282,6 +367,89 @@ const en: Ui = {
     adsText:
       'The tool area that handles your files is a locked room that your browser keeps separate. Ads outside cannot look in, and the room cannot connect anywhere other than this site.',
     more: 'See how to check it yourself',
+  },
+  safetyMotion: {
+    title: 'See it step by step: where your file goes',
+    lead: 'Four scenes show how the tool area is sealed off, and where your file goes in and comes out.',
+    scenesLabel: 'Choose a scene',
+    step: (n: number, total: number) => `Scene ${n} of ${total}`,
+    pause: 'Pause',
+    play: 'Play',
+    replay: 'Play again from the start',
+    outerPage: 'Outer page',
+    ad: 'Ad',
+    analytics: 'Analytics',
+    toolArea: 'Tool area · isolated iframe',
+    myFile: 'Your file',
+    downloads: 'Downloads',
+    myDevice: 'Your device',
+    thisSite: 'This site',
+    otherSites: 'Other sites',
+    internet: 'Internet',
+    noOrigin: 'No allow-same-origin → an area with no origin',
+    onlyOurFiles: "Only this site's files, no other connections",
+    ourFilesOnly: 'This site only',
+    blocked: 'Blocked',
+    dropHere: 'Drop it here',
+    frameFills: 'The tool area now fills the page',
+    worker: 'Web Worker',
+    program: 'Program files',
+    noUpload: 'No upload',
+    download: 'Download',
+    savedDirectly: 'Saved directly',
+    noInternet: 'Nothing sent',
+    scenes: [
+      {
+        name: 'Two areas',
+        title: 'Two areas on one page',
+        text: [
+          {
+            text: 'A tool page is split in two. Ads and analytics scripts run on the outer page, while the tool area where you pick and process files is a separate document (an iframe) set inside it.',
+          },
+          {
+            text: 'If an outer script tries to read file names or contents inside the tool area, the browser stops it.',
+          },
+        ],
+      },
+      {
+        name: 'The seal',
+        title: 'Two things build the wall',
+        text: [
+          {
+            term: 'sandbox',
+            text: 'The tool area is not given allow-same-origin, so it becomes a document with no origin. Browsers do not let documents from different origins read each other, so the outer page and the tool area cannot look inside each other.',
+          },
+          {
+            term: 'Security policy (CSP)',
+            text: "The tool area starts with every connection blocked (default-src 'none') and only opens the way to download this site's files. Even the tool's own code cannot connect anywhere else.",
+          },
+        ],
+      },
+      {
+        name: 'Processing',
+        title: 'Files stay inside the tool area',
+        text: [
+          {
+            text: 'When you drag a file onto the page, the tool area briefly grows to fill the screen, so wherever you drop it, the tool area receives it. Even if it lands on the outer page, the page catches it first and does not pass it to other scripts.',
+          },
+          {
+            text: 'A worker (Web Worker) inside the tool area does the processing on this device. All it gets from this site is the program; there is no server program to receive your file.',
+          },
+        ],
+      },
+      {
+        name: 'Download',
+        title: 'The result goes straight to your device',
+        text: [
+          {
+            text: 'When you press Download, the browser saves the result made inside the tool area straight to your device. It does not pass through the outer page or the ads, and it is not sent over the internet.',
+          },
+          {
+            text: 'The saved file is an ordinary file on your device, so this site cannot read or delete it again. What happens to it after that depends on the security of your device.',
+          },
+        ],
+      },
+    ],
   },
 };
 
