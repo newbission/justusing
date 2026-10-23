@@ -89,7 +89,9 @@ export function clampRect(rect: Rect, board: Size, ratio?: number): Rect {
   let width = rect.width;
   let height = rect.height;
   if (ratio !== undefined) {
-    // 비율을 지킬 때는 두 변을 함께 늘리고 줄인다 (한 변씩 맞추면 비율이 풀린다)
+    // 비율을 지킬 때는 두 변을 함께 늘리고 줄인다 (한 변씩 맞추면 비율이 풀린다).
+    // 0 이하(숫자 칸에 0)면 배율이 무한대가 되므로 먼저 1로 올린다
+    width = Math.max(1, width);
     height = width / ratio;
     const min = Math.min(MIN_SIDE, board.width, board.height);
     const grow = Math.max(1, min / Math.min(width, height));
