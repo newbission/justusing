@@ -1,24 +1,42 @@
 ---
 /**
- * 가이드 목록 (/guide/). 글마다 제목·설명과 안내하는 도구 아이콘을 카드로 보여준다.
+ * 가이드 목록 (/guide/). 카테고리(PDF·이미지)별 소제목 아래 글마다 제목·설명과 안내하는 도구 아이콘을 카드로 보여주고,
+ * 카테고리마다 도구 묶음별로 나눈 카테고리 가이드 페이지(/guide/pdf/)로 잇는다.
  */
 import DocLayout from '../../layouts/DocLayout.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import GuideCards from '../../components/GuideCards.astro';
-import { guidesIn } from '../../guides';
-import { localeOf } from '../../i18n/locales';
+import { guideCategories, guidesInCategory } from '../../guides';
+import { localeOf, localizePath } from '../../i18n/locales';
 import { ui } from '../../i18n/ui';
+import { CATEGORIES } from '../../tools/categories';
 
 const locale = localeOf(Astro.url.pathname);
 const t = ui(locale).guide;
-const guides = guidesIn(locale);
+const categories = guideCategories.map((category) => {
+  const name = CATEGORIES[category].text[locale].name;
+  return {
+    category,
+    title: t.categoryTitle(name),
+    link: t.categoryLink(name),
+    guides: guidesInCategory(category, locale),
+  };
+});
 ---
 
 <DocLayout title={t.indexTitle} description={t.indexDescription}>
   <p>{t.indexDescription}</p>
-  <div class="list">
-    <GuideCards {guides} />
-  </div>
+  {categories.map(({ category, title, link, guides }) => (
+    <section class="category">
+      <div class="category-head">
+        <h2>{title}</h2>
+        <a href={localizePath(`/guide/${category}/`, locale)}>
+          {link} <span aria-hidden="true">→</span>
+        </a>
+      </div>
+      <GuideCards {guides} />
+    </section>
+  ))}
 
   <Fragment slot="after">
     <div class="in-content">
@@ -28,8 +46,25 @@ const guides = guidesIn(locale);
 </DocLayout>
 
 <style>
-  .list {
-    margin-top: 24px;
+  .category {
+    margin-top: 32px;
+  }
+  .category + .category {
+    margin-top: 48px;
+  }
+  .category-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin-bottom: 12px;
+  }
+  .category-head h2 {
+    margin: 0;
+  }
+  .category-head a {
+    font-size: 15px;
   }
   .in-content {
     margin: 48px 0;

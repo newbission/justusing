@@ -66,6 +66,7 @@ const ko = {
     categoryTitle: (name: string) => `${name} 가이드`,
     categoryDescription: (name: string) =>
       `${name} 도구로 하는 일을 도구 묶음별로 나눠 설명합니다. 설치·업로드 없이 브라우저에서 바로 따라 할 수 있습니다.`,
+    categoryLink: (name: string) => `${name} 가이드 묶음별로 보기`,
   },
   category: {
     title: (name: string) => `${name} 도구`,
@@ -201,6 +202,7 @@ const en: Ui = {
     categoryTitle: (name: string) => `${name} guides`,
     categoryDescription: (name: string) =>
       `Step-by-step guides for the ${name} tools, grouped by task. Follow along right in your browser, with nothing to install or upload.`,
+    categoryLink: (name: string) => `${name} guides by task`,
   },
   category: {
     title: (name: string) => `${name} tools`,
