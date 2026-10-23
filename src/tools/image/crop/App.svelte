@@ -577,7 +577,7 @@
     content: '';
     position: absolute;
     pointer-events: none;
-    border: 0 solid color-mix(in srgb, #fff 55%, transparent);
+    border: 0 solid color-mix(in srgb, var(--color-paper) 55%, transparent);
   }
   .area::before {
     top: 0;
