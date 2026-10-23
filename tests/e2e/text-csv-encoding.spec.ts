@@ -187,6 +187,17 @@ test('빈 파일과 글자 파일이 아닌 것은 빼고 알린다', async ({ p
   await expect(frame.getByText('완료: 파일 1개를 바꿨습니다.')).toBeVisible();
 });
 
+test('한글이 많은 BOM 없는 UTF-16 파일도 글자 파일로 알아낸다', async ({ page }) => {
+  // 0 바이트가 쉼표·줄바꿈 자리에만 있고, '가'(U+AC00)는 반대쪽에 0 바이트를 만든다
+  const text = '이름,메모\r\n홍길동,가나다라 가게\r\n김예시,안녕하세요\r\n';
+  const frame = await openTool(page, [csv('utf16.csv', Buffer.from(text, 'utf16le'))]);
+  await expect(frame.getByText('UTF-16 LE · 1KB')).toBeVisible();
+  await expect(frame.getByRole('cell', { name: '가나다라 가게' }).last()).toBeVisible();
+  await frame.getByRole('button', { name: '변환하기' }).click();
+  const file = await download(page, () => frame.getByRole('button', { name: '다운로드' }).click());
+  expect(file.bytes.equals(Buffer.concat([BOM, Buffer.from(text)]))).toBe(true);
+});
+
 test('CSV가 아닌 형식은 받지 않는다', async ({ page }) => {
   const frame = await openTool(page, ['three-pages.pdf']);
   await expect(frame.getByRole('button', { name: '예시 파일로 해 보기' })).toBeVisible();
