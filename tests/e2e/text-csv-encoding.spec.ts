@@ -198,6 +198,13 @@ test('한글이 많은 BOM 없는 UTF-16 파일도 글자 파일로 알아낸다
   expect(file.bytes.equals(Buffer.concat([BOM, Buffer.from(text)]))).toBe(true);
 });
 
+test('미리보기는 따옴표 안의 쉼표를 칸 나눔으로 세지 않는다', async ({ page }) => {
+  const text = '"Last, First, Middle";City\n"Doe, Jane, A";Paris\n';
+  const frame = await openTool(page, [csv('semicolon.csv', Buffer.from(text))]);
+  await expect(frame.getByRole('cell', { name: 'Doe, Jane, A', exact: true })).toBeVisible();
+  await expect(frame.getByRole('cell', { name: 'Paris', exact: true })).toBeVisible();
+});
+
 test('CSV가 아닌 형식은 받지 않는다', async ({ page }) => {
   const frame = await openTool(page, ['three-pages.pdf']);
   await expect(frame.getByRole('button', { name: '예시 파일로 해 보기' })).toBeVisible();

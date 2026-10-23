@@ -242,15 +242,19 @@ export interface Preview {
   more: boolean;
 }
 
-/** 칸 나누는 글자: TSV는 탭, 그 밖에는 첫 줄에 많은 것 */
+/** 칸 나누는 글자: TSV는 탭, 그 밖에는 첫 줄에서 따옴표 밖에 가장 많은 것 */
 function delimiterOf(text: string, name: string): string {
   if (/\.tsv$/i.test(name)) return '\t';
-  const end = text.search(/\r|\n/);
-  const first = end === -1 ? text : text.slice(0, end);
-  const count = (char: string) => first.split(char).length - 1;
-  const candidates = [',', '\t', ';'].map((char) => ({ char, n: count(char) }));
-  candidates.sort((a, b) => b.n - a.n);
-  return candidates[0]!.n > 0 ? candidates[0]!.char : ',';
+  const counts: Record<string, number> = { ',': 0, '\t': 0, ';': 0 };
+  let quoted = false;
+  for (const char of text) {
+    if (char === '"') quoted = !quoted;
+    else if (quoted) continue;
+    else if (char === '\r' || char === '\n') break;
+    else if (char in counts) counts[char]!++;
+  }
+  const [best, n] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]!;
+  return n > 0 ? best : ',';
 }
 
 /**
