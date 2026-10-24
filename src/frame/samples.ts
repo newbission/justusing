@@ -35,7 +35,9 @@ type SampleKey =
   | 'heic1'
   | 'heic2'
   /** 직접 그린 짧은 동영상 (공이 튀어 오름, 동영상을 GIF로·장면 캡처) */
-  | 'ballClip';
+  | 'ballClip'
+  /** 해 지는 바다를 지나는 돛단배 동영상 (그림·소리 모두 직접 만든 것, make_sea_video.py) */
+  | 'seaClip';
 
 /** 언어별 파일 이름 (make_samples.py의 TEXT와 같게) */
 const NAMES: Record<Locale, Record<SampleKey, string>> = {
@@ -63,6 +65,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     heic1: '예시-아이폰사진1.heic',
     heic2: '예시-아이폰사진2.heic',
     ballClip: '예시-공튀기기.mp4',
+    seaClip: '예시-바다영상.mp4',
   },
   en: {
     report: 'sample-report.pdf',
@@ -88,6 +91,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     heic1: 'sample-iphone-photo-1.heic',
     heic2: 'sample-iphone-photo-2.heic',
     ballClip: 'sample-bouncing-ball.mp4',
+    seaClip: 'sample-sea-video.mp4',
   },
 };
 
@@ -132,6 +136,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'text/csv-encoding': ['utf8Csv', 'legacyCsv'],
   'video/to-gif': ['ballClip'],
   'video/frame-capture': ['ballClip'],
+  'video/trim': ['seaClip'],
 };
 
 const TYPES: Record<string, string> = {
