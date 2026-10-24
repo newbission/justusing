@@ -62,6 +62,9 @@ export class VideoError extends Error {
   }
 }
 
+/** 빠르게 자를 때 시작 앞으로 넓혀 담을 수 있는 가장 긴 길이 (초). Matroska 한계(32.767초)보다 넉넉히 작게 */
+export const FAST_TRIM_MAX_LEAD = 10;
+
 /** 비트레이트(bit/s)로 정한 화질. new Quality(숫자)는 비트레이트가 아니라 화질 단계(0~1)라 쓰지 않는다 */
 function bitrate(value: number) {
   return new Quality({ bitrate: Math.max(1, Math.round(value)) });
@@ -231,8 +234,12 @@ async function planTrim(input: Input, job: TrimJob): Promise<Plan> {
     needs: track ? 'video' : 'audio',
     options: {
       trim: { start: job.start, end: job.end },
-      // 빠르게: 시작 앞의 가장 가까운 키프레임부터 옮기고 고른 시점부터 재생되게 적는다 (MP4·MOV는 편집 목록)
-      copy: job.exact ? { mode: 'preferred' } : { mode: 'forced', boundaryPolicy: 'expand' },
+      // 빠르게: 시작 앞의 가장 가까운 키프레임부터 옮기고 고른 시점부터 재생되게 적는다 (MP4·MOV는 편집 목록).
+      // 키프레임이 너무 멀면 옮기지 않는다(실패 'copy' → 화면이 '정확하게'를 권한다). WebM·MKV는 32.767초 넘게 앞선
+      // 블록을 담지 못해 말없이 버리고(풀 수 없는 파일이 됨), MP4·MOV도 숨긴 앞부분이 길게 파일에 남는다
+      copy: job.exact
+        ? { mode: 'preferred' }
+        : { mode: 'forced', boundaryPolicy: 'expand', boundaryTolerance: FAST_TRIM_MAX_LEAD },
       video: job.exact ? { forceTranscode: true, codec, quality: new Quality('high') } : {},
       audio: {},
     },
