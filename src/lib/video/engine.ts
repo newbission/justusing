@@ -38,6 +38,7 @@ import {
   type OutputFormat,
 } from 'mediabunny';
 import { BlobCollector } from './blob-target';
+import { AUDIO_BITRATE, audioPlan } from './plan';
 import { SHORT_SIDES, guessBitrate, scaledSize } from './sizes';
 import type {
   AudioJob,
@@ -189,24 +190,18 @@ export async function probe(file: Blob): Promise<VideoInfo> {
   }
 }
 
-/** 다시 저장할 소리 설정. 옮길 수 있으면 옮기고(그대로), 아니면 그 그릇에 맞는 코덱으로 다시 저장한다 */
+/** 다시 저장할 소리 설정 (규칙은 plan.ts의 audioPlan) */
 function audioFor(container: 'mp4' | 'webm') {
   return async (track: InputAudioTrack): Promise<ConversionAudioOptions> => {
-    const codec = await track.getCodec();
     const channels = Math.min(2, await track.getNumberOfChannels());
-    if (container === 'mp4') {
-      if (codec === 'aac' || codec === 'mp3') return {};
-      if (await canEncodeAudio('aac', { numberOfChannels: channels, sampleRate: 48000 })) {
-        return { codec: 'aac', quality: bitrate(128_000), numberOfChannels: channels };
-      }
-      // AAC로 다시 저장하지 못하면 MP4에 들어가는 원래 소리(Opus·FLAC)를 그대로 옮긴다
-      return codec === 'opus' || codec === 'flac' ? {} : { discard: true };
-    }
-    if (codec === 'opus' || codec === 'vorbis') return {};
-    if (await canEncodeAudio('opus', { numberOfChannels: channels, sampleRate: 48000 })) {
-      return { codec: 'opus', quality: bitrate(128_000), numberOfChannels: channels };
-    }
-    return { discard: true };
+    const options = { numberOfChannels: channels, sampleRate: 48000 };
+    const plan = audioPlan(await track.getCodec(), container, {
+      aac: await canEncodeAudio('aac', options),
+      opus: await canEncodeAudio('opus', options),
+    });
+    if (plan === 'copy') return {};
+    if (plan === 'drop') return { discard: true };
+    return { codec: plan, quality: bitrate(AUDIO_BITRATE), numberOfChannels: channels };
   };
 }
 
