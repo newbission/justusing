@@ -33,7 +33,9 @@ type SampleKey =
   /** BOM 없는 UTF-8 CSV (엑셀에서 깨짐) */
   | 'utf8Csv'
   | 'heic1'
-  | 'heic2';
+  | 'heic2'
+  /** 직접 그린 짧은 동영상 (공이 튀어 오름, 동영상을 GIF로·장면 캡처) */
+  | 'ballClip';
 
 /** 언어별 파일 이름 (make_samples.py의 TEXT와 같게) */
 const NAMES: Record<Locale, Record<SampleKey, string>> = {
@@ -60,6 +62,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     utf8Csv: '예시-주문목록-UTF8.csv',
     heic1: '예시-아이폰사진1.heic',
     heic2: '예시-아이폰사진2.heic',
+    ballClip: '예시-공튀기기.mp4',
   },
   en: {
     report: 'sample-report.pdf',
@@ -84,6 +87,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     utf8Csv: 'sample-orders-utf8.csv',
     heic1: 'sample-iphone-photo-1.heic',
     heic2: 'sample-iphone-photo-2.heic',
+    ballClip: 'sample-bouncing-ball.mp4',
   },
 };
 
@@ -126,6 +130,8 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/crop': ['tilted'],
   'image/mosaic': ['car'],
   'text/csv-encoding': ['utf8Csv', 'legacyCsv'],
+  'video/to-gif': ['ballClip'],
+  'video/frame-capture': ['ballClip'],
 };
 
 const TYPES: Record<string, string> = {
@@ -134,6 +140,7 @@ const TYPES: Record<string, string> = {
   png: 'image/png',
   csv: 'text/csv',
   heic: 'image/heic',
+  mp4: 'video/mp4',
 };
 
 /** 도구에 견본이 있는지 (바깥 페이지가 빌드 때 '따라 하기' 버튼을 그릴지 정한다) */
