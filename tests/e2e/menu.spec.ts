@@ -90,7 +90,14 @@ test('Tab으로 판 밖으로 나가면 닫힌다', async ({ page }) => {
 });
 
 test('마우스를 올리면 잠깐 뒤 열리고, 떠나면 닫힌다. 바깥을 누르면 닫힌다', async ({ page }) => {
+  // 도구·가이드가 늘어 판이 길어져도 판 아래에 바깥 자리가 남게 화면을 넉넉히 잡는다
+  await page.setViewportSize({ width: 1280, height: 1400 });
   await page.goto('/');
+  /** 열린 판보다 아래, 메뉴 밖의 한 점 */
+  const outside = async (id: string) => {
+    const box = (await page.locator(id).boundingBox())!;
+    return { x: 5, y: Math.min(1395, box.y + box.height + 40) };
+  };
   const button = trigger(page, '이미지');
   await button.hover();
   await expect(page.locator('#mega-image')).toBeVisible();
@@ -102,15 +109,17 @@ test('마우스를 올리면 잠깐 뒤 열리고, 떠나면 닫힌다. 바깥�
   await page.locator('#mega-guide').getByRole('link', { name: '가이드 전체 보기' }).hover();
   await expect(page.locator('#mega-guide')).toBeVisible();
   // 메뉴를 떠나면 닫힌다
-  await page.mouse.move(5, 700);
+  const belowGuide = await outside('#mega-guide');
+  await page.mouse.move(belowGuide.x, belowGuide.y);
   await expect(page.locator('#mega-guide')).toBeHidden();
 
   // 눌러서 연 판은 마우스가 떠나도 남고, 바깥을 누르면 닫힌다
   await trigger(page, 'PDF').click();
-  await page.mouse.move(5, 700);
+  const belowPdf = await outside('#mega-pdf');
+  await page.mouse.move(belowPdf.x, belowPdf.y);
   await page.waitForTimeout(400);
   await expect(page.locator('#mega-pdf')).toBeVisible();
-  await page.mouse.click(5, 700);
+  await page.mouse.click(belowPdf.x, belowPdf.y);
   await expect(page.locator('#mega-pdf')).toBeHidden();
 });
 
