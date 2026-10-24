@@ -33,7 +33,7 @@ export default defineContent({
       },
       {
         q: '목표 용량에 정확히 맞나요?',
-        a: '용량을 길이로 나눠 비트레이트를 정하므로 대체로 가깝지만, 인코더가 장면에 따라 데이터를 더 쓰거나 덜 써서 조금 넘거나 모자랄 수 있습니다. 제한이 있다면 10% 정도 작게 적으세요. 결과가 원본보다 작아지지 않으면 받지 않게 알립니다.',
+        a: '용량을 길이로 나눠 비트레이트를 정하므로 대체로 가깝지만, 인코더가 장면에 따라 데이터를 더 쓰거나 덜 써서 조금 넘거나 모자랄 수 있습니다. 제한이 있다면 10% 정도 작게 적으세요. 1MB는 1,000,000바이트로 셉니다(1,048,576바이트로 세는 곳보다 조금 작게 잡힘). 결과가 원본보다 작아지지 않으면 받지 않게 알립니다.',
       },
       {
         q: '어떤 형식으로 저장되나요?',
@@ -85,7 +85,7 @@ export default defineContent({
       },
       {
         q: 'Will it match the target size exactly?',
-        a: 'The bitrate is set by dividing the size by the length, so it usually comes close, but the encoder uses more or less data depending on the scene, so it may land a little above or below. If you have a hard limit, aim about 10% lower. If the result is not smaller than the original, you are told instead of getting the file.',
+        a: 'The bitrate is set by dividing the size by the length, so it usually comes close, but the encoder uses more or less data depending on the scene, so it may land a little above or below. If you have a hard limit, aim about 10% lower. 1 MB is counted as 1,000,000 bytes (slightly less than places that count 1,048,576). If the result is not smaller than the original, you are told instead of getting the file.',
       },
       {
         q: 'What format is it saved in?',
