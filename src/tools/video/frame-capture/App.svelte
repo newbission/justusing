@@ -186,7 +186,8 @@
       while (pending.length > 0) await settle();
       if (controller.signal.aborted || ticket !== generation) return;
       const zip = await makeZip(files);
-      if (ticket !== generation) return;
+      // 묶는 사이 '그만두기'를 눌렀으면 받지 않는다 (그만두기는 generation을 바꾸지 않는다)
+      if (controller.signal.aborted || ticket !== generation) return;
       downloadFile(zip, `${wanted.base}_${t.suffix}.zip`, 'application/zip');
       save = { kind: 'savedMany', count: files.length, size: zip.length };
     } catch {
