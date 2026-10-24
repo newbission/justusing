@@ -94,6 +94,8 @@ const ko = {
   images: {
     choose: '이미지 파일 선택',
     hint: 'JPG·PNG·WebP 이미지를 여러 장 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다',
+    hintHeic:
+      'JPG·PNG·WebP·HEIC 이미지를 여러 장 한 번에 고를 수 있습니다 · 파일은 이 기기를 떠나지 않습니다',
     summary: (count: number, size: string) => `이미지 ${count}장 · ${size}`,
     add: '이미지 추가',
     list: '이미지 목록',
@@ -242,6 +244,8 @@ const en: FrameMessages = {
   images: {
     choose: 'Choose image files',
     hint: 'You can pick several JPG, PNG or WebP images at once · Your files never leave this device',
+    hintHeic:
+      'You can pick several JPG, PNG, WebP or HEIC images at once · Your files never leave this device',
     summary: (count: number, size: string) =>
       `${count} ${count === 1 ? 'image' : 'images'} · ${size}`,
     add: 'Add images',
