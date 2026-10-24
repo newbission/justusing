@@ -138,9 +138,12 @@ function recognizeLines(gray: Gray): EngineLine[] {
 /** 처음부터 회색으로 읽어 들이는 그림 화소 수 한도. 더 큰 사진은 읽어 들일 때 줄인다 */
 const MAX_SOURCE_PIXELS = 12_000_000;
 
-/** 사진·화면 캡처 한 장을 읽는다 (방향은 사진에 적힌 대로 바로 세운다) */
+/** 사진·화면 캡처 한 장을 읽는다 (방향은 사진에 적힌 대로 바로 세운다. libheif로 푼 HEIC는 이미 바로 서 있다) */
 async function readPicture(request: Extract<OcrRequest, { type: 'image' }>) {
-  const bitmap = await createImageBitmap(request.image, { imageOrientation: 'from-image' });
+  const bitmap =
+    request.image instanceof ImageBitmap
+      ? request.image
+      : await createImageBitmap(request.image, { imageOrientation: 'from-image' });
   const { width, height } = bitmap;
   const shrink = Math.min(1, Math.sqrt(MAX_SOURCE_PIXELS / (width * height)));
   const w = Math.max(1, Math.round(width * shrink));
