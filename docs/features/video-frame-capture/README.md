@@ -55,7 +55,7 @@
 ### 주의할 점
 
 - 플레이어의 `seeked`·`timeupdate`로 위치 칸을 맞춘다. 장면 받기 안내는 그 위치를 쓴다
-- frame CSP의 `media-src blob:` (`FrameLayout.astro`)
+- frame CSP의 `media-src blob:` (`FrameLayout.astro`, `video` 카테고리 frame에만)
 
 ## 3. 구현 체크리스트
 

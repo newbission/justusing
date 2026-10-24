@@ -222,3 +222,18 @@ test('영어 화면', async ({ page }) => {
   // 원본이 320px라 480·640은 없고 고를 수 있는 가장 큰 폭(원본 320px)이 기본
   expect(gif).toMatchObject({ width: 320, height: 180, frames: 10, loop: 0 });
 });
+
+test('동영상(blob) 재생 허용은 동영상 도구 frame에만 있다', async ({ page }) => {
+  const csp = async (path: string) => {
+    const html = await (await page.request.get(path)).text();
+    return /http-equiv="content-security-policy" content="([^"]*)"/i.exec(html)?.[1] ?? '';
+  };
+  for (const path of ['/video/to-gif/frame/', '/en/video/frame-capture/frame/']) {
+    expect(await csp(path)).toContain('media-src blob:');
+  }
+  for (const path of ['/pdf/view/frame/', '/image/crop/frame/', '/en/text/csv-encoding/frame/']) {
+    const policy = await csp(path);
+    expect(policy).toContain("default-src 'none'");
+    expect(policy).not.toContain('media-src');
+  }
+});

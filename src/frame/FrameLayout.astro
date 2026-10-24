@@ -40,8 +40,9 @@ if (csp) {
   csp.insertDirective('worker-src blob:');
   csp.insertDirective(`img-src ${self} blob: data:`);
   csp.insertDirective(`font-src ${self} data:`);
-  // 동영상 도구: 고른 동영상을 blob URL로 <video>에 연다 (파일은 이 기기 안에만 있다)
-  csp.insertDirective('media-src blob:');
+  // 동영상 도구만: 고른 동영상을 blob URL로 <video>에 연다 (파일은 이 기기 안에만 있다).
+  // 다른 도구 frame은 default-src 'none' 그대로 미디어를 열지 못한다
+  if (category === 'video') csp.insertDirective('media-src blob:');
   csp.insertDirective("form-action 'none'");
   csp.insertDirective("base-uri 'none'");
   // pdf.js 등이 이미지 디코딩에 WebAssembly를 쓴다 (eval 자체는 계속 금지)

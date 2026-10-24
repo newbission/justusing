@@ -70,7 +70,7 @@
 
 ### 주의할 점
 
-- frame CSP에 `media-src blob:`가 있어야 `<video>`가 blob URL을 연다 (`FrameLayout.astro`)
+- frame CSP에 `media-src blob:`가 있어야 `<video>`가 blob URL을 연다 (`FrameLayout.astro`, `video` 카테고리 frame에만 넣는다)
 - `seekVideo()`는 이미 그 시각이면 `seeked`가 오지 않으므로 기다리지 않는다. 동영상 끝 시각은 그릴 장면이 없는 브라우저가 있어 1ms 앞으로 찾아간다
 - 워커 파일에 `/// <reference lib="webworker" />`를 넣지 않는다. 프로젝트 전체 타입이 바뀌어 다른 파일(`drop.ts` 등)에 타입 오류가 난다
 - gifenc `quantize`는 버퍼 전체를 4바이트씩 읽는다. 장면들을 처음부터 시작하는 새 버퍼에 모아 넘긴다
