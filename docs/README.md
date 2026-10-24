@@ -103,3 +103,10 @@ PDF
 | 폴더                                              | 도구                 | 상태 |
 | ------------------------------------------------- | -------------------- | ---- |
 | [text-csv-encoding](./features/text-csv-encoding) | CSV 한글 깨짐 고치기 | live |
+
+동영상
+
+| 폴더                                                  | 도구           | 상태       |
+| ----------------------------------------------------- | -------------- | ---------- |
+| [video-to-gif](./features/video-to-gif)               | 동영상을 GIF로 | PR 진행 중 |
+| [video-frame-capture](./features/video-frame-capture) | 장면 캡처      | PR 진행 중 |

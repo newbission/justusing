@@ -27,7 +27,9 @@ node scripts/perf/measure.mjs [--port 8852] [--files]  # 페이지가 처음 받
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow·pillow-heif 필요)
 python3 tests/fixtures/make_text_fixtures.py  # 테스트용 CSV(CP949·Shift_JIS) 다시 만들기
+python3 tests/fixtures/make_frame_fixtures.py  # 동영상을 GIF로·장면 캡처 시험 동영상 다시 만들기 (Pillow·ffmpeg 필요)
 python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow·pillow-heif, 먼저 npm install)
+python3 scripts/samples/make_video_samples.py  # 동영상을 GIF로·장면 캡처 견본 동영상 다시 만들기 (Pillow·ffmpeg 필요)
 PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
 ```
 
@@ -435,6 +437,13 @@ Co-Authored-By: ...
   - [x] CSV 한글 깨짐 고치기 (`/text/csv-encoding/`): 인코딩 자동 판단(BOM·UTF-16·UTF-8·CP949·Windows-1252) + 직접 고르기,
         지금 열리는 모습·바꾼 뒤 미리보기 표, 엑셀용 UTF-8(BOM)·UTF-8·CP949로 저장, 줄바꿈. 워커가 조각씩 읽어 수백 MB도 된다
         (`src/lib/text/`). CP949 쓰기 표는 브라우저의 euc-kr 디코더로 만들고, 없는 글자는 ?로 바꿔 줄 번호와 알린다
+- [ ] 11단계: 동영상 도구 (2026-10-24) — 카테고리 `video`. **ffmpeg.wasm 금지, 사이트가 무거워지면 안 된다** (사용자 철칙).
+      브라우저 `<video>`·canvas로 풀고, frame CSP `media-src blob:`. 도구마다 멈추고 확인
+  - [x] 동영상을 GIF로 (`/video/to-gif/`): 구간(30초까지)·폭·초당 장면 수·색 수·디더링·반복, 예상 용량, 미리보기. 숨은 `<video>`로
+        장면을 찾아가 뽑고(`src/lib/video-frames/`) 워커가 gifenc(MIT, 9KB)로 GIF(전체 색 표, 앞 장면과 같은 화소는 투명, 순서 디더링)
+        또는 브라우저 WebP 장면을 직접 묶어 움직이는 WebP로 만든다(Safari는 WebP 저장 불가라 GIF만)
+  - [x] 장면 캡처 (`/video/frame-capture/`): 지금 장면을 원래 크기 JPG·PNG로, 일정 간격(0.5~10초) 여러 장(200장까지)은 ZIP.
+        1/30초 버튼·위치(초) 칸. 저장은 워커(OffscreenCanvas)
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)
