@@ -1,7 +1,10 @@
 ---
 /**
  * 도구 아이콘. 각 도구 meta.ts의 icon(선으로 그린 path들)을 그린다. 꾸밈이라 화면 읽기에서 뺀다.
+ * 레지스트리의 도구 아이콘은 문서 앞 symbol(ToolIconSprite)을 `<use>`로 가리켜 HTML이 커지지 않게 한다.
  */
+import { iconSymbolId } from './tool-icons';
+
 interface Props {
   paths: string[];
   /** 한 변 길이(px) */
@@ -9,16 +12,24 @@ interface Props {
 }
 
 const { paths, size = 24 } = Astro.props;
+const id = iconSymbolId(paths);
 ---
 
-<svg class="tool-icon" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
-  {paths.map((d) => (
-    <path d={d} />
-  ))}
-</svg>
+{id ? (
+  <svg class="tool-icon" width={size} height={size} aria-hidden="true">
+    <use href={`#${id}`} />
+  </svg>
+) : (
+  <svg class="tool-icon" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+    {paths.map((d) => (
+      <path d={d} />
+    ))}
+  </svg>
+)}
 
 <style is:global>
-  /* 전역 스타일: 아이콘이 페이지마다 수십~수백 개라 범위 속성(data-astro-cid)을 붙이면 HTML이 커진다 */
+  /* 전역 스타일: 아이콘이 페이지마다 수십~수백 개라 범위 속성(data-astro-cid)을 붙이면 HTML이 커진다.
+     선 모양은 상속되는 속성이라 <use>로 가리킨 symbol 안의 path에도 그대로 적용된다 */
   .tool-icon {
     flex: none;
     fill: none;

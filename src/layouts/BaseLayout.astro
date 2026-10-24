@@ -16,6 +16,7 @@ import ThemeInit from '../components/ThemeInit.astro';
 import LocaleRedirect from '../components/LocaleRedirect.astro';
 import DropGuard from '../components/DropGuard.astro';
 import Header from '../components/Header.astro';
+import ToolIconSprite from '../components/ToolIconSprite.astro';
 import Footer from '../components/Footer.astro';
 import MobileAnchor from '../components/MobileAnchor.astro';
 import Analytics from '../components/Analytics.astro';
@@ -85,6 +86,7 @@ const alternates = LOCALES.map((other) => ({
     <AdsScript />
   </head>
   <body>
+    <ToolIconSprite />
     <Header />
     <main>
       <slot />
