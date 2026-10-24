@@ -41,11 +41,15 @@
 
   const codecs = webCodecs();
   /** 정확하게 자르기(다시 인코딩)를 할 수 있는지 */
-  const canExact = $derived(
-    !!video?.info.video?.canDecode &&
-      codecs.video &&
-      Object.values(video.info.encodable).some((codec) => codec !== null),
-  );
+  /**
+   * 정확하게 자르기는 원래 크기로 다시 저장하므로 원래 크기로 저장할 수 있어야 한다.
+   * WebM은 VP9로만 담는다 (MP4·MOV·MKV는 H.264, 못 하면 VP9)
+   */
+  const canExact = $derived.by(() => {
+    if (!video?.info.video?.canDecode || !codecs.video) return false;
+    const { originalCodecs, container } = video.info;
+    return container === 'webm' ? originalCodecs.includes('vp9') : originalCodecs.length > 0;
+  });
 
   const key = $derived(`${start}|${end}|${exact}`);
   const result = $derived(runner.resultFor(key));

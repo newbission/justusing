@@ -24,6 +24,20 @@ export async function openVideoTool(page: Page, tool: string, file: string) {
   return frame;
 }
 
+/**
+ * 동영상 인코더가 폭 maxWidth까지만 저장할 수 있는 브라우저처럼 만든다 (일부 휴대폰의 4K 같은 경우).
+ * 도구 frame을 포함해 모든 문서의 VideoEncoder.isConfigSupported를 바꾼다
+ */
+export async function limitEncoderWidth(page: Page, maxWidth: number) {
+  await page.addInitScript((max) => {
+    const encoder = (globalThis as { VideoEncoder?: typeof VideoEncoder }).VideoEncoder;
+    if (!encoder) return;
+    const original = encoder.isConfigSupported.bind(encoder);
+    encoder.isConfigSupported = async (config) =>
+      config.width > max ? { supported: false, config } : original(config);
+  }, maxWidth);
+}
+
 /** 버튼을 눌러 일을 끝낸 뒤 '받기'로 받은 파일 */
 export async function runAndDownload(
   page: Page,

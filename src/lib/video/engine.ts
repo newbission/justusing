@@ -136,6 +136,7 @@ export async function probe(file: Blob): Promise<VideoInfo> {
 
     let video: VideoInfo['video'];
     const encodable: VideoInfo['encodable'] = {};
+    const originalCodecs: EncodeCodec[] = [];
     if (videoTrack) {
       const stats = await videoTrack.computePacketStats(120);
       const width = await videoTrack.getDisplayWidth();
@@ -156,6 +157,15 @@ export async function probe(file: Blob): Promise<VideoInfo> {
           frameRate,
           quality: bitrate(guessBitrate(size.width, size.height, frameRate, 'medium')),
         })) as EncodeCodec | null;
+      }
+      const original = scaledSize(width, height, 0);
+      for (const codec of ['avc', 'vp9'] as const) {
+        const options = {
+          ...original,
+          frameRate,
+          quality: bitrate(guessBitrate(original.width, original.height, frameRate, 'high')),
+        };
+        if (await canEncodeVideo(codec, options)) originalCodecs.push(codec);
       }
     }
 
@@ -186,6 +196,7 @@ export async function probe(file: Blob): Promise<VideoInfo> {
       video,
       audio,
       encodable,
+      originalCodecs,
       audioEncodable,
     };
   } finally {

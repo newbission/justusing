@@ -44,6 +44,8 @@ export interface VideoInfo {
   audio?: AudioTrackInfo;
   /** 높이(짧은 변) 후보마다 이 브라우저가 다시 저장할 수 있는 첫 코덱. 0은 원래 크기 */
   encodable: Record<number, EncodeCodec | null>;
+  /** 원래 크기로 다시 저장할 수 있는 코덱 (정확하게 자르기는 원래 크기로 저장한다) */
+  originalCodecs: EncodeCodec[];
   /** 소리를 다시 저장할 수 있는지 */
   audioEncodable: { aac: boolean; opus: boolean };
 }

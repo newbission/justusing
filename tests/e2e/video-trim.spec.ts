@@ -6,7 +6,15 @@
  */
 import { expect, test } from './test';
 import type { FrameLocator } from '@playwright/test';
-import { colorAt, fixture, fixtureKB, inspect, openVideoTool, runAndDownload } from './video';
+import {
+  colorAt,
+  fixture,
+  fixtureKB,
+  inspect,
+  limitEncoderWidth,
+  openVideoTool,
+  runAndDownload,
+} from './video';
 
 async function setTimes(frame: FrameLocator, start: string, end: string) {
   await frame.getByRole('textbox', { name: '끝' }).fill(end);
@@ -127,6 +135,16 @@ test('WebCodecs가 없는 브라우저는 빠르게 자르기만 된다', async 
   await setTimes(frame, '0', '2');
   const file = await runAndDownload(page, frame, '자르기', '받기');
   expect((await inspect(file.bytes)).duration).toBeCloseTo(2, 1);
+});
+
+test('원래 크기로 저장하지 못하는 브라우저는 정확하게 자르기를 막는다', async ({ page }) => {
+  // 폭 1000px까지만 저장할 수 있다: 1280×720 원본은 못 하고 480p(854×480)는 된다
+  await limitEncoderWidth(page, 1000);
+  const frame = await openVideoTool(page, 'trim', 'clip.mp4');
+  await expect(frame.getByRole('radio', { name: /정확하게/ })).toBeDisabled();
+  await expect(
+    frame.getByText('이 브라우저에서는 다시 인코딩할 수 없어 빠르게 자르기만 됩니다.'),
+  ).toBeVisible();
 });
 
 test('동영상이 아니거나 다룰 수 없는 코덱이면 알린다', async ({ page }) => {
