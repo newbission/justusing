@@ -100,6 +100,12 @@ TEXT = {
         'fitted': {'original': '원본', 'resize': '크기도 줄이기', 'keep': '화질만'},
         'product': '예시-상품사진.jpg',
         'cutout': {'original': '원본', 'png': '투명 PNG (체크무늬는 지운 곳)', 'white': '흰 배경 JPG, 물체에 맞춰 자름'},
+        'gifVariants': {
+            'gif-640-20-256': 'GIF · 640px · 초당 20장 · 256색',
+            'gif-320-10-256': 'GIF · 320px · 초당 10장 · 256색',
+            'gif-320-10-64': 'GIF · 320px · 초당 10장 · 64색',
+            'webp-320-10': 'WebP · 320px · 초당 10장',
+        },
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -164,6 +170,12 @@ TEXT = {
         'fitted': {'original': 'Original', 'resize': 'Also resize', 'keep': 'Quality only'},
         'product': 'sample-product-photo.jpg',
         'cutout': {'original': 'Original', 'png': 'Transparent PNG (checkerboard = removed)', 'white': 'JPG on white, cropped to subject'},
+        'gifVariants': {
+            'gif-640-20-256': 'GIF · 640px · 20 fps · 256 colors',
+            'gif-320-10-256': 'GIF · 320px · 10 fps · 256 colors',
+            'gif-320-10-64': 'GIF · 320px · 10 fps · 64 colors',
+            'webp-320-10': 'WebP · 320px · 10 fps',
+        },
     },
 }
 
@@ -664,6 +676,22 @@ def photo_size_limit(t, cache, samples, fonts):
     return 'photo-size-limit', 'compare.png', tiles(items, *fonts)
 
 
+def gif_size(t, cache, samples, fonts):
+    # 견본 4초를 설정만 바꿔 만든 결과에서 1.5초 장면의 공 둘레를 같은 크기로 늘어놓는다.
+    # 화소를 그대로 보이게 키운다(NEAREST): 폭을 줄이면 거칠어지고, 색을 줄이면 공의 명암이 계단이 된다
+    items = []
+    for name, label in t['gifVariants'].items():
+        fps = int(name.split('-')[2])
+        path = os.path.join(cache, name + ('.webp' if name.startswith('webp') else '.gif'))
+        with Image.open(path) as animation:
+            animation.seek(round(1.5 * fps))
+            image = animation.convert('RGB')
+        w, h = image.size
+        crop = image.crop((round(w * 0.6), round(h * 0.15), round(w * 0.85), round(h * 0.6)))
+        items.append((fit_width(crop, 220, Image.NEAREST), label, size_label(path)))
+    return 'reduce-gif-size', 'compare.png', tiles(items, *fonts, cols=2)
+
+
 def resize_image(t, cache, samples, fonts):
     # 원래 크기 대비 같은 비율로 줄여 그린다
     photo = os.path.join(samples, t['photo'])
@@ -1114,6 +1142,7 @@ GUIDES = {
     'remove-background': remove_background,
     'fix-csv-encoding': csv_encoding,
     'image-to-text': image_ocr,
+    'reduce-gif-size': gif_size,
 }
 
 
