@@ -1,6 +1,6 @@
 # 이미지를 PDF로 (`pdf/from-image`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-23
+쓴 날 2026-10-16 · 고친 날 2026-10-24
 
 - 주소: `/pdf/from-image/` (영어 `/en/pdf/from-image/`)
 - 상태: live (2026-10-15 배포, PR #29)
@@ -52,6 +52,7 @@
    - JPG이고 방향 값이 1 → 원본 바이트 그대로
    - JPG이고 방향이 있음 → `createImageBitmap(imageOrientation: 'from-image')`로 세워 `OffscreenCanvas`에서 JPG(0.92, 흰 바탕)로 다시 저장
    - PNG → 원본 그대로
+   - Safari처럼 브라우저가 스스로 읽은 HEIC → JPG로 다시 저장 (2026-10-24, 사진을 PNG로 하면 몇 배 커진다)
    - 그 밖 → PNG로 다시 저장
 6. `embedJpg`/`embedPng` → 쪽 추가 → `drawImage`(가운데, 비율 유지, 키우지 않음) → 진행 알림 → `save()`
 7. "다운로드" → `downloadFile()`
