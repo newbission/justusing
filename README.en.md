@@ -29,9 +29,9 @@ Merge and compress PDFs, shrink photos, convert iPhone HEIC pictures, remove bac
 **without installing anything, signing up or uploading your files**. Everything happens inside your browser.
 The site is available in Korean and English and works on computers and phones.
 
-|                No uploads                |        No install, no sign-up        |                     Free                      |
-| :--------------------------------------: | :----------------------------------: | :-------------------------------------------: |
-| Files never leave your device. No server | Open the page and start. No accounts | Every tool is free. Ads keep the site running |
+|              No uploads               |   No install, no sign-up   |         Free          |
+| :-----------------------------------: | :------------------------: | :-------------------: |
+| Your files never<br>leave your device | Open the page<br>and start | Every tool<br>is free |
 
 <p align="center">
   <picture>
@@ -161,23 +161,23 @@ there is no upload request the size of your file. This repository is public, so 
 ### Architecture
 
 The outer page (where ads and analytics live) is separate from the tool frame (where files are handled).
-They exchange only content-free signals and public data from our own site; your files never leave the frame.
+They exchange only content-free signals (theme, drag and drop, ...) and public data from our own site; your files never leave the frame.
 
 ```mermaid
-flowchart LR
-  subgraph outer["Outer page /en/pdf/merge/ (ads, analytics)"]
-    page["About, how-to, FAQ"]
+flowchart TB
+  file[("Your file")]
+  subgraph outer["Outer page: about, how-to, ads, analytics"]
     store["Data store (Cache API)<br/>fonts, OCR data, models"]
+    subgraph frame["Isolated iframe: sandbox, no origin, CSP default-src 'none'"]
+      app["Tool screen (Svelte)"]
+      worker["Web Worker<br/>pdf-lib, Tesseract, mediabunny, ..."]
+    end
   end
-  subgraph frame["Isolated iframe /en/pdf/merge/frame/<br/>sandbox, no origin, CSP default-src 'none'"]
-    app["Tool screen (Svelte)"]
-    worker["Web Worker<br/>pdf-lib, Tesseract, ..."]
-  end
-  file[("Your file")] -- pick or drop --> app
-  app <-- jobs and results --> worker
-  app -- download (Blob URL) --> out[("Result file")]
-  store -- public data (SHA-256 checked) --> app
-  page -. content-free signals (theme, drag and drop, ...) .- app
+  out[("Result file")]
+  file -- "pick or drop" --> app
+  app <-- "jobs and results" --> worker
+  store -- "public data (SHA-256 checked)" --> app
+  app -- "download (Blob URL)" --> out
 ```
 
 ### Quick start
