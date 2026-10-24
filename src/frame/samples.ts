@@ -138,6 +138,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'video/frame-capture': ['ballClip'],
   'video/trim': ['seaClip'],
   'video/compress': ['seaClip'],
+  'video/extract-audio': ['seaClip'],
 };
 
 const TYPES: Record<string, string> = {
