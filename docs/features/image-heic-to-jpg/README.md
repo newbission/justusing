@@ -1,6 +1,6 @@
 # HEIC JPG 변환 (`image/heic-to-jpg`)
 
-쓴 날 2026-10-23 · 고친 날 2026-10-23
+쓴 날 2026-10-23 · 고친 날 2026-10-24
 
 - 주소: `/image/heic-to-jpg/` (영어 `/en/image/heic-to-jpg/`)
 - 상태: PR 진행 중 (2026-10-23)
@@ -76,7 +76,7 @@
 - 엔진은 압축 전 **1.46MB**, gzip **0.48MB**, brotli **0.36MB**다. Cloudflare가 압축해 보내면(wasm은 압축 대상 형식) 실제로 받는 것은 0.5MB 아래다
 - [데이터 보관](../../foundations/fonts-and-data/README.md)(받기 전에 묻기·바깥 보관·SHA-256)은 OCR(2.9MB+언어 데이터)·얼굴(17MB)·글꼴처럼
   수 MB인 데이터를 위한 것이다. 0.5MB는 PDF 도구들이 묻지 않고 받는 pdf.js(약 1MB)보다 작다
-- 묻는 단계를 넣으면 HEIC를 쓰는 모든 도구(형식 변환·자르기·모자이크·증명사진·이어 붙이기·이미지를 PDF로)에 동의 화면이 생긴다.
+- 묻는 단계를 넣으면 HEIC를 쓰는 모든 도구(형식 변환·자르기·모자이크·증명사진·이어 붙이기·이미지를 PDF로·압축·크기 조절·용량 맞추기 등)에 동의 화면이 생긴다.
   HEIC 변환 도구는 그것이 할 일의 전부라 '받을까요?'가 군더더기다
 - 그래서 Vite가 `/_astro/libheif.<해시>.wasm`으로 내보내는 빌드 자산으로 두고, **브라우저가 못 읽는 HEIC가 처음 들어왔을 때만** 받는다
   (Safari·HEIC를 넣지 않은 방문은 받지 않는다). 주소에 내용 해시가 들어가 글루와 판이 어긋나지 않는다
@@ -108,6 +108,10 @@
 - 새 도구를 형식 변환과 따로 둔 까닭: 'HEIC JPG 변환' 검색이 많고, 아이폰 설정·라이브 포토·촬영 정보 이야기는 형식 변환의 FAQ에 담기 어렵다.
   화면은 같은 부품(`ConvertTool`)을 쓴다
 - 다른 이미지 도구도 같은 길(`readable`·`decodeImage`·`readForDisplay`·`heifToJpeg`)로 HEIC를 연다 ([이미지 공통](../../foundations/image-common/README.md))
+- 원래 형식으로 저장하는 도구(압축·크기 조절·용량 맞추기)는 브라우저가 HEIC로 저장하지 못해 JPG로 저장한다 (2026-10-24).
+  압축은 JPG가 HEIC보다 크면 원본 HEIC를 둔다(압축 도구의 원칙). 용량 맞추기는 HEIC를 받는 곳이 드물어 목표 이하여도 JPG로 맞춘다
+- 위치 정보 지우기는 HEIC를 다시 저장하지 않고 EXIF·XMP 항목을 그 자리에서 덮어쓴다 (2026-10-24, [위치 정보 지우기](../image-remove-location/README.md)).
+  JPG로 바꿔 저장하는 방법도 있었지만 '다시 저장하지 않는다'는 도구의 약속을 지킬 수 있고 위치표(iloc) 길이를 바꾸지 않으면 안전해서 고쳤다
 - 대표 그림만 쓰는 까닭: 사진 앱이 보여 주는 것이 대표 그림이고, 나머지는 썸네일·깊이·게인 맵이나 연사의 다른 장이다
 - P3를 sRGB로: 바꾸지 않으면 아이폰 사진이 크롬 결과에서 눈에 띄게 옅어진다. Safari 경로는 브라우저가 같은 일을 한다
 - 풀기 워커는 1~2개만: 12MP 한 장을 풀 때 엔진이 150MB쯤 쓴다. 처리 워커(1~4개)는 풀린 그림을 받아 쓴다
@@ -130,9 +134,9 @@
 - [x] 견본 2장, E2E (로컬 처리 약속 포함, 요청에 HEIC 머리 `ftyp`가 실리지 않는지도 검사)
 - [x] LGPL 허가서·안내, FAQ 고지, HEVC 특허 기록
 - [x] 다른 이미지 도구에서 HEIC 열기 (형식 변환·자르기·모자이크·증명사진·이어 붙이기·이미지를 PDF로)
-- [ ] 압축·크기 조절에서 HEIC (원래 형식으로 저장하는 도구라 HEIC는 저장 형식을 정해야 한다)
-- [ ] 위치 정보 지우기에서 HEIC (다시 저장하지 않고 정보만 고치는 도구라 HEIF 상자 고치기가 필요하다)
-- [ ] 이미지 넣기·서명 넣기(`embed.worker`)에서 HEIC
+- [x] 압축·크기 조절·용량 맞추기에서 HEIC (2026-10-24, JPG로 저장)
+- [x] 위치 정보 지우기에서 HEIC (2026-10-24, EXIF·XMP 항목을 같은 길이로 그 자리에서 덮어쓰기)
+- [x] 이미지 넣기·서명 넣기(`embedImage`)에서 HEIC (2026-10-24, JPG로 바꿔 넣고 미리보기도 그 JPG)
 - [ ] 목록을 읽을 때 원본을 다 풀지 않고 HEIC 안의 작은 미리보기(thmb)만 풀기 (지금 embind에 썸네일 API가 없다)
 
 ## 4. 검증
@@ -148,7 +152,8 @@
 - 견본 두 장 → ZIP, 둘째 장은 1200×1600
 - 영어 화면
 
-다른 도구: `image-convert`·`image-crop`·`image-mosaic`·`image-id-photo`·`image-stitch`·`pdf-from-image`에 HEIC 열기 테스트가 하나씩 있다
+다른 도구: `image-convert`·`image-crop`·`image-mosaic`·`image-id-photo`·`image-stitch`·`pdf-from-image`·`image-compress`·`image-resize`·`image-target-size`·
+`image-remove-location`(`located.heic`, 두 방식)·`image-remove-bg`·`image-ocr`·`pdf-stamp`(이미지 넣기·서명 넣기)에 HEIC 열기 테스트가 있다
 
 ### 직접 확인
 
