@@ -166,10 +166,10 @@ PR마다 도는 E2E 테스트는 도구들로 실제 파일을 처리합니다. 
 flowchart TB
   file[("내 파일")]
   subgraph outer["바깥 페이지: 설명·사용법·광고·통계"]
-    store["데이터 보관 (Cache API)<br/>글꼴·글자 인식 데이터·모델"]
+    store["데이터 보관 (Cache API)<br/>글꼴, 글자 인식 데이터,<br/>얼굴·배경 모델"]
     subgraph frame["격리 iframe: sandbox, 출처 없음, CSP default-src 'none'"]
       app["도구 화면 (Svelte)"]
-      worker["Web Worker<br/>pdf-lib·Tesseract·mediabunny 등"]
+      worker["Web Worker<br/>pdf-lib, Tesseract,<br/>mediabunny 등"]
     end
   end
   out[("결과 파일")]
