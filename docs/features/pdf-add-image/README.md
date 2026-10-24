@@ -1,6 +1,6 @@
 # PDF 이미지 넣기 (`pdf/add-image`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-16
+쓴 날 2026-10-16 · 고친 날 2026-10-24
 
 - 주소: `/pdf/add-image/` (영어 `/en/pdf/add-image/`)
 - 상태: live (2026-10-15 배포, PR #32로 dev 병합)
@@ -10,7 +10,7 @@
 ## 1. 어떤 기능인지
 
 - PDF 쪽 위 원하는 자리에 로고·도장·사진 같은 이미지를 넣는다
-- 입력: PDF 하나 + 이미지 한 장 (`accept="image/*"`)
+- 입력: PDF 하나 + 이미지 한 장 (`accept="image/*,.heic,.heif"`). 아이폰 사진(HEIC)은 브라우저가 못 읽으면 libheif로 JPG로 바꿔 넣는다 (2026-10-24)
 - 출력: `<원래 이름>_이미지.pdf` (영어 화면 `_with-image.pdf`)
 - 할 수 있는 것
   - 끌어서 옮기기, 오른쪽 아래 손잡이로 비율을 지킨 채 크기 바꾸기, 키보드(화살표 이동, `+`·`-` 크기, Shift는 크게)
@@ -25,23 +25,24 @@
 
 ### 파일
 
-| 파일                                        | 역할                                                                                               |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `src/tools/pdf/add-image/meta.ts`           | 이름·설명·아이콘, 묶음 `edit`, 관련 도구 `pdf/sign`·`pdf/from-image`                               |
-| `src/tools/pdf/add-image/content.ts`        | 사용법·FAQ (한·영)                                                                                 |
-| `src/tools/pdf/add-image/messages.ts`       | 화면 문구 (`StampMessages` + 이미지 고르기 문구)                                                   |
-| `src/tools/pdf/add-image/App.svelte`        | 이미지 고르기와 준비만 하고 나머지는 `StampTool`에 맡긴다                                          |
-| `src/lib/pdf/StampTool.svelte`              | 이미지 찍기 공통 화면: 넣을 쪽 고르기, 배치 화면, 실행·다운로드                                    |
-| `src/lib/pdf/PlacementEditor.svelte`        | 쪽 위에 이미지를 놓는 화면 (끌기·손잡이·키보드, 쪽 안으로 맞추기 `fit`)                            |
-| `src/lib/pdf/PageSheet.svelte`              | 쪽 하나를 크게 그리고 위에 겹칠 화면을 받는 틀 (‹ › 쪽 넘기기)                                     |
-| `src/lib/image/embed.ts`, `embed.worker.ts` | `embedImage(file)` — 워커에서 `toEmbeddable`로 넣을 수 있는 이미지 준비                            |
-| `src/lib/image/prepare.ts`                  | `toEmbeddable`: JPG·PNG는 그대로, EXIF 방향이 붙은 JPG는 바로 세워 다시 저장, 그 밖의 형식은 PNG로 |
-| `src/lib/pdf/modify.ts`, `modify.worker.ts` | `{ kind: 'stamp-image', image, place, pages }` 처리                                                |
+| 파일                                        | 역할                                                                                                                     |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `src/tools/pdf/add-image/meta.ts`           | 이름·설명·아이콘, 묶음 `edit`, 관련 도구 `pdf/sign`·`pdf/from-image`                                                     |
+| `src/tools/pdf/add-image/content.ts`        | 사용법·FAQ (한·영)                                                                                                       |
+| `src/tools/pdf/add-image/messages.ts`       | 화면 문구 (`StampMessages` + 이미지 고르기 문구)                                                                         |
+| `src/tools/pdf/add-image/App.svelte`        | 이미지 고르기와 준비만 하고 나머지는 `StampTool`에 맡긴다                                                                |
+| `src/lib/pdf/StampTool.svelte`              | 이미지 찍기 공통 화면: 넣을 쪽 고르기, 배치 화면, 실행·다운로드                                                          |
+| `src/lib/pdf/PlacementEditor.svelte`        | 쪽 위에 이미지를 놓는 화면 (끌기·손잡이·키보드, 쪽 안으로 맞추기 `fit`)                                                  |
+| `src/lib/pdf/PageSheet.svelte`              | 쪽 하나를 크게 그리고 위에 겹칠 화면을 받는 틀 (‹ › 쪽 넘기기)                                                           |
+| `src/lib/image/embed.ts`, `embed.worker.ts` | `embedImage(file)` — 워커에서 `toEmbeddable`로 넣을 수 있는 이미지 준비. 못 읽는 HEIC는 먼저 JPG로(`heifToJpeg`)         |
+| `src/lib/image/prepare.ts`                  | `toEmbeddable`: JPG·PNG는 그대로, EXIF 방향이 붙은 JPG는 바로 세워 다시 저장, HEIC(Safari)는 JPG로, 그 밖의 형식은 PNG로 |
+| `src/lib/pdf/modify.ts`, `modify.worker.ts` | `{ kind: 'stamp-image', image, place, pages }` 처리                                                                      |
 
 ### 처리 흐름
 
 1. `SinglePdfTool`로 PDF를 연다 → `StampTool`이 이미지가 없으므로 고르기 화면(`picker`)을 보여 준다
-2. "이미지 선택" → `embedImage(file)`(워커) → `{ url: blob 주소, embed: { kind, bytes, width, height } }`
+2. "이미지 선택" → `embedImage(file)`(워커) → `{ embed: { kind, bytes, width, height }, preview }` → `{ url: preview의 blob 주소, embed }`.
+   `preview`는 원본, 브라우저가 못 읽는 HEIC면 바꾼 JPG다 (`<img>`가 HEIC를 그리지 못한다)
 3. `PlacementEditor`에 처음 자리 `{ x: 0.35, y: 0.35, width: 0.3 }` (화면에 보이는 쪽 기준 비율)
 4. "이미지 넣기" → `canUse('pdf/add-image')` → `modifyPdf(source, { kind: 'stamp-image', ... })`
 5. 워커는 `embedJpg`·`embedPng`로 한 번 넣고, 고른 쪽마다
@@ -88,6 +89,8 @@
 - `이미지 넣기: 모든 쪽을 고르면 돌린 쪽에도 화면 기준 같은 자리에 넣는다` — 0·90·180·270° 돌린 네 쪽 모두 같은 자리
 - `이미지 넣기: 크게 키워도 이미지가 어느 쪽에서도 쪽 밖으로 나가지 않는다` — 가로 쪽에서 세로 이미지를 한껏 키워도
   모든 쪽에서 0~1 안, 가로 쪽은 높이가 꽉 참
+- `이미지 넣기: 아이폰 사진(HEIC)도 크롬에서 바로 세운 JPG로 넣는다` — `iphone.heic` 미리보기가 300×400으로 그려지고, PDF에 세로 비율의
+  JPG(`/DCTDecode`)로 들어감, 로컬 처리
 - `처리하는 동안의 요청에는 파일이 기기 밖으로 나가는 것이 없다` — EXIF 방향이 있는 `rotated.jpg`를 넣으며 `expectLocalOnly`
 
 ### 직접 확인
