@@ -213,3 +213,35 @@ test('HEIC의 정보를 모두 지우면 날짜·기기도 빠진다', async ({ 
     true,
   );
 });
+
+test('HEIC의 빈 상자(free·skip)와 끝 뒤 자료에 남은 위치 글도 지운다', async ({ page }) => {
+  // 예전 편집이 남긴 것처럼 GPS 글을 free·skip 상자와 파일 끝 뒤에 붙인다
+  const secret = Buffer.from('exif:GPSLatitude="37,33.978N" Home 123 Secret St');
+  const box = (type: string) => {
+    const out = Buffer.alloc(8 + secret.length);
+    out.writeUInt32BE(out.length, 0);
+    out.write(type, 4, 'latin1');
+    secret.copy(out, 8);
+    return out;
+  };
+  const original = await readFile(fixture('located.heic'));
+  const buffer = Buffer.concat([original, box('free'), box('skip'), secret.subarray(0, 6)]);
+  await page.goto('/image/remove-location/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame
+    .locator('input[type=file]')
+    .setInputFiles({ name: 'edited.heic', mimeType: 'image/heic', buffer });
+  await expect(frame.getByText('사진 1장 중 1장에 위치가 있습니다.')).toBeVisible();
+  await frame.getByText('위치만 지우기').click();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('완료: 사진 1장에서 지웠습니다.')).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const bytes = new Uint8Array(await readFile(await (await event).path()));
+  expect(bytes.length).toBe(buffer.length);
+  const text = Buffer.from(bytes).toString('latin1');
+  expect(text).not.toContain('GPSLatitude');
+  expect(text).not.toContain('Secret');
+  // 원래 HEIC 부분은 정보 항목 밖이 그대로다
+  expect(sameOutsideMetadata(original, bytes.subarray(0, original.length))).toBe(true);
+});
