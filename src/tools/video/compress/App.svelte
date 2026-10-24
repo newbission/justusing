@@ -70,8 +70,12 @@
     runner.reset();
     video = loaded;
     const short = Math.min(loaded.info.video!.width, loaded.info.video!.height);
-    // 기본: 720p보다 크면 720p, 아니면 원래 크기 (저장하지 못하는 크기면 원래 크기)
-    side = short > 720 && loaded.info.encodable[720] ? 720 : 0;
+    // 기본: 720p보다 크면 720p, 아니면 원래 크기. 그 크기로 저장하지 못하면 저장할 수 있는 가장 큰 크기
+    const preferred = short > 720 ? 720 : 0;
+    const available = SHORT_SIDES.filter((option) => option === 0 || option < short);
+    side = loaded.info.encodable[preferred]
+      ? preferred
+      : (available.find((option) => loaded.info.encodable[option]) ?? preferred);
     mode = 'quality';
     level = 'medium';
     targetText = String(Math.max(1, Math.round((loaded.info.size / 1024 / 1024) * 0.5)));
