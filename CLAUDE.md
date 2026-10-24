@@ -78,6 +78,8 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/readme/screenshots.mjs  # README 화면 �
 - 광고·통계 스크립트는 바깥 페이지에만 둔다. 광고는 처리 중에도 계속 보인다.
 - frame 높이는 고정(`ToolFrame`), 안에서 스크롤한다. 처리 전후로 바깥 레이아웃이 밀리지 않는다.
 - 모든 페이지에 Astro CSP(`security.csp`)가 켜져 있다. 광고를 붙일 때 바깥 페이지 CSP에 광고 업체를 추가한다.
+  빌드 뒤 `src/integrations/csp-per-page.ts`가 페이지마다 그 페이지의 인라인 스크립트·스타일 해시만 남긴다(2026-10-24). 그래서
+  실행 중에 `<style>`·인라인 `<script>`를 새로 넣는 코드는 막힌다 (E2E가 CSP 위반을 실패로 본다)
 - 파일 놓기: 바깥 페이지에서 파일 끌기가 시작되면 도구 iframe이 화면 전체로 넓어져
   어디에 놓든 격리 frame이 받는다 (`ToolFrame`). 그래도 바깥에 놓이면 `DropGuard`가
   `<head>` 맨 앞에서 가장 먼저 가로채 다른 스크립트(광고 등)에 전달되지 않게 막는다.

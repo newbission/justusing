@@ -59,19 +59,22 @@
 
 ### frame CSP (`FrameLayout.astro`)
 
-| 지시어                    | 값                                                | 이유                                             |
-| ------------------------- | ------------------------------------------------- | ------------------------------------------------ |
-| `default-src`             | `'none'`                                          | 그 밖은 모두 막는다                              |
-| `connect-src`             | `'self'` + 사이트 주소 + `www.` 주소              | 우리 사이트 파일(워커 스크립트·CMap 등)만 받는다 |
-| `worker-src`              | `blob:`                                           | `createWorker()`가 blob URL로 띄운다             |
-| `img-src`                 | 사이트 + `blob:` `data:`                          | 썸네일·미리보기                                  |
-| `font-src`                | 사이트 + `data:`                                  |                                                  |
-| `media-src`               | `blob:` (동영상 카테고리 frame만)                 | 고른 동영상을 `<video>`로 연다. 다른 도구는 막힘 |
-| `script-src`              | `'self'` + 사이트 + `'wasm-unsafe-eval'`          | pdf.js 등이 WebAssembly를 쓴다 (eval은 금지)     |
-| `style-src`               | `'self'` + 사이트 (+ Astro가 넣는 `<style>` 해시) |                                                  |
-| `form-action`, `base-uri` | `'none'`                                          |                                                  |
+| 지시어                    | 값                                             | 이유                                             |
+| ------------------------- | ---------------------------------------------- | ------------------------------------------------ |
+| `default-src`             | `'none'`                                       | 그 밖은 모두 막는다                              |
+| `connect-src`             | `'self'` + 사이트 주소 + `www.` 주소           | 우리 사이트 파일(워커 스크립트·CMap 등)만 받는다 |
+| `worker-src`              | `blob:`                                        | `createWorker()`가 blob URL로 띄운다             |
+| `img-src`                 | 사이트 + `blob:` `data:`                       | 썸네일·미리보기                                  |
+| `font-src`                | 사이트 + `data:`                               |                                                  |
+| `media-src`               | `blob:` (동영상 카테고리 frame만)              | 고른 동영상을 `<video>`로 연다. 다른 도구는 막힘 |
+| `script-src`              | `'self'` + 사이트 + `'wasm-unsafe-eval'`       | pdf.js 등이 WebAssembly를 쓴다 (eval은 금지)     |
+| `style-src`               | `'self'` + 사이트 (+ 그 페이지 `<style>` 해시) | 해시는 그 페이지 것만 (빌드 뒤)                  |
+| `form-action`, `base-uri` | `'none'`                                       |                                                  |
 
 - CSP를 걸 수 없으면(`Astro.csp` 없음) 배포 빌드를 멈춘다
+- Astro는 사이트 전체의 스타일·스크립트 해시를 모든 페이지에 넣는다. 빌드 뒤 `src/integrations/csp-per-page.ts`가 페이지마다 그 페이지의
+  인라인 `<script>`·`<style>`과 부르는 파일의 해시만 남긴다 (frame HTML gzip 7KB → 3KB). 해시가 아닌 값과 다른 지시어는 그대로 둔다.
+  그래서 frame 안에서 실행 중에 `<style>`·인라인 `<script>`를 새로 넣으면 막힌다 (E2E `csp.spec.ts`·공통 `test.ts`가 위반을 찾는다)
 
 ### 바깥 ↔ frame 신호 (`postMessage`, 대상 `'*'`, 내용 없음)
 
