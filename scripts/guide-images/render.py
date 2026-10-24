@@ -98,6 +98,18 @@ TEXT = {
         'ocrChat': '대화 캡처',
         'ocrLines': lambda n: f'읽은 줄 {n}개',
         'fitted': {'original': '원본', 'resize': '크기도 줄이기', 'keep': '화질만'},
+        'product': '예시-상품사진.jpg',
+        'cutout': {'original': '원본', 'png': '투명 PNG (체크무늬는 지운 곳)', 'white': '흰 배경 JPG, 물체에 맞춰 자름'},
+        'gifVariants': {
+            'gif-640-20-256': 'GIF · 640px · 초당 20장 · 256색',
+            'gif-320-10-256': 'GIF · 320px · 초당 10장 · 256색',
+            'gif-320-10-64': 'GIF · 320px · 초당 10장 · 64색',
+            'webp-320-10': 'WebP · 320px · 초당 10장',
+        },
+        'seaClip': '예시-바다영상.mp4',
+        'videoSizes': {'original': '원본 1080p', '720': '720p · 보통', '480': '480p · 낮음'},
+        'trimRows': {'source': '원본', 'fast': '빠르게', 'exact': '정확하게'},
+        'trimNotes': {'hidden': '담기지만 숨김', 'key': '키프레임', 'chosen': '고른 구간'},
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -160,6 +172,18 @@ TEXT = {
         'ocrChat': 'Chat screenshot',
         'ocrLines': lambda n: f'{n} lines read',
         'fitted': {'original': 'Original', 'resize': 'Also resize', 'keep': 'Quality only'},
+        'product': 'sample-product-photo.jpg',
+        'cutout': {'original': 'Original', 'png': 'Transparent PNG (checkerboard = removed)', 'white': 'JPG on white, cropped to subject'},
+        'gifVariants': {
+            'gif-640-20-256': 'GIF · 640px · 20 fps · 256 colors',
+            'gif-320-10-256': 'GIF · 320px · 10 fps · 256 colors',
+            'gif-320-10-64': 'GIF · 320px · 10 fps · 64 colors',
+            'webp-320-10': 'WebP · 320px · 10 fps',
+        },
+        'seaClip': 'sample-sea-video.mp4',
+        'videoSizes': {'original': 'Original 1080p', '720': '720p · Medium', '480': '480p · Low'},
+        'trimRows': {'source': 'Original', 'fast': 'Fast', 'exact': 'Precise'},
+        'trimNotes': {'hidden': 'Kept but hidden', 'key': 'Key frame', 'chosen': 'Your selection'},
     },
 }
 
@@ -660,6 +684,22 @@ def photo_size_limit(t, cache, samples, fonts):
     return 'photo-size-limit', 'compare.png', tiles(items, *fonts)
 
 
+def gif_size(t, cache, samples, fonts):
+    # 견본 4초를 설정만 바꿔 만든 결과에서 1.5초 장면의 공 둘레를 같은 크기로 늘어놓는다.
+    # 화소를 그대로 보이게 키운다(NEAREST): 폭을 줄이면 거칠어지고, 색을 줄이면 공의 명암이 계단이 된다
+    items = []
+    for name, label in t['gifVariants'].items():
+        fps = int(name.split('-')[2])
+        path = os.path.join(cache, name + ('.webp' if name.startswith('webp') else '.gif'))
+        with Image.open(path) as animation:
+            animation.seek(round(1.5 * fps))
+            image = animation.convert('RGB')
+        w, h = image.size
+        crop = image.crop((round(w * 0.6), round(h * 0.15), round(w * 0.85), round(h * 0.6)))
+        items.append((fit_width(crop, 220, Image.NEAREST), label, size_label(path)))
+    return 'reduce-gif-size', 'compare.png', tiles(items, *fonts, cols=2)
+
+
 def resize_image(t, cache, samples, fonts):
     # 원래 크기 대비 같은 비율로 줄여 그린다
     photo = os.path.join(samples, t['photo'])
@@ -737,6 +777,33 @@ def hide_info_in_photo(t, cache, samples, fonts):
         items.append((fit_width(image, 320, Image.LANCZOS), t['hidden'][key], ''))
     return 'hide-info-in-photo', 'compare.png', tiles(items, *fonts, gap=20, cols=2)
 
+def checkerboard(width: int, height: int, cell: int = 12) -> Image.Image:
+    """투명한 곳을 보여 주는 체크무늬 (도구 미리보기와 같은 밝은 칸)"""
+    board = Image.new('RGB', (width, height), BG)
+    draw = ImageDraw.Draw(board)
+    for y in range(0, height, cell):
+        for x in range((y // cell) % 2 * cell, width, cell * 2):
+            draw.rectangle([x, y, x + cell - 1, y + cell - 1], fill=(220, 220, 218))
+    return board
+
+
+def remove_background(t, cache, samples, fonts):
+    # 원본, 투명 PNG(체크무늬 위에 얹어 지운 곳이 보이게), 흰 배경·물체에 맞춰 자른 JPG를 같은 높이로 2칸씩
+    height = 270
+    original = Image.open(os.path.join(samples, t['product'])).convert('RGB')
+    cutout = Image.open(os.path.join(cache, 'remove-bg.png')).convert('RGBA')
+    white = Image.open(os.path.join(cache, 'remove-bg-white.jpg')).convert('RGB')
+    items = []
+    for image, key in [(original, 'original'), (cutout, 'png'), (white, 'white')]:
+        small = image.resize((round(image.width * height / image.height), height), Image.LANCZOS)
+        if small.mode == 'RGBA':
+            board = checkerboard(*small.size)
+            board.paste(small, (0, 0), small)
+            small = board
+        items.append((small, t['cutout'][key], f'{image.width}×{image.height}'))
+    return 'remove-background', 'result.png', tiles(items, *fonts, gap=20, cols=2)
+
+
 def image_ocr(t, cache, samples, fonts):
     # 도구가 읽은 줄 자리(.cache의 ocr-lines.json)를 원래 이미지 위에 상자로 그린다 (초록 말풍선 위에서도 보이게 테두리는 검게).
     # 기운 사진은 바로 세워 읽은 줄이 이미지 위에서는 기운 상자로 돌아온다
@@ -771,6 +838,83 @@ MOTION_QUALITY = 70
 STILL_QUALITY = 88
 FRAME_MS = 50  # 20fps. 멈춘 구간은 프레임 하나에 긴 시간을 준다
 WARN = (214, 96, 58)  # 지워지는 곳 표시색
+
+
+def compress_video(t, cache, samples, fonts):
+    # 같은 순간(5초)의 돛단배 둘레를 같은 크기로 잘라 놓는다. 줄인 결과는 1080p 크기로 키워 같은 곳을 자른다
+    paths = [
+        ('original', os.path.join(samples, t['seaClip'])),
+        ('720', os.path.join(cache, 'video-compress-720.mp4')),
+        ('480', os.path.join(cache, 'video-compress-480.mp4')),
+    ]
+    items = []
+    for name, video in paths:
+        frame = Image.open(os.path.join(cache, f'video-compress-{name}.png')).convert('RGB')
+        size = f'{frame.width}×{frame.height} · {size_label(video)}'
+        frame = frame.resize((1920, 1080), Image.BICUBIC)
+        crop = frame.crop((780, 540, 1180, 900))
+        items.append((fit_width(crop, 260), t['videoSizes'][name], size))
+    return 'compress-video', 'sizes.png', tiles(items, *fonts)
+
+
+def trim_video(t, cache, samples, fonts):
+    """빠르게·정확하게 자르기의 원리 그림 (견본처럼 키프레임 2초마다, 2.5초~5초를 고름).
+    칸 하나가 0.25초. 원본 줄, 빠르게(2초 키프레임부터 담고 2.5초 앞은 숨김), 정확하게(2.5초에 새 키프레임)"""
+    # 휴대폰 폭으로 줄여도 글자가 읽히게 칸은 작게, 글자는 크게
+    bold, regular = ImageFont.truetype(BOLD, 22), ImageFont.truetype(REGULAR, 18)
+    cell, gap, seconds, step = 20, 2, 6, 0.25
+    count = int(seconds / step)
+    label_w = max(bold.getlength(text) for text in t['trimRows'].values()) + 20
+    width = PAD * 2 + label_w + count * (cell + gap)
+    row_h = cell + 26
+    height = PAD + row_h * 3 + 62
+    card = Image.new('RGB', (round(width), height), BG)
+    draw = ImageDraw.Draw(card)
+    x0 = PAD + label_w
+    start, end = 2.5, 5.0
+    pale = (232, 240, 236)
+    hidden = (214, 214, 210)
+
+    def cells(y, first, last, keys, hide_before=None):
+        for i in range(count):
+            time = i * step
+            x = x0 + i * (cell + gap)
+            if time < first or time >= last:
+                draw.rectangle([x, y, x + cell, y + cell], outline=LINE)
+                continue
+            fill = hidden if hide_before is not None and time < hide_before else pale
+            draw.rectangle([x, y, x + cell, y + cell], fill=fill, outline=MUTED)
+            if any(abs(time - key) < 1e-6 for key in keys):
+                draw.rectangle([x, y, x + cell, y + cell], fill=GREEN)
+
+    rows = [
+        ('source', 0, seconds, [0, 2, 4], None),
+        ('fast', 2, end, [2, 4], start),
+        ('exact', start, end, [start], None),
+    ]
+    for index, (name, first, last, keys, hide) in enumerate(rows):
+        y = PAD + index * row_h
+        draw.text((PAD, y - 4), t['trimRows'][name], font=bold, fill=INK)
+        cells(y, first, last, keys, hide)
+    # 고른 구간 괄호와 초 눈금
+    sx = x0 + start / step * (cell + gap) - gap / 2
+    ex = x0 + end / step * (cell + gap) - gap / 2
+    bottom = PAD + row_h * 3 - 14
+    draw.line([sx, PAD - 8, sx, bottom], fill=GREEN, width=2)
+    draw.line([ex, PAD - 8, ex, bottom], fill=GREEN, width=2)
+    for second in range(seconds + 1):
+        x = x0 + second / step * (cell + gap) - gap / 2
+        draw.text((x - 6, bottom + 2), f'{second}s', font=regular, fill=MUTED)
+    # 범례
+    y = bottom + 30
+    x = PAD
+    for fill, label in ((GREEN, t['trimNotes']['key']), (hidden, t['trimNotes']['hidden'])):
+        draw.rectangle([x, y, x + 16, y + 16], fill=fill, outline=MUTED)
+        draw.text((x + 24, y - 1), label, font=regular, fill=INK)
+        x += 24 + regular.getlength(label) + 28
+    draw.line([x, y + 8, x + 22, y + 8], fill=GREEN, width=2)
+    draw.text((x + 30, y - 1), t['trimNotes']['chosen'], font=regular, fill=INK)
+    return 'trim-video', 'keyframes.png', card
 
 
 def ease(x: float) -> float:
@@ -1080,8 +1224,12 @@ GUIDES = {
     'stitch-screenshots': stitch_screenshots,
     'crop-rotate-photo': crop_rotate_photo,
     'hide-info-in-photo': hide_info_in_photo,
+    'remove-background': remove_background,
     'fix-csv-encoding': csv_encoding,
     'image-to-text': image_ocr,
+    'reduce-gif-size': gif_size,
+    'compress-video': compress_video,
+    'trim-video': trim_video,
 }
 
 

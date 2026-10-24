@@ -24,20 +24,20 @@
 
 <details><summary>기능 2개</summary>
 
-- 2026-10-14 `9a25e30` PDF 글자 추출 도구 화면 추가
-- 2026-10-14 `4cbdff2` 사용법과 FAQ 추가
+- 2026-10-14 `9a25e308` PDF 글자 추출 도구 화면 추가
+- 2026-10-14 `4cbdff23` 사용법과 FAQ 추가
 
 </details>
 
 <details><summary>오류 수정 1개</summary>
 
-- 2026-10-14 `ec03627` 글자 수를 쪽마다 세어 더하도록 변경
+- 2026-10-14 `ec03627e` 글자 수를 쪽마다 세어 더하도록 변경
 
 </details>
 
 <details><summary>문서 1개</summary>
 
-- 2026-10-16 `03ae600` 스캔 PDF FAQ에 OCR 도구 안내로 변경
+- 2026-10-16 `03ae6006` 스캔 PDF FAQ에 OCR 도구 안내로 변경
 
 </details>
 

@@ -1,8 +1,8 @@
 /**
  * pdf.js 준비: 워커를 격리 frame에서 띄우고, 보조 파일을 우리 사이트에서 읽게 한다.
- * PDF 도구들이 공통으로 쓴다. 이 모듈을 import한 도구 frame에서만 pdf.js가 로드된다.
+ * PDF 도구들이 공통으로 쓴다. pdf.js 본체(gzip 126KB)는 PDF를 처음 열 때 받는다 —
+ * 파일을 고르기 전 첫 화면은 가볍게 뜬다 (성능 예산, docs/foundations/site-structure).
  */
-import * as pdfjs from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.mjs?worker&url';
 import scanWorkerUrl from './signature-scan.worker.ts?worker&url';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
@@ -10,10 +10,18 @@ import { createWorker } from '../worker';
 
 export type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 
+let library: Promise<typeof import('pdfjs-dist')> | undefined;
+
+/** pdf.js 본체. 처음 부를 때 받는다 */
+function loadPdfjs(): Promise<typeof import('pdfjs-dist')> {
+  library ??= import('pdfjs-dist');
+  return library;
+}
+
 let workerReady: Promise<void> | undefined;
 
 function ensureWorker(): Promise<void> {
-  workerReady ??= createWorker(workerUrl).then((worker) => {
+  workerReady ??= Promise.all([loadPdfjs(), createWorker(workerUrl)]).then(([pdfjs, worker]) => {
     pdfjs.GlobalWorkerOptions.workerPort = worker;
   });
   return workerReady;
@@ -83,6 +91,7 @@ export interface OpenedPdf {
 /** 메모리에 있는 PDF 바이트를 연다. 파일은 어디로도 전송되지 않는다. */
 export async function openPdf(data: Uint8Array, password?: string): Promise<OpenedPdf> {
   await ensureWorker();
+  const pdfjs = await loadPdfjs();
   const task = pdfjs.getDocument({
     data,
     password,

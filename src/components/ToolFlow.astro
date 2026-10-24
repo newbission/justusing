@@ -159,6 +159,25 @@ function marks(mark: FlowMark): {
         accent: ['M10 9h12v12H10z'],
         texts: [],
       };
+    case 'cutout':
+      return {
+        lines: [],
+        fills: [],
+        // 투명한 배경을 뜻하는 체크무늬 (옅게)
+        photo: [
+          'M5 12h5v5H5z',
+          'M15 12h5v5h-5z',
+          'M10 17h5v5h-5z',
+          'M20 17h5v5h-5z',
+          'M5 22h5v5H5z',
+          'M15 22h5v5h-5z',
+          'M10 27h5v5h-5z',
+          'M20 27h5v5h-5z',
+        ],
+        // 남은 사람 (머리와 어깨)
+        accent: ['M17 13a3.5 3.5 0 1 0 .01 0', 'M9.5 34v-2a7.5 7.5 0 0 1 15 0v2'],
+        texts: [],
+      };
     case 'table':
       return {
         lines: ['M5 12h24v24H5z', 'M5 20h24', 'M5 28h24', 'M15 12v24'],
@@ -179,6 +198,29 @@ function marks(mark: FlowMark): {
         accent: [],
         texts: [],
       };
+    case 'video':
+      // 화면 틀과 위아래 필름 구멍, 가운데 재생 삼각형
+      return {
+        lines: ['M4 11h26v22H4z', 'M8 8v1', 'M14 8v1', 'M20 8v1', 'M26 8v1'],
+        fills: [],
+        accent: ['M14 16.5v11l9-5.5z'],
+        texts: [],
+      };
+    case 'trim':
+      // 동영상 화면 아래 재생 막대에서 고른 구간
+      return {
+        lines: ['M4 9h26v20H4z', 'M4 37h26'],
+        fills: [],
+        accent: ['M14.5 14v10l8-5z', 'M10 34v6', 'M23 34v6', 'M10 37h13'],
+        texts: [],
+      };
+    case 'audio':
+      return {
+        lines: [],
+        fills: [],
+        accent: ['M7 20v6', 'M11 16v14', 'M15 11v24', 'M19 15v16', 'M23 18v10', 'M27 21v4'],
+        texts: [],
+      };
     default:
       return {
         lines: ['M6 12h16', 'M6 17h20', 'M6 22h14', 'M6 27h18'],
@@ -195,7 +237,9 @@ function stack(doc: FlowDoc) {
   const width = (W + STEP * (count - 1)) * scale;
   const height = (H + STEP * (count - 1)) * scale;
   const photo = doc.kind === 'jpg' || doc.kind === 'png' || doc.kind === 'heic';
-  const drawn = marks(doc.mark ?? (photo ? 'photo' : 'lines'));
+  const video = doc.kind === 'mp4' || doc.kind === 'webm' || doc.kind === 'gif';
+  const audio = doc.kind === 'm4a' || doc.kind === 'wav';
+  const drawn = marks(doc.mark ?? (photo ? 'photo' : video ? 'video' : audio ? 'audio' : 'lines'));
   return { count, scale, width, height, drawn, label: doc.kind.toUpperCase() };
 }
 

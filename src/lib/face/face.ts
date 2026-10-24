@@ -7,20 +7,16 @@
  */
 import type { DataFile } from '../../frame/data';
 import { createWorker } from '../worker';
-import catalog from './catalog.json';
+import {
+  FACE_MODEL,
+  MEDIAPIPE_ENGINE as FACE_ENGINE,
+  SELFIE_MODEL as FACE_SEGMENTER,
+} from './data-files';
 import workerUrl from './face.worker.ts?worker&url';
 
 /** 보관소에서 받기 동의를 기억하는 이름 */
 export const FACE_CONSENT = 'face';
 
-/** 내용이 바뀌면 주소도 바뀌게 해 예전 보관본을 쓰지 않는다 */
-const versioned = (file: DataFile): DataFile => ({
-  ...file,
-  path: `${file.path}?v=${file.sha256.slice(0, 12)}`,
-});
-const FACE_ENGINE = versioned(catalog.engine);
-const FACE_MODEL = versioned(catalog.model);
-const FACE_SEGMENTER = versioned(catalog.segmenter);
 export const FACE_FILES: DataFile[] = [FACE_ENGINE, FACE_MODEL, FACE_SEGMENTER];
 
 /** 사진 안의 위치. 0~1 비율 (왼쪽 위가 0) */

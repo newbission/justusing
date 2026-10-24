@@ -23,14 +23,14 @@
 
 <details><summary>기능 2개</summary>
 
-- 2026-10-14 `d088043` PDF 자르기 도구 화면 추가
-- 2026-10-14 `60db363` 사용법과 FAQ 추가
+- 2026-10-14 `d088043f` PDF 자르기 도구 화면 추가
+- 2026-10-14 `60db3634` 사용법과 FAQ 추가
 
 </details>
 
 <details><summary>테스트 1개</summary>
 
-- 2026-10-14 `5a721ff` PDF 자르기 E2E 추가
+- 2026-10-14 `5a721ffb` PDF 자르기 E2E 추가
 
 </details>
 

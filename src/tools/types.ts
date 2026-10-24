@@ -43,7 +43,8 @@ export interface ToolMeta {
 /** 그림 속 종이 한 묶음 */
 export interface FlowDoc {
   /** 종이 아래 꼬리표 */
-  kind: 'pdf' | 'jpg' | 'png' | 'heic' | 'txt' | 'csv' | 'zip';
+  kind:
+    'pdf' | 'jpg' | 'png' | 'heic' | 'txt' | 'csv' | 'zip' | 'mp4' | 'webm' | 'm4a' | 'wav' | 'gif';
   /** 겹친 장수 (1~3, 기본 1) */
   count?: number;
   /** 종이 위 그림 (기본: 글 줄) */
@@ -78,10 +79,18 @@ export type FlowMark =
   | 'stitch'
   /** 사진 위 잘게 나뉜 칸 (모자이크) */
   | 'mosaic'
+  /** 체크무늬(투명) 위에 남은 사람 (배경 제거) */
+  | 'cutout'
   /** 표 칸 속 글자 (CSV) */
   | 'table'
   /** 표 칸 속 깨진 글자 (인코딩이 맞지 않는 CSV) */
-  | 'garbled';
+  | 'garbled'
+  /** 재생 삼각형이 있는 화면 (동영상) */
+  | 'video'
+  /** 화면 아래 재생 막대에서 고른 구간 (동영상 자르기) */
+  | 'trim'
+  /** 소리 물결 (소리 파일) */
+  | 'audio';
 
 export function defineTool(meta: ToolMeta): ToolMeta {
   return meta;

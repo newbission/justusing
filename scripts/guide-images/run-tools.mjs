@@ -33,8 +33,11 @@ const SAMPLES = {
     chat3: '예시-대화캡처3.png',
     tilted: '예시-기운사진.jpg',
     car: '예시-번호판사진.jpg',
+    product: '예시-상품사진.jpg',
     utf8Csv: '예시-주문목록-UTF8.csv',
     heic: '예시-아이폰사진2.heic',
+    ballClip: '예시-공튀기기.mp4',
+    seaClip: '예시-바다영상.mp4',
   },
   en: {
     report: 'sample-report.pdf',
@@ -52,8 +55,11 @@ const SAMPLES = {
     chat3: 'sample-chat-3.png',
     tilted: 'sample-tilted-photo.jpg',
     car: 'sample-license-plate.jpg',
+    product: 'sample-product-photo.jpg',
     utf8Csv: 'sample-orders-utf8.csv',
     heic: 'sample-iphone-photo-2.heic',
+    ballClip: 'sample-bouncing-ball.mp4',
+    seaClip: 'sample-sea-video.mp4',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -452,11 +458,81 @@ const JOBS = {
     }
   },
 
+  // 배경 제거: 견본 머그잔의 가운데를 저절로 남기고 손잡이를 눌러 더한 뒤, 손잡이 안쪽(벽)을 지우개로 지운다.
+  // 투명 PNG와 흰 배경·물체에 맞춰 자른 JPG를 받는다
+  async 'remove-bg'({ sample, out }) {
+    await open('/image/remove-bg/', sample('product'));
+    const get = frame.getByRole('button', { name: /^데이터 받기/ });
+    const done = frame.getByText('사진 가운데의 물체를 남겼습니다.', { exact: false });
+    await get.or(done).first().waitFor();
+    if (await get.isVisible()) await get.click();
+    await done.waitFor({ timeout: 60_000 });
+    await page.waitForFunction(() => scrollY > 0);
+    const view = frame.getByRole('application');
+    // 손잡이 고리 (사진의 73%, 52% 자리)
+    const box = await view.boundingBox();
+    await view.click({ position: { x: box.width * 0.73, y: box.height * 0.52 } });
+    await frame.getByText('누른 곳 2곳의 물체를 남겼습니다.').waitFor({ timeout: 30_000 });
+    // 손잡이 안쪽 구멍(가로 68%, 세로 44~59%)을 붓 크기 7%의 지우개로 위에서 아래로 찍어 지운다
+    await frame.getByText('지우개', { exact: true }).click();
+    await press(frame.getByLabel('붓 크기'), 'ArrowRight', 3);
+    await view.focus();
+    await press(view, 'Shift+ArrowRight', 3);
+    await press(view, 'ArrowRight', 3);
+    await press(view, 'ArrowUp', 1);
+    for (let i = 0; i < 6; i++) {
+      await view.press('Enter');
+      await view.press('ArrowDown');
+    }
+    await save('PNG 다운로드', `${out}remove-bg.png`);
+    await frame.getByText('흰색', { exact: true }).click();
+    await frame.getByText('물체에 맞춰 자르기').click();
+    await save('JPG 다운로드', `${out}remove-bg-white.jpg`);
+  },
+
   // CSV 한글 깨짐 고치기: BOM 없는 UTF-8 견본을 엑셀용 UTF-8(기본)로
   async 'csv-encoding'({ sample, out }) {
     await open('/text/csv-encoding/', sample('utf8Csv'));
     await frame.getByRole('button', { name: '변환하기' }).click();
     await save('다운로드', `${out}csv-encoding.csv`);
+  },
+
+  // 동영상 용량 줄이기: 1080p 견본을 720p·보통, 480p·낮음으로. 같은 순간(5초)의 장면을 PNG로 떠 둔다
+  async 'video-compress'({ sample, out }) {
+    for (const [side, level] of [
+      [720, '보통'],
+      [480, '낮음'],
+    ]) {
+      await open('/video/compress/', sample('seaClip'));
+      await frame.getByRole('radio', { name: new RegExp(`^${side}p`) }).check();
+      await frame.getByText(level, { exact: true }).click();
+      await frame.getByRole('button', { name: '줄이기', exact: true }).click();
+      await frame.getByRole('button', { name: '받기', exact: true }).waitFor({ timeout: 120_000 });
+      await save('받기', `${out}video-compress-${side}.mp4`);
+    }
+    await page.goto(BASE + '/');
+    for (const [name, path] of [
+      ['original', sample('seaClip')],
+      ['720', `${out}video-compress-720.mp4`],
+      ['480', `${out}video-compress-480.mp4`],
+    ]) {
+      const png = await page.evaluate(
+        async (data) => {
+          const video = document.createElement('video');
+          video.muted = true;
+          video.src = URL.createObjectURL(new Blob([new Uint8Array(data)], { type: 'video/mp4' }));
+          await new Promise((resolve) => (video.onloadeddata = resolve));
+          video.currentTime = 5;
+          await new Promise((resolve) => (video.onseeked = resolve));
+          const canvas = new OffscreenCanvas(video.videoWidth, video.videoHeight);
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          const blob = await canvas.convertToBlob({ type: 'image/png' });
+          return Array.from(new Uint8Array(await blob.arrayBuffer()));
+        },
+        Array.from(await readFile(path)),
+      );
+      await writeFile(`${out}video-compress-${name}.png`, Buffer.from(png));
+    }
   },
 
   // 이미지 글자 추출: 12° 기울여 찍은 서류 사진(견본을 돌려 만든다)과 대화 캡처에서 읽은 줄 자리
@@ -508,6 +584,27 @@ const JOBS = {
         ),
       );
     await writeFile(`${out}ocr-lines.json`, JSON.stringify(lines));
+  },
+  // 동영상을 GIF로: 견본 4초를 설정만 바꿔 여러 번 만든다 (용량 비교). 이름은 render.py의 GIF_VARIANTS와 같게
+  async 'video-to-gif'({ sample, out }) {
+    for (const [name, format, width, fps, colors, dither] of [
+      ['gif-640-20-256', 'GIF', 640, 20, 256, true],
+      ['gif-320-20-256', 'GIF', 320, 20, 256, true],
+      ['gif-320-10-256', 'GIF', 320, 10, 256, true],
+      ['gif-320-10-64', 'GIF', 320, 10, 64, false],
+      ['webp-320-10', 'WebP', 320, 10, 0, false],
+    ]) {
+      await open('/video/to-gif/', sample('ballClip'));
+      if (format === 'WebP') await frame.getByText('움직이는 WebP', { exact: true }).click();
+      await frame.getByText(`${width}px`, { exact: true }).click();
+      await frame.getByRole('slider', { name: '초당 장면 수' }).fill(String(fps));
+      if (format === 'GIF') {
+        await frame.getByText(`${colors}색`, { exact: true }).click();
+        await frame.getByLabel(/디더링/).setChecked(dither);
+      }
+      await frame.getByRole('button', { name: `${format} 만들기` }).click();
+      await save(`${format} 받기`, `${out}${name}.${format.toLowerCase()}`);
+    }
   },
 };
 

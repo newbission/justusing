@@ -17,7 +17,8 @@ const { paths, size = 24 } = Astro.props;
   ))}
 </svg>
 
-<style>
+<style is:global>
+  /* 전역 스타일: 아이콘이 페이지마다 수십~수백 개라 범위 속성(data-astro-cid)을 붙이면 HTML이 커진다 */
   .tool-icon {
     flex: none;
     fill: none;

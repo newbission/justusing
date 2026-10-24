@@ -23,7 +23,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
 
 <button
   type="button"
-  class="open"
+  class="mobile-menu-open"
   aria-label={t.openMenu}
   aria-haspopup="dialog"
   aria-controls="mobile-menu"
@@ -34,7 +34,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   </svg>
 </button>
 
-<dialog class="sheet" id="mobile-menu" aria-label={t.menu} data-mobile-menu>
+<dialog class="mobile-menu-sheet" id="mobile-menu" aria-label={t.menu} data-mobile-menu>
   <div class="head">
     <p class="title">{t.menu}</p>
     <button type="button" class="close" aria-label={t.closeMenu} data-mobile-menu-close>
@@ -103,12 +103,13 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   }
 </script>
 
-<style>
-  .open {
+<style is:global>
+  /* 전역 스타일(루트 클래스 안에서만 적용): 이 메뉴는 모든 페이지에 있고 항목이 많아, 범위 속성(data-astro-cid)을 붙이면 HTML이 크게 늘어난다 */
+  .mobile-menu-open {
     display: none;
   }
   @media (max-width: 767px) {
-    .open {
+    .mobile-menu-open {
       display: inline-grid;
       place-items: center;
       width: 40px;
@@ -120,8 +121,8 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
       cursor: pointer;
     }
   }
-  .open path,
-  .close path {
+  .mobile-menu-open path,
+  .mobile-menu-sheet .close path {
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -129,7 +130,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   }
 
   /* 화면 전체를 덮는 창. 안에서 스크롤하고 뒤 화면은 움직이지 않는다 */
-  .sheet {
+  .mobile-menu-sheet {
     width: 100%;
     max-width: none;
     height: 100%;
@@ -142,15 +143,15 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     background: var(--color-bg);
     color: var(--color-text);
   }
-  .sheet::backdrop {
+  .mobile-menu-sheet::backdrop {
     background: var(--color-bg);
   }
-  :global(html:has(dialog[data-mobile-menu][open])) {
+  html:has(dialog[data-mobile-menu][open]) {
     overflow: hidden;
   }
 
   /* 머리글과 같은 높이의 윗줄. 스크롤해도 닫기 버튼이 보이게 붙여 둔다 */
-  .head {
+  .mobile-menu-sheet .head {
     position: sticky;
     top: 0;
     z-index: 1;
@@ -162,12 +163,12 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     border-bottom: 1px solid var(--color-line);
     background: var(--color-bg);
   }
-  .title {
+  .mobile-menu-sheet .title {
     margin: 0;
     font-size: 17px;
     font-weight: 700;
   }
-  .close {
+  .mobile-menu-sheet .close {
     display: inline-grid;
     place-items: center;
     width: 40px;
@@ -179,13 +180,13 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     cursor: pointer;
   }
 
-  .body {
+  .mobile-menu-sheet .body {
     padding: 0 var(--gutter);
   }
-  .section {
+  .mobile-menu-sheet .section {
     border-bottom: 1px solid var(--color-line);
   }
-  summary {
+  .mobile-menu-sheet summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -195,41 +196,41 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     cursor: pointer;
     list-style: none;
   }
-  summary::-webkit-details-marker {
+  .mobile-menu-sheet summary::-webkit-details-marker {
     display: none;
   }
-  .caret {
+  .mobile-menu-sheet .caret {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.6;
     transition: transform 0.12s;
   }
-  .section[open] .caret {
+  .mobile-menu-sheet .section[open] .caret {
     transform: rotate(180deg);
   }
-  .section-body {
+  .mobile-menu-sheet .section-body {
     padding-bottom: 16px;
   }
-  .group + .group {
+  .mobile-menu-sheet .group + .group {
     margin-top: 12px;
   }
-  .group-title {
+  .mobile-menu-sheet .group-title {
     margin: 0 0 2px;
     color: var(--color-muted);
     font-size: 13px;
     font-weight: 600;
   }
-  .group-title a {
+  .mobile-menu-sheet .group-title a {
     display: inline-block;
     padding: 6px 0;
     color: inherit;
   }
-  .group ul {
+  .mobile-menu-sheet .group ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  .item {
+  .mobile-menu-sheet .item {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -243,11 +244,11 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     word-break: keep-all;
     overflow-wrap: anywhere;
   }
-  .item[aria-current='page'] {
+  .mobile-menu-sheet .item[aria-current='page'] {
     color: var(--color-accent);
     font-weight: 600;
   }
-  .item-icon {
+  .mobile-menu-sheet .item-icon {
     display: grid;
     flex: none;
     place-items: center;
@@ -257,7 +258,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     background: var(--color-accent-soft);
     color: var(--color-accent);
   }
-  .all {
+  .mobile-menu-sheet .all {
     display: inline-flex;
     align-items: center;
     min-height: 44px;

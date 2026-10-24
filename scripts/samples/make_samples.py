@@ -63,6 +63,7 @@ TEXT = {
         'located': '예시-위치사진.jpg',
         'tilted': '예시-기운사진.jpg',
         'car': '예시-번호판사진.jpg',
+        'product': '예시-상품사진.jpg',
         'heics': ['예시-아이폰사진1.heic', '예시-아이폰사진2.heic'],
         'plate': '00가 0000',
         'carCard': ('주차 시 연락처', '010-0000-0000'),
@@ -203,6 +204,7 @@ TEXT = {
         'located': 'sample-photo-with-location.jpg',
         'tilted': 'sample-tilted-photo.jpg',
         'car': 'sample-license-plate.jpg',
+        'product': 'sample-product-photo.jpg',
         'heics': ['sample-iphone-photo-1.heic', 'sample-iphone-photo-2.heic'],
         'plate': 'ABC 0000',
         'carCard': ('Parking contact', '000-000-0000'),
@@ -458,6 +460,65 @@ def parked_car(t, width: int = 1600, height: int = 1200) -> Image.Image:
     image = image.filter(ImageFilter.GaussianBlur(0.8))
     noise = Image.effect_noise(image.size, 16).convert('RGB')
     return Image.blend(image, noise, 0.05)
+
+
+def mug_photo(width: int = 1600, height: int = 1200) -> Image.Image:
+    """나무 탁자 위 머그잔을 찍은 상품 사진 같은 그림 (배경 지우기). 잔은 둥근 빛과 그늘, 손잡이, 그림자가 있다"""
+    rng = random.Random(61)
+    image = Image.new('RGB', (width, height))
+    draw = ImageDraw.Draw(image)
+    table = int(height * 0.62)
+    # 뒤 벽: 위가 조금 어두운 베이지, 잔 무늬
+    for y in range(table):
+        t = y / table
+        draw.line([(0, y), (width, y)], fill=(int(196 + 30 * t), int(184 + 28 * t), int(164 + 24 * t)))
+    # 나무 탁자: 가로 결
+    for y in range(table, height):
+        t = (y - table) / (height - table)
+        base = (int(150 - 30 * t), int(104 - 22 * t), int(66 - 16 * t))
+        draw.line([(0, y), (width, y)], fill=base)
+    for _ in range(260):
+        y = rng.randrange(table + 4, height)
+        x = rng.randrange(-200, width)
+        shade = rng.randint(-26, 18)
+        length = rng.randint(200, 900)
+        draw.line([(x, y), (x + length, y + rng.randint(-2, 2))], fill=(118 + shade, 80 + shade, 50 + shade), width=rng.randint(1, 3))
+    draw.line([(0, table), (width, table)], fill=(110, 76, 48), width=4)
+
+    cx, top, bottom, half = width // 2 - 40, int(height * 0.30), int(height * 0.80), int(width * 0.15)
+    # 그림자 (잔 아래 오른쪽으로 번진다)
+    shadow = Image.new('L', (width, height), 0)
+    ImageDraw.Draw(shadow).ellipse([cx - half + 40, bottom - 40, cx + half + 200, bottom + 50], fill=170)
+    image = Image.composite(Image.new('RGB', image.size, (60, 40, 26)), image, shadow.filter(ImageFilter.GaussianBlur(28)))
+
+    # 잔 몸통: 가로로 빛이 도는 청록 (왼쪽이 밝고 오른쪽이 어둡다)
+    mug = Image.new('RGB', (width, height))
+    mask = Image.new('L', (width, height), 0)
+    mask_draw = ImageDraw.Draw(mask)
+    mask_draw.rectangle([cx - half, top, cx + half, bottom - 30], fill=255)
+    mask_draw.ellipse([cx - half, bottom - 70, cx + half, bottom + 10], fill=255)
+    mug_draw = ImageDraw.Draw(mug)
+    for x in range(cx - half, cx + half + 1):
+        u = (x - (cx - half)) / (2 * half)
+        light = 0.55 + 0.45 * math.cos((u - 0.32) * math.pi)
+        mug_draw.line([(x, 0), (x, height)], fill=(int(30 + 70 * light), int(110 + 90 * light), int(118 + 80 * light)))
+    # 손잡이: 오른쪽 고리
+    handle = Image.new('L', (width, height), 0)
+    handle_draw = ImageDraw.Draw(handle)
+    hx, hy = cx + half - 20, top + int((bottom - top) * 0.18)
+    handle_draw.ellipse([hx, hy, hx + 210, hy + 300], fill=255)
+    handle_draw.ellipse([hx + 50, hy + 60, hx + 160, hy + 240], fill=0)
+    image.paste((40, 112, 120), (0, 0), handle.filter(ImageFilter.GaussianBlur(1.2)))
+    image = Image.composite(mug, image, mask.filter(ImageFilter.GaussianBlur(1.2)))
+    draw = ImageDraw.Draw(image)
+    # 잔 입구: 안쪽이 보이는 납작한 타원
+    draw.ellipse([cx - half, top - 40, cx + half, top + 40], fill=(28, 92, 100))
+    draw.ellipse([cx - half + 16, top - 30, cx + half - 16, top + 30], fill=(22, 60, 66))
+    # 몸통 위 흰 무늬 띠
+    draw.rectangle([cx - half, top + 170, cx + half, top + 200], fill=(232, 236, 228))
+    image = image.filter(ImageFilter.GaussianBlur(0.7))
+    noise = Image.effect_noise(image.size, 14).convert('RGB')
+    return Image.blend(image, noise, 0.04)
 
 
 def jpeg(image: Image.Image, quality: int = 92) -> bytes:
@@ -819,6 +880,7 @@ def main():
     photo = landscape(2000, 1500, 21)
     face = Image.open(os.path.join(HERE, 'face.jpg')).convert('RGB')
     sea = tilted_sea(1600, 1200, 4)
+    mug = mug_photo()
     heics = iphone_photos()
     for locale, t in TEXT.items():
         folder = os.path.join(OUT, locale)
@@ -845,6 +907,7 @@ def main():
         photo.save(os.path.join(folder, t['located']), 'JPEG', quality=90, exif=located_exif())
         sea.save(os.path.join(folder, t['tilted']), 'JPEG', quality=90)
         parked_car(t).save(os.path.join(folder, t['car']), 'JPEG', quality=90)
+        mug.save(os.path.join(folder, t['product']), 'JPEG', quality=90)
         for name, data in zip(t['heics'], heics):
             with open(os.path.join(folder, name), 'wb') as f:
                 f.write(data)

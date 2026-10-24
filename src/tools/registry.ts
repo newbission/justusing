@@ -47,11 +47,17 @@ const TOOL_IDS: readonly string[] = [
   'image/heic-to-jpg',
   'image/ocr',
   'image/id-photo',
+  'image/remove-bg',
   'image/remove-location',
   'image/stitch',
   'image/crop',
   'image/mosaic',
   'text/csv-encoding',
+  'video/trim',
+  'video/compress',
+  'video/to-gif',
+  'video/frame-capture',
+  'video/extract-audio',
 ];
 
 export interface Tool extends ToolMeta {

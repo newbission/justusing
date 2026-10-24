@@ -65,6 +65,7 @@
 | `worker-src`              | `blob:`                                           | `createWorker()`가 blob URL로 띄운다             |
 | `img-src`                 | 사이트 + `blob:` `data:`                          | 썸네일·미리보기                                  |
 | `font-src`                | 사이트 + `data:`                                  |                                                  |
+| `media-src`               | `blob:` (동영상 카테고리 frame만)                 | 고른 동영상을 `<video>`로 연다. 다른 도구는 막힘 |
 | `script-src`              | `'self'` + 사이트 + `'wasm-unsafe-eval'`          | pdf.js 등이 WebAssembly를 쓴다 (eval은 금지)     |
 | `style-src`               | `'self'` + 사이트 (+ Astro가 넣는 `<style>` 해시) |                                                  |
 | `form-action`, `base-uri` | `'none'`                                          |                                                  |
@@ -102,6 +103,9 @@
 - 워커는 Vite가 IIFE 한 파일로 번들한다 (`worker.format: 'iife'`). 사용: `import url from './x.worker.ts?worker&url'`
 - 개발 서버는 워커를 ES 모듈로 내려줘 클래식 워커로는 `import` 오류가 난다. 개발 중(격리 꺼짐)에는 `type: 'module'`로 바로 띄운다
 - blob URL은 해제하지 않는다 (워커가 비동기로 읽어 바로 해제하면 실패할 수 있다, 도구마다 워커는 몇 개뿐)
+- **blob 워커는 안전한 문맥(secure context)이 아니다** (2026-10-23, 크롬): 출처 null인 frame이 만든 blob URL 워커는 `isSecureContext`가 false라
+  WebCodecs(`VideoDecoder`·`VideoEncoder`·`AudioDecoder`) 같은 secure-context 전용 API가 없다. frame 본문에는 있다.
+  그래서 동영상 처리는 frame 본문에서 한다 (→ [동영상 공통](../video-common/README.md))
 - 워커 안의 상대 주소는 blob 기준이라 쓸 수 없다. 보조 파일은 절대 주소로 넘긴다 (예: pdf.js CMap, `pdfjs.ts`의 `assetUrl`)
 
 ### 도구 칸 높이·스크롤

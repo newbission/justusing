@@ -13,5 +13,10 @@
     "path": "/data/face/selfie_segmenter.tflite",
     "bytes": 249537,
     "sha256": "191ac9529ae506ee0beefa6b2c945a172dab9d07d1e802a290a4e4038226658b"
+  },
+  "objects": {
+    "path": "/data/face/magic_touch.tflite",
+    "bytes": 6227884,
+    "sha256": "e24338a717c1b7ad8d159666677ef400babb7f33b8ad60c4d96db4ecf694cd25"
   }
 }

@@ -161,11 +161,12 @@ const { menus, label } = Astro.props;
   });
 </script>
 
-<style>
+<style is:global>
+  /* 전역 스타일(루트 클래스 안에서만 적용): 이 메뉴는 모든 페이지에 있고 항목이 많아, 범위 속성(data-astro-cid)을 붙이면 HTML이 크게 늘어난다 */
   .mega {
     height: 100%;
   }
-  .bar {
+  .mega .bar {
     display: flex;
     height: 100%;
     gap: 4px;
@@ -174,11 +175,11 @@ const { menus, label } = Astro.props;
     list-style: none;
   }
   /* 머리글 높이를 다 채워, 버튼에서 판으로 내려가는 길이 메뉴 밖으로 나가지 않게 한다 */
-  .entry {
+  .mega .entry {
     display: flex;
     align-items: center;
   }
-  .trigger {
+  .mega .trigger {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -192,27 +193,27 @@ const { menus, label } = Astro.props;
     white-space: nowrap;
     cursor: pointer;
   }
-  .trigger:hover,
-  .trigger[aria-expanded='true'] {
+  .mega .trigger:hover,
+  .mega .trigger[aria-expanded='true'] {
     background: var(--color-hover);
     color: var(--color-text);
   }
-  .trigger[data-current] {
+  .mega .trigger[data-current] {
     color: var(--color-text);
     font-weight: 600;
   }
-  .caret {
+  .mega .caret {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.6;
     transition: transform 0.12s;
   }
-  .trigger[aria-expanded='true'] .caret {
+  .mega .trigger[aria-expanded='true'] .caret {
     transform: rotate(180deg);
   }
 
   /* 머리글(.site-header) 폭 전체에 걸친 판. 화면보다 길면 판 안에서 스크롤한다 */
-  .panel {
+  .mega .panel {
     position: absolute;
     top: 100%;
     right: 0;
@@ -226,25 +227,25 @@ const { menus, label } = Astro.props;
     background: var(--color-surface);
     box-shadow: var(--shadow-dialog);
   }
-  .panel-inner {
+  .mega .panel-inner {
     max-width: var(--content-max);
     margin: 0 auto;
     padding: 20px var(--gutter) 12px;
   }
   /* 칸 폭을 정하고 들어가는 만큼 칸을 늘린다. 도구 묶음은 칸을 넘어가지 않게 한 칸에 둔다 */
-  .columns {
+  .mega .columns {
     column-gap: 24px;
     column-width: 260px;
   }
-  .group {
+  .mega .group {
     break-inside: avoid;
     padding-bottom: 16px;
   }
   /* 가이드처럼 묶음 하나가 긴 판은 칸을 넘어 이어진다 */
-  .columns.flow .group {
+  .mega .columns.flow .group {
     break-inside: auto;
   }
-  .group-title {
+  .mega .group-title {
     margin: 0 0 4px;
     padding: 0 8px;
     color: var(--color-muted);
@@ -252,23 +253,23 @@ const { menus, label } = Astro.props;
     font-weight: 600;
     break-after: avoid;
   }
-  .group-title a {
+  .mega .group-title a {
     color: inherit;
     text-decoration: none;
   }
-  .group-title a:hover {
+  .mega .group-title a:hover {
     color: var(--color-text);
     text-decoration: underline;
   }
-  .group ul {
+  .mega .group ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  .group li {
+  .mega .group li {
     break-inside: avoid;
   }
-  .item {
+  .mega .item {
     display: flex;
     align-items: flex-start;
     gap: 10px;
@@ -277,10 +278,10 @@ const { menus, label } = Astro.props;
     color: var(--color-text);
     text-decoration: none;
   }
-  .item:hover {
+  .mega .item:hover {
     background: var(--color-hover);
   }
-  .item-icon {
+  .mega .item-icon {
     display: grid;
     flex: none;
     place-items: center;
@@ -290,53 +291,53 @@ const { menus, label } = Astro.props;
     background: var(--color-accent-soft);
     color: var(--color-accent);
   }
-  .item-text {
+  .mega .item-text {
     display: flex;
     flex-direction: column;
     min-width: 0;
     padding-top: 1px;
   }
   /* 한글은 낱말 단위로 줄을 바꾼다 (글자 하나만 다음 줄로 넘어가지 않게) */
-  .item-text,
-  .group-title {
+  .mega .item-text,
+  .mega .group-title {
     word-break: keep-all;
     overflow-wrap: anywhere;
   }
-  .item-name {
+  .mega .item-name {
     font-size: 14px;
     font-weight: 600;
     line-height: 1.45;
   }
   /* 설명 없는 항목(가이드 제목)은 한 덩어리 글이라 덜 굵게, 아이콘과 가운데를 맞춘다 */
-  .item.plain {
+  .mega .item.plain {
     align-items: center;
   }
-  .item.plain .item-name {
+  .mega .item.plain .item-name {
     font-weight: 500;
   }
-  .item-summary {
+  .mega .item-summary {
     color: var(--color-muted);
     font-size: 13px;
     line-height: 1.45;
     text-wrap: pretty;
   }
-  .item[aria-current='page'] .item-name {
+  .mega .item[aria-current='page'] .item-name {
     color: var(--color-accent);
   }
-  .all {
+  .mega .all {
     display: flex;
     justify-content: flex-end;
     margin: 0;
     padding-top: 12px;
     border-top: 1px solid var(--color-line);
   }
-  .all a {
+  .mega .all a {
     color: var(--color-accent);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
   }
-  .all a:hover {
+  .mega .all a:hover {
     text-decoration: underline;
   }
 </style>

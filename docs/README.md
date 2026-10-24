@@ -1,6 +1,6 @@
 # justusing 문서
 
-쓴 날 2026-10-16 · 고친 날 2026-10-17
+쓴 날 2026-10-16 · 고친 날 2026-10-23
 
 기능마다, 여러 기능이 같이 쓰는 기반마다 폴더가 하나씩 있다. 다른 세션(사람이든 에이전트든)이 이어서 일할 때
 코드와 커밋을 처음부터 다시 읽지 않아도 되게 하는 것이 목적이다.
@@ -43,6 +43,7 @@
 | [frame-isolation](./foundations/frame-isolation)     | 도구를 격리된 iframe에서 돌리는 구조, CSP, 워커 띄우기, 파일 놓기, 다운로드                      |
 | [pdf-common](./foundations/pdf-common)               | PDF 도구 공통: pdf.js 열기·썸네일·쪽 그리기, pdf-lib 워커(조립·고치기·글자 넣기), 공통 화면 부품 |
 | [image-common](./foundations/image-common)           | 이미지 도구 공통: 여러 장 목록 화면, 읽기·크기 바꾸기·저장 워커                                  |
+| [video-common](./foundations/video-common)           | 동영상 도구 공통: mediabunny + WebCodecs, 열기·지원 확인·진행률·그만두기, 결과 Blob 조각         |
 | [fonts-and-data](./foundations/fonts-and-data)       | 한글 글꼴 직접 호스팅, 큰 데이터(글꼴·OCR) 받기 전 동의와 보관(Cache API)                        |
 | [site-structure](./foundations/site-structure)       | 레지스트리·카테고리·허브, 레이아웃, 테마, 로고, 설정, 이용 권한(canUse)                          |
 | [i18n](./foundations/i18n)                           | 한국어·영어 주소 규칙, 문구 위치, 처음 방문 언어 보내기                                          |
@@ -94,6 +95,7 @@ PDF
 | [image-stitch](./features/image-stitch)                   | 이어 붙이기      | live |
 | [image-crop](./features/image-crop)                       | 자르기·회전      | live |
 | [image-mosaic](./features/image-mosaic)                   | 모자이크         | live |
+| [image-remove-bg](./features/image-remove-bg)             | 배경 제거        | live |
 | [image-heic-to-jpg](./features/image-heic-to-jpg)         | HEIC JPG 변환    | live |
 | [image-ocr](./features/image-ocr)                         | 글자 추출(OCR)   | live |
 
@@ -102,3 +104,13 @@ PDF
 | 폴더                                              | 도구                 | 상태 |
 | ------------------------------------------------- | -------------------- | ---- |
 | [text-csv-encoding](./features/text-csv-encoding) | CSV 한글 깨짐 고치기 | live |
+
+동영상
+
+| 폴더                                                  | 도구           | 상태       |
+| ----------------------------------------------------- | -------------- | ---------- |
+| [video-trim](./features/video-trim)                   | 자르기         | PR 진행 중 |
+| [video-compress](./features/video-compress)           | 용량 줄이기    | PR 진행 중 |
+| [video-to-gif](./features/video-to-gif)               | 동영상을 GIF로 | PR 진행 중 |
+| [video-frame-capture](./features/video-frame-capture) | 장면 캡처      | PR 진행 중 |
+| [video-extract-audio](./features/video-extract-audio) | 소리 추출      | PR 진행 중 |

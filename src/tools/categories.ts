@@ -46,13 +46,13 @@ export const CATEGORIES = {
         name: '이미지',
         title: '무료 이미지 도구 모음 - 사진 압축·크기 조절·변환·증명사진, 업로드 없이',
         description:
-          '이미지를 업로드 없이 줄이고, 정한 용량에 맞추고, 크기를 바꾸고, 변환하고(아이폰 HEIC 포함), 글자를 뽑고, 이어 붙이고, 자르고 돌리고, 모자이크로 가리고, 증명사진으로 맞추고, 위치 정보를 지우는 도구',
+          '이미지를 업로드 없이 줄이고, 정한 용량에 맞추고, 크기를 바꾸고, 변환하고(아이폰 HEIC 포함), 글자를 뽑고, 이어 붙이고, 자르고 돌리고, 모자이크로 가리고, 배경을 지우고, 증명사진으로 맞추고, 위치 정보를 지우는 도구',
       },
       en: {
         name: 'Image',
         title: 'Free image tools - Compress, resize and convert photos without uploading',
         description:
-          'Compress, fit to a file size, resize, convert (including iPhone HEIC), extract text, stitch, crop, rotate, pixelate, make ID photos and remove location data without uploading',
+          'Compress, fit to a file size, resize, convert (including iPhone HEIC), extract text, stitch, crop, rotate, pixelate, remove backgrounds, make ID photos and remove location data without uploading',
       },
     },
     sections: {
@@ -79,6 +79,27 @@ export const CATEGORIES = {
     },
     sections: {
       encoding: { ko: '인코딩', en: 'Encoding' },
+    },
+  },
+  video: {
+    text: {
+      ko: {
+        name: '동영상',
+        title: '무료 동영상 도구 - 동영상 자르기·용량 줄이기·GIF 만들기·소리 추출, 업로드 없이',
+        description:
+          '동영상을 업로드 없이 자르고, 용량을 줄이고, GIF로 만들고, 장면을 사진으로 저장하고, 소리만 뽑는 도구. 이 기기 안에서 처리합니다',
+      },
+      en: {
+        name: 'Video',
+        title: 'Free video tools - Trim, compress, make GIFs and extract audio without uploading',
+        description:
+          'Trim videos, make them smaller, turn them into GIFs, save frames as images and extract the audio without uploading. Everything runs on this device',
+      },
+    },
+    sections: {
+      edit: { ko: '편집', en: 'Edit' },
+      optimize: { ko: '용량', en: 'Size' },
+      convert: { ko: '변환·추출', en: 'Convert & extract' },
     },
   },
 } as const satisfies Record<

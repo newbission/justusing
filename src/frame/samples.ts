@@ -22,6 +22,8 @@ type SampleKey =
   | 'located'
   | 'tilted'
   | 'car'
+  /** 탁자 위 머그잔 (배경 지우기) */
+  | 'product'
   | 'screen'
   | 'chat1'
   | 'chat2'
@@ -31,7 +33,11 @@ type SampleKey =
   /** BOM 없는 UTF-8 CSV (엑셀에서 깨짐) */
   | 'utf8Csv'
   | 'heic1'
-  | 'heic2';
+  | 'heic2'
+  /** 직접 그린 짧은 동영상 (공이 튀어 오름, 동영상을 GIF로·장면 캡처) */
+  | 'ballClip'
+  /** 해 지는 바다를 지나는 돛단배 동영상 (그림·소리 모두 직접 만든 것, make_sea_video.py) */
+  | 'seaClip';
 
 /** 언어별 파일 이름 (make_samples.py의 TEXT와 같게) */
 const NAMES: Record<Locale, Record<SampleKey, string>> = {
@@ -49,6 +55,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     located: '예시-위치사진.jpg',
     tilted: '예시-기운사진.jpg',
     car: '예시-번호판사진.jpg',
+    product: '예시-상품사진.jpg',
     screen: '예시-화면캡처.png',
     chat1: '예시-대화캡처1.png',
     chat2: '예시-대화캡처2.png',
@@ -57,6 +64,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     utf8Csv: '예시-주문목록-UTF8.csv',
     heic1: '예시-아이폰사진1.heic',
     heic2: '예시-아이폰사진2.heic',
+    ballClip: '예시-공튀기기.mp4',
+    seaClip: '예시-바다영상.mp4',
   },
   en: {
     report: 'sample-report.pdf',
@@ -72,6 +81,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     located: 'sample-photo-with-location.jpg',
     tilted: 'sample-tilted-photo.jpg',
     car: 'sample-license-plate.jpg',
+    product: 'sample-product-photo.jpg',
     screen: 'sample-screenshot.png',
     chat1: 'sample-chat-1.png',
     chat2: 'sample-chat-2.png',
@@ -80,6 +90,8 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     utf8Csv: 'sample-orders-utf8.csv',
     heic1: 'sample-iphone-photo-1.heic',
     heic2: 'sample-iphone-photo-2.heic',
+    ballClip: 'sample-bouncing-ball.mp4',
+    seaClip: 'sample-sea-video.mp4',
   },
 };
 
@@ -116,11 +128,17 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/heic-to-jpg': ['heic1', 'heic2'],
   'image/ocr': ['docPhoto2', 'chat1'],
   'image/id-photo': ['face'],
+  'image/remove-bg': ['product'],
   'image/remove-location': ['located', 'screen'],
   'image/stitch': ['chat1', 'chat2', 'chat3'],
   'image/crop': ['tilted'],
   'image/mosaic': ['car'],
   'text/csv-encoding': ['utf8Csv', 'legacyCsv'],
+  'video/to-gif': ['ballClip'],
+  'video/frame-capture': ['ballClip'],
+  'video/trim': ['seaClip'],
+  'video/compress': ['seaClip'],
+  'video/extract-audio': ['seaClip'],
 };
 
 const TYPES: Record<string, string> = {
@@ -129,6 +147,7 @@ const TYPES: Record<string, string> = {
   png: 'image/png',
   csv: 'text/csv',
   heic: 'image/heic',
+  mp4: 'video/mp4',
 };
 
 /** 도구에 견본이 있는지 (바깥 페이지가 빌드 때 '따라 하기' 버튼을 그릴지 정한다) */
