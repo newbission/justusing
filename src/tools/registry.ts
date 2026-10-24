@@ -53,6 +53,7 @@ const TOOL_IDS: readonly string[] = [
   'image/crop',
   'image/mosaic',
   'text/csv-encoding',
+  'video/trim',
   'video/to-gif',
   'video/frame-capture',
 ];
