@@ -103,7 +103,7 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/readme/screenshots.mjs  # README 화면 �
 ### 설정은 한 곳에
 
 - 사이트명·도메인·설명·광고 설정은 `src/site.config.ts`에만 둔다. 코드·문서에 하드코딩하지 않는다.
-  예외: `README.md`는 저장소를 찾은 사람이 사이트로 바로 가게 사이트 링크를 직접 적는다 (사용자 결정, 2026-10-18). 도메인을 바꾸면 같이 고친다.
+  예외: `README.md`·`README.en.md`(영어판)는 저장소를 찾은 사람이 사이트로 바로 가게 사이트 링크를 직접 적는다 (사용자 결정, 2026-10-18). 도메인을 바꾸면 같이 고친다 (도구 목록은 `scripts/readme/tools.mjs`가 `site.config.ts`의 도메인으로 다시 만든다).
 - 도메인 연결은 코드가 아니라 Cloudflare 대시보드에서 한다 (아래 "배포 수동 설정").
 
 ### 주소 구조
