@@ -22,6 +22,8 @@ type SampleKey =
   | 'located'
   | 'tilted'
   | 'car'
+  /** 탁자 위 머그잔 (배경 지우기) */
+  | 'product'
   | 'screen'
   | 'chat1'
   | 'chat2'
@@ -49,6 +51,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     located: '예시-위치사진.jpg',
     tilted: '예시-기운사진.jpg',
     car: '예시-번호판사진.jpg',
+    product: '예시-상품사진.jpg',
     screen: '예시-화면캡처.png',
     chat1: '예시-대화캡처1.png',
     chat2: '예시-대화캡처2.png',
@@ -72,6 +75,7 @@ const NAMES: Record<Locale, Record<SampleKey, string>> = {
     located: 'sample-photo-with-location.jpg',
     tilted: 'sample-tilted-photo.jpg',
     car: 'sample-license-plate.jpg',
+    product: 'sample-product-photo.jpg',
     screen: 'sample-screenshot.png',
     chat1: 'sample-chat-1.png',
     chat2: 'sample-chat-2.png',
@@ -116,6 +120,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'image/heic-to-jpg': ['heic1', 'heic2'],
   'image/ocr': ['docPhoto2', 'chat1'],
   'image/id-photo': ['face'],
+  'image/remove-bg': ['product'],
   'image/remove-location': ['located', 'screen'],
   'image/stitch': ['chat1', 'chat2', 'chat3'],
   'image/crop': ['tilted'],
