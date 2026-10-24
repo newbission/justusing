@@ -55,6 +55,7 @@ const DOCS = {
   'features/image-stitch': { scopes: ['image-stitch'], prs: [] },
   'features/image-crop': { scopes: ['image-crop'], prs: [] },
   'features/image-mosaic': { scopes: ['image-mosaic'], prs: [] },
+  'features/image-remove-bg': { scopes: ['image-remove-bg'], prs: [] },
   'features/image-heic-to-jpg': { scopes: ['image-heic-to-jpg'], prs: [] },
   'features/image-ocr': { scopes: ['image-ocr', 'ocr'], prs: [] },
   'features/text-csv-encoding': { scopes: ['text-csv-encoding'], prs: [] },
