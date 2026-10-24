@@ -65,6 +65,7 @@
 | `worker-src`              | `blob:`                                           | `createWorker()`가 blob URL로 띄운다             |
 | `img-src`                 | 사이트 + `blob:` `data:`                          | 썸네일·미리보기                                  |
 | `font-src`                | 사이트 + `data:`                                  |                                                  |
+| `media-src`               | `blob:` (동영상 카테고리 frame만)                 | 고른 동영상을 `<video>`로 연다. 다른 도구는 막힘 |
 | `script-src`              | `'self'` + 사이트 + `'wasm-unsafe-eval'`          | pdf.js 등이 WebAssembly를 쓴다 (eval은 금지)     |
 | `style-src`               | `'self'` + 사이트 (+ Astro가 넣는 `<style>` 해시) |                                                  |
 | `form-action`, `base-uri` | `'none'`                                          |                                                  |
