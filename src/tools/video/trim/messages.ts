@@ -32,6 +32,8 @@ const ko = {
   exactUnavailable: '이 브라우저에서는 다시 인코딩할 수 없어 빠르게 자르기만 됩니다.',
   ready: (start: string, end: string, length: string) => `${start} ~ ${end} (${length}) 남기기`,
   tooShort: '시작과 끝 사이가 너무 짧습니다. 0.1초 이상 남겨 주세요.',
+  keyframeTooFar:
+    '이 동영상은 시작 앞 10초 안에 키프레임이 없어 빠르게 자를 수 없습니다 (화면 녹화에 흔함). "정확하게"를 골라 주세요.',
   run: '자르기',
   done: (length: string, size: string) => `잘랐습니다: ${length} · ${size}`,
   droppedAudio: ' · 이 브라우저가 소리를 옮기지 못해 소리가 빠졌습니다',
@@ -70,6 +72,8 @@ const en: typeof ko = {
   exactUnavailable: 'This browser cannot re-encode video, so only fast trimming is available.',
   ready: (start: string, end: string, length: string) => `Keep ${start} to ${end} (${length})`,
   tooShort: 'The part between start and end is too short. Keep at least 0.1 seconds.',
+  keyframeTooFar:
+    'This video has no key frame within 10 seconds before your start, so it cannot be trimmed fast (common in screen recordings). Please choose "Precise".',
   run: 'Trim',
   done: (length: string, size: string) => `Trimmed: ${length} · ${size}`,
   droppedAudio: ' · The sound was removed because this browser could not move it over',

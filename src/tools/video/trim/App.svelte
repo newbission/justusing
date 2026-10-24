@@ -138,7 +138,7 @@
             ? t.droppedAudio
             : ''}
         {:else if failure}
-          <strong>{common.failed[failure]}</strong>
+          <strong>{failure === 'copy' ? t.keyframeTooFar : common.failed[failure]}</strong>
         {:else if tooShort}
           <strong>{t.tooShort}</strong>
         {:else}

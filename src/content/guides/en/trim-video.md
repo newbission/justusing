@@ -29,6 +29,7 @@ The video data is moved over as it is, without decoding. If your start falls bet
 - The quality is identical to the original, and even long videos are done in seconds
 - No video encoder is needed, so it works in most browsers
 - Most players (browsers, phones, QuickTime, VLC and others) start exactly at your start. Some editing programs that ignore edit lists may show the video from the earlier key frame (within a few seconds)
+- If there is no key frame within 10 seconds before your start, fast trimming is not done and you are told. Screen recordings have very rare key frames, so moving the data as is would leave a long hidden part in the file, or, in WebM and MKV, which cannot hold frames more than 32 seconds before the start, produce a file that cannot be played. Use precise trimming then
 
 ## Precise trimming (re-encode)
 

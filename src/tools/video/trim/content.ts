@@ -32,6 +32,10 @@ export default defineContent({
         a: '편집 목록을 읽지 않는 프로그램은 앞의 키프레임부터(보통 몇 초 안) 보여 줍니다. WebM·MKV는 편집 목록 대신 음수 시각으로 적어 프로그램마다 다르게 보일 수 있습니다. 이럴 때는 정확하게 자르기를 쓰세요.',
       },
       {
+        q: '"빠르게 자를 수 없습니다"라고 나와요.',
+        a: '빠르게 자르기는 시작 앞 10초 안에 키프레임이 있어야 합니다. 화면 녹화처럼 키프레임이 아주 드문 동영상은 그보다 멀어서, 그대로 옮기면 숨긴 앞부분이 길게 남거나(MP4·MOV) 풀 수 없는 파일이 됩니다(WebM·MKV는 32초 넘게 앞선 장면을 담지 못함). 이럴 때는 정확하게 자르기를 고르세요.',
+      },
+      {
         q: '어떤 브라우저에서 되나요?',
         a: '빠르게 자르기는 파일 안의 데이터를 옮기기만 해서 대부분의 최신 브라우저에서 됩니다. 정확하게 자르기는 브라우저에 든 WebCodecs로 다시 인코딩하므로 크롬·엣지(94 이상), Safari(16.4 이상), 파이어폭스(130 이상, 컴퓨터)가 필요하고, 브라우저가 그 코덱을 풀고 저장할 수 있어야 합니다. 안 되면 화면에 미리 알리고 빠르게만 고를 수 있게 합니다. Safari는 MKV 미리보기를 재생하지 못하지만 자르기는 됩니다.',
       },
@@ -78,6 +82,10 @@ export default defineContent({
       {
         q: 'My fast-trimmed video starts a little early in an editing program.',
         a: 'Programs that ignore edit lists show the video from the earlier key frame (usually within a few seconds). WebM and MKV use negative timestamps instead of an edit list, which programs handle differently. In that case, use precise trimming.',
+      },
+      {
+        q: 'It says the video cannot be trimmed fast.',
+        a: 'Fast trimming needs a key frame within 10 seconds before your start. Videos with very rare key frames, such as screen recordings, have them farther apart; moving the data as is would either leave a long hidden part in the file (MP4, MOV) or make a file that cannot be played (WebM and MKV cannot hold frames more than 32 seconds before the start). In that case, choose precise trimming.',
       },
       {
         q: 'Which browsers does it work in?',

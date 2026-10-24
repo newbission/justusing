@@ -82,6 +82,36 @@ test('WebM도 같은 형식으로 자른다', async ({ page }) => {
   expect(facts.audio?.codec).toBe('opus');
 });
 
+for (const file of ['sparse-keys.webm', 'sparse-keys.mp4']) {
+  test(`키프레임이 10초 넘게 앞에 있으면 빠르게 자르지 않고 정확하게를 권한다 (${file})`, async ({
+    page,
+  }) => {
+    // 키프레임이 0초 하나뿐인 16초 동영상
+    const frame = await openVideoTool(page, 'trim', file);
+    await setTimes(frame, '12', '14');
+    await frame.getByRole('button', { name: '자르기', exact: true }).click();
+    await expect(
+      frame.getByText(/시작 앞 10초 안에 키프레임이 없어 빠르게 자를 수 없습니다/),
+    ).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(frame.getByRole('button', { name: '받기' })).toHaveCount(0);
+
+    // 정확하게는 된다
+    await frame.getByRole('radio', { name: /정확하게/ }).check();
+    const exact = await runAndDownload(page, frame, '자르기', '받기');
+    const facts = await inspect(exact.bytes);
+    expect(facts.duration).toBeCloseTo(2, 0);
+    expect(facts.video!.firstTimestamp).toBeGreaterThanOrEqual(0);
+
+    // 10초 안이면 빠르게 자른다 (0초 키프레임부터 8초 앞까지 담음)
+    await frame.getByRole('radio', { name: /빠르게/ }).check();
+    await setTimes(frame, '8', '10');
+    const fast = await runAndDownload(page, frame, '자르기', '받기');
+    expect((await inspect(fast.bytes)).video!.firstTimestamp).toBeCloseTo(-8, 1);
+  });
+}
+
 test('WebCodecs가 없는 브라우저는 빠르게 자르기만 된다', async ({ page }) => {
   // 도구 frame에서 WebCodecs를 없앤다 (예전 Safari처럼)
   await page.addInitScript(() => {
