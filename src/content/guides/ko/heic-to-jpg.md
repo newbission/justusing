@@ -3,6 +3,7 @@ title: 아이폰 HEIC 사진을 JPG로 바꾸는 방법
 description: 아이폰 사진이 윈도우나 제출 사이트에서 열리지 않는 이유와 HEIC를 JPG로 바꾸는 방법, 처음부터 JPG로 찍거나 옮기는 아이폰 설정, 바꿀 때 사라지는 것(촬영 정보·라이브 포토·HDR)을 설명합니다.
 tool: image/heic-to-jpg
 published: 2026-10-23
+updated: 2026-10-24
 order: 28
 ---
 
@@ -44,4 +45,4 @@ HEIC는 아이폰·아이패드가 iOS 11(2017년)부터 기본으로 쓰는 사
 
 ## 바꾼 다음에
 
-바꾼 사진의 용량을 더 줄이려면 [이미지 압축](/image/compress/)을 이어서 쓰세요. [이미지를 PDF로](/pdf/from-image/), [이미지 자르기·회전](/image/crop/), [이미지 모자이크](/image/mosaic/), [증명사진 만들기](/image/id-photo/)에는 바꾸지 않은 HEIC를 바로 넣어도 됩니다.
+[이미지 압축](/image/compress/), [이미지 크기 조절](/image/resize/), [이미지 용량 맞추기](/image/target-size/), [이미지를 PDF로](/pdf/from-image/), [이미지 자르기·회전](/image/crop/), [이미지 모자이크](/image/mosaic/), [증명사진 만들기](/image/id-photo/), [이미지 배경 제거](/image/remove-bg/), [PDF 이미지 넣기](/pdf/add-image/)에는 바꾸지 않은 HEIC를 바로 넣어도 됩니다(결과는 JPG 등으로 저장됩니다). 촬영 정보만 지우고 HEIC 그대로 두려면 [사진 위치 정보 지우기](/image/remove-location/)를 쓰세요.

@@ -3,6 +3,7 @@ title: How to convert iPhone HEIC photos to JPG
 description: Why iPhone photos will not open on Windows or upload forms, how to convert HEIC to JPG, the iPhone settings that take or transfer photos as JPG, and what is lost in conversion (photo information, Live Photos, HDR).
 tool: image/heic-to-jpg
 published: 2026-10-23
+updated: 2026-10-24
 order: 28
 ---
 
@@ -44,4 +45,4 @@ Most Compatible makes each photo about twice as large. If storage is tight, keep
 
 ## After converting
 
-To make the photos smaller, continue with [Compress Image](/en/image/compress/). You can add HEIC photos directly, without converting first, to [Image to PDF](/en/pdf/from-image/), [Crop & Rotate Image](/en/image/crop/), [Pixelate & Blur Image](/en/image/mosaic/) and [ID Photo Maker](/en/image/id-photo/).
+You can add HEIC photos directly, without converting first, to [Compress Image](/en/image/compress/), [Resize Image](/en/image/resize/), [Compress to Target Size](/en/image/target-size/), [Image to PDF](/en/pdf/from-image/), [Crop & Rotate Image](/en/image/crop/), [Pixelate & Blur Image](/en/image/mosaic/), [ID Photo Maker](/en/image/id-photo/), [Remove Image Background](/en/image/remove-bg/) and [Add Image to PDF](/en/pdf/add-image/) (the results are saved as JPG or another common format). To remove only the photo information and keep the HEIC, use [Remove Photo Location](/en/image/remove-location/).
