@@ -85,15 +85,15 @@ export const CATEGORIES = {
     text: {
       ko: {
         name: '동영상',
-        title: '무료 동영상 도구 - 동영상 GIF 만들기·장면 캡처, 업로드 없이',
+        title: '무료 동영상 도구 - 동영상 자르기·용량 줄이기·GIF 만들기·소리 추출, 업로드 없이',
         description:
-          '동영상을 업로드 없이 GIF로 만들고, 원하는 장면을 사진으로 저장하는 도구. 브라우저가 재생하는 동영상을 이 기기 안에서 처리합니다',
+          '동영상을 업로드 없이 자르고, 용량을 줄이고, GIF로 만들고, 장면을 사진으로 저장하고, 소리만 뽑는 도구. 이 기기 안에서 처리합니다',
       },
       en: {
         name: 'Video',
-        title: 'Free video tools - Video to GIF and frame capture without uploading',
+        title: 'Free video tools - Trim, compress, make GIFs and extract audio without uploading',
         description:
-          'Turn videos into GIFs and save frames as images without uploading. Any video your browser can play is processed on this device',
+          'Trim videos, make them smaller, turn them into GIFs, save frames as images and extract the audio without uploading. Everything runs on this device',
       },
     },
     sections: {
