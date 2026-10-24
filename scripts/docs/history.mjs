@@ -61,10 +61,14 @@ const DOCS = {
   'features/text-csv-encoding': { scopes: ['text-csv-encoding'], prs: [] },
   'features/video-to-gif': { scopes: ['video-to-gif'], prs: [] },
   'features/video-frame-capture': { scopes: ['video-frame-capture'], prs: [] },
+  'features/video-trim': { scopes: ['video-trim'], prs: [] },
+  'features/video-compress': { scopes: ['video-compress'], prs: [] },
+  'features/video-extract-audio': { scopes: ['video-extract-audio'], prs: [] },
   // 기반 (여러 도구·페이지가 같이 쓰는 것)
   'foundations/frame-isolation': { scopes: ['frame'], prs: [40] },
   'foundations/pdf-common': { scopes: ['pdf'], prs: [76, 77] },
   'foundations/image-common': { scopes: ['image'], prs: [] },
+  'foundations/video-common': { scopes: ['video'], prs: [] },
   'foundations/fonts-and-data': { scopes: ['font'], prs: [47] },
   'foundations/site-structure': {
     scopes: ['registry', 'category', 'hub', 'layout', 'theme', 'config', 'dev', 'entitlement'],
