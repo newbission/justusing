@@ -37,6 +37,7 @@ const SAMPLES = {
     utf8Csv: '예시-주문목록-UTF8.csv',
     heic: '예시-아이폰사진2.heic',
     ballClip: '예시-공튀기기.mp4',
+    seaClip: '예시-바다영상.mp4',
   },
   en: {
     report: 'sample-report.pdf',
@@ -58,6 +59,7 @@ const SAMPLES = {
     utf8Csv: 'sample-orders-utf8.csv',
     heic: 'sample-iphone-photo-2.heic',
     ballClip: 'sample-bouncing-ball.mp4',
+    seaClip: 'sample-sea-video.mp4',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -493,6 +495,44 @@ const JOBS = {
     await open('/text/csv-encoding/', sample('utf8Csv'));
     await frame.getByRole('button', { name: '변환하기' }).click();
     await save('다운로드', `${out}csv-encoding.csv`);
+  },
+
+  // 동영상 용량 줄이기: 1080p 견본을 720p·보통, 480p·낮음으로. 같은 순간(5초)의 장면을 PNG로 떠 둔다
+  async 'video-compress'({ sample, out }) {
+    for (const [side, level] of [
+      [720, '보통'],
+      [480, '낮음'],
+    ]) {
+      await open('/video/compress/', sample('seaClip'));
+      await frame.getByRole('radio', { name: new RegExp(`^${side}p`) }).check();
+      await frame.getByText(level, { exact: true }).click();
+      await frame.getByRole('button', { name: '줄이기', exact: true }).click();
+      await frame.getByRole('button', { name: '받기', exact: true }).waitFor({ timeout: 120_000 });
+      await save('받기', `${out}video-compress-${side}.mp4`);
+    }
+    await page.goto(BASE + '/');
+    for (const [name, path] of [
+      ['original', sample('seaClip')],
+      ['720', `${out}video-compress-720.mp4`],
+      ['480', `${out}video-compress-480.mp4`],
+    ]) {
+      const png = await page.evaluate(
+        async (data) => {
+          const video = document.createElement('video');
+          video.muted = true;
+          video.src = URL.createObjectURL(new Blob([new Uint8Array(data)], { type: 'video/mp4' }));
+          await new Promise((resolve) => (video.onloadeddata = resolve));
+          video.currentTime = 5;
+          await new Promise((resolve) => (video.onseeked = resolve));
+          const canvas = new OffscreenCanvas(video.videoWidth, video.videoHeight);
+          canvas.getContext('2d').drawImage(video, 0, 0);
+          const blob = await canvas.convertToBlob({ type: 'image/png' });
+          return Array.from(new Uint8Array(await blob.arrayBuffer()));
+        },
+        Array.from(await readFile(path)),
+      );
+      await writeFile(`${out}video-compress-${name}.png`, Buffer.from(png));
+    }
   },
 
   // 이미지 글자 추출: 12° 기울여 찍은 서류 사진(견본을 돌려 만든다)과 대화 캡처에서 읽은 줄 자리

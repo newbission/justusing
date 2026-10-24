@@ -106,6 +106,8 @@ TEXT = {
             'gif-320-10-64': 'GIF · 320px · 초당 10장 · 64색',
             'webp-320-10': 'WebP · 320px · 초당 10장',
         },
+        'seaClip': '예시-바다영상.mp4',
+        'videoSizes': {'original': '원본 1080p', '720': '720p · 보통', '480': '480p · 낮음'},
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -176,6 +178,8 @@ TEXT = {
             'gif-320-10-64': 'GIF · 320px · 10 fps · 64 colors',
             'webp-320-10': 'WebP · 320px · 10 fps',
         },
+        'seaClip': 'sample-sea-video.mp4',
+        'videoSizes': {'original': 'Original 1080p', '720': '720p · Medium', '480': '480p · Low'},
     },
 }
 
@@ -832,6 +836,23 @@ FRAME_MS = 50  # 20fps. 멈춘 구간은 프레임 하나에 긴 시간을 준�
 WARN = (214, 96, 58)  # 지워지는 곳 표시색
 
 
+def compress_video(t, cache, samples, fonts):
+    # 같은 순간(5초)의 돛단배 둘레를 같은 크기로 잘라 놓는다. 줄인 결과는 1080p 크기로 키워 같은 곳을 자른다
+    paths = [
+        ('original', os.path.join(samples, t['seaClip'])),
+        ('720', os.path.join(cache, 'video-compress-720.mp4')),
+        ('480', os.path.join(cache, 'video-compress-480.mp4')),
+    ]
+    items = []
+    for name, video in paths:
+        frame = Image.open(os.path.join(cache, f'video-compress-{name}.png')).convert('RGB')
+        size = f'{frame.width}×{frame.height} · {size_label(video)}'
+        frame = frame.resize((1920, 1080), Image.BICUBIC)
+        crop = frame.crop((780, 540, 1180, 900))
+        items.append((fit_width(crop, 260), t['videoSizes'][name], size))
+    return 'compress-video', 'sizes.png', tiles(items, *fonts)
+
+
 def ease(x: float) -> float:
     """천천히 시작해 천천히 멈춘다 (0~1)"""
     x = min(max(x, 0.0), 1.0)
@@ -1143,6 +1164,7 @@ GUIDES = {
     'fix-csv-encoding': csv_encoding,
     'image-to-text': image_ocr,
     'reduce-gif-size': gif_size,
+    'compress-video': compress_video,
 }
 
 
