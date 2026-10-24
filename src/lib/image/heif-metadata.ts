@@ -7,6 +7,8 @@
  *
  * 무엇이 적혔는지 모르는 항목·상자(그림도 EXIF·XMP도 아닌 것, 압축한 XMP, 동영상 트랙 등)가 있으면
  * `unknown`으로 알린다. 거기에도 위치가 적힐 수 있어, 지우는 쪽은 그런 파일을 고치지 않는다 (허용 목록).
+ * 어느 항목도 쓰지 않는 바이트(빈 상자 `free`·`skip`, 그림 자료 상자 안의 쓰지 않는 틈, 파일 끝 뒤 자료)와
+ * 자유 글(항목 이름, `hdlr` 이름)은 예전 편집이 남긴 촬영 정보가 있을 수 있어 `wipes`로 알려 함께 비운다.
  * 워커와 화면 어디서나 부른다. 구조를 읽지 못하면 undefined.
  */
 import { ascii, boxes, child, u16, u32, type Box } from './heif-container';
@@ -17,10 +19,19 @@ export interface HeifMetaItem {
   ranges: { start: number; end: number }[];
 }
 
+/** 읽는 프로그램이 쓰지 않는 바이트 구간. fill로 채워 비운다 (길이는 그대로) */
+export interface HeifWipe {
+  start: number;
+  end: number;
+  /** 0: 쓰지 않는 자리, 0x20(공백): 0으로 끝나는 글자라 0을 넣으면 뒤 글자의 시작이 바뀌는 이름 */
+  fill: number;
+}
+
 export interface HeifMeta {
   items: HeifMetaItem[];
   /** 무엇이 적혔는지 모르는 항목이나 상자가 있다 (고치지 않는다) */
   unknown: boolean;
+  wipes: HeifWipe[];
 }
 
 /** 그림을 담는 항목 (그대로 둔다). 대표 그림·타일·격자·겹침·회전 그림·HDR 밝기·보조 그림(깊이 등) */
@@ -74,16 +85,25 @@ function parse(bytes: Uint8Array): HeifMeta | undefined {
   let meta: Box | undefined;
   let unknown = false;
   let first = true;
+  const wipes: HeifWipe[] = [];
+  const mdats: Box[] = [];
+  let end = 0;
   for (const box of boxes(bytes, 0, bytes.length)) {
     if (first && box.type !== 'ftyp') return undefined;
     first = false;
+    end = box.end;
     if (!TOP_BOXES.has(box.type)) unknown = true;
+    if (box.type === 'free' || box.type === 'skip')
+      wipes.push({ start: box.start, end: box.end, fill: 0 });
+    if (box.type === 'mdat') mdats.push(box);
     if (box.type === 'meta') {
       if (meta) unknown = true;
       meta ??= box;
     }
   }
   if (!meta) return undefined;
+  // 마지막 상자 뒤에 덧붙은 자료 (읽는 프로그램은 쓰지 않는다)
+  if (end < bytes.length) wipes.push({ start: end, end: bytes.length, fill: 0 });
   // meta는 FullBox라 내용 앞에 판·깃발 4바이트가 있다
   for (const box of boxes(bytes, meta.start + 4, meta.end)) {
     if (!META_BOXES.has(box.type)) unknown = true;
@@ -92,6 +112,11 @@ function parse(bytes: Uint8Array): HeifMeta | undefined {
   const iloc = child(bytes, meta, 'iloc', 4);
   const idat = child(bytes, meta, 'idat', 4);
   if (!iinf || !iloc) return undefined;
+  // hdlr 이름 (판·깃발 4, pre_defined 4, 종류 4, 예약 12 뒤의 글자)
+  const hdlr = child(bytes, meta, 'hdlr', 4);
+  if (hdlr && hdlr.start + 24 < hdlr.end) {
+    wipes.push({ start: hdlr.start + 24, end: hdlr.end, fill: 0 });
+  }
 
   const iprp = child(bytes, meta, 'iprp', 4);
   const ipco = iprp && child(bytes, iprp, 'ipco');
@@ -103,6 +128,20 @@ function parse(bytes: Uint8Array): HeifMeta | undefined {
 
   const infos = readItemInfos(bytes, iinf);
   const locations = readLocations(bytes, iloc);
+  for (const info of infos.values()) {
+    if (info.name.end > info.name.start) wipes.push({ ...info.name, fill: 0x20 });
+  }
+  // 어느 항목이든 쓰는 구간. 그림 자료 상자(mdat·idat) 안에서 이 밖은 쓰지 않는 틈이다
+  const used: HeifMetaItem['ranges'] = [];
+  for (const location of locations.values()) {
+    const ranges = rangesOf(bytes, location, idat);
+    if (ranges) used.push(...ranges);
+    else unknown = true; // 다른 파일·다른 항목 안의 자료: 무엇을 쓰는지 몰라 틈을 가릴 수 없다
+  }
+  for (const box of idat ? [...mdats, idat] : mdats) {
+    for (const gap of gaps(box, used)) wipes.push({ ...gap, fill: 0 });
+  }
+
   const items: HeifMetaItem[] = [];
   for (const [id, info] of infos) {
     if (IMAGE_ITEMS.has(info.type)) continue;
@@ -120,11 +159,28 @@ function parse(bytes: Uint8Array): HeifMeta | undefined {
     }
     items.push({ kind, ranges });
   }
-  return { items, unknown };
+  return { items, unknown, wipes };
+}
+
+/** box 내용 가운데 used 구간들이 덮지 않는 곳 */
+function gaps(box: Box, used: HeifMetaItem['ranges']): HeifMetaItem['ranges'] {
+  const inside = used
+    .filter((range) => range.end > box.start && range.start < box.end)
+    .sort((a, b) => a.start - b.start);
+  const out: HeifMetaItem['ranges'] = [];
+  let at = box.start;
+  for (const range of inside) {
+    if (range.start > at) out.push({ start: at, end: range.start });
+    at = Math.max(at, range.end);
+  }
+  if (at < box.end) out.push({ start: at, end: box.end });
+  return out;
 }
 
 interface ItemInfo {
   type: string;
+  /** 항목 이름 글자가 있는 구간 (끝의 0은 빼고) */
+  name: { start: number; end: number };
   contentType?: string;
   encoding?: string;
 }
@@ -151,8 +207,8 @@ function readItemInfos(bytes: Uint8Array, iinf: Box): Map<number, ItemInfo> {
     if (at + 4 > infe.end) throw new Unreadable();
     const type = ascii(bytes, at);
     at += 4;
-    const info: ItemInfo = { type };
     const name = cString(bytes, at, infe.end);
+    const info: ItemInfo = { type, name: { start: at, end: at + name.value.length } };
     if (type === 'mime') {
       const content = cString(bytes, name.next, infe.end);
       // 'application/rdf+xml; charset=…' 같은 덧붙임은 빼고 본다
