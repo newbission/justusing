@@ -56,6 +56,8 @@
 - **mediabunny** (2026-10-23): MPL-2.0, 의존성 없음, 쓰는 부분만 번들(tree-shaking), mp4-muxer·webm-muxer를 만든 사람이 이어 관리(매주 릴리스).
   읽기·쓰기·자르기·다시 저장을 `Conversion` 하나로 한다. mp4box.js(읽기만, 쓰기는 따로)·mp4-muxer/webm-muxer(쓰기만, 지금은 mediabunny로 넘어감)보다
   하나로 끝나고 관리가 활발하다. 버전은 고정한다 (1.61.6)
+  - MPL-2.0 고지: 번들에서는 허가서 머리말이 빠지므로 `scripts/copy-mediabunny-notice.mjs`가 dev·build 전에 `public/vendor/mediabunny/`에
+    `LICENSE.txt`와 `README.txt`(고정 판의 npm·GitHub 주소, 이 사이트 소스)를 둔다. 세 도구의 FAQ "무엇을 내려받나요?"가 연결한다 (libheif와 같은 방식)
   - 크기: `engine` 청크 약 500KB(gzip 약 120KB). 대부분이 `Conversion`(풀기·저장 파이프라인)이고 그릇 형식은 몇 KB씩이라 도구별로 나누지 않았다.
     동영상 도구 페이지에서 **파일을 처음 열 때만** 받는다
 - **워커가 아니라 frame 본문에서 돈다** (2026-10-23): 격리 frame(출처 null) 안에서 `createWorker()`로 띄운 blob 워커는 크롬에서 안전한 문맥

@@ -1,4 +1,8 @@
+import { siteConfig } from '../../../site.config';
 import { defineContent } from '../../types';
+
+/** mediabunny 허가서·안내 (scripts/copy-mediabunny-notice.mjs가 만든다) */
+const NOTICE = `${siteConfig.domain}/vendor/mediabunny/README.txt`;
 
 export default defineContent({
   ko: {
@@ -46,6 +50,10 @@ export default defineContent({
       {
         q: '아주 큰 동영상도 되나요?',
         a: '파일을 통째로 읽지 않고 필요한 부분만 잘라 읽으므로 수 GB 동영상도 열 수 있습니다. 결과는 브라우저 메모리에 모았다가 받으므로 결과가 아주 크면(휴대폰에서 수 GB) 기기 메모리가 모자랄 수 있습니다. 그럴 때는 여러 번에 나눠 자르세요.',
+      },
+      {
+        q: '무엇을 내려받나요?',
+        a: `동영상을 처음 열 때 동영상 파일을 읽고 쓰는 프로그램(mediabunny, 압축 전송 약 120KB)을 이 사이트에서 받습니다. 풀기·다시 저장하기는 브라우저에 든 기능(WebCodecs)이 하고, 동영상은 어디로도 올라가지 않습니다. mediabunny는 Mozilla Public License 2.0 오픈소스이며, 허가서와 소스 안내는 ${NOTICE}에 있습니다.`,
       },
       {
         q: '동영상이 서버로 올라가나요?',
@@ -98,6 +106,10 @@ export default defineContent({
       {
         q: 'Does it work with very large videos?',
         a: 'The file is not read all at once, only the parts that are needed, so even videos of several GB can be opened. The result is collected in the browser before you download it, so a very large result (several GB on a phone) may run out of memory. In that case, trim it in several parts.',
+      },
+      {
+        q: 'What gets downloaded?',
+        a: `When you first open a video, the page loads a program that reads and writes video files (mediabunny, about 120 KB compressed) from this site. Decoding and saving are done by the WebCodecs built into your browser, and your video is never uploaded. mediabunny is open source under the Mozilla Public License 2.0; the license text and source information are at ${NOTICE}.`,
       },
       {
         q: 'Is my video uploaded?',

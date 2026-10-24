@@ -13,8 +13,8 @@
     "check": "astro check && svelte-check --tsconfig ./tsconfig.json --threshold warning",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "predev": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-libheif-notice.mjs && node scripts/copy-ocr-data.mjs && node scripts/copy-face-data.mjs",
-    "prebuild": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-libheif-notice.mjs && node scripts/copy-ocr-data.mjs && node scripts/copy-face-data.mjs",
+    "predev": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-libheif-notice.mjs && node scripts/copy-mediabunny-notice.mjs && node scripts/copy-ocr-data.mjs && node scripts/copy-face-data.mjs",
+    "prebuild": "node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-libheif-notice.mjs && node scripts/copy-mediabunny-notice.mjs && node scripts/copy-ocr-data.mjs && node scripts/copy-face-data.mjs",
     "test:e2e": "playwright test",
     "build:ad-preview": "SHOW_AD_PLACEHOLDERS=1 npm run build"
   },
