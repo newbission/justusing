@@ -32,6 +32,8 @@ npm run build && python3 scripts/fonts/build_site_font.py && npm run build  # �
 python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow·pillow-heif, 먼저 npm install)
 python3 scripts/samples/make_video_samples.py  # 동영상을 GIF로·장면 캡처 견본 동영상 다시 만들기 (Pillow·ffmpeg 필요)
 PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
+node scripts/readme/tools.mjs  # README(한·영) 도구 목록을 레지스트리에서 다시 만들기 (--check: 다르면 실패, CI)
+PLAYWRIGHT_CHANNEL=chrome node scripts/readme/screenshots.mjs  # README 화면 그림 다시 만들기 (먼저 npm run preview)
 ```
 
 개발 서버에서 `/_dev/layout/` 주소로 도구 페이지 틀과 광고 슬롯 위치를 볼 수 있다 (배포에는 없음).
@@ -128,6 +130,7 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 2. `src/tools/registry.ts`의 `TOOL_IDS`에 `'<카테고리>/<이름>'` 한 줄을 넣는다.
    `src/frame/samples.ts`의 `BY_TOOL`에 넣을 견본을 적는다 ('예시 파일로 해 보기', 맞는 견본이 없으면 `make_samples.py`에 더한다).
 3. 다 만들면 `meta.ts`의 `status`를 `'live'`로 바꾸고 `tests/e2e/`에 E2E를 추가한다.
+   `node scripts/readme/tools.mjs`로 README(한·영)의 도구 목록을 다시 만든다 (CI가 `--check`로 레지스트리와 같은지 본다).
 
 도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
 frame 페이지는 `src/integrations/tool-frames.ts`가 live 도구마다 그 도구의 `Frame.astro`를 진입점으로 만든다(그 도구 CSS만 실리게).
