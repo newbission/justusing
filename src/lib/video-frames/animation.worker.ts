@@ -42,6 +42,24 @@ async function webpStill(
   return readStill(new Uint8Array(await blob.arrayBuffer()));
 }
 
+/**
+ * 화면이 담아 보낸 장면(이미 결과 크기로 줄인 ImageBitmap)의 RGBA 화소. 화소 읽기를 여기서 해
+ * 큰 동영상에서도 화면 스레드가 멈추지 않는다
+ */
+function pixelsOf(bitmap: ImageBitmap, width: number, height: number): Uint8ClampedArray {
+  const canvas = new OffscreenCanvas(width, height);
+  try {
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) throw new EncodeFailure('canvas');
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    return ctx.getImageData(0, 0, width, height).data;
+  } finally {
+    bitmap.close();
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+}
+
 function startGif(settings: EncodeSettings, samples: Uint8ClampedArray[]): GifSession {
   // 투명 자리 하나를 남긴다 (gif-writer.ts)
   const palette = buildPalette(samples, Math.min(255, settings.colors));
@@ -60,11 +78,15 @@ function startGif(settings: EncodeSettings, samples: Uint8ClampedArray[]): GifSe
  */
 async function estimate(
   settings: EncodeSettings,
-  samples: Uint8ClampedArray[],
-  pairs: [Uint8ClampedArray, Uint8ClampedArray][],
+  bitmaps: ImageBitmap[],
+  framePairs: [ImageBitmap, ImageBitmap][],
   count: number,
 ): Promise<number> {
   const { width, height } = settings;
+  const samples = bitmaps.map((bitmap) => pixelsOf(bitmap, width, height));
+  const pairs = framePairs.map(
+    ([a, b]) => [pixelsOf(a, width, height), pixelsOf(b, width, height)] as const,
+  );
   if (settings.format === 'webp') {
     let total = 0;
     let stills = 0;
@@ -94,21 +116,30 @@ async function handle(request: AnimationRequest): Promise<AnimationResponse> {
   switch (request.kind) {
     case 'start': {
       const { settings } = request;
+      const samples = request.samples.map((bitmap) =>
+        pixelsOf(bitmap, settings.width, settings.height),
+      );
       session =
         settings.format === 'gif'
-          ? startGif(settings, request.samples)
+          ? startGif(settings, samples)
           : { format: 'webp', frames: [], settings };
       return { id, kind: 'ok' };
     }
     case 'frame': {
-      if (!session) throw new EncodeFailure('session');
+      if (!session) {
+        request.frame.close();
+        throw new EncodeFailure('session');
+      }
       if (session.format === 'gif') {
         const { writer, indexer, width, height } = session;
-        writer.add(indexer.map(request.pixels, width, height), request.delay);
+        writer.add(
+          indexer.map(pixelsOf(request.frame, width, height), width, height),
+          request.delay,
+        );
       } else {
         const { width, height, quality } = session.settings;
         session.frames.push({
-          still: await webpStill(request.pixels, width, height, quality),
+          still: await webpStill(pixelsOf(request.frame, width, height), width, height, quality),
           duration: request.delay,
         });
       }

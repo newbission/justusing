@@ -36,16 +36,16 @@ export interface AnimationSettings extends EncodeSettings {
 }
 
 export type AnimationRequest =
-  | { id: number; kind: 'start'; settings: EncodeSettings; samples: Uint8ClampedArray[] }
-  | { id: number; kind: 'frame'; pixels: Uint8ClampedArray; delay: number }
+  | { id: number; kind: 'start'; settings: EncodeSettings; samples: ImageBitmap[] }
+  | { id: number; kind: 'frame'; frame: ImageBitmap; delay: number }
   | { id: number; kind: 'finish' }
   | { id: number; kind: 'cancel' }
   | {
       id: number;
       kind: 'estimate';
       settings: EncodeSettings;
-      samples: Uint8ClampedArray[];
-      pairs: [Uint8ClampedArray, Uint8ClampedArray][];
+      samples: ImageBitmap[];
+      pairs: [ImageBitmap, ImageBitmap][];
       count: number;
     };
 
@@ -124,10 +124,14 @@ function spread(times: number[], count: number): number[] {
 
 async function grab(reader: FrameReader, time: number, settings: AnimationSettings) {
   try {
-    return (await reader.pixels(time, settings.width, settings.height)).data;
+    return await reader.frame(time, settings.width, settings.height);
   } catch {
     throw new AnimationError('seek');
   }
+}
+
+function closeAll(bitmaps: ImageBitmap[]) {
+  for (const bitmap of bitmaps) bitmap.close();
 }
 
 function checkAbort(signal?: AbortSignal) {
@@ -140,12 +144,17 @@ async function paletteSamples(
   times: number[],
   settings: AnimationSettings,
   signal?: AbortSignal,
-): Promise<Uint8ClampedArray[]> {
+): Promise<ImageBitmap[]> {
   if (settings.format !== 'gif') return [];
-  const samples: Uint8ClampedArray[] = [];
-  for (const time of spread(times, PALETTE_SAMPLES)) {
-    checkAbort(signal);
-    samples.push(await grab(reader, time, settings));
+  const samples: ImageBitmap[] = [];
+  try {
+    for (const time of spread(times, PALETTE_SAMPLES)) {
+      checkAbort(signal);
+      samples.push(await grab(reader, time, settings));
+    }
+  } catch (error) {
+    closeAll(samples);
+    throw error;
   }
   return samples;
 }
@@ -158,23 +167,32 @@ export async function estimateSize(
 ): Promise<number> {
   const times = frameTimes(settings.start, settings.end, settings.fps);
   const samples = await paletteSamples(reader, times, settings, signal);
-  const pairs: [Uint8ClampedArray, Uint8ClampedArray][] = [];
+  const pairs: [ImageBitmap, ImageBitmap][] = [];
   const starts = times.length > 1 ? spread(times.slice(0, -1), ESTIMATE_PAIRS) : times;
-  for (const time of starts) {
+  try {
+    for (const time of starts) {
+      checkAbort(signal);
+      const a = await grab(reader, time, settings);
+      // 장면이 하나뿐이면 같은 장면을 한 번 더 담는다 (ImageBitmap은 두 번 넘길 수 없다)
+      const next = times.length > 1 ? time + 1 / settings.fps : time;
+      pairs.push([a, await grab(reader, next, settings)]);
+    }
     checkAbort(signal);
-    const a = await grab(reader, time, settings);
-    const b = times.length > 1 ? await grab(reader, time + 1 / settings.fps, settings) : a.slice();
-    pairs.push([a, b]);
+  } catch (error) {
+    closeAll([...samples, ...pairs.flat()]);
+    throw error;
   }
-  checkAbort(signal);
   const response = expectOk(
-    await ask({
-      kind: 'estimate',
-      settings: encodeSettings(settings),
-      samples,
-      pairs,
-      count: times.length,
-    }),
+    await ask(
+      {
+        kind: 'estimate',
+        settings: encodeSettings(settings),
+        samples,
+        pairs,
+        count: times.length,
+      },
+      [...samples, ...pairs.flat()],
+    ),
   );
   return response.kind === 'estimated' ? response.bytes : 0;
 }
@@ -191,13 +209,9 @@ export async function makeAnimation(
   onProgress(0, times.length);
   try {
     const samples = await paletteSamples(reader, times, settings, signal);
+    if (signal?.aborted) closeAll(samples);
     checkAbort(signal);
-    expectOk(
-      await ask(
-        { kind: 'start', settings: encodeSettings(settings), samples },
-        samples.map((sample) => sample.buffer),
-      ),
-    );
+    expectOk(await ask({ kind: 'start', settings: encodeSettings(settings), samples }, samples));
     const pending: Promise<AnimationResponse>[] = [];
     let done = 0;
     const settle = async () => {
@@ -206,8 +220,8 @@ export async function makeAnimation(
     };
     for (let i = 0; i < times.length; i++) {
       checkAbort(signal);
-      const pixels = await grab(reader, times[i]!, settings);
-      pending.push(ask({ kind: 'frame', pixels, delay: delays[i]! }, [pixels.buffer]));
+      const frame = await grab(reader, times[i]!, settings);
+      pending.push(ask({ kind: 'frame', frame, delay: delays[i]! }, [frame]));
       if (pending.length >= IN_FLIGHT) await settle();
     }
     while (pending.length > 0) await settle();

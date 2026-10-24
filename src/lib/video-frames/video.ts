@@ -127,14 +127,12 @@ export async function seekVideo(video: HTMLVideoElement, time: number): Promise<
 }
 
 /**
- * 장면 읽개: 화면과 따로 숨은 <video> 하나로 시각을 옮겨 가며 장면을 그린다.
+ * 장면 읽개: 화면과 따로 숨은 <video> 하나로 시각을 옮겨 가며 장면을 담는다.
  * 요청은 들어온 순서대로 하나씩 한다 (같은 <video>를 동시에 옮기지 않게)
  */
 export class FrameReader {
   readonly #video: HTMLVideoElement;
   #queue: Promise<unknown> = Promise.resolve();
-  readonly #canvas = document.createElement('canvas');
-  readonly #ctx = this.#canvas.getContext('2d', { willReadFrequently: true })!;
 
   constructor(url: string) {
     this.#video = hiddenVideo(url);
@@ -146,15 +144,14 @@ export class FrameReader {
     return next;
   }
 
-  /** time초 장면을 width × height로 줄여 RGBA 화소로 */
-  pixels(time: number, width: number, height: number): Promise<ImageData> {
+  /**
+   * time초 장면을 width × height로 줄인 ImageBitmap으로. 화소 읽기는 받는 워커가 한다
+   * (화면 스레드에서 getImageData를 하면 큰 동영상에서 화면이 멈춘다)
+   */
+  frame(time: number, width: number, height: number): Promise<ImageBitmap> {
     return this.#run(async () => {
       await seekVideo(this.#video, time);
-      this.#canvas.width = width;
-      this.#canvas.height = height;
-      this.#ctx.imageSmoothingQuality = 'high';
-      this.#ctx.drawImage(this.#video, 0, 0, width, height);
-      return this.#ctx.getImageData(0, 0, width, height);
+      return captureBitmap(this.#video, width, height);
     });
   }
 
@@ -170,21 +167,37 @@ export class FrameReader {
     this.#video.removeAttribute('src');
     this.#video.load();
     this.#video.remove();
-    this.#canvas.width = 0;
-    this.#canvas.height = 0;
   }
 }
 
 /**
- * video가 지금 보여 주는 장면을 원래 크기로 ImageBitmap에 담는다.
- * canvas에 한 번 그려서 만든다 (createImageBitmap(video)를 받지 않는 브라우저가 있다)
+ * video가 지금 보여 주는 장면을 ImageBitmap에 담는다 (크기를 주면 그 크기로 줄여서).
+ * 브라우저가 화면 스레드 밖에서 줄이도록 createImageBitmap(video)를 먼저 쓰고,
+ * 받지 않는 브라우저에서만 canvas에 그려서 만든다
  */
-export async function captureBitmap(video: HTMLVideoElement): Promise<ImageBitmap> {
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+export async function captureBitmap(
+  video: HTMLVideoElement,
+  width = video.videoWidth,
+  height = video.videoHeight,
+): Promise<ImageBitmap> {
+  const resize = width !== video.videoWidth || height !== video.videoHeight;
   try {
-    canvas.getContext('2d')!.drawImage(video, 0, 0);
+    const bitmap = await createImageBitmap(
+      video,
+      resize ? { resizeWidth: width, resizeHeight: height, resizeQuality: 'high' } : {},
+    );
+    if (bitmap.width === width && bitmap.height === height) return bitmap;
+    bitmap.close();
+  } catch {
+    // 아래 canvas 방식으로
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  try {
+    const ctx = canvas.getContext('2d')!;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(video, 0, 0, width, height);
     return await createImageBitmap(canvas);
   } finally {
     canvas.width = 0;
