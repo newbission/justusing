@@ -92,6 +92,8 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 - frame CSP에서 우리 파일을 허용할 때 `'self'`만 쓰지 않는다. **Safari(WebKit)는 출처 없는 sandbox 문서에서 `'self'`를
   우리 사이트로 보지 않아** 워커·스타일·글꼴이 모두 막힌다(2026-10-15에 발견, 크롬 E2E로는 보이지 않음).
   `FrameLayout`이 사이트 주소를 함께 적는다. Astro `insert*Resource`는 기본값을 대신하므로 `'self'`도 직접 넣는다
+- 격리 frame 안의 blob 워커는 안전한 문맥(secure context)이 아니라 WebCodecs(`VideoDecoder` 등) 같은 secure-context 전용 API가 없다
+  (2026-10-23, 크롬). 그런 API는 frame 본문에서 쓴다 (동영상 도구, docs/foundations/video-common)
 - 외부 리소스가 필요하면 우리 사이트에 복사해 둔다 (예: pdf.js CMap → `public/vendor/pdfjs/`,
   `scripts/copy-pdfjs-assets.mjs`가 dev/build 전에 복사).
 
@@ -438,12 +440,18 @@ Co-Authored-By: ...
         지금 열리는 모습·바꾼 뒤 미리보기 표, 엑셀용 UTF-8(BOM)·UTF-8·CP949로 저장, 줄바꿈. 워커가 조각씩 읽어 수백 MB도 된다
         (`src/lib/text/`). CP949 쓰기 표는 브라우저의 euc-kr 디코더로 만들고, 없는 글자는 ?로 바꿔 줄 번호와 알린다
 - [ ] 11단계: 동영상 도구 (2026-10-24) — 카테고리 `video`. **ffmpeg.wasm 금지, 사이트가 무거워지면 안 된다** (사용자 철칙).
-      브라우저 `<video>`·canvas로 풀고, frame CSP `media-src blob:`. 도구마다 멈추고 확인
+      GIF·장면 캡처는 브라우저 `<video>`·canvas로 풀고, frame CSP `media-src blob:`(동영상 frame만). 도구마다 멈추고 확인
+  - 자르기·용량·소리 공통 `src/lib/video/` (docs/foundations/video-common): 풀기·저장은 브라우저 WebCodecs, 그릇(MP4·MOV·WebM·MKV)
+    읽기·쓰기는 mediabunny(MPL-2.0, 버전 고정)만, 동영상 도구에서 파일을 열 때만 받는다. 열기·코덱 지원 확인·진행률·그만두기,
+    결과는 Blob 조각. **격리 frame의 blob 워커에는 WebCodecs가 없어**(안전한 문맥 아님) frame 본문에서 돈다
+  - [x] 자르기 (`/video/trim/`): 빠르게(다시 인코딩 없음, 앞 키프레임부터 담고 편집 목록으로 숨김)·정확하게(화면 다시 인코딩)
+  - [x] 용량 줄이기 (`/video/compress/`): 해상도(원래·1080·720·480)·화질 또는 목표 용량, H.264 MP4(못 하면 VP9 WebM), 소리는 되도록 그대로
   - [x] 동영상을 GIF로 (`/video/to-gif/`): 구간(30초까지)·폭·초당 장면 수·색 수·디더링·반복, 예상 용량, 미리보기. 숨은 `<video>`로
         장면을 찾아가 뽑고(`src/lib/video-frames/`) 워커가 gifenc(MIT, 9KB)로 GIF(전체 색 표, 앞 장면과 같은 화소는 투명, 순서 디더링)
         또는 브라우저 WebP 장면을 직접 묶어 움직이는 WebP로 만든다(Safari는 WebP 저장 불가라 GIF만)
   - [x] 장면 캡처 (`/video/frame-capture/`): 지금 장면을 원래 크기 JPG·PNG로, 일정 간격(0.5~10초) 여러 장(200장까지)은 ZIP.
         1/30초 버튼·위치(초) 칸. 저장은 워커(OffscreenCanvas)
+  - [x] 소리 추출 (`/video/extract-audio/`): 원래 소리 그대로(M4A·MP3·OGG·FLAC·WAV), WAV·M4A로 다시 저장. MP3 인코더는 브라우저에 없다
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)
