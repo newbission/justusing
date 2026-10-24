@@ -39,10 +39,11 @@
   /* 창(dialog) 그림자 */
   --shadow-dialog: 0 8px 40px rgb(0 0 0 / 0.24);
 
-  /* 글꼴: 본문은 Pretendard(global.css에서 불러옴), 받기 전·못 받으면 시스템 폰트 */
+  /* 글꼴: 본문은 사이트 글자만 담은 Pretendard 고친 판(global.css에서 불러옴). 그 밖의 글자(도구 화면의
+     파일 이름 등)는 Pretendard 원래 조각(도구 화면만, FrameLayout), 받기 전·못 받으면 시스템 폰트 */
   --font-sans:
-    'Pretendard Variable', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic',
-    'Noto Sans KR', sans-serif;
+    'JUS Modern Gothic', 'Pretendard Variable', system-ui, -apple-system, 'Apple SD Gothic Neo',
+    'Malgun Gothic', 'Noto Sans KR', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
   /* 크기 */

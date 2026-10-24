@@ -11,6 +11,11 @@
  * blob URL로 띄운 워커도 이 CSP를 그대로 따른다.
  */
 import '../styles/global.css';
+/*
+ * 도구 화면은 파일 이름·표 미리보기처럼 사이트 글꼴(사이트에 쓰는 글자만)에 없는 글자도 보여 준다.
+ * 그런 글자는 Pretendard 원래 글자 범위별 조각으로 그린다 (화면에 나온 글자의 조각만 받는다)
+ */
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import { localeOf, withoutLocale } from '../i18n/locales';
 import { getTool } from '../tools/registry';
 import { siteConfig, siteUrl } from '../site.config';
