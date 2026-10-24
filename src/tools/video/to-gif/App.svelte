@@ -144,6 +144,8 @@
     if (reset) generation++;
     making?.abort();
     clearResult();
+    // 만드는 중이던 작업은 위에서 그만두었다. 예전 작업은 generation이 달라 상태를 되돌리지 않으므로 여기서 비운다
+    make = { kind: 'idle' };
     reader?.close();
     reader = undefined;
     video?.close();
