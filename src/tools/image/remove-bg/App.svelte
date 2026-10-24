@@ -26,10 +26,7 @@
   import {
     SHIFT_LIMIT,
     SOFT_LIMIT,
-    coverage,
-    union,
     type Look,
-    type Mask,
     type Point,
     type Stroke,
   } from '../../../lib/cutout/matte';
@@ -94,9 +91,6 @@
   let empty = $state(false);
   /** 사진 워커에 새 마스크를 넘길 때마다 늘어난다 (미리보기를 다시 그린다) */
   let maskVersion = $state(0);
-  /** 점마다 나눈 마스크 (같은 점을 다시 나누지 않는다). 사진이 바뀌면 비운다 */
-  const masks = new Map<string, Mask>();
-  const keyOf = (point: Point) => `${point.x.toFixed(4)},${point.y.toFixed(4)}`;
 
   type Tool = 'pick' | 'erase' | 'restore';
   let tool = $state<Tool>('pick');
@@ -218,7 +212,6 @@
     photo?.preview.close();
     photo?.analysis.close();
     photo = undefined;
-    masks.clear();
     points = [];
     strokes = [];
     history = [];
@@ -264,19 +257,12 @@
             await found.setImage(await createImageBitmap(current.analysis));
             finderPhoto = current;
           }
-          for (const point of wanted) {
-            if (ticket !== generation) break;
-            if (!masks.has(keyOf(point))) masks.set(keyOf(point), await found.segment(point));
-          }
+          // 점마다 나누고 겹치는 일은 워커가 한다 (점이 늘어도 화면이 멈추지 않게)
+          const { mask, coverage } = await found.segment(wanted);
+          // 그사이 다른 사진을 열었으면 예전 사진의 마스크를 사진 워커에 넘기지 않는다
           if (ticket !== generation) continue;
-          const { width, height } = current.analysis;
-          const merged = union(
-            wanted.map((point) => masks.get(keyOf(point))!),
-            width,
-            height,
-          );
-          empty = coverage(merged) < MIN_COVERAGE;
-          await photos.setMask(merged);
+          empty = coverage < MIN_COVERAGE;
+          await photos.setMask(mask);
           if (ticket !== generation) continue;
           maskVersion++;
           separation = 'ready';
