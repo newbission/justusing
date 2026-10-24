@@ -118,6 +118,32 @@ test('구간·간격을 바꾸면 장 수가 바뀐다', async ({ page }) => {
   await expect(frame.getByText('4장 · JPG · ZIP')).toBeVisible();
 });
 
+test('ZIP을 묶는 사이 그만두면 내려받지 않는다', async ({ page }) => {
+  // ZIP 워커 스크립트를 늦게 내려줘 묶는 사이를 길게 만든다 (워커는 처음 묶을 때 받는다)
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  let asked!: () => void;
+  const zipping = new Promise<void>((resolve) => (asked = resolve));
+  await page.route(/zip\.worker-[^/]*\.js$/, async (route) => {
+    asked();
+    await held;
+    await route.continue();
+  });
+  const frame = await openTool(page, 'color-steps.mp4');
+  await frame.getByText('일정 간격으로 여러 장', { exact: true }).click();
+  let downloaded = false;
+  page.on('download', () => (downloaded = true));
+  await frame.getByRole('button', { name: 'ZIP으로 받기' }).click();
+  await zipping;
+  await frame.getByRole('button', { name: '그만두기' }).click();
+  release();
+  await expect(frame.getByText('4장 · JPG · ZIP')).toBeVisible();
+  // 묶기가 끝날 시간을 준 뒤에도 내려받기가 없고 화면은 처음 상태 그대로다
+  await page.waitForTimeout(1500);
+  expect(downloaded).toBe(false);
+  await expect(frame.getByText(/받았습니다/)).toHaveCount(0);
+});
+
 test('열지 못하는 파일은 알리고 다시 고르게 한다', async ({ page }) => {
   const frame = await openTool(page, 'not-a-video.mp4');
   await expect(frame.getByRole('alert')).toContainText('이 동영상을 열 수 없습니다');
