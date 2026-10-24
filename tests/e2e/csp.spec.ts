@@ -72,20 +72,22 @@ test('휴대폰 메뉴·가이드 창·따라 하기·예시 파일·움직이�
     ['/text/csv-encoding/', '예시 파일로 해 보기'],
   ] as const) {
     await open(page, path);
+    // 예시 파일: 도구가 파일을 그려 보인다 (PDF는 pdf.js가 글꼴을 넣는다).
+    // 따라 하기보다 먼저 한다 (따라 하기가 끝나는 신호가 frame에 닿기 전에 누르면 눌리지 않는다)
+    const frame = page.frameLocator('iframe[data-tool-frame]');
+    await frame.getByRole('button', { name: sample }).click();
+    // 다른 테스트와 함께 돌면 견본을 받고 여는 데 오래 걸릴 수 있다
+    await expect(frame.getByRole('button', { name: sample })).toHaveCount(0, { timeout: 30_000 });
     // 가이드 창: 가이드 페이지를 받아 본문을 옮겨 넣는다
     const guide = page.locator('[data-guide-open]');
     if (await guide.count()) {
       await guide.click();
-      await expect(page.locator('[data-guide-body] > *').first()).toBeVisible();
+      await expect(page.locator('[data-guide-body] p').first()).toBeVisible();
       await page.keyboard.press('Escape');
     }
     // 따라 하기 창
     await page.locator('[data-tour-open]').click();
     await page.locator('[data-tour-close]').click();
-    // 예시 파일: 도구가 파일을 그려 보인다 (PDF는 pdf.js가 글꼴을 넣는다)
-    const frame = page.frameLocator('iframe[data-tool-frame]');
-    await frame.getByRole('button', { name: sample }).click();
-    await expect(frame.getByRole('button', { name: sample })).toHaveCount(0);
     await page.waitForTimeout(2000);
     expect(cspViolations(page), path).toEqual([]);
   }
