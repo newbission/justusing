@@ -131,6 +131,7 @@ test('가이드 판은 카테고리별 가이드로 나뉘고 카테고리 가�
     'PDF 가이드',
     '이미지 가이드',
     '텍스트·CSV 가이드',
+    '동영상 가이드',
   ]);
   await expect(panel.getByRole('link', { name: '가이드 전체 보기' })).toHaveAttribute(
     'href',

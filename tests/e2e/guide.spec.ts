@@ -161,6 +161,7 @@ test('가이드 목록은 카테고리별로 나뉘고 카테고리 가이드 �
     'PDF 가이드',
     '이미지 가이드',
     '텍스트·CSV 가이드',
+    '동영상 가이드',
   ]);
   await page.getByRole('link', { name: '이미지 가이드 묶음별로 보기' }).click();
   await expect(page).toHaveURL(/\/guide\/image\/$/);
