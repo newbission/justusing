@@ -1,7 +1,7 @@
 # MediaPipe 모델
 
-증명사진 도구(`/image/id-photo/`)가 쓰는 모델이다.
-npm 패키지에 들어 있지 않아 받아서 그대로 커밋해 두었다 (고치지 않음). 허가는 둘 다 Apache License 2.0 (`LICENSE`, Google MediaPipe).
+증명사진 도구(`/image/id-photo/`)와 배경 지우기 도구(`/image/remove-bg/`)가 쓰는 모델이다.
+npm 패키지에 들어 있지 않아 받아서 그대로 커밋해 두었다 (고치지 않음). 허가는 모두 Apache License 2.0 (`LICENSE`, Google MediaPipe).
 
 ## 얼굴 점 찾기 (Face Landmarker)
 
@@ -22,5 +22,15 @@ npm 패키지에 들어 있지 않아 받아서 그대로 커밋해 두었다 (�
 - 설명: https://ai.google.dev/edge/mediapipe/solutions/vision/image_segmenter
 - 고른 이유 (2026-10-20): 같은 엔진으로 도는 여러 부위 모델(`selfie_multiclass_256x256`, 16MB)보다 작고(250KB),
   성조기 같은 복잡한 배경 사진 3장에서 배경을 덜 남겼다. 흰 배경 사진의 머리카락 가장자리는 둘이 비슷했다
+
+## 누른 곳의 물체 나누기 (Interactive Segmenter, MagicTouch)
+
+배경 지우기에서 사용자가 누른 곳(처음에는 사진 가운데)의 물체·사람·동물을 배경과 나눈다.
+
+- 파일: `magic_touch.tflite` (float32, 버전 1, 입력 512×512 + 누른 점 지도)
+- 받은 곳: https://storage.googleapis.com/mediapipe-models/interactive_segmenter/magic_touch/float32/1/magic_touch.tflite
+- SHA-256: `e24338a717c1b7ad8d159666677ef400babb7f33b8ad60c4d96db4ecf694cd25`
+- 설명·허가: 모델 카드 https://storage.googleapis.com/mediapipe-assets/Model%20Card%20MagicTouch.pdf ("Licensed under Apache License, Version 2.0")
+- 고른 이유 (2026-10-23): 일반 물체용 모델 비교는 `docs/features/image-remove-bg/README.md`
 
 `scripts/copy-face-data.mjs`가 dev/build 전에 엔진(`@mediapipe/tasks-vision`의 wasm)과 함께 `public/data/face/`로 복사한다.
