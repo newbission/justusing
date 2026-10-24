@@ -17,7 +17,8 @@ import { ui } from '../i18n/ui';
 import { siteConfig } from '../site.config';
 
 interface Props {
-  scene: 1 | 2 | 3 | 4;
+  /** 그릴 장면. 0은 장면들이 같이 쓰는 모양(symbol)만 담은 숨은 SVG로, 장면들보다 먼저 한 번 그린다 */
+  scene: 0 | 1 | 2 | 3 | 4;
 }
 
 const { scene } = Astro.props;
@@ -84,283 +85,326 @@ const probes = [
 ];
 ---
 
-<svg
-  viewBox="0 0 360 356"
-  class:list={['stage', `s${scene}`]}
-  xmlns="http://www.w3.org/2000/svg"
-  focusable="false"
->
-  {/* 바깥 페이지 (브라우저 창) */}
-  <g class="window">
-    <rect x="4" y="4" width="352" height="236" rx="10" class="win" />
-    <path d="M4 28H356" class="win-line" />
-    <circle cx="16" cy="16" r="3" class="dot" />
-    <circle cx="27" cy="16" r="3" class="dot" />
-    <circle cx="38" cy="16" r="3" class="dot" />
-    <text x="50" y="19.5" class="t-url">
-      {siteConfig.domain}
-    </text>
-    <text x="344" y="19.5" text-anchor="end" class="t-tag">
-      {t.outerPage}
-    </text>
-    <g class="scripts">
-      <rect x="16" y="38" width="200" height="24" rx="5" class="ad" />
-      <text x="116" y="54" text-anchor="middle" class="t-muted">
-        {t.ad}
-      </text>
-      <rect x="226" y="38" width="118" height="24" rx="12" class="stats" />
-      <text x="285" y="54" text-anchor="middle" class="t-muted">
-        {t.analytics}
-      </text>
-    </g>
-  </g>
-
-  {/* 도구 칸 (격리된 iframe) */}
-  <g class="frame">
-    <rect x="16" y="98" width="328" height="124" rx="8" class="tool" />
-    <g transform="translate(26 103.5) scale(0.5)">
-      <path d={icon.lock} class="ico ico-accent" />
-    </g>
-    <text x="43" y="114" class="t-frame">
-      {t.toolArea}
-    </text>
-  </g>
-
-  {/* 창 밖: 다운로드 폴더 · 이 사이트 · 다른 사이트 */}
-  {nodes.map((node) => (
-    <g class:list={['node', `node-${node.key}`, nodeState[scene][node.key]]}>
-      <rect x={node.cx - 55} y="272" width="110" height="72" rx="8" class="node-box" />
-      <g transform={`translate(${node.cx - 12} 279)`}>
-        <path d={node.icon} class="ico node-ico" />
+{/*
+  장면 넷이 같은 무대(브라우저 창·도구 칸 이름표·창 밖 세 곳)와 ✕·눈 표시를 쓴다. 모양은 여기 한 번만 적고
+  장면에서는 <use>로 가리킨다 (안전 페이지 HTML을 줄인다). 움직임·장면별 모양은 <use>를 감싼 <g>에 건다:
+  <use>로 그린 모양에는 장면의 선택자(.s1 .frame .tool 등)가 닿지 않는다. 창 밖 세 곳의 강조(on)는
+  상속되는 CSS 변수로 넘긴다.
+*/}
+{scene === 0 ? (
+  <svg class="defs" aria-hidden="true" focusable="false">
+    <defs>
+      <g id="sa-chrome">
+        <rect x="4" y="4" width="352" height="236" rx="10" class="win" />
+        <path d="M4 28H356" class="win-line" />
+        <circle cx="16" cy="16" r="3" class="dot" />
+        <circle cx="27" cy="16" r="3" class="dot" />
+        <circle cx="38" cy="16" r="3" class="dot" />
+        <text x="50" y="19.5" class="t-url">
+          {siteConfig.domain}
+        </text>
+        <text x="344" y="19.5" text-anchor="end" class="t-tag">
+          {t.outerPage}
+        </text>
       </g>
-      <text x={node.cx} y="320" text-anchor="middle" class="t-node">
-        {node.name}
-      </text>
-      <text x={node.cx} y="335" text-anchor="middle" class="t-sub">
-        {node.sub}
-      </text>
-    </g>
-  ))}
-
-  {(scene === 1 || scene === 2) && (
-    <g class="probes">
-      {probes.map((p, i) => (
-        <g class={`probe probe-${i + 1}`}>
-          <path
-            d={`M${p.from[0]} ${p.from[1]}L${p.hit[0]} ${p.hit[1]}`}
-            pathLength="1"
-            class="ray"
+      <g id="sa-scripts">
+        <rect x="16" y="38" width="200" height="24" rx="5" class="ad" />
+        <text x="116" y="54" text-anchor="middle" class="t-muted">
+          {t.ad}
+        </text>
+        <rect x="226" y="38" width="118" height="24" rx="12" class="stats" />
+        <text x="285" y="54" text-anchor="middle" class="t-muted">
+          {t.analytics}
+        </text>
+      </g>
+      <g id="sa-frame-label">
+        <g transform="translate(26 103.5) scale(0.5)">
+          <path d={icon.lock} class="ico ico-accent" />
+        </g>
+        <text x="43" y="114" class="t-frame">
+          {t.toolArea}
+        </text>
+      </g>
+      {nodes.map((node) => (
+        <g id={`sa-node-${node.key}`}>
+          <rect
+            x={node.cx - 55}
+            y="272"
+            width="110"
+            height="72"
+            rx="8"
+            class:list={['node-box', { dashed: node.key === 'other' }]}
           />
-          <g transform={`translate(${p.hit[0]} ${p.hit[1]})`}>
-            <circle r="5" class="ripple" />
+          <g transform={`translate(${node.cx - 12} 279)`}>
+            <path d={node.icon} class="ico node-ico" />
           </g>
-          <g transform={`translate(${p.eye[0]} ${p.eye[1]})`}>
-            <g class="eye">
-              <circle r="8" class="eye-bg" />
-              <g transform="translate(-6.6 -6.6) scale(0.55)">
-                <path d={icon.eye} class="ico" />
+          <text x={node.cx} y="320" text-anchor="middle" class="t-node">
+            {node.name}
+          </text>
+          <text x={node.cx} y="335" text-anchor="middle" class="t-sub">
+            {node.sub}
+          </text>
+        </g>
+      ))}
+      <g id="sa-hit">
+        <circle r="6.5" class="hit-bg" />
+        <path d={cross} class="hit-x" />
+      </g>
+      <g id="sa-eye">
+        <circle r="8" class="eye-bg" />
+        <g transform="translate(-6.6 -6.6) scale(0.55)">
+          <path d={icon.eye} class="ico" />
+        </g>
+      </g>
+    </defs>
+  </svg>
+) : (
+  <svg
+    viewBox="0 0 360 356"
+    class:list={['stage', `s${scene}`]}
+    xmlns="http://www.w3.org/2000/svg"
+    focusable="false"
+  >
+    {/* 바깥 페이지 (브라우저 창) */}
+    <g class="window">
+      <use href="#sa-chrome" />
+      <g class="scripts">
+        <use href="#sa-scripts" />
+      </g>
+    </g>
+
+    {/* 도구 칸 (격리된 iframe) */}
+    <g class="frame">
+      <rect x="16" y="98" width="328" height="124" rx="8" class="tool" />
+      <use href="#sa-frame-label" />
+    </g>
+
+    {/* 창 밖: 다운로드 폴더 · 이 사이트 · 다른 사이트 */}
+    {nodes.map((node) => (
+      <g class:list={['node', `node-${node.key}`, nodeState[scene][node.key]]}>
+        <use href={`#sa-node-${node.key}`} />
+      </g>
+    ))}
+
+    {(scene === 1 || scene === 2) && (
+      <g class="probes">
+        {probes.map((p, i) => (
+          <g class={`probe probe-${i + 1}`}>
+            <path
+              d={`M${p.from[0]} ${p.from[1]}L${p.hit[0]} ${p.hit[1]}`}
+              pathLength="1"
+              class="ray"
+            />
+            <g transform={`translate(${p.hit[0]} ${p.hit[1]})`}>
+              <circle r="5" class="ripple" />
+            </g>
+            <g transform={`translate(${p.eye[0]} ${p.eye[1]})`}>
+              <g class="eye">
+                <use href="#sa-eye" />
+              </g>
+            </g>
+            <g transform={`translate(${p.hit[0]} ${p.hit[1]})`}>
+              <g class="hit">
+                <use href="#sa-hit" />
               </g>
             </g>
           </g>
-          <g transform={`translate(${p.hit[0]} ${p.hit[1]})`}>
+        ))}
+      </g>
+    )}
+
+    {scene === 1 && (
+      <g class="file">
+        <path d={paper(166, 132, 28, 36)} class="sheet" />
+        <path d={lines(171, 146, [15, 17, 11])} class="ink" />
+        <text x="180" y="186" text-anchor="middle" class="t-label">
+          {t.myFile}
+        </text>
+      </g>
+    )}
+
+    {scene === 2 && (
+      <g class="rules">
+        <g class="code1">
+          <text x="28" y="140" class="t-code">
+            {['<iframe ', <tspan class="hl">sandbox="allow-scripts allow-downloads"</tspan>, '>']}
+          </text>
+        </g>
+        <text x="28" y="156" class="t-note note1">
+          {t.noOrigin}
+        </text>
+        <g class="code2">
+          <text x="28" y="186" class="t-code">
+            {[<tspan class="hl">default-src 'none'</tspan>, "; connect-src 'self'"]}
+          </text>
+        </g>
+        <text x="28" y="202" class="t-note note2">
+          {t.onlyOurFiles}
+        </text>
+
+        {/* 다른 사이트로 연결하려다 막힘 */}
+        <g class="out">
+          <path d="M301 222V240" pathLength="1" class="ray" />
+          <path d="M301 254V270" class="dash" />
+          <g transform="translate(301 247)">
             <g class="hit">
-              <circle r="6.5" class="hit-bg" />
-              <path d={cross} class="hit-x" />
+              <use href="#sa-hit" />
             </g>
           </g>
+          <text x="291" y="251" text-anchor="end" class="t-small out-label">
+            {t.blocked}
+          </text>
         </g>
-      ))}
-    </g>
-  )}
-
-  {scene === 1 && (
-    <g class="file">
-      <path d={paper(166, 132, 28, 36)} class="sheet" />
-      <path d={lines(171, 146, [15, 17, 11])} class="ink" />
-      <text x="180" y="186" text-anchor="middle" class="t-label">
-        {t.myFile}
-      </text>
-    </g>
-  )}
-
-  {scene === 2 && (
-    <g class="rules">
-      <g class="code1">
-        <text x="28" y="140" class="t-code">
-          {['<iframe ', <tspan class="hl">sandbox="allow-scripts allow-downloads"</tspan>, '>']}
-        </text>
+        {/* 이 사이트의 파일만 들어온다 */}
+        <g class="in">
+          <path d="M166 270V225" pathLength="1" class="flow" />
+          <path d="M161.5 229.5 166 225l4.5 4.5" class="flow-head" />
+          <text x="156" y="251" text-anchor="end" class="t-small t-accent in-label">
+            {t.ourFilesOnly}
+          </text>
+        </g>
       </g>
-      <text x="28" y="156" class="t-note note1">
-        {t.noOrigin}
-      </text>
-      <g class="code2">
-        <text x="28" y="186" class="t-code">
-          {[<tspan class="hl">default-src 'none'</tspan>, "; connect-src 'self'"]}
-        </text>
-      </g>
-      <text x="28" y="202" class="t-note note2">
-        {t.onlyOurFiles}
-      </text>
+    )}
 
-      {/* 다른 사이트로 연결하려다 막힘 */}
-      <g class="out">
-        <path d="M301 222V240" pathLength="1" class="ray" />
-        <path d="M301 254V270" class="dash" />
-        <g transform="translate(301 247)">
-          <g class="hit">
-            <circle r="6.5" class="hit-bg" />
-            <path d={cross} class="hit-x" />
+    {scene === 3 && (
+      <g class="process">
+        {/* 처리 프로그램은 이 사이트에서 받는다 */}
+        <g class="in">
+          <path d="M166 270V225" pathLength="1" class="flow" />
+          <path d="M161.5 229.5 166 225l4.5 4.5" class="flow-head" />
+          <text x="156" y="251" text-anchor="end" class="t-small t-accent in-label">
+            {t.program}
+          </text>
+        </g>
+
+        <g class="worker">
+          <rect x="140" y="126" width="80" height="58" rx="8" class="worker-box" />
+          <g transform="translate(165.6 133) scale(1.2)">
+            <g class="gear">
+              <path d={icon.gear} class="ico ico-accent" />
+            </g>
+          </g>
+          <rect x="152" y="171" width="56" height="3" rx="1.5" class="track" />
+          <rect x="152" y="171" width="56" height="3" rx="1.5" class="progress" />
+          <text x="180" y="201" text-anchor="middle" class="t-label t-accent">
+            {t.worker}
+          </text>
+        </g>
+
+        {/* 놓은 파일: 도구 칸 왼쪽에 자리 잡은 뒤 작업자에게 들어간다 */}
+        <g class="settle">
+          <g class="feed">
+            <path d={paper(44, 140, 24, 30)} class="sheet" />
+            <path d={lines(48.5, 152, [13, 15, 9], 4.5)} class="ink" />
           </g>
         </g>
-        <text x="291" y="251" text-anchor="end" class="t-small out-label">
-          {t.blocked}
-        </text>
-      </g>
-      {/* 이 사이트의 파일만 들어온다 */}
-      <g class="in">
-        <path d="M166 270V225" pathLength="1" class="flow" />
-        <path d="M161.5 229.5 166 225l4.5 4.5" class="flow-head" />
-        <text x="156" y="251" text-anchor="end" class="t-small t-accent in-label">
-          {t.ourFilesOnly}
-        </text>
-      </g>
-    </g>
-  )}
 
-  {scene === 3 && (
-    <g class="process">
-      {/* 처리 프로그램은 이 사이트에서 받는다 */}
-      <g class="in">
-        <path d="M166 270V225" pathLength="1" class="flow" />
-        <path d="M161.5 229.5 166 225l4.5 4.5" class="flow-head" />
-        <text x="156" y="251" text-anchor="end" class="t-small t-accent in-label">
-          {t.program}
-        </text>
-      </g>
+        <g class="outfile">
+          <path d={paper(280, 140, 24, 30)} class="sheet result" />
+          <path d={lines(284.5, 152, [13, 15, 9], 4.5)} class="ink" />
+        </g>
 
-      <g class="worker">
-        <rect x="140" y="126" width="80" height="58" rx="8" class="worker-box" />
-        <g transform="translate(165.6 133) scale(1.2)">
-          <g class="gear">
-            <path d={icon.gear} class="ico ico-accent" />
+        {/* 파일을 서버로 보내는 길은 없다 */}
+        <g class="cut">
+          <path d="M194 222V240M194 254V270" class="dash" />
+          <g transform="translate(194 247)">
+            <g class="hit">
+              <use href="#sa-hit" />
+            </g>
+          </g>
+          <text x="204" y="251" class="t-small cut-label">
+            {t.noUpload}
+          </text>
+        </g>
+
+        {/* 끄는 동안 도구 칸이 화면 전체로 넓어진다 (ToolFrame) */}
+        <rect x="8" y="32" width="344" height="204" rx="8" class="overlay" />
+        <g class="overlay-text">
+          <text x="180" y="96" text-anchor="middle" class="t-drop">
+            {t.dropHere}
+          </text>
+          <text x="180" y="114" text-anchor="middle" class="t-small">
+            {t.frameFills}
+          </text>
+        </g>
+
+        <g class="drag">
+          <path d={paper(318, 68, 20, 26)} class="sheet" />
+          <path d={lines(322, 78, [11, 12, 8], 4)} class="ink" />
+          <g transform="translate(332 84)">
+            <path d={cursor} class="cursor" />
           </g>
         </g>
-        <rect x="152" y="171" width="56" height="3" rx="1.5" class="track" />
-        <rect x="152" y="171" width="56" height="3" rx="1.5" class="progress" />
-        <text x="180" y="201" text-anchor="middle" class="t-label t-accent">
-          {t.worker}
-        </text>
       </g>
+    )}
 
-      {/* 놓은 파일: 도구 칸 왼쪽에 자리 잡은 뒤 작업자에게 들어간다 */}
-      <g class="settle">
-        <g class="feed">
-          <path d={paper(44, 140, 24, 30)} class="sheet" />
-          <path d={lines(48.5, 152, [13, 15, 9], 4.5)} class="ink" />
-        </g>
-      </g>
-
-      <g class="outfile">
-        <path d={paper(280, 140, 24, 30)} class="sheet result" />
-        <path d={lines(284.5, 152, [13, 15, 9], 4.5)} class="ink" />
-      </g>
-
-      {/* 파일을 서버로 보내는 길은 없다 */}
-      <g class="cut">
-        <path d="M194 222V240M194 254V270" class="dash" />
-        <g transform="translate(194 247)">
-          <g class="hit">
-            <circle r="6.5" class="hit-bg" />
-            <path d={cross} class="hit-x" />
-          </g>
-        </g>
-        <text x="204" y="251" class="t-small cut-label">
-          {t.noUpload}
-        </text>
-      </g>
-
-      {/* 끄는 동안 도구 칸이 화면 전체로 넓어진다 (ToolFrame) */}
-      <rect x="8" y="32" width="344" height="204" rx="8" class="overlay" />
-      <g class="overlay-text">
-        <text x="180" y="96" text-anchor="middle" class="t-drop">
-          {t.dropHere}
-        </text>
-        <text x="180" y="114" text-anchor="middle" class="t-small">
-          {t.frameFills}
-        </text>
-      </g>
-
-      <g class="drag">
-        <path d={paper(318, 68, 20, 26)} class="sheet" />
-        <path d={lines(322, 78, [11, 12, 8], 4)} class="ink" />
-        <g transform="translate(332 84)">
-          <path d={cursor} class="cursor" />
-        </g>
-      </g>
-    </g>
-  )}
-
-  {scene === 4 && (
-    <g class="deliver">
-      <path d={paper(166, 126, 28, 36)} class="sheet result" />
-      <path d={lines(171, 140, [15, 17, 11])} class="ink" />
-      <g class="button">
-        <rect x="140" y="172" width="80" height="24" rx="12" class="btn" />
-        <text x="180" y="188" text-anchor="middle" class="t-btn">
-          {t.download}
-        </text>
-      </g>
-
-      {/* 내 기기로 곧장 */}
-      <g class="save">
-        <path d="M59 222V266" pathLength="1" class="flow" />
-        <path d="M54.5 261.5 59 266l4.5-4.5" class="flow-head" />
-        <text x="68" y="251" class="t-small t-accent save-label">
-          {t.savedDirectly}
-        </text>
-      </g>
-      <g transform="translate(108 278)">
-        <g class="badge">
-          <circle r="8" class="badge-bg" />
-          <path d="M-3.5 0.2l2.3 2.3 4.7-4.8" class="badge-check" />
-        </g>
-      </g>
-
-      {/* 인터넷으로는 나가지 않는다 */}
-      <g class="cut">
-        <path d="M194 222V240M194 254V270M301 222V240M301 254V270" class="dash" />
-        <g transform="translate(194 247)">
-          <g class="hit">
-            <circle r="6.5" class="hit-bg" />
-            <path d={cross} class="hit-x" />
-          </g>
-        </g>
-        <g transform="translate(301 247)">
-          <g class="hit">
-            <circle r="6.5" class="hit-bg" />
-            <path d={cross} class="hit-x" />
-          </g>
-        </g>
-        <text x="247.5" y="251" text-anchor="middle" class="t-small cut-label">
-          {t.noInternet}
-        </text>
-      </g>
-
-      <g class="dl">
+    {scene === 4 && (
+      <g class="deliver">
         <path d={paper(166, 126, 28, 36)} class="sheet result" />
         <path d={lines(171, 140, [15, 17, 11])} class="ink" />
-      </g>
+        <g class="button">
+          <rect x="140" y="172" width="80" height="24" rx="12" class="btn" />
+          <text x="180" y="188" text-anchor="middle" class="t-btn">
+            {t.download}
+          </text>
+        </g>
 
-      <g transform="translate(198 186)">
-        <g class="click">
-          <path d={cursor} class="cursor" />
+        {/* 내 기기로 곧장 */}
+        <g class="save">
+          <path d="M59 222V266" pathLength="1" class="flow" />
+          <path d="M54.5 261.5 59 266l4.5-4.5" class="flow-head" />
+          <text x="68" y="251" class="t-small t-accent save-label">
+            {t.savedDirectly}
+          </text>
+        </g>
+        <g transform="translate(108 278)">
+          <g class="badge">
+            <circle r="8" class="badge-bg" />
+            <path d="M-3.5 0.2l2.3 2.3 4.7-4.8" class="badge-check" />
+          </g>
+        </g>
+
+        {/* 인터넷으로는 나가지 않는다 */}
+        <g class="cut">
+          <path d="M194 222V240M194 254V270M301 222V240M301 254V270" class="dash" />
+          <g transform="translate(194 247)">
+            <g class="hit">
+              <use href="#sa-hit" />
+            </g>
+          </g>
+          <g transform="translate(301 247)">
+            <g class="hit">
+              <use href="#sa-hit" />
+            </g>
+          </g>
+          <text x="247.5" y="251" text-anchor="middle" class="t-small cut-label">
+            {t.noInternet}
+          </text>
+        </g>
+
+        <g class="dl">
+          <path d={paper(166, 126, 28, 36)} class="sheet result" />
+          <path d={lines(171, 140, [15, 17, 11])} class="ink" />
+        </g>
+
+        <g transform="translate(198 186)">
+          <g class="click">
+            <path d={cursor} class="cursor" />
+          </g>
         </g>
       </g>
-    </g>
-  )}
-</svg>
+    )}
+  </svg>
+)}
 
 <style>
+  /* 장면들이 같이 쓰는 모양만 담은 숨은 SVG. display: none이면 일부 브라우저가 가리킨 모양을 그리지 않을 수 있어 크기만 없앤다 */
+  .defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
   .stage {
     display: block;
     width: 100%;
@@ -396,22 +440,20 @@ const probes = [
     stroke: var(--color-accent);
     stroke-width: 2;
   }
+  /* 창 밖 세 곳은 <use>로 그려 장면의 선택자가 안쪽에 닿지 않는다. 강조(on)는 상속되는 변수로 넘긴다 */
+  .node.on {
+    --node-stroke: var(--color-accent);
+    --node-stroke-width: 1.8;
+  }
   .node-box {
     fill: var(--color-surface);
-    stroke: var(--color-line);
-    stroke-width: 1.4;
-  }
-  .node.on .node-box {
-    stroke: var(--color-accent);
-    stroke-width: 1.8;
-  }
-  .node.on .node-ico {
-    stroke: var(--color-accent);
+    stroke: var(--node-stroke, var(--color-line));
+    stroke-width: var(--node-stroke-width, 1.4);
   }
   .node.dim {
     opacity: 0.4;
   }
-  .node-other .node-box {
+  .node-box.dashed {
     stroke-dasharray: 4 3;
   }
 
@@ -492,6 +534,9 @@ const probes = [
   }
   .ico-accent {
     stroke: var(--color-accent);
+  }
+  .node-ico {
+    stroke: var(--node-stroke, var(--color-muted));
   }
   .sheet {
     fill: var(--color-paper);
