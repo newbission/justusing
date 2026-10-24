@@ -195,6 +195,20 @@ test('설정을 바꾸면 만든 결과를 지우고 다시 만들게 한다', a
   await expect(frame.getByRole('img', { name: '만든 움직이는 그림' })).toHaveCount(0);
 });
 
+test('만드는 중에 다른 동영상을 열면 진행 표시 없이 처음부터 고를 수 있다', async ({ page }) => {
+  const frame = await openTool(page, 'color-steps.mp4');
+  await setRange(frame, '0', '3');
+  await frame.getByRole('slider', { name: '초당 장면 수' }).fill('20');
+  await frame.getByRole('button', { name: 'GIF 만들기' }).click();
+  await expect(frame.getByText(/장면 \d+ \/ 60 만드는 중/)).toBeVisible();
+  await frame.getByRole('button', { name: '다른 동영상' }).click();
+  await frame.locator('input[type=file]').first().setInputFiles(fixture('color-steps.mp4'));
+  await expect(frame.getByText(/예상 약/)).toBeVisible();
+  await expect(frame.getByText(/만드는 중/)).toHaveCount(0);
+  await expect(frame.getByRole('button', { name: 'GIF 만들기' })).toBeEnabled();
+  await expect(frame.getByLabel('시작 (초)')).toBeEnabled();
+});
+
 test('움직이는 WebP로도 만든다', async ({ page }) => {
   const frame = await openTool(page, 'color-steps.mp4');
   await setRange(frame, '0', '1.5');
