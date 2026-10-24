@@ -154,6 +154,8 @@ test('옆으로 누운·기운 이미지를 바로 세워 읽고, HEIC도 읽고
   await expect(frame.getByRole('button', { name: 'TXT 다운로드' })).toBeVisible({
     timeout: 170_000,
   });
+  // 모든 이미지를 다 읽을 때까지 기다린다 (누운 이미지는 방향을 돌려 다시 읽어 느린 CI에서 오래 걸린다)
+  await expect(frame.getByPlaceholder('읽는 중…')).toHaveCount(0, { timeout: 170_000 });
   // 글자가 없는 사진이라도 읽기는 실패하지 않는다
   await expect(frame.getByText('이 이미지는 읽지 못했습니다')).toHaveCount(0);
   for (const name of ['sideways.png', 'tilted.png']) {
