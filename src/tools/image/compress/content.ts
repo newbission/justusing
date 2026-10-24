@@ -44,6 +44,10 @@ export default defineContent({
         a: '웹에서 많이 쓰는 이미지 형식으로, 같은 화질에서 JPG·PNG보다 작습니다. 요즘 브라우저와 대부분의 앱에서 열리지만 오래된 프로그램에서는 열리지 않을 수 있습니다. 어디에 쓸지 모르면 "원래 형식 그대로"를 고르세요.',
       },
       {
+        q: '아이폰 사진(HEIC)도 줄일 수 있나요?',
+        a: '네. 다만 브라우저는 HEIC로 저장하지 못해 결과는 JPG입니다("WebP로 바꾸기"를 고르면 WebP). HEIC는 원래 JPG보다 훨씬 작게 저장되는 형식이라, JPG로 바꾸면 오히려 커질 때가 많습니다. 그러면 원본 HEIC를 그대로 둡니다. 크롬·엣지처럼 HEIC를 스스로 열지 못하는 브라우저에서는 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받아 이 기기에서 엽니다.',
+      },
+      {
         q: '많은 이미지를 한 번에 줄여도 되나요?',
         a: '네. 기기의 CPU 수에 맞춰 여러 장을 동시에 줄이고, 그동안에도 화면은 멈추지 않습니다. 다만 휴대폰에서 아주 큰 사진을 수십 장 넣으면 메모리가 부족할 수 있으니 나눠서 줄이세요.',
       },
@@ -90,6 +94,10 @@ export default defineContent({
       {
         q: 'What is WebP?',
         a: 'WebP is an image format widely used on the web. It is smaller than JPG or PNG at the same quality. Modern browsers and most apps open it, but some older programs cannot. If you are not sure where you will use it, choose "Same format".',
+      },
+      {
+        q: 'Can I compress iPhone photos (HEIC)?',
+        a: 'Yes, but browsers cannot save HEIC, so the result is a JPG (or WebP if you choose "Convert to WebP"). HEIC is already much more compact than JPG, so converting often makes the file larger. In that case the original HEIC is kept. Browsers that cannot open HEIC on their own, such as Chrome and Edge, download a HEIC reader (libheif, about 0.5 MB) from this site and open the photo on this device.',
       },
       {
         q: 'Can I compress many images at once?',
