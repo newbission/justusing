@@ -2,22 +2,23 @@
  * HEIC·HEIF 파일의 겉 구조(ISOBMFF 상자)에서 그림을 풀지 않고 알 수 있는 것을 읽는다.
  * - 이 파일이 HEVC로 압축한 HEIF(아이폰 HEIC 등)인지 (`ftyp` 상자의 브랜드)
  * - 대표 그림의 색 공간 (`colr` 상자). 아이폰 사진은 Display P3로 찍힌다
+ * 상자 읽기 도우미는 촬영 정보 항목을 찾는 heif-metadata.ts도 쓴다.
  * 화면 스레드와 워커 어디서나 부른다. 읽지 못하는 구조면 모른다고(기본값) 답한다.
  */
 
 /** HEVC로 압축한 HEIF 브랜드 (heic: 아이폰 사진, heix: 10비트, heim·heis: 여러 겹, hev*: 연속 사진) */
 const HEVC_BRANDS = new Set(['heic', 'heix', 'heim', 'heis', 'hevc', 'hevx', 'hevm', 'hevs']);
 
-const ascii = (bytes: Uint8Array, at: number) =>
+export const ascii = (bytes: Uint8Array, at: number) =>
   String.fromCharCode(bytes[at]!, bytes[at + 1]!, bytes[at + 2]!, bytes[at + 3]!);
 
-function u32(bytes: Uint8Array, at: number): number {
+export function u32(bytes: Uint8Array, at: number): number {
   return (
     ((bytes[at]! << 24) | (bytes[at + 1]! << 16) | (bytes[at + 2]! << 8) | bytes[at + 3]!) >>> 0
   );
 }
 
-const u16 = (bytes: Uint8Array, at: number) => (bytes[at]! << 8) | bytes[at + 1]!;
+export const u16 = (bytes: Uint8Array, at: number) => (bytes[at]! << 8) | bytes[at + 1]!;
 
 /** 파일 머리(앞 64바이트면 충분)로 HEVC HEIF인지 본다 */
 export function isHeifHead(head: Uint8Array): boolean {
@@ -30,7 +31,7 @@ export function isHeifHead(head: Uint8Array): boolean {
   return brands.includes('mif1') && !brands.some((brand) => brand.startsWith('avi'));
 }
 
-interface Box {
+export interface Box {
   type: string;
   /** 머리 뒤 내용의 시작과 끝 */
   start: number;
@@ -38,7 +39,7 @@ interface Box {
 }
 
 /** [from, to) 안의 상자들 */
-function* boxes(bytes: Uint8Array, from: number, to: number): Generator<Box> {
+export function* boxes(bytes: Uint8Array, from: number, to: number): Generator<Box> {
   let at = from;
   while (at + 8 <= to) {
     let size = u32(bytes, at);
@@ -56,7 +57,7 @@ function* boxes(bytes: Uint8Array, from: number, to: number): Generator<Box> {
   }
 }
 
-const child = (bytes: Uint8Array, parent: Box, type: string, skip = 0) => {
+export const child = (bytes: Uint8Array, parent: Box, type: string, skip = 0) => {
   for (const box of boxes(bytes, parent.start + skip, parent.end))
     if (box.type === type) return box;
   return undefined;
