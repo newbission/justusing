@@ -137,6 +137,7 @@ const BY_TOOL: Record<string, SampleKey[]> = {
   'video/to-gif': ['ballClip'],
   'video/frame-capture': ['ballClip'],
   'video/trim': ['seaClip'],
+  'video/compress': ['seaClip'],
 };
 
 const TYPES: Record<string, string> = {
