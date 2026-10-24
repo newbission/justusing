@@ -26,7 +26,7 @@ const OUTER_ORIGINS = [
 /**
  * 도구가 다루는 파일 형식의 첫머리. 그대로 실리거나 base64로 실리면 본문에 나타난다.
  * PDF(%PDF, JVBERi), PNG(IHDR, iVBORw0KGgo), JPG(JFIF·Exif, /9j/), GIF(GIF8, R0lGOD), OTF 글꼴(OTTO, T1RUTw),
- * HEIC(ftyp)
+ * HEIC·MP4·MOV·M4A(ftyp), WebM·MKV(base64 GkXfo), Ogg(OggS, T2dnUw), WAV(WAVEfmt, UklGR)
  */
 const FILE_MARKS = [
   '%PDF',
@@ -41,6 +41,11 @@ const FILE_MARKS = [
   'OTTO',
   'T1RUTw',
   'ftyp',
+  'GkXfo',
+  'OggS',
+  'T2dnUw',
+  'WAVEfmt',
+  'UklGR',
 ];
 
 const fixturesDir = fileURLToPath(new URL('../fixtures/', import.meta.url));
