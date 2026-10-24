@@ -27,6 +27,6 @@ export default defineTool({
         'Make a video smaller by lowering its resolution (1080p, 720p, 480p) and quality, or by setting a target size, and save it as H.264 MP4. The sound is kept as it is. Great for email and chat app limits, and your video is never uploaded.',
     },
   },
-  related: ['video/trim'],
+  related: ['video/trim', 'video/extract-audio'],
   flow: { from: { kind: 'mp4', mark: 'video' }, to: { kind: 'mp4', mark: 'video', small: true } },
 });

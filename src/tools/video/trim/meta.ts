@@ -20,5 +20,6 @@ export default defineTool({
         'Cut the start and end of a video to keep just the part you want. Trim in seconds without re-encoding and without losing quality, or cut precisely at the frame you choose. Works with MP4, MOV, WebM and MKV, and your video is never uploaded.',
     },
   },
+  related: ['video/compress', 'video/extract-audio'],
   flow: { from: { kind: 'mp4', mark: 'video' }, to: { kind: 'mp4', mark: 'trim' } },
 });
