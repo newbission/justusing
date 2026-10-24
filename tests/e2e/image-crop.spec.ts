@@ -175,6 +175,37 @@ test('아이폰 사진(HEIC)도 바로 세워 열고 JPG로 받는다', async ({
   });
 });
 
+test('HEIC를 푸는 동안 다른 사진을 열면 나중에 연 사진을 저장한다', async ({ page }) => {
+  // HEIC 엔진을 늦게 받게 해, 푸는 동안 PNG를 끌어다 놓는다
+  await page.route('**/libheif.*.wasm', async (route) => {
+    await new Promise((done) => setTimeout(done, 1500));
+    await route.continue();
+  });
+  const engine = page.waitForResponse(/libheif\..*\.wasm/);
+  const frame = await openTool(page, 'iphone.heic');
+  const tool = page.frames().find((f) => f.url().includes('/image/crop/frame/'))!;
+  const png = Array.from(await readFile(fixture('quadrants.png')));
+  await tool.evaluate((bytes) => {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(
+      new File([new Uint8Array(bytes)], 'quadrants.png', { type: 'image/png' }),
+    );
+    document.body.dispatchEvent(
+      new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer }),
+    );
+    document.body.dispatchEvent(
+      new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer }),
+    );
+  }, png);
+  await expect(frame.getByText('결과 40 × 30 px · PNG')).toBeVisible();
+  // HEIC가 다 풀린 뒤에 받는다. 늦게 풀린 HEIC가 워커의 원본을 바꾸지 않았어야 한다
+  await engine;
+  await page.waitForTimeout(500);
+  const file = await download(page, frame);
+  expect(file.name).toBe('quadrants_편집.png');
+  expect((await corners(page, file.bytes)).corners).toEqual(['red', 'green', 'blue', 'white']);
+});
+
 test('예시 사진의 기울기를 바로잡아 같은 크기로 받는다', async ({ page }) => {
   await page.goto('/image/crop/');
   const frame = page.frameLocator('iframe[data-tool-frame]');
