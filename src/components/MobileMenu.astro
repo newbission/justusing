@@ -34,7 +34,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   </svg>
 </button>
 
-<dialog class="sheet" id="mobile-menu" aria-label={t.menu} data-mobile-menu>
+<dialog class="mobile-menu-sheet" id="mobile-menu" aria-label={t.menu} data-mobile-menu>
   <div class="head">
     <p class="title">{t.menu}</p>
     <button type="button" class="close" aria-label={t.closeMenu} data-mobile-menu-close>
@@ -122,7 +122,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     }
   }
   .mobile-menu-open path,
-  .sheet .close path {
+  .mobile-menu-sheet .close path {
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -130,7 +130,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   }
 
   /* 화면 전체를 덮는 창. 안에서 스크롤하고 뒤 화면은 움직이지 않는다 */
-  .sheet {
+  .mobile-menu-sheet {
     width: 100%;
     max-width: none;
     height: 100%;
@@ -143,7 +143,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     background: var(--color-bg);
     color: var(--color-text);
   }
-  .sheet::backdrop {
+  .mobile-menu-sheet::backdrop {
     background: var(--color-bg);
   }
   html:has(dialog[data-mobile-menu][open]) {
@@ -151,7 +151,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   }
 
   /* 머리글과 같은 높이의 윗줄. 스크롤해도 닫기 버튼이 보이게 붙여 둔다 */
-  .sheet .head {
+  .mobile-menu-sheet .head {
     position: sticky;
     top: 0;
     z-index: 1;
@@ -163,12 +163,12 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     border-bottom: 1px solid var(--color-line);
     background: var(--color-bg);
   }
-  .sheet .title {
+  .mobile-menu-sheet .title {
     margin: 0;
     font-size: 17px;
     font-weight: 700;
   }
-  .sheet .close {
+  .mobile-menu-sheet .close {
     display: inline-grid;
     place-items: center;
     width: 40px;
@@ -180,13 +180,13 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     cursor: pointer;
   }
 
-  .sheet .body {
+  .mobile-menu-sheet .body {
     padding: 0 var(--gutter);
   }
-  .sheet .section {
+  .mobile-menu-sheet .section {
     border-bottom: 1px solid var(--color-line);
   }
-  .sheet summary {
+  .mobile-menu-sheet summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -196,41 +196,41 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     cursor: pointer;
     list-style: none;
   }
-  .sheet summary::-webkit-details-marker {
+  .mobile-menu-sheet summary::-webkit-details-marker {
     display: none;
   }
-  .sheet .caret {
+  .mobile-menu-sheet .caret {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.6;
     transition: transform 0.12s;
   }
-  .sheet .section[open] .caret {
+  .mobile-menu-sheet .section[open] .caret {
     transform: rotate(180deg);
   }
-  .sheet .section-body {
+  .mobile-menu-sheet .section-body {
     padding-bottom: 16px;
   }
-  .sheet .group + .group {
+  .mobile-menu-sheet .group + .group {
     margin-top: 12px;
   }
-  .sheet .group-title {
+  .mobile-menu-sheet .group-title {
     margin: 0 0 2px;
     color: var(--color-muted);
     font-size: 13px;
     font-weight: 600;
   }
-  .sheet .group-title a {
+  .mobile-menu-sheet .group-title a {
     display: inline-block;
     padding: 6px 0;
     color: inherit;
   }
-  .sheet .group ul {
+  .mobile-menu-sheet .group ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  .sheet .item {
+  .mobile-menu-sheet .item {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -244,11 +244,11 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     word-break: keep-all;
     overflow-wrap: anywhere;
   }
-  .sheet .item[aria-current='page'] {
+  .mobile-menu-sheet .item[aria-current='page'] {
     color: var(--color-accent);
     font-weight: 600;
   }
-  .sheet .item-icon {
+  .mobile-menu-sheet .item-icon {
     display: grid;
     flex: none;
     place-items: center;
@@ -258,7 +258,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     background: var(--color-accent-soft);
     color: var(--color-accent);
   }
-  .sheet .all {
+  .mobile-menu-sheet .all {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
