@@ -26,7 +26,7 @@ export default defineContent({
     faq: [
       {
         q: '어떤 이미지를 읽을 수 있나요?',
-        a: 'JPG·PNG·WebP·GIF·BMP처럼 브라우저가 여는 이미지를 읽습니다. 아이폰 사진(HEIC)은 Safari에서만 열립니다. 사진·화면 캡처·스캔 이미지 속 인쇄된 글자와 화면 글자를 읽고, 한국어와 영어를 지원합니다.',
+        a: 'JPG·PNG·WebP·GIF·BMP처럼 브라우저가 여는 이미지를 읽습니다. 아이폰 사진(HEIC·HEIF)도 크롬·엣지 등 모든 브라우저에서 읽습니다. 사진·화면 캡처·스캔 이미지 속 인쇄된 글자와 화면 글자를 읽고, 한국어와 영어를 지원합니다.',
       },
       {
         q: '데이터를 왜 받아야 하나요?',
@@ -79,7 +79,7 @@ export default defineContent({
     faq: [
       {
         q: 'Which images can it read?',
-        a: 'Any image your browser can open, such as JPG, PNG, WebP, GIF and BMP. iPhone photos (HEIC) only open in Safari. It reads printed text and on-screen text in photos, screenshots and scans, in English and Korean.',
+        a: 'Any image your browser can open, such as JPG, PNG, WebP, GIF and BMP. iPhone photos (HEIC, HEIF) are read in every browser, including Chrome and Edge. It reads printed text and on-screen text in photos, screenshots and scans, in English and Korean.',
       },
       {
         q: 'Why do I need to download data?',

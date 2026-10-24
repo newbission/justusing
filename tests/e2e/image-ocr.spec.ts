@@ -135,7 +135,7 @@ test('서류 사진과 대화 캡처의 글자를 읽어 복사하고 TXT로 받
   await expect(doc).toHaveValue(/고쳐 쓴 줄/);
 });
 
-test('옆으로 누운 이미지와 기운 이미지를 바로 세워 읽고, 못 여는 파일은 빼고 읽는다', async ({
+test('옆으로 누운·기운 이미지를 바로 세워 읽고, HEIC도 읽고, 못 여는 파일은 빼고 읽는다', async ({
   page,
 }) => {
   test.setTimeout(180_000);
@@ -144,14 +144,18 @@ test('옆으로 누운 이미지와 기운 이미지를 바로 세워 읽고, �
     { name: 'sideways.png', mimeType: 'image/png', buffer: await turned(page, DOC, 90) },
     { name: 'tilted.png', mimeType: 'image/png', buffer: await turned(page, DOC, 12) },
     { name: 'broken.png', mimeType: 'image/png', buffer: await readFile(fixture('broken.png')) },
+    // 크롬은 HEIC를 스스로 읽지 못해 libheif로 풀어 넘긴다
+    { name: 'iphone.heic', mimeType: 'image/heic', buffer: await readFile(fixture('iphone.heic')) },
   ]);
   await expect(frame.getByText('열 수 없는 이미지입니다. 빼고 읽습니다.')).toBeVisible();
   await prepare(frame);
-  await expect(frame.getByText('이미지 2장의 글자를 읽습니다.')).toBeVisible();
+  await expect(frame.getByText('이미지 3장의 글자를 읽습니다.')).toBeVisible();
   await frame.getByRole('button', { name: '글자 인식' }).click();
   await expect(frame.getByRole('button', { name: 'TXT 다운로드' })).toBeVisible({
     timeout: 170_000,
   });
+  // 글자가 없는 사진이라도 읽기는 실패하지 않는다
+  await expect(frame.getByText('이 이미지는 읽지 못했습니다')).toHaveCount(0);
   for (const name of ['sideways.png', 'tilted.png']) {
     const box = frame.getByRole('textbox', { name: `${name}에서 읽은 글자` });
     await expect(box, name).toHaveValue(/재직 증명서/);
@@ -159,6 +163,7 @@ test('옆으로 누운 이미지와 기운 이미지를 바로 세워 읽고, �
   }
   // 한 장만 받으면 원래 이름을 붙인다
   await frame.getByRole('button', { name: 'sideways.png 빼기' }).click();
+  await frame.getByRole('button', { name: 'iphone.heic 빼기' }).click();
   const event = page.waitForEvent('download');
   await frame.getByRole('button', { name: 'TXT 다운로드' }).click();
   expect((await event).suggestedFilename()).toBe('tilted_글자인식.txt');

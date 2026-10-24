@@ -6,6 +6,7 @@
  */
 import type { DataFile } from '../../frame/data';
 import { createWorker } from '../worker';
+import { readable } from '../image/heif';
 import type { ImageLine } from './image-read';
 import catalog from './catalog.json';
 import workerUrl from './ocr.worker.ts?worker&url';
@@ -41,7 +42,8 @@ export type OcrRequest =
       langs: { code: OcrLang; data: Uint8Array }[];
     }
   | { id: number; type: 'page'; bitmap: ImageBitmap; dpi: number }
-  | { id: number; type: 'image'; image: Blob };
+  /** image: 파일, 또는 브라우저가 못 읽는 HEIC를 libheif로 풀어 바로 세운 그림 (src/lib/image/heif.ts) */
+  | { id: number; type: 'image'; image: Blob | ImageBitmap };
 
 export type OcrResponse =
   | { id: number; kind: 'ready' }
@@ -179,7 +181,16 @@ export class OcrPool {
     onImage: (index: number, result: ImageResult | Error) => void,
   ): Promise<void> {
     const left = await this.each([...images.keys()], async (worker, index) => {
-      const response = await call(worker, { id: nextId++, type: 'image', image: images[index]! });
+      // 브라우저가 못 읽는 HEIC(크롬 등의 아이폰 사진)는 맡길 때 푼다 (미리 모두 풀면 큰 그림이 메모리에 남는다)
+      let image: Blob | ImageBitmap;
+      try {
+        image = await readable(images[index]!);
+      } catch {
+        onImage(index, new Error('decode'));
+        return true;
+      }
+      const transfer = image instanceof ImageBitmap ? [image] : [];
+      const response = await call(worker, { id: nextId++, type: 'image', image }, transfer);
       if (response.kind === 'image') {
         const { text, lines, width, height } = response;
         onImage(index, { text, lines, width, height });
