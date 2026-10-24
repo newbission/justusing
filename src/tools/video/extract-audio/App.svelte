@@ -78,7 +78,9 @@
     runner.reset();
     video = loaded;
     const options = available;
-    target = options.copy ? 'copy' : options.aac ? 'aac' : 'wav';
+    // 그대로 꺼낼 수 없으면: 원래 압축하지 않은 소리(PCM)는 손실 없는 WAV, 그 밖은 M4A(못 하면 WAV)
+    const pcm = isPcm(loaded.info.audio?.codec);
+    target = options.copy ? 'copy' : pcm && options.wav ? 'wav' : options.aac ? 'aac' : 'wav';
   }
 
   function onclose() {
@@ -96,6 +98,10 @@
   function download() {
     if (!video || !result) return;
     downloadFile(result.blob, resultName(video.name, t.suffix, result.container));
+  }
+
+  function isPcm(codec: string | null | undefined) {
+    return !!codec && (codec.startsWith('pcm-') || codec === 'ulaw' || codec === 'alaw');
   }
 
   function unavailableReason(option: Target) {

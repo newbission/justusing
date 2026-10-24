@@ -11,6 +11,7 @@ E2E 테스트용 동영상을 만든다. ffmpeg가 필요하다 (도구의 media
 - silent.mp4        3초, 640×360, H.264, 소리 없음, 잡음 없음 (아주 작아 다시 저장하면 오히려 커진다)
 - mpeg4-part2.mp4   2초, MPEG-4 Part 2 화면(WebCodecs가 풀지 못하는 코덱) + AAC
 - broken-video.mp4  동영상이 아닌 글자 (못 여는 파일)
+- pcm-be.mov        2초, 320×180 H.264 + 빅엔디언 16비트 PCM(카메라 MOV의 twos). WAV에 그대로 못 담는 소리
 - sparse-keys.webm, sparse-keys.mp4  16초, 320×180, 키프레임이 맨 앞 하나뿐 (화면 녹화처럼). 빠르게 자르기를 막는지
 """
 import os
@@ -87,6 +88,12 @@ SPARSE = [
 ]
 make('sparse-keys.webm', SPARSE + ['-c:v', 'libvpx-vp9', '-b:v', '100k', '-c:a', 'libopus', '-b:a', '32k'])
 make('sparse-keys.mp4', SPARSE + ['-c:v', 'libx264', '-preset', 'veryfast', '-b:v', '100k', '-c:a', 'aac', '-b:a', '32k'])
+
+make(
+    'pcm-be.mov',
+    ['-f', 'lavfi', '-i', 'testsrc2=s=320x180:r=30:d=2,format=yuv420p', *tone(2)]
+    + ['-ac', '2', '-c:v', 'libx264', '-preset', 'veryfast', '-c:a', 'pcm_s16be'],
+)
 
 if not ONLY or 'broken-video.mp4' in ONLY:
     with open(os.path.join(HERE, 'broken-video.mp4'), 'wb') as file:

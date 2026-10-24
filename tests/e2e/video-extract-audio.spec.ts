@@ -56,6 +56,19 @@ test('AAC로 저장할 수 있는 브라우저는 Opus 소리를 M4A로 다시 �
   expect((await inspect(file.bytes)).audio?.codec).toBe('aac');
 });
 
+test('WAV에 그대로 못 담는 PCM(빅엔디언)은 풀어서 WAV로 저장한다', async ({ page }) => {
+  // 카메라 MOV에 흔한 빅엔디언 16비트 PCM(twos)
+  const frame = await openVideoTool(page, 'extract-audio', 'pcm-be.mov');
+  await expect(frame.getByRole('radio', { name: /원래 소리 그대로/ })).toBeDisabled();
+  await expect(frame.getByText(/이 소리 코덱은 그대로 담을 파일 형식이 없어/)).toBeVisible();
+  await expect(frame.getByRole('radio', { name: /WAV \(압축 없음\)/ })).toBeChecked();
+  const file = await runAndDownload(page, frame, '소리 뽑기', '받기');
+  expect(file.name).toBe('pcm-be_소리.wav');
+  const facts = await inspect(file.bytes);
+  expect(facts.audio).toMatchObject({ codec: 'pcm-s16', channels: 2 });
+  expect(facts.duration).toBeCloseTo(2, 0);
+});
+
 test('WebCodecs가 없으면 원래 소리 그대로만 꺼낼 수 있다', async ({ page }) => {
   await page.addInitScript(() => {
     for (const name of ['VideoDecoder', 'VideoEncoder', 'AudioDecoder', 'AudioEncoder']) {
