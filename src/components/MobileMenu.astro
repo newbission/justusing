@@ -23,7 +23,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
 
 <button
   type="button"
-  class="open"
+  class="mobile-menu-open"
   aria-label={t.openMenu}
   aria-haspopup="dialog"
   aria-controls="mobile-menu"
@@ -103,12 +103,13 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   }
 </script>
 
-<style>
-  .open {
+<style is:global>
+  /* 전역 스타일(루트 클래스 안에서만 적용): 이 메뉴는 모든 페이지에 있고 항목이 많아, 범위 속성(data-astro-cid)을 붙이면 HTML이 크게 늘어난다 */
+  .mobile-menu-open {
     display: none;
   }
   @media (max-width: 767px) {
-    .open {
+    .mobile-menu-open {
       display: inline-grid;
       place-items: center;
       width: 40px;
@@ -120,8 +121,8 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
       cursor: pointer;
     }
   }
-  .open path,
-  .close path {
+  .mobile-menu-open path,
+  .sheet .close path {
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -145,12 +146,12 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
   .sheet::backdrop {
     background: var(--color-bg);
   }
-  :global(html:has(dialog[data-mobile-menu][open])) {
+  html:has(dialog[data-mobile-menu][open]) {
     overflow: hidden;
   }
 
   /* 머리글과 같은 높이의 윗줄. 스크롤해도 닫기 버튼이 보이게 붙여 둔다 */
-  .head {
+  .sheet .head {
     position: sticky;
     top: 0;
     z-index: 1;
@@ -162,12 +163,12 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     border-bottom: 1px solid var(--color-line);
     background: var(--color-bg);
   }
-  .title {
+  .sheet .title {
     margin: 0;
     font-size: 17px;
     font-weight: 700;
   }
-  .close {
+  .sheet .close {
     display: inline-grid;
     place-items: center;
     width: 40px;
@@ -179,13 +180,13 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     cursor: pointer;
   }
 
-  .body {
+  .sheet .body {
     padding: 0 var(--gutter);
   }
-  .section {
+  .sheet .section {
     border-bottom: 1px solid var(--color-line);
   }
-  summary {
+  .sheet summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -195,41 +196,41 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     cursor: pointer;
     list-style: none;
   }
-  summary::-webkit-details-marker {
+  .sheet summary::-webkit-details-marker {
     display: none;
   }
-  .caret {
+  .sheet .caret {
     fill: none;
     stroke: currentColor;
     stroke-width: 1.6;
     transition: transform 0.12s;
   }
-  .section[open] .caret {
+  .sheet .section[open] .caret {
     transform: rotate(180deg);
   }
-  .section-body {
+  .sheet .section-body {
     padding-bottom: 16px;
   }
-  .group + .group {
+  .sheet .group + .group {
     margin-top: 12px;
   }
-  .group-title {
+  .sheet .group-title {
     margin: 0 0 2px;
     color: var(--color-muted);
     font-size: 13px;
     font-weight: 600;
   }
-  .group-title a {
+  .sheet .group-title a {
     display: inline-block;
     padding: 6px 0;
     color: inherit;
   }
-  .group ul {
+  .sheet .group ul {
     margin: 0;
     padding: 0;
     list-style: none;
   }
-  .item {
+  .sheet .item {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -243,11 +244,11 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     word-break: keep-all;
     overflow-wrap: anywhere;
   }
-  .item[aria-current='page'] {
+  .sheet .item[aria-current='page'] {
     color: var(--color-accent);
     font-weight: 600;
   }
-  .item-icon {
+  .sheet .item-icon {
     display: grid;
     flex: none;
     place-items: center;
@@ -257,7 +258,7 @@ const t = ui(localeOf(Astro.url.pathname)).nav;
     background: var(--color-accent-soft);
     color: var(--color-accent);
   }
-  .all {
+  .sheet .all {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
