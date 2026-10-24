@@ -76,6 +76,9 @@ test('가이드 그림은 설명(alt)과 크기가 있고 실제로 열린다', 
   const hrefs = await page
     .locator('.guides a')
     .evaluateAll((anchors) => anchors.map((anchor) => anchor.getAttribute('href')!));
+  // 모든 글을 두 언어로 한 테스트에서 연다. 글이 늘어도 시간 제한에 걸리지 않게 글 수에 맞춰 늘린다
+  // (CI에서 글 30편을 넘자 기본 30초를 넘겼다)
+  test.setTimeout(30_000 + hrefs.length * 2 * 1_500);
   let total = 0;
   for (const href of [...hrefs, ...hrefs.map((href) => `/en${href}`)]) {
     await page.goto(href);
