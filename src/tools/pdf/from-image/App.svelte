@@ -18,11 +18,16 @@
   import { requestShowTool } from '../../../frame/parent';
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
-  import { readImageInfo } from '../../../lib/image/prepare';
+  import { readForDisplay } from '../../../lib/image/heif';
   import { imagesToPdf, type PageSize } from '../../../lib/pdf/images-to-pdf';
 
-  /** 받는 이미지 형식. 브라우저가 읽을 수 있으면 그 밖의 형식도 받는다 (읽지 못하면 '열 수 없음') */
-  const ACCEPT = 'image/*';
+  /**
+   * 받는 이미지 형식. 브라우저가 읽을 수 있으면 그 밖의 형식도 받는다 (읽지 못하면 '열 수 없음').
+   * HEIC(아이폰 사진)는 브라우저가 못 읽으면 libheif로 연다
+   */
+  const ACCEPT = 'image/*,.heic,.heif';
+  /** 브라우저가 못 읽는 HEIC의 목록 썸네일 크기 (긴 변) */
+  const THUMB_SIDE = 512;
 
   interface Item {
     id: number;
@@ -107,7 +112,8 @@
   async function add(files: File[]) {
     const images = files.filter(
       (file) =>
-        file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(file.name),
+        file.type.startsWith('image/') ||
+        /\.(jpe?g|png|webp|gif|bmp|avif|heic|heif)$/i.test(file.name),
     );
     if (images.length === 0) return;
     if (items.length === 0) requestShowTool();
@@ -121,12 +127,12 @@
   /** 크기를 읽고 썸네일을 만든다 */
   async function load(item: Item) {
     try {
-      const info = await readImageInfo(item.file);
+      const info = await readForDisplay(item.file, THUMB_SIDE);
       // 읽는 동안 목록에서 뺐으면 썸네일 주소를 만들지 않는다 (해제할 곳이 없어 메모리에 남는다)
       if (!items.some((other) => other.id === item.id)) return;
       item.width = info.width;
       item.height = info.height;
-      item.thumb = URL.createObjectURL(item.file);
+      item.thumb = URL.createObjectURL(info.display);
       item.status = 'ready';
     } catch {
       item.status = 'error';

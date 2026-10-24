@@ -62,7 +62,7 @@ const ko = {
   failed: {
     decode: '읽지 못한 이미지가 있습니다. 그 이미지를 빼고 다시 해 주세요.',
     tooLarge:
-      '이 브라우저가 이렇게 큰 이미지를 만들지 못했습니다. PNG로 저장하거나 나누어 저장해 보세요.',
+      '이 브라우저가 이렇게 큰 이미지를 만들지 못했습니다. PNG나 JPG로 저장하거나 나누어 저장해 보세요.',
     encode: '이 브라우저는 이 형식으로 저장하지 못합니다. 다른 형식을 골라 주세요.',
   } satisfies Record<StitchFailure, string>,
   pdfFailed: 'PDF를 만들지 못했습니다.',
@@ -142,7 +142,8 @@ const en: typeof ko = {
   downloadAll: (count: number) => `Download all (ZIP, ${count})`,
   failed: {
     decode: 'An image could not be read. Remove it and try again.',
-    tooLarge: 'This browser could not make an image this large. Try saving as PNG or splitting it.',
+    tooLarge:
+      'This browser could not make an image this large. Try saving as PNG or JPG, or splitting it.',
     encode: 'This browser cannot save in this format. Choose another format.',
   },
   pdfFailed: 'Could not make the PDF.',

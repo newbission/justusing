@@ -24,8 +24,9 @@ npm run format:check  # 포맷 검사 (CI에서 실행)
 npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
 E2E_PORT=8790 npm run test:e2e  # 다른 작업 공간과 동시에 돌릴 때 포트 변경 (기본 8788, 검사 포트는 +1)
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
-python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow 필요)
-python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow, 먼저 npm install)
+python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow·pillow-heif 필요)
+python3 tests/fixtures/make_text_fixtures.py  # 테스트용 CSV(CP949·Shift_JIS) 다시 만들기
+python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow·pillow-heif, 먼저 npm install)
 PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
 ```
 
@@ -379,9 +380,15 @@ Co-Authored-By: ...
   - 공통: 여러 장 목록 화면 `src/lib/image/ImageBatchTool.svelte`(+`batch.svelte.ts`), 처리는
     `src/lib/image/process.ts`(읽기 → 크기 바꾸기 → 저장, CPU 수에 맞춘 워커 여러 개).
     PNG 색 줄이기는 UPNG.js (`upng-globals.ts`가 워커에서 zlib을 마련한다)
+  - 큰 결과 저장 (2026-10-23): 다시 그려 저장하는 워커(자르기·회전, 모자이크, 이어 붙이기)는
+    `src/lib/image/worker-canvas.ts`의 `saveDrawing()`을 쓴다. canvas 하나에 그릴 수 있으면 브라우저 저장, 못 그리면
+    (아이폰 약 1,670만 화소) PNG·JPG를 줄 묶음씩 직접 만든다(`png-stream.ts`, `jpeg-stream.ts`). WebP만 실패로 알린다.
+    E2E는 워커 전역 `__canvasPixelLimit`으로 한계를 낮춰 시험한다(`tests/e2e/canvas-limit.ts`)
   - [x] 압축 (`/image/compress/`): JPG·WebP는 화질, PNG는 색 수로 줄인다. 원본보다 크면 원본 그대로
   - [x] 크기 조절 (`/image/resize/`): 비율(%) 또는 가로·세로 픽셀(비율 유지·정확히)
-  - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF, Safari의 HEIC)를 JPG·PNG·WebP로
+  - [x] 형식 변환 (`/image/convert/`): 브라우저가 읽는 이미지(GIF·BMP·AVIF)와 HEIC를 JPG·PNG·WebP로
+  - [x] 용량 맞추기 (`/image/target-size/`, 2026-10-23): "200KB 이하"처럼 정한 용량 이하로. 화질을 이분 탐색으로 낮추고(크기를 줄여도 되면 60%까지),
+        그래도 크면 가로·세로를 줄인다. 공통 워커의 `limit` 경로(`fitImage`, `src/lib/image/fit-size.ts`). 1KB = 1,000바이트로 센다
   - [x] 증명사진 (`/image/id-photo/`, 2026-10-20): MediaPipe Face Landmarker로 얼굴을 찾아 여권 규격(3.5×4.5cm,
         머리 3.2~3.6cm)에 맞게 자르기·크기·기울기를 바꾼다(`src/lib/face/`). 얼굴 보정은 하지 않는다(여권 규정).
         배경은 고를 때만 바꾸고(Selfie Segmenter) 여권에는 원래 사진을 쓰라고 알린다. 좌우 반전(앞 카메라).
@@ -392,16 +399,28 @@ Co-Authored-By: ...
         JPEG 끝 뒤에 덧붙은 자료(움직이는 사진 영상)는 두 방식 모두 뺀다. 지운 결과를 다시 읽어 위치가 남았으면 실패로 알린다
   - [x] 이어 붙이기 (`/image/stitch/`, 2026-10-22): 세로·가로로 잇기. 세로로 이을 때 화면 캡처의 고정 막대와 겹친 부분을
         줄 모양(칸 밝기 평균) 비교로 찾고 이음마다 고칠 수 있다(`src/lib/image/stitch-detect.ts`). 결과는 워커가 줄 묶음씩 그리고
-        PNG는 직접 이어 써서(`png-stream.ts`) canvas 크기 한계(아이폰 약 1,670만 화소)에 묶이지 않는다. 나누기·PDF는 빈 줄에서 자른다
+        PNG·JPG는 직접 이어 써서 canvas 크기 한계(아이폰 약 1,670만 화소)에 묶이지 않는다(위 "큰 결과 저장"). 나누기·PDF는 빈 줄에서 자른다
   - [x] 자르기·회전 (`/image/crop/`, 2026-10-23): 한 장을 90°씩 돌리기·뒤집기·기울기 바로잡기(사진을 키워 귀퉁이를 채움)·비율 자르기.
         미리보기와 저장 워커가 같은 변환(`src/lib/image/crop-geometry.ts`)을 쓰고, 원본은 워커가 들고 있다
   - [x] 모자이크 (`/image/mosaic/`, 2026-10-23): 가릴 곳(사각형·타원)마다 모자이크·흐림·검게 칠하기. 흐림·작은 모자이크는
         되살릴 수 있다고 밝히고 검게 칠하기를 권한다. 미리보기와 워커가 같은 계산(`src/lib/image/mosaic-effects.ts`).
         얼굴 자동 찾기는 나중 (증명사진 얼굴 데이터의 받기 동의·용량)
-  - [ ] HEIC를 모든 브라우저에서 (libheif, LGPL·HEVC 특허 — 사용자 결정 대기), 배경 제거(누끼, 모델 데이터 크기를
-        밝히고 캐시) 등
+  - [x] 글자 추출 (`/image/ocr/`, 2026-10-23): 여러 장에서 한국어·영어 글자를 읽어 복사·TXT. PDF 글자 인식과 엔진·데이터·받기 화면
+        (`src/lib/ocr/OcrSetup.svelte`)을 같이 쓴다. 기울기(±20°)·눕힘을 바로 세우고 작은 글자는 키우며, 어두운 말풍선은 바탕을
+        다시 그려 놓친 줄만 더한다(`src/lib/ocr/image-read.ts`). 손글씨·세로쓰기·원근 바로잡기는 하지 않는다
+  - [x] HEIC를 모든 브라우저에서 (2026-10-23, 사용자가 LGPL·HEVC 특허 우려를 감수하고 결정): libheif-js(libheif+libde265
+        WebAssembly)를 브라우저가 HEIC를 못 읽을 때만 워커에서 쓴다(`src/lib/image/heif.ts`). 엔진은 압축 전송 약 0.5MB라
+        데이터 보관(동의) 없이 빌드 자산으로 필요할 때 받는다. 대표 그림만, irot·imir 적용, 8비트, P3 → sRGB.
+        새 도구 HEIC JPG 변환(`/image/heic-to-jpg/`, 화면은 형식 변환과 같은 `ConvertTool`)과 형식 변환·자르기·모자이크·
+        증명사진·이어 붙이기·이미지를 PDF로가 HEIC를 연다. LGPL 허가서·안내는 `scripts/copy-libheif-notice.mjs`가
+        `public/vendor/libheif/`에 둔다. 압축·크기 조절·위치 정보 지우기는 아직 (docs/features/image-heic-to-jpg)
+  - [ ] 배경 제거(누끼, 모델 데이터 크기를 밝히고 캐시) 등
   - [x] 가이드 글 (`/guide/`, 2026-10-15): 검색 유입과 광고 심사용. 첫 6편 (PDF 압축·합치기·이미지로·서명,
         이미지 압축·크기 조절). 도구를 만들 때마다 그 도구의 가이드를 함께 쓴다
+- [ ] 10단계: 텍스트·CSV 도구 (2026-10-23) — 카테고리 `text`(`/data/`는 데이터 파일 자리라 피함). 도구마다 멈추고 확인
+  - [x] CSV 한글 깨짐 고치기 (`/text/csv-encoding/`): 인코딩 자동 판단(BOM·UTF-16·UTF-8·CP949·Windows-1252) + 직접 고르기,
+        지금 열리는 모습·바꾼 뒤 미리보기 표, 엑셀용 UTF-8(BOM)·UTF-8·CP949로 저장, 줄바꿈. 워커가 조각씩 읽어 수백 MB도 된다
+        (`src/lib/text/`). CP949 쓰기 표는 브라우저의 euc-kr 디코더로 만들고, 없는 글자는 ?로 바꿔 줄 번호와 알린다
 - [x] MVP 범위 확정 → GitHub 레포 생성 → 첫 push → `dev` 브랜치 생성 (2026-10-11)
 - [x] Cloudflare 배포 연결 → 첫 배포 확인 (2026-10-11, workers.dev 주소에서 E2E 전체 통과)
 - [x] 도메인 연결 → 도메인 주소에서 다시 확인 (2026-10-12, E2E 전체 통과, workers.dev 주소는 끔)

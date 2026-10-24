@@ -86,6 +86,7 @@ PDF
 | 폴더                                                      | 도구             | 상태 |
 | --------------------------------------------------------- | ---------------- | ---- |
 | [image-compress](./features/image-compress)               | 이미지 압축      | live |
+| [image-target-size](./features/image-target-size)         | 용량 맞추기      | live |
 | [image-resize](./features/image-resize)                   | 크기 조절        | live |
 | [image-convert](./features/image-convert)                 | 형식 변환        | live |
 | [image-id-photo](./features/image-id-photo)               | 증명사진         | live |
@@ -93,3 +94,11 @@ PDF
 | [image-stitch](./features/image-stitch)                   | 이어 붙이기      | live |
 | [image-crop](./features/image-crop)                       | 자르기·회전      | live |
 | [image-mosaic](./features/image-mosaic)                   | 모자이크         | live |
+| [image-heic-to-jpg](./features/image-heic-to-jpg)         | HEIC JPG 변환    | live |
+| [image-ocr](./features/image-ocr)                         | 글자 추출(OCR)   | live |
+
+텍스트·CSV
+
+| 폴더                                              | 도구                 | 상태 |
+| ------------------------------------------------- | -------------------- | ---- |
+| [text-csv-encoding](./features/text-csv-encoding) | CSV 한글 깨짐 고치기 | live |

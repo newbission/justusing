@@ -6,6 +6,7 @@
  */
 import type { FrameLocator } from '@playwright/test';
 import { expect, test, type Page } from './test';
+import { difference, isJpeg, limitCanvas } from './canvas-limit';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -235,6 +236,16 @@ test('휴대폰 사진의 방향 정보대로 세워 연다', async ({ page }) =
   expect(await sizeOf(page, file.bytes)).toEqual([300, 400]);
 });
 
+test('아이폰 사진(HEIC)도 바로 세워 열고 JPG로 받는다', async ({ page }) => {
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다 (회전 표시 irot을 적용한다)
+  const frame = await openTool(page, 'iphone.heic');
+  await expect(frame.getByText('300×400')).toBeVisible();
+  await frame.getByRole('button', { name: '가릴 곳 추가' }).click();
+  const file = await download(page, frame);
+  expect(file.name).toBe('iphone_모자이크.jpg');
+  expect(await sizeOf(page, file.bytes)).toEqual([300, 400]);
+});
+
 test('예시 사진의 번호판을 가려 같은 크기의 JPG로 받는다', async ({ page }) => {
   await page.goto('/image/mosaic/');
   const frame = page.frameLocator('iframe[data-tool-frame]');
@@ -244,6 +255,35 @@ test('예시 사진의 번호판을 가려 같은 크기의 JPG로 받는다', a
   const file = await download(page, frame);
   expect(file.name).toBe('예시-번호판사진_모자이크.jpg');
   expect(await sizeOf(page, file.bytes)).toEqual([1600, 1200]);
+});
+
+test('canvas 하나에 그리지 못하는 크기도 같은 결과의 JPG로 받는다', async ({ page }) => {
+  await page.goto('/image/mosaic/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.getByRole('button', { name: '예시 파일로 해 보기' }).click();
+  await frame.getByRole('button', { name: '가릴 곳 추가' }).click();
+  await expect(frame.getByText('가릴 곳 1곳 · 1,600 × 1,200 px · JPG')).toBeVisible();
+  const whole = await download(page, frame);
+
+  // 결과(192만 화소)보다 작은 canvas만 되게 하면 가릴 곳을 먼저 고치고 줄 묶음씩 JPG로 쓴다
+  await limitCanvas(page, 1_000_000);
+  const strips = await download(page, frame);
+  expect(strips.name).toBe('예시-번호판사진_모자이크.jpg');
+  expect(isJpeg(strips.bytes)).toBe(true);
+  expect(Buffer.from(strips.bytes).equals(Buffer.from(whole.bytes))).toBe(false);
+  const diff = await difference(page, whole.bytes, strips.bytes);
+  expect(diff.sizes).toEqual([
+    [1600, 1200],
+    [1600, 1200],
+  ]);
+  expect(diff.mean).toBeLessThan(2);
+
+  // WebP는 줄 묶음으로 만들 수 없어 PNG·JPG를 권한다
+  await frame.getByText('WebP', { exact: true }).click();
+  await frame.getByRole('button', { name: '가린 이미지 받기' }).click();
+  await expect(
+    frame.getByText('이 브라우저가 이렇게 큰 이미지를 만들지 못했습니다. PNG나 JPG로'),
+  ).toBeVisible();
 });
 
 test('열 수 없는 파일은 알린다', async ({ page }) => {

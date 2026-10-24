@@ -6,19 +6,19 @@
 -->
 <script lang="ts">
   import '../../../frame/controls.css';
-  import { untrack } from 'svelte';
   import { frameLocale, pick } from '../../../frame/locale';
   import { FRAME_MESSAGES } from '../../../frame/messages';
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
-  import { dataStatus, loadData, missingData } from '../../../frame/data';
   import { downloadFile } from '../../../frame/download';
-  import { baseName, formatSize } from '../../../frame/format';
+  import { baseName } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
   import { modifyPdf } from '../../../lib/pdf/modify';
   import { renderPageBitmap } from '../../../lib/pdf/render-image';
   import SinglePdfTool, { type LoadedPdf } from '../../../lib/pdf/SinglePdfTool.svelte';
-  import { OCR_CONSENT, OCR_LANGS, OcrPool, ocrFiles, type OcrLang } from '../../../lib/ocr/ocr';
+  import { OcrPool } from '../../../lib/ocr/ocr';
+  import { OcrData } from '../../../lib/ocr/ocr-data.svelte';
+  import OcrSetup from '../../../lib/ocr/OcrSetup.svelte';
 
   const common = pick(FRAME_MESSAGES);
   const t = pick(MESSAGES);
@@ -27,67 +27,10 @@
   const OCR_DPI = 300;
 
   let pdf: LoadedPdf | undefined = $state.raw();
-  /** 한국어 화면은 한국어+영어, 영어 화면은 영어부터 */
-  let langs: OcrLang[] = $state(frameLocale === 'ko' ? ['kor', 'eng'] : ['eng']);
+  const ocr = new OcrData();
   let skipText = $state(true);
 
-  const files = $derived(ocrFiles(OCR_LANGS.filter((lang) => langs.includes(lang))));
-  /** 받아야 할 크기 (고른 언어 중 보관돼 있지 않은 것만) */
-  let needBytes = $state(0);
-
-  type Data =
-    | { kind: 'checking' }
-    | { kind: 'missing'; removed: boolean; lowSpace: boolean }
-    | { kind: 'downloading'; percent: number }
-    | { kind: 'failed' }
-    | { kind: 'ready' };
-  let data = $state<Data>({ kind: 'checking' });
-  /**
-   * "데이터 받기"로 받은 바이트. 보관소를 쓸 수 없는 창(시크릿 모드 등)에서는 인식할 때 다시 받게 되므로
-   * 받은 것을 그대로 쓴다
-   */
-  let downloaded: Map<string, Uint8Array> | undefined;
-
-  // 고른 언어의 데이터가 보관돼 있는지 확인한다. 없으면 받지 않고 묻는다 (와이파이인지 알 수 없다)
-  $effect(() => {
-    const wanted = files;
-    if (wanted.length < 2) return;
-    let current = true;
-    untrack(() => (data = { kind: 'checking' }));
-    dataStatus(wanted, OCR_CONSENT).then((status) => {
-      if (!current) return;
-      const missing = missingData(wanted, status);
-      const lowSpace = status.available !== undefined && status.available < missing.bytes * 2;
-      needBytes = missing.bytes;
-      data =
-        missing.bytes === 0
-          ? { kind: 'ready' }
-          : { kind: 'missing', removed: missing.removed, lowSpace };
-    });
-    return () => {
-      current = false;
-    };
-  });
-
-  async function download() {
-    const wanted = files;
-    data = { kind: 'downloading', percent: 0 };
-    try {
-      const bytes = await loadData(wanted, OCR_CONSENT, (received) => {
-        if (files !== wanted) return;
-        data = {
-          kind: 'downloading',
-          percent: Math.min(99, Math.floor((received / needBytes) * 100)),
-        };
-      });
-      downloaded = new Map([...(downloaded ?? []), ...bytes]);
-      if (files === wanted) data = { kind: 'ready' };
-    } catch {
-      if (files === wanted) data = { kind: 'failed' };
-    }
-  }
-
-  const signature = $derived(`${langs.join('+')}:${skipText}`);
+  const signature = $derived(`${ocr.chosen.join('+')}:${skipText}`);
   type Run =
     | { kind: 'idle' }
     | { kind: 'scanning' }
@@ -130,7 +73,7 @@
   }
 
   async function recognize() {
-    if (!pdf || busy || data.kind !== 'ready' || langs.length === 0) return;
+    if (!pdf || busy || !ocr.ready) return;
     const entitlement = await canUse('pdf/ocr');
     if (!entitlement.allowed) {
       run = { kind: 'failed', message: entitlement.reason ?? common.action.unavailable };
@@ -138,7 +81,7 @@
     }
     const source = pdf;
     const startedWith = signature;
-    const chosen = OCR_LANGS.filter((lang) => langs.includes(lang));
+    const chosen = ocr.chosen;
     const total = source.doc.numPages;
     let pool: OcrPool | undefined;
     try {
@@ -154,11 +97,7 @@
       }
 
       run = { kind: 'starting' };
-      const needed = ocrFiles(chosen);
-      const bytes = needed.every((file) => downloaded?.has(file.path))
-        ? downloaded!
-        : await loadData(needed, OCR_CONSENT);
-      pool = await OcrPool.create(bytes, chosen, indices.length);
+      pool = await OcrPool.create(await ocr.bytes(chosen), chosen, indices.length);
       if (pdf !== source) return;
 
       const layers: (Uint8Array | null)[] = Array.from({ length: total }, () => null);
@@ -240,10 +179,10 @@
           <strong>{run.message}</strong>
         {:else if run.kind === 'nothing'}
           {t.nothing}
-        {:else if langs.length === 0}
-          {t.needLang}
-        {:else if data.kind !== 'ready'}
-          {t.needData}
+        {:else if ocr.chosen.length === 0}
+          {common.ocr.needLang}
+        {:else if !ocr.ready}
+          {common.ocr.needData}
         {:else}
           {t.ready(doc.numPages)}
         {/if}
@@ -256,68 +195,19 @@
           onclick={() => downloadFile(result.bytes, result.name)}>{t.downloadPdf}</button
         >
       {:else}
-        <button
-          type="button"
-          class="btn primary"
-          disabled={busy || data.kind !== 'ready' || langs.length === 0}
-          onclick={recognize}>{t.run}</button
+        <button type="button" class="btn primary" disabled={busy || !ocr.ready} onclick={recognize}
+          >{t.run}</button
         >
       {/if}
     </ActionBar>
 
     <div class="tool-body">
-      <div class="choices">
-        <fieldset class="langs">
-          <legend>{t.langGroup}</legend>
-          {#each OCR_LANGS as lang (lang)}
-            <label class="check">
-              <input
-                type="checkbox"
-                value={lang}
-                bind:group={langs}
-                disabled={busy || data.kind === 'downloading'}
-              />
-              {t.langs[lang]}
-            </label>
-          {/each}
-        </fieldset>
+      <OcrSetup data={ocr} {busy}>
         <label class="check">
           <input type="checkbox" bind:checked={skipText} disabled={busy} />
           {t.skipText}
         </label>
-      </div>
-
-      {#if langs.length > 0}
-        <section class="data" aria-label={t.dataTitle}>
-          {#if data.kind === 'ready'}
-            <p>{t.dataReady}</p>
-          {:else if data.kind === 'checking'}
-            <p>{t.checking}</p>
-          {:else}
-            <h2>{t.dataTitle}</h2>
-            {#if data.kind === 'missing' && data.removed}
-              <p><strong>{t.dataRemoved}</strong></p>
-            {/if}
-            <p>{t.dataSize(formatSize(needBytes))}</p>
-            <p class="help">{t.dataNote}</p>
-            {#if data.kind === 'missing' && data.lowSpace}
-              <p class="help">{t.lowSpace}</p>
-            {/if}
-            {#if data.kind === 'failed'}
-              <p><strong>{t.dataFailed}</strong></p>
-            {/if}
-            <button
-              type="button"
-              class="btn primary"
-              disabled={data.kind === 'downloading'}
-              onclick={download}
-              >{data.kind === 'downloading'
-                ? t.downloading(data.percent)
-                : t.download(formatSize(needBytes))}</button
-            >
-          {/if}
-        </section>
-      {/if}
+      </OcrSetup>
 
       {#if result}
         <textarea readonly aria-label={t.textLabel} value={result.text}></textarea>
@@ -327,21 +217,6 @@
 </SinglePdfTool>
 
 <style>
-  .langs {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
-  .langs legend {
-    float: left;
-    margin-right: 4px;
-    font-size: 14px;
-    color: var(--color-muted);
-  }
   .check {
     display: inline-flex;
     align-items: center;
@@ -353,23 +228,6 @@
     width: 18px;
     height: 18px;
     accent-color: var(--color-text);
-  }
-  .data {
-    margin: 16px 0;
-    padding: 16px;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius);
-  }
-  .data h2 {
-    margin: 0 0 8px;
-    font-size: 15px;
-  }
-  .data p {
-    margin: 0 0 8px;
-    font-size: 14px;
-  }
-  .data .btn {
-    margin-top: 4px;
   }
   textarea {
     width: 100%;

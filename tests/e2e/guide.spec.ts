@@ -157,7 +157,11 @@ for (const prefix of ['', '/en']) {
 
 test('가이드 목록은 카테고리별로 나뉘고 카테고리 가이드 페이지로 간다', async ({ page }) => {
   await page.goto('/guide/');
-  await expect(page.locator('main h2')).toHaveText(['PDF 가이드', '이미지 가이드']);
+  await expect(page.locator('main h2')).toHaveText([
+    'PDF 가이드',
+    '이미지 가이드',
+    '텍스트·CSV 가이드',
+  ]);
   await page.getByRole('link', { name: '이미지 가이드 묶음별로 보기' }).click();
   await expect(page).toHaveURL(/\/guide\/image\/$/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('이미지 가이드');

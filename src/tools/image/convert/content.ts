@@ -13,7 +13,7 @@ export default defineContent({
       },
       {
         title: '아이폰 사진(HEIC)을 JPG로',
-        text: '아이폰이나 맥의 Safari에서 열면 HEIC 사진을 JPG로 바꿀 수 있습니다. 크롬·엣지는 HEIC를 읽지 못하므로 이때는 Safari에서 쓰세요.',
+        text: '윈도우 PC로 옮긴 아이폰 사진(HEIC)이 열리지 않을 때 크롬·엣지에서도 JPG로 바꿀 수 있습니다. 다른 형식과 섞어 넣어도 됩니다.',
       },
     ],
     howTo: [
@@ -25,11 +25,11 @@ export default defineContent({
     faq: [
       {
         q: '어떤 형식을 바꿀 수 있나요?',
-        a: 'JPG·PNG·WebP·GIF·BMP·AVIF처럼 지금 쓰는 브라우저가 열 수 있는 이미지는 모두 바꿀 수 있습니다. 결과는 JPG·PNG·WebP 가운데 하나로 저장합니다. 브라우저가 읽지 못하는 형식은 목록에 "읽지 못하는 형식"으로 표시됩니다.',
+        a: 'JPG·PNG·WebP·GIF·BMP·AVIF처럼 지금 쓰는 브라우저가 열 수 있는 이미지와 아이폰 사진(HEIC·HEIF)을 바꿀 수 있습니다. 결과는 JPG·PNG·WebP 가운데 하나로 저장합니다. 읽지 못하는 파일은 목록에 "읽지 못하는 이미지"로 표시됩니다.',
       },
       {
         q: '아이폰 사진(HEIC)도 바꿀 수 있나요?',
-        a: 'Safari(아이폰·맥)에서는 HEIC를 열 수 있어 JPG로 바꿀 수 있습니다. 크롬·엣지 같은 다른 브라우저는 HEIC를 읽지 못해 지금은 바꿀 수 없습니다. 아이폰 설정 → 카메라 → 포맷에서 "높은 호환성"을 고르면 처음부터 JPG로 찍힙니다.',
+        a: '네. Safari는 HEIC를 스스로 열고, 크롬·엣지·파이어폭스에서는 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받아 브라우저 안에서 엽니다. 사진은 올라가지 않습니다. 라이브 포토처럼 여러 장이 든 파일은 사진 앱에 보이는 대표 사진 한 장만 바뀝니다. 아이폰 사진만 바꾼다면 HEIC 변환 도구가 더 알맞습니다.',
       },
       {
         q: 'PNG를 JPG로 바꾸면 투명한 부분은 어떻게 되나요?',
@@ -57,7 +57,7 @@ export default defineContent({
       },
       {
         title: 'iPhone photos (HEIC) to JPG',
-        text: 'Open this page in Safari on an iPhone or Mac to convert HEIC photos to JPG. Chrome and Edge cannot read HEIC, so use Safari for these.',
+        text: 'When iPhone photos (HEIC) copied to a Windows PC will not open, convert them to JPG, even in Chrome or Edge. You can mix them with other formats.',
       },
     ],
     howTo: [
@@ -69,11 +69,11 @@ export default defineContent({
     faq: [
       {
         q: 'Which formats can I convert?',
-        a: 'Any image your browser can open, such as JPG, PNG, WebP, GIF, BMP or AVIF. The result is saved as JPG, PNG or WebP. Formats your browser cannot read are marked as such in the list.',
+        a: 'Any image your browser can open, such as JPG, PNG, WebP, GIF, BMP or AVIF, plus iPhone photos (HEIC and HEIF). The result is saved as JPG, PNG or WebP. Files that cannot be read are marked in the list.',
       },
       {
         q: 'Can I convert iPhone photos (HEIC)?',
-        a: 'Safari (on iPhone and Mac) can open HEIC, so you can convert it to JPG there. Other browsers such as Chrome and Edge cannot read HEIC, so it cannot be converted in them for now. On an iPhone, choosing Settings → Camera → Formats → "Most Compatible" takes photos as JPG from the start.',
+        a: 'Yes. Safari opens HEIC by itself. In Chrome, Edge and Firefox, the page loads a HEIC reader (libheif, about 0.5 MB) from this site and opens the photo inside your browser. Your photos are not uploaded. A file holding several images, such as a Live Photo, becomes the one main photo shown in the Photos app. For iPhone photos only, the HEIC to JPG tool is a better fit.',
       },
       {
         q: 'What happens to transparency when converting PNG to JPG?',

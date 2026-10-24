@@ -5,6 +5,7 @@
  */
 import workerUrl from './mosaic.worker.ts?worker&url';
 import { createWorker } from '../worker';
+import { readable } from './heif';
 import type { Region } from './mosaic-effects';
 import type { OutputType } from './process';
 
@@ -12,7 +13,7 @@ import type { OutputType } from './process';
 export type MosaicFailure = 'decode' | 'tooLarge' | 'encode';
 
 export type MosaicRequest =
-  | { id: number; kind: 'open'; file: Blob; previewSide: number }
+  | { id: number; kind: 'open'; file: Blob | ImageBitmap; previewSide: number }
   | { id: number; kind: 'preview'; regions: Region[] }
   | { id: number; kind: 'export'; regions: Region[]; type: OutputType; quality: number };
 
@@ -45,7 +46,28 @@ type Ask = MosaicRequest extends infer R
     : never
   : never;
 
-async function ask(request: Ask): Promise<MosaicResponse> {
+/**
+ * 요청은 부른 순서대로 워커에 보낸다. 열기는 HEIC 풀기까지 줄 안에서 한다: 크롬에서 HEIC를 푸는 동안
+ * 다른 사진을 열면 그 사진이 먼저 워커에 가고, 늦게 풀린 HEIC가 워커의 원본을 덮어 저장이 화면과 다른 사진을 쓴다
+ */
+let queue: Promise<unknown> = Promise.resolve();
+
+function ask(request: Ask): Promise<MosaicResponse> {
+  const next = queue.then(async (): Promise<MosaicResponse> => {
+    if (request.kind !== 'open' || request.file instanceof ImageBitmap) return send(request);
+    let file: ImageBitmap | Blob;
+    try {
+      file = await readable(request.file);
+    } catch {
+      return { id: -1, kind: 'error', reason: 'decode' };
+    }
+    return send({ ...request, file });
+  });
+  queue = next.catch(() => undefined);
+  return next;
+}
+
+async function send(request: Ask): Promise<MosaicResponse> {
   const worker = await (workerPromise ??= createWorker(workerUrl));
   const id = nextId++;
   return new Promise((resolve) => {
@@ -67,11 +89,17 @@ async function ask(request: Ask): Promise<MosaicResponse> {
     };
     worker.addEventListener('message', listener);
     worker.addEventListener('error', onError);
-    worker.postMessage({ ...request, id } as MosaicRequest);
+    // libheif로 푼 HEIC 그림은 옮겨 준다 (복사하지 않게)
+    const transfer =
+      request.kind === 'open' && request.file instanceof ImageBitmap ? [request.file] : [];
+    worker.postMessage({ ...request, id } as MosaicRequest, transfer);
   });
 }
 
-/** 사진을 연다. 워커가 원본을 들고 있다가 저장에 쓴다 (새로 열면 바뀐다) */
+/**
+ * 사진을 연다. 워커가 원본을 들고 있다가 저장에 쓴다 (새로 열면 바뀐다).
+ * 브라우저가 못 읽는 HEIC는 libheif로 풀어 넘긴다
+ */
 export async function openImage(file: Blob, previewSide: number): Promise<OpenedImage> {
   const response = await ask({ kind: 'open', file, previewSide });
   if (response.kind === 'opened') return response;

@@ -159,6 +159,26 @@ function marks(mark: FlowMark): {
         accent: ['M10 9h12v12H10z'],
         texts: [],
       };
+    case 'table':
+      return {
+        lines: ['M5 12h24v24H5z', 'M5 20h24', 'M5 28h24', 'M15 12v24'],
+        fills: [],
+        accent: ['M8 16h4', 'M18 16h8', 'M8 24h4', 'M18 24h6', 'M8 32h4', 'M18 32h8'],
+        texts: [],
+      };
+    case 'garbled':
+      return {
+        lines: ['M5 12h24v24H5z', 'M5 20h24', 'M5 28h24', 'M15 12v24'],
+        fills: [
+          'M18 14.5h3v3h-3z',
+          'M22.5 14.5h3v3h-3z',
+          'M18 22.5h3v3h-3z',
+          'M22.5 22.5h3v3h-3z',
+          'M18 30.5h3v3h-3z',
+        ],
+        accent: [],
+        texts: [],
+      };
     default:
       return {
         lines: ['M6 12h16', 'M6 17h20', 'M6 22h14', 'M6 27h18'],
@@ -174,7 +194,8 @@ function stack(doc: FlowDoc) {
   const scale = doc.small ? 0.78 : 1;
   const width = (W + STEP * (count - 1)) * scale;
   const height = (H + STEP * (count - 1)) * scale;
-  const drawn = marks(doc.mark ?? (doc.kind === 'jpg' || doc.kind === 'png' ? 'photo' : 'lines'));
+  const photo = doc.kind === 'jpg' || doc.kind === 'png' || doc.kind === 'heic';
+  const drawn = marks(doc.mark ?? (photo ? 'photo' : 'lines'));
   return { count, scale, width, height, drawn, label: doc.kind.toUpperCase() };
 }
 

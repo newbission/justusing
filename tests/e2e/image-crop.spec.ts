@@ -6,6 +6,7 @@
  */
 import type { FrameLocator } from '@playwright/test';
 import { expect, test, type Page } from './test';
+import { difference, isJpeg, limitCanvas } from './canvas-limit';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
@@ -161,6 +162,50 @@ test('휴대폰 사진의 방향 정보대로 세워 연다', async ({ page }) =
   expect([result.width, result.height]).toEqual([300, 400]);
 });
 
+test('아이폰 사진(HEIC)도 바로 세워 열고 JPG로 받는다', async ({ page }) => {
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다 (회전 표시 irot을 적용한다)
+  const frame = await openTool(page, 'iphone.heic');
+  await expect(frame.getByText('결과 300 × 400 px · JPG')).toBeVisible();
+  const file = await download(page, frame);
+  expect(file.name).toBe('iphone_편집.jpg');
+  expect(await corners(page, file.bytes)).toEqual({
+    width: 300,
+    height: 400,
+    corners: ['blue', 'red', 'white', 'green'],
+  });
+});
+
+test('HEIC를 푸는 동안 다른 사진을 열면 나중에 연 사진을 저장한다', async ({ page }) => {
+  // HEIC 엔진을 늦게 받게 해, 푸는 동안 PNG를 끌어다 놓는다
+  await page.route('**/libheif.*.wasm', async (route) => {
+    await new Promise((done) => setTimeout(done, 1500));
+    await route.continue();
+  });
+  const engine = page.waitForResponse(/libheif\..*\.wasm/);
+  const frame = await openTool(page, 'iphone.heic');
+  const tool = page.frames().find((f) => f.url().includes('/image/crop/frame/'))!;
+  const png = Array.from(await readFile(fixture('quadrants.png')));
+  await tool.evaluate((bytes) => {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(
+      new File([new Uint8Array(bytes)], 'quadrants.png', { type: 'image/png' }),
+    );
+    document.body.dispatchEvent(
+      new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer }),
+    );
+    document.body.dispatchEvent(
+      new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer }),
+    );
+  }, png);
+  await expect(frame.getByText('결과 40 × 30 px · PNG')).toBeVisible();
+  // HEIC가 다 풀린 뒤에 받는다. 늦게 풀린 HEIC가 워커의 원본을 바꾸지 않았어야 한다
+  await engine;
+  await page.waitForTimeout(500);
+  const file = await download(page, frame);
+  expect(file.name).toBe('quadrants_편집.png');
+  expect((await corners(page, file.bytes)).corners).toEqual(['red', 'green', 'blue', 'white']);
+});
+
 test('예시 사진의 기울기를 바로잡아 같은 크기로 받는다', async ({ page }) => {
   await page.goto('/image/crop/');
   const frame = page.frameLocator('iframe[data-tool-frame]');
@@ -175,6 +220,34 @@ test('예시 사진의 기울기를 바로잡아 같은 크기로 받는다', as
   expect([result.width, result.height]).toEqual([1600, 1200]);
   await frame.getByRole('button', { name: '0°로' }).click();
   await expect(frame.getByText('0.0°')).toBeVisible();
+});
+
+test('canvas 하나에 그리지 못하는 크기도 JPG로 받는다', async ({ page }) => {
+  await page.goto('/image/crop/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.getByRole('button', { name: '예시 파일로 해 보기' }).click();
+  await expect(frame.getByText('결과 1,600 × 1,200 px · JPG')).toBeVisible();
+  const whole = await download(page, frame);
+
+  // 결과(192만 화소)보다 작은 canvas만 되게 하면 줄 묶음씩 그려 직접 만든 JPG가 된다
+  await limitCanvas(page, 1_000_000);
+  const strips = await download(page, frame);
+  expect(strips.name).toBe('예시-기운사진_편집.jpg');
+  expect(isJpeg(strips.bytes)).toBe(true);
+  expect(Buffer.from(strips.bytes).equals(Buffer.from(whole.bytes))).toBe(false);
+  const diff = await difference(page, whole.bytes, strips.bytes);
+  expect(diff.sizes).toEqual([
+    [1600, 1200],
+    [1600, 1200],
+  ]);
+  expect(diff.mean).toBeLessThan(2);
+
+  // WebP는 줄 묶음으로 만들 수 없어 PNG·JPG를 권한다
+  await frame.getByText('WebP', { exact: true }).click();
+  await frame.getByRole('button', { name: '자른 이미지 받기' }).click();
+  await expect(
+    frame.getByText('이 브라우저가 이렇게 큰 이미지를 만들지 못했습니다. PNG나 JPG로'),
+  ).toBeVisible();
 });
 
 test('열 수 없는 파일은 알린다', async ({ page }) => {

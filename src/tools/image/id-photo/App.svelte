@@ -738,7 +738,7 @@
     {/if}
     <div class="drop">
       <FileDrop
-        accept="image/*"
+        accept="image/*,.heic,.heif"
         label={t.choose}
         hint={t.hint}
         onfiles={([file]) => file && open(file)}

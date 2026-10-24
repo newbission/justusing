@@ -2,16 +2,15 @@
  * 이어 붙이기 워커 (stitch.ts가 부른다). 사진은 메모리에서만 다룬다.
  *
  * - 겹친 부분 찾기: 사진을 바로 세워 줄 묶음씩 읽어 줄 모양을 만들고(사진마다 한 번, key로 보관) 두 장을 비교한다
- * - 잇기: 결과를 위에서부터 줄 묶음씩 그린다. PNG는 묶음마다 이어 써서 결과 크기에 한계가 없고,
- *   JPG·WebP는 브라우저 저장을 써야 해서 결과(나누면 한 장)를 canvas 하나에 그린다
+ * - 잇기: 결과를 위에서부터 줄 묶음씩 그린다. PNG는 묶음마다 이어 써서 결과 크기에 한계가 없다.
+ *   JPG는 canvas 하나에 그릴 수 있으면 브라우저 저장, 못 그리면 줄 묶음씩 직접 만든다.
+ *   WebP는 브라우저 저장을 써야 해서 결과(나누면 한 장)를 canvas 하나에 그린다
  * - 나누기: 정한 높이를 넘지 않게 자르되, 그 앞 4분의 1 안에서 한 색으로 된 줄(글 줄 사이)을 찾아 자른다
  */
-import { PngStream } from './png-stream';
 import { SignatureBuilder, detectSeam, type RowSignature } from './stitch-detect';
 import { STITCH_TYPES, type StitchJob, type StitchRequest, type StitchResponse } from './stitch';
+import { SaveFailure, saveDrawing, stripRows } from './worker-canvas';
 
-/** 한 번에 그려 읽는 화소 수 (줄 묶음 높이를 정한다) */
-const STRIP_PIXELS = 4_000_000;
 /** 한 색 줄로 보는 화소 차이 */
 const BLANK_TOLERANCE = 6;
 
@@ -23,16 +22,14 @@ class Failure extends Error {
   }
 }
 
-async function decode(file: Blob): Promise<ImageBitmap> {
+/** 바로 세워 읽는다. ImageBitmap이면 화면이 libheif로 이미 바로 세워 푼 HEIC다 */
+async function decode(file: Blob | ImageBitmap): Promise<ImageBitmap> {
+  if (file instanceof ImageBitmap) return file;
   try {
     return await createImageBitmap(file, { imageOrientation: 'from-image' });
   } catch {
     throw new Failure('decode');
   }
-}
-
-function stripRows(width: number): number {
-  return Math.max(1, Math.min(1024, Math.floor(STRIP_PIXELS / width)));
 }
 
 function context(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2D {
@@ -41,9 +38,13 @@ function context(canvas: OffscreenCanvas): OffscreenCanvasRenderingContext2D {
   return ctx;
 }
 
-async function signatureOf(key: number, file: Blob): Promise<RowSignature> {
+async function signatureOf(key: number, file: Blob | ImageBitmap): Promise<RowSignature> {
   const cached = signatures.get(key);
-  if (cached) return cached;
+  if (cached) {
+    // 이미 읽은 사진이면 화면이 풀어 보낸 그림은 쓰지 않는다
+    if (file instanceof ImageBitmap) file.close();
+    return cached;
+  }
   const bitmap = await decode(file);
   try {
     const { width, height } = bitmap;
@@ -145,36 +146,21 @@ async function encode(
   rows: number,
 ): Promise<Uint8Array> {
   const { width } = job.layout;
-  if (job.format === 'png') {
-    const png = new PngStream(width, rows, job.background === 'transparent');
-    const strip = stripRows(width);
-    const ctx = context(new OffscreenCanvas(width, Math.min(strip, rows)));
-    for (let at = 0; at < rows; at += strip) {
-      const count = Math.min(strip, rows - at);
-      drawRows(ctx, job, bitmaps, y + at, count);
-      await png.write(ctx.getImageData(0, 0, width, count).data, count);
-    }
-    return png.finish();
-  }
-
-  const canvas = new OffscreenCanvas(width, rows);
-  const ctx = context(canvas);
-  // 브라우저 한계를 넘는 canvas는 오류 없이 아무것도 그리지 않는다 (Safari). 맨 끝 화소로 확인한다
-  ctx.fillStyle = '#010203';
-  ctx.fillRect(width - 1, rows - 1, 1, 1);
-  const probe = ctx.getImageData(width - 1, rows - 1, 1, 1).data;
-  if (probe[0] !== 1 || probe[1] !== 2 || probe[2] !== 3) throw new Failure('tooLarge');
-  drawRows(ctx, job, bitmaps, y, rows);
-  const type = STITCH_TYPES[job.format];
-  let blob: Blob;
-  try {
-    blob = await canvas.convertToBlob({ type, quality: job.quality });
-  } catch {
-    throw new Failure('tooLarge');
-  }
-  // 저장하지 못하는 형식이면 브라우저가 몰래 PNG로 준다 (WebP를 못 쓰는 Safari)
-  if (blob.type !== type) throw new Failure('encode');
-  return new Uint8Array(await blob.arrayBuffer());
+  return saveDrawing(
+    {
+      width,
+      height: rows,
+      whole: (ctx) => drawRows(ctx, job, bitmaps, y, rows),
+      strips: () => (ctx, top, count) => {
+        drawRows(ctx, job, bitmaps, y + top, count);
+        return ctx.getImageData(0, 0, width, count).data;
+      },
+    },
+    STITCH_TYPES[job.format],
+    job.quality,
+    // 화면 캡처는 직접 만든 PNG(줄마다 필터를 고름)가 브라우저 저장보다 작아 PNG는 늘 줄 묶음으로 쓴다
+    { alpha: job.background === 'transparent', pngStrips: true },
+  );
 }
 
 async function stitch(job: StitchJob): Promise<Uint8Array[]> {
@@ -216,7 +202,7 @@ addEventListener('message', async (event: MessageEvent<StitchRequest>) => {
     send({
       id: request.id,
       kind: 'error',
-      reason: error instanceof Failure ? error.reason : 'tooLarge',
+      reason: error instanceof Failure || error instanceof SaveFailure ? error.reason : 'tooLarge',
     });
   }
 });

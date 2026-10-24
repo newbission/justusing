@@ -4,20 +4,25 @@
  */
 import workerUrl from './stitch.worker.ts?worker&url';
 import { createWorker } from '../worker';
+import { readable } from './heif';
+import type { OutputType } from './process';
 import type { Seam, StitchLayout } from './stitch-layout';
 
 export type StitchFormat = 'jpg' | 'png' | 'webp';
 export type Background = 'white' | 'black' | 'transparent';
 
-export const STITCH_TYPES: Record<StitchFormat, string> = {
+export const STITCH_TYPES: Record<StitchFormat, OutputType> = {
   jpg: 'image/jpeg',
   png: 'image/png',
   webp: 'image/webp',
 };
 
+/** 원본 파일, 또는 브라우저가 못 읽는 HEIC를 libheif로 바로 세워 푼 그림 (워커에 넘길 때 바꾼다) */
+type Source = Blob | ImageBitmap;
+
 export interface StitchJob {
   /** layout.pieces의 index 순서대로 */
-  files: Blob[];
+  files: Source[];
   layout: StitchLayout;
   background: Background;
   format: StitchFormat;
@@ -31,7 +36,12 @@ export interface StitchJob {
 export type StitchFailure = 'decode' | 'tooLarge' | 'encode';
 
 export type StitchRequest =
-  | { id: number; kind: 'seam'; a: { key: number; file: Blob }; b: { key: number; file: Blob } }
+  | {
+      id: number;
+      kind: 'seam';
+      a: { key: number; file: Source };
+      b: { key: number; file: Source };
+    }
   | { id: number; kind: 'forget'; keys: number[] }
   | { id: number; kind: 'stitch'; job: StitchJob };
 
@@ -66,7 +76,40 @@ function ask(request: Ask): Promise<StitchResponse> {
   return next;
 }
 
-async function send(request: Ask): Promise<StitchResponse> {
+/** 브라우저가 못 읽는 HEIC를 풀어 넣은 요청과, 워커로 옮길 그림들. 풀지 못하면 HeifError */
+async function prepare(request: Ask): Promise<[Ask, ImageBitmap[]]> {
+  const transfer: ImageBitmap[] = [];
+  const open = async (file: Source) => {
+    const source = file instanceof ImageBitmap ? file : await readable(file);
+    if (source instanceof ImageBitmap) transfer.push(source);
+    return source;
+  };
+  try {
+    if (request.kind === 'seam') {
+      const a = { ...request.a, file: await open(request.a.file) };
+      const b = { ...request.b, file: await open(request.b.file) };
+      return [{ ...request, a, b }, transfer];
+    }
+    if (request.kind === 'stitch') {
+      const files: Source[] = [];
+      for (const file of request.job.files) files.push(await open(file));
+      return [{ ...request, job: { ...request.job, files } }, transfer];
+    }
+    return [request, transfer];
+  } catch (error) {
+    for (const bitmap of transfer) bitmap.close();
+    throw error;
+  }
+}
+
+async function send(original: Ask): Promise<StitchResponse> {
+  let request: Ask;
+  let transfer: ImageBitmap[];
+  try {
+    [request, transfer] = await prepare(original);
+  } catch {
+    return { id: -1, kind: 'error', reason: 'decode' };
+  }
   const worker = await (workerPromise ??= createWorker(workerUrl));
   const id = nextId++;
   return new Promise((resolve, reject) => {
@@ -88,7 +131,7 @@ async function send(request: Ask): Promise<StitchResponse> {
     };
     worker.addEventListener('message', listener);
     worker.addEventListener('error', onError);
-    worker.postMessage({ ...request, id } as StitchRequest);
+    worker.postMessage({ ...request, id } as StitchRequest, transfer);
   });
 }
 

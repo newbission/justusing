@@ -83,7 +83,7 @@ const ko = {
   failed: {
     decode: '원본을 다시 읽지 못했습니다. 이미지를 다시 열어 주세요.',
     tooLarge:
-      '이 브라우저가 이렇게 큰 이미지를 만들지 못했습니다. PNG로 저장하거나 더 작게 잘라 보세요.',
+      '이 브라우저가 이렇게 큰 이미지를 만들지 못했습니다. PNG나 JPG로 저장하거나 더 작게 잘라 보세요.',
     encode: '이 브라우저는 이 형식으로 저장하지 못합니다. 다른 형식을 골라 주세요.',
   } satisfies Record<CropFailure, string>,
   /** 결과 파일 이름 뒤에 붙는 말 */
@@ -151,7 +151,7 @@ const en: typeof ko = {
   failed: {
     decode: 'The original could not be read again. Please open the image again.',
     tooLarge:
-      'This browser could not make an image this large. Try saving as PNG or cropping a smaller area.',
+      'This browser could not make an image this large. Try saving as PNG or JPG, or cropping a smaller area.',
     encode: 'This browser cannot save in this format. Choose another format.',
   },
   suffix: 'edited',

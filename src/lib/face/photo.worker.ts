@@ -22,8 +22,9 @@ async function shrink(source: ImageBitmap, side: number) {
 async function open(request: Extract<PhotoRequest, { type: 'open' }>) {
   original?.close();
   original = undefined;
-  // 휴대폰 사진의 방향(EXIF)은 브라우저가 맞춰 읽는다
-  const bitmap = await createImageBitmap(request.file);
+  // 휴대폰 사진의 방향(EXIF)은 브라우저가 맞춰 읽는다. libheif로 푼 HEIC는 이미 바로 선 그림으로 온다
+  const bitmap =
+    request.file instanceof ImageBitmap ? request.file : await createImageBitmap(request.file);
   original = bitmap;
   const preview = (await shrink(bitmap, request.previewSide)).bitmap;
   const small = await shrink(bitmap, request.thumbSide);

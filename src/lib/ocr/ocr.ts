@@ -6,6 +6,8 @@
  */
 import type { DataFile } from '../../frame/data';
 import { createWorker } from '../worker';
+import { readable } from '../image/heif';
+import type { ImageLine } from './image-read';
 import catalog from './catalog.json';
 import workerUrl from './ocr.worker.ts?worker&url';
 
@@ -39,11 +41,14 @@ export type OcrRequest =
       engine: Uint8Array;
       langs: { code: OcrLang; data: Uint8Array }[];
     }
-  | { id: number; type: 'page'; bitmap: ImageBitmap; dpi: number };
+  | { id: number; type: 'page'; bitmap: ImageBitmap; dpi: number }
+  /** image: 파일, 또는 브라우저가 못 읽는 HEIC를 libheif로 풀어 바로 세운 그림 (src/lib/image/heif.ts) */
+  | { id: number; type: 'image'; image: Blob | ImageBitmap };
 
 export type OcrResponse =
   | { id: number; kind: 'ready' }
   | { id: number; kind: 'page'; text: string; layer: Uint8Array }
+  | ({ id: number; kind: 'image' } & ImageResult)
   | { id: number; kind: 'error'; message: string };
 
 export interface OcrResult {
@@ -52,7 +57,19 @@ export interface OcrResult {
   layer: Uint8Array;
 }
 
+/** 사진·화면 캡처 한 장을 읽은 결과 */
+export interface ImageResult {
+  text: string;
+  /** 읽은 줄과 그 자리 (바로 세운 그림 기준 화소) */
+  lines: ImageLine[];
+  /** 바로 세운 그림의 가로·세로 */
+  width: number;
+  height: number;
+}
+
 let nextId = 0;
+/** 메모리가 모자라 워커가 죽었을 때의 오류 */
+const CRASHED = 'worker crashed';
 
 function call(worker: Worker, request: OcrRequest, transfer: Transferable[] = []) {
   return new Promise<OcrResponse>((resolve) => {
@@ -64,7 +81,7 @@ function call(worker: Worker, request: OcrRequest, transfer: Transferable[] = []
     // 메모리가 모자라 워커가 죽으면 메시지가 오지 않는다. 기다리지 않고 실패로 끝낸다
     const onError = () => {
       done();
-      resolve({ id: request.id, kind: 'error', message: 'worker crashed' });
+      resolve({ id: request.id, kind: 'error', message: CRASHED });
     };
     const done = () => {
       worker.removeEventListener('message', onMessage);
@@ -120,6 +137,25 @@ export class OcrPool {
   }
 
   /**
+   * 일감을 워커에 나눠 맡긴다. 쉬는 워커가 다음 일감을 가져간다.
+   * job이 false를 돌려주면 그 워커는 더 쓰지 않는다 (죽은 워커). 남은 일감을 돌려준다
+   */
+  private async each<T>(
+    items: T[],
+    job: (worker: Worker, item: T) => Promise<boolean | void>,
+  ): Promise<T[]> {
+    const queue = [...items];
+    await Promise.all(
+      this.workers.map(async (worker) => {
+        for (let item = queue.shift(); item !== undefined; item = queue.shift()) {
+          if ((await job(worker, item)) === false) return;
+        }
+      }),
+    );
+    return queue;
+  }
+
+  /**
    * 쪽들을 워커에 나눠 인식한다. render(i)가 i번째 쪽 그림을 그려 준다.
    * onPage(i, 결과): 쪽 하나가 끝날 때마다 (순서는 섞일 수 있다)
    */
@@ -128,19 +164,44 @@ export class OcrPool {
     render: (index: number) => Promise<{ bitmap: ImageBitmap; dpi: number }>,
     onPage: (index: number, result: OcrResult) => void,
   ): Promise<void> {
-    const queue = [...indices];
-    await Promise.all(
-      this.workers.map(async (worker) => {
-        for (let index = queue.shift(); index !== undefined; index = queue.shift()) {
-          const { bitmap, dpi } = await render(index);
-          const response = await call(worker, { id: nextId++, type: 'page', bitmap, dpi }, [
-            bitmap,
-          ]);
-          if (response.kind === 'error') throw new Error(response.message);
-          if (response.kind === 'page') onPage(index, response);
-        }
-      }),
-    );
+    await this.each(indices, async (worker, index) => {
+      const { bitmap, dpi } = await render(index);
+      const response = await call(worker, { id: nextId++, type: 'page', bitmap, dpi }, [bitmap]);
+      if (response.kind === 'error') throw new Error(response.message);
+      if (response.kind === 'page') onPage(index, response);
+    });
+  }
+
+  /**
+   * 사진·화면 캡처들을 워커에 나눠 읽는다. 한 장이 실패해도 나머지는 계속 읽는다.
+   * onImage(i, 결과 또는 실패): 한 장이 끝날 때마다 (순서는 섞일 수 있다)
+   */
+  async images(
+    images: Blob[],
+    onImage: (index: number, result: ImageResult | Error) => void,
+  ): Promise<void> {
+    const left = await this.each([...images.keys()], async (worker, index) => {
+      // 브라우저가 못 읽는 HEIC(크롬 등의 아이폰 사진)는 맡길 때 푼다 (미리 모두 풀면 큰 그림이 메모리에 남는다)
+      let image: Blob | ImageBitmap;
+      try {
+        image = await readable(images[index]!);
+      } catch {
+        onImage(index, new Error('decode'));
+        return true;
+      }
+      const transfer = image instanceof ImageBitmap ? [image] : [];
+      const response = await call(worker, { id: nextId++, type: 'image', image }, transfer);
+      if (response.kind === 'image') {
+        const { text, lines, width, height } = response;
+        onImage(index, { text, lines, width, height });
+        return true;
+      }
+      const message = response.kind === 'error' ? response.message : 'unexpected';
+      onImage(index, new Error(message));
+      return message !== CRASHED;
+    });
+    // 워커가 모두 죽어 남은 그림은 실패로 알린다
+    for (const index of left) onImage(index, new Error(CRASHED));
   }
 
   dispose() {

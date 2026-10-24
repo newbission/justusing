@@ -9,13 +9,16 @@ src/assets/guides/<언어>/<글>/에 PNG를 쓴다 (커밋한다. 배포용 WebP
 - 그림은 흰 종이 카드 하나로 그린다. 두 테마에서 같은 모습이고, 가이드 글의 테두리·둥근 모서리는 CSS가 맡는다
 - 그림 안 글자는 꼬리표(단계 이름·용량)만 둔다. 설명은 가이드 글과 그림 설명(alt)이 맡는다
 """
+import csv
 import io
+import json
 import math
 import os
 import sys
 import zipfile
 
 import fitz
+from fontTools.ttLib import TTFont
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageStat
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -81,6 +84,20 @@ TEXT = {
         'angle': '기울기 바로잡기',
         'car': '예시-번호판사진.jpg',
         'hidden': {'original': '원본', 'blur': '흐리게', 'mosaic': '모자이크', 'fill': '검게 칠하기'},
+        'utf8Csv': '예시-주문목록-UTF8.csv',
+        # 엑셀이 BOM 없는 CSV를 읽는 인코딩 (한국어 윈도우)과 그림에 보일 칸 (받는 분·상품·금액)
+        'excelCodec': 'cp949',
+        'csvColumns': (2, 4, 6),
+        'csvBefore': '엑셀에서 연 원본 (UTF-8, BOM 없음)',
+        'csvAfter': '엑셀용 UTF-8로 바꾼 뒤',
+        'heic': '예시-아이폰사진2.heic',
+        'heicStored': 'HEIC 안의 화소 (누운 채)',
+        'heicResult': 'JPG로 바꾼 결과',
+        'chat1': '예시-대화캡처1.png',
+        'ocrTilted': '12° 기울여 찍은 서류',
+        'ocrChat': '대화 캡처',
+        'ocrLines': lambda n: f'읽은 줄 {n}개',
+        'fitted': {'original': '원본', 'resize': '크기도 줄이기', 'keep': '화질만'},
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -129,6 +146,20 @@ TEXT = {
         'angle': 'Straighten',
         'car': 'sample-license-plate.jpg',
         'hidden': {'original': 'Original', 'blur': 'Blur', 'mosaic': 'Mosaic', 'fill': 'Black out'},
+        'utf8Csv': 'sample-orders-utf8.csv',
+        # 서유럽 윈도우의 엑셀 기본 인코딩. 칸: Customer·City·Product
+        'excelCodec': 'cp1252',
+        'csvColumns': (2, 3, 4),
+        'csvBefore': 'Original opened in Excel (UTF-8, no BOM)',
+        'csvAfter': 'After converting to UTF-8 with BOM',
+        'heic': 'sample-iphone-photo-2.heic',
+        'heicStored': 'Pixels inside the HEIC (lying)',
+        'heicResult': 'Converted to JPG',
+        'chat1': 'sample-chat-1.png',
+        'ocrTilted': 'Paper shot at 12°',
+        'ocrChat': 'Chat screenshot',
+        'ocrLines': lambda n: f'{n} lines read',
+        'fitted': {'original': 'Original', 'resize': 'Also resize', 'keep': 'Quality only'},
     },
 }
 
@@ -468,6 +499,99 @@ def photo_location(t, cache, samples, fonts):
     return 'photo-location', 'before-after.png', card
 
 
+# 깨진 글자(한자·�)는 Pretendard에 없어 macOS 글꼴로 그린다 (render.py는 맥에서 돌린다)
+FALLBACK_FONTS = [
+    (REGULAR, 0),
+    ('/System/Library/Fonts/AppleSDGothicNeo.ttc', 0),
+    ('/System/Library/Fonts/LucidaGrande.ttc', 0),
+]
+
+
+def mixed_fonts(size: int):
+    """글자마다 그 글자가 있는 첫 글꼴로 그리기 위한 (글꼴, 글자 표) 목록"""
+    out = []
+    for path, index in FALLBACK_FONTS:
+        tt = TTFont(path, fontNumber=index)
+        out.append((ImageFont.truetype(path, size, index=index), set(tt.getBestCmap())))
+    return out
+
+
+def runs(text: str, fonts):
+    """글자를 같은 글꼴끼리 묶는다"""
+    out = []
+    for char in text:
+        font = next((f for f, cmap in fonts if ord(char) in cmap), fonts[0][0])
+        if out and out[-1][0] is font:
+            out[-1][1] += char
+        else:
+            out.append([font, char])
+    return out
+
+
+def mixed_length(text: str, fonts) -> float:
+    return sum(font.getlength(part) for font, part in runs(text, fonts))
+
+
+def draw_mixed(draw, x, y, text, fonts, fill):
+    for font, part in runs(text, fonts):
+        draw.text((x, y), part, font=font, fill=fill, anchor='lm')
+        x += font.getlength(part)
+
+
+def sheet(rows, fonts, widths) -> Image.Image:
+    """엑셀처럼 칸 이름(A, B…)과 줄 번호를 단 표"""
+    row_h = 40
+    head_w = 40
+    width = head_w + sum(widths)
+    height = row_h * (len(rows) + 1)
+    image = Image.new('RGB', (width, height), BG)
+    draw = ImageDraw.Draw(image)
+    head = (244, 244, 241)
+    draw.rectangle([0, 0, width, row_h], fill=head)
+    draw.rectangle([0, 0, head_w, height], fill=head)
+    small = fonts[0][0].font_variant(size=15)
+    for c in range(len(widths)):
+        x = head_w + sum(widths[:c])
+        draw.text((x + widths[c] / 2, row_h / 2), chr(65 + c), font=small, fill=MUTED, anchor='mm')
+    for r, row in enumerate(rows):
+        y = row_h * (r + 1)
+        draw.text((head_w / 2, y + row_h / 2), str(r + 1), font=small, fill=MUTED, anchor='mm')
+        for c, text in enumerate(row):
+            x = head_w + sum(widths[:c])
+            draw_mixed(draw, x + 12, y + row_h / 2, text, fonts, INK)
+    for r in range(len(rows) + 2):
+        draw.line([0, r * row_h, width, r * row_h], fill=LINE)
+    for c in range(len(widths) + 1):
+        x = head_w + sum(widths[:c])
+        draw.line([x, 0, x, height], fill=LINE)
+    draw.line([0, 0, 0, height], fill=LINE)
+    return image
+
+
+def csv_encoding(t, cache, samples, fonts):
+    # 견본(BOM 없는 UTF-8)을 엑셀이 읽는 인코딩으로 읽은 모습과, 도구로 바꾼 파일을 읽은 모습
+    original = open(os.path.join(samples, t['utf8Csv']), 'rb').read()
+    converted = open(os.path.join(cache, 'csv-encoding.csv'), 'rb').read()
+    assert converted.startswith(b'\xef\xbb\xbf') and not original.startswith(b'\xef\xbb\xbf')
+
+    def table(text: str):
+        rows = list(csv.reader(io.StringIO(text)))[:4]
+        return [[row[c] for c in t['csvColumns']] for row in rows]
+
+    before = table(original.decode(t['excelCodec'], errors='replace'))
+    after = table(converted.decode('utf-8-sig'))
+    cell_fonts = mixed_fonts(18)
+    widths = [
+        round(max(mixed_length(row[c], cell_fonts) for row in before + after) + 24)
+        for c in range(len(t['csvColumns']))
+    ]
+    items = [
+        (sheet(before, cell_fonts, widths), t['csvBefore'], ''),
+        (sheet(after, cell_fonts, widths), t['csvAfter'], ''),
+    ]
+    return 'fix-csv-encoding', 'before-after.png', tiles(items, *fonts, cols=1)
+
+
 def fill_pdf_form(t, cache, samples, fonts):
     path = os.path.join(cache, 'fill-form.pdf')
     image = render(path, 0, 96, page_rect(path, 0, 0.08, 0.06, 0.92, 0.428))
@@ -518,6 +642,24 @@ def compress_image(t, cache, samples, fonts):
     return 'compress-image', 'levels.png', tiles(items, *fonts)
 
 
+def photo_size_limit(t, cache, samples, fonts):
+    # 30KB 목표: 크기도 줄인 것과 화질만 낮춘 것. 해 둘레와 하늘을 같은 크기로 잘라 놓는다
+    # (화질만 낮추면 하늘에 네모 얼룩이 생기고, 크기를 줄이면 조금 흐려질 뿐이다)
+    photo = os.path.join(samples, t['photo'])
+    paths = [
+        (photo, t['fitted']['original']),
+        (os.path.join(cache, 'target-size-resize.jpg'), t['fitted']['resize']),
+        (os.path.join(cache, 'target-size-keep.jpg'), t['fitted']['keep']),
+    ]
+    items = []
+    for path, label in paths:
+        image = Image.open(path).convert('RGB')
+        w, h = image.size
+        crop = image.crop((round(w * 0.47), round(h * 0.22), round(w * 0.56), round(h * 0.34)))
+        items.append((fit_width(crop, 200), label, f'{w}×{h} · {size_label(path)}'))
+    return 'photo-size-limit', 'compare.png', tiles(items, *fonts)
+
+
 def resize_image(t, cache, samples, fonts):
     # 원래 크기 대비 같은 비율로 줄여 그린다
     photo = os.path.join(samples, t['photo'])
@@ -551,6 +693,20 @@ def convert_image(t, cache, samples, fonts):
 CONVERT_CROP = (52, 160, 116, 206)
 
 
+def heic_to_jpg(t, cache, samples, fonts):
+    # 세로로 들고 찍은 견본: HEIC 안의 화소는 누워 있고 회전 표시(irot)만 붙어 있다. 바꾼 JPG는 바로 서 있다.
+    # 왼쪽은 결과를 회전 표시만큼 되돌려 그린 것이다 (HEIC에 담긴 화소의 모습, 그림 크기는 원본 파일 크기를 적는다)
+    heic = os.path.join(samples, t['heic'])
+    result = os.path.join(cache, 'heic-to-jpg.jpg')
+    upright = Image.open(result).convert('RGB')
+    stored = upright.transpose(Image.Transpose.ROTATE_90)
+    items = [
+        (fit_height(stored, 225), t['heicStored'], f'HEIC · {stored.width}×{stored.height} · {size_label(heic)}'),
+        (fit_height(upright, 300), t['heicResult'], f'JPG · {upright.width}×{upright.height} · {size_label(result)}'),
+    ]
+    return 'heic-to-jpg', 'upright.png', tiles(items, *fonts, gap=24)
+
+
 def stitch_screenshots(t, cache, samples, fonts):
     # 캡처 세 장과 이은 결과를 같은 비율로 줄여 나란히 둔다 (겹친 부분과 막대가 빠져 세 장 합보다 짧다)
     scale = 300 / 1334
@@ -580,6 +736,31 @@ def hide_info_in_photo(t, cache, samples, fonts):
         image = Image.open(path).convert('RGB').crop(box)
         items.append((fit_width(image, 320, Image.LANCZOS), t['hidden'][key], ''))
     return 'hide-info-in-photo', 'compare.png', tiles(items, *fonts, gap=20, cols=2)
+
+def image_ocr(t, cache, samples, fonts):
+    # 도구가 읽은 줄 자리(.cache의 ocr-lines.json)를 원래 이미지 위에 상자로 그린다 (초록 말풍선 위에서도 보이게 테두리는 검게).
+    # 기운 사진은 바로 세워 읽은 줄이 이미지 위에서는 기운 상자로 돌아온다
+    with open(os.path.join(cache, 'ocr-lines.json'), encoding='utf-8') as file:
+        found = json.load(file)
+    sources = [
+        (os.path.join(cache, 'ocr-tilted.jpg'), t['ocrTilted']),
+        (os.path.join(samples, t['chat1']), t['ocrChat']),
+    ]
+    items = []
+    for (path, label), lines in zip(sources, found):
+        image = Image.open(path).convert('RGB')
+        height = 420
+        scale = height / image.height
+        image = image.resize((round(image.width * scale), height), Image.LANCZOS).convert('RGBA')
+        marks = Image.new('RGBA', image.size)
+        draw = ImageDraw.Draw(marks)
+        for points in lines:
+            polygon = [(points[i] * scale, points[i + 1] * scale) for i in range(0, len(points), 2)]
+            draw.polygon(polygon, fill=GREEN + (70,), outline=INK + (255,), width=2)
+        image = Image.alpha_composite(image, marks).convert('RGB')
+        items.append((image, label, t['ocrLines'](len(lines))))
+    return 'image-to-text', 'lines.png', tiles(items, *fonts, gap=24)
+
 
 # ---- 움직이는 그림 (2026-10-23) ----
 # 정지 그림과 같은 칸 자리·크기로 3~4초 움직이는 그림. 재료도 같다: 견본과 도구가 만든 실제 결과
@@ -892,11 +1073,15 @@ GUIDES = {
     'extract-images-pdf': extract_images_pdf,
     'compress-image': compress_image,
     'resize-image': resize_image,
+    'photo-size-limit': photo_size_limit,
     'convert-image': convert_image,
+    'heic-to-jpg': heic_to_jpg,
     'photo-location': photo_location,
     'stitch-screenshots': stitch_screenshots,
     'crop-rotate-photo': crop_rotate_photo,
     'hide-info-in-photo': hide_info_in_photo,
+    'fix-csv-encoding': csv_encoding,
+    'image-to-text': image_ocr,
 }
 
 

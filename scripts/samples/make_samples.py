@@ -1,7 +1,7 @@
 """
 '예시 파일로 해 보기'에 쓰는 견본 파일을 만든다. 결과는 public/samples/<언어>/에 쓰고 커밋한다.
 
-  python3 scripts/samples/make_samples.py   (PyMuPDF·Pillow 필요, 먼저 npm install)
+  python3 scripts/samples/make_samples.py   (PyMuPDF·Pillow·pillow-heif 필요, 먼저 npm install)
 
 - 내용은 모두 지어낸 것이다. 이름은 홍길동, 번호는 0으로 채우고, 회사는 '예시상사'처럼 없는 이름을 쓴다
 - 문서 안 글자가 있는 파일은 언어마다 따로 만든다. 사진은 두 언어가 같은 것을 쓴다(언어 폴더에 같이 둔다)
@@ -21,6 +21,7 @@ import random
 import fitz
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
+import pillow_heif
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -62,10 +63,34 @@ TEXT = {
         'located': '예시-위치사진.jpg',
         'tilted': '예시-기운사진.jpg',
         'car': '예시-번호판사진.jpg',
+        'heics': ['예시-아이폰사진1.heic', '예시-아이폰사진2.heic'],
         'plate': '00가 0000',
         'carCard': ('주차 시 연락처', '010-0000-0000'),
         'screen': '예시-화면캡처.png',
         'scrolls': ['예시-대화캡처1.png', '예시-대화캡처2.png', '예시-대화캡처3.png'],
+        # CSV 인코딩 견본: BOM 없는 UTF-8(엑셀에서 깨짐)과 엑셀이 아닌 곳에서 깨지는 예전 인코딩.
+        # 확장 완성형에만 있는 '똠'과 CP949에 없는 이모지를 넣어 둔다
+        'utf8Csv': '예시-주문목록-UTF8.csv',
+        'utf8Rows': [
+            ('주문번호', '주문일', '받는 분', '연락처', '상품', '수량', '금액', '배송 메모'),
+            ('20261001-0001', '2026-10-01', '홍길동', '010-0000-0000', '유기농 사과 3kg', '1', '29,900', '문 앞에 놓아 주세요'),
+            ('20261001-0002', '2026-10-01', '김예시', '010-0000-0000', '제주 감귤 5kg', '2', '41,800', '경비실에 맡겨 주세요 🙏'),
+            ('20261002-0003', '2026-10-02', '이샘플', '010-0000-0000', '햇밤 1kg', '1', '12,500', ''),
+            ('20261003-0004', '2026-10-03', '박견본', '010-0000-0000', '고구마, 호박 세트', '1', '24,000', '부재 시 연락 바랍니다'),
+            ('20261003-0005', '2026-10-03', '최예제', '010-0000-0000', '유기농 사과 3kg', '3', '89,700', ''),
+            ('20261004-0006', '2026-10-04', '정보기', '010-0000-0000', '똠얌꿍 밀키트', '2', '25,800', '맵지 않게 부탁드려요'),
+        ],
+        'legacyCsv': '예시-은행거래내역-CP949.csv',
+        'legacyCodec': 'cp949',
+        'legacyRows': [
+            ('거래일시', '적요', '출금액', '입금액', '잔액', '거래점', '메모'),
+            ('2026-10-01 09:12', '급여', '0', '3,200,000', '3,450,000', '인터넷', '예시상사'),
+            ('2026-10-02 12:40', '똠얌꿍 식당', '18,000', '0', '3,432,000', '체크카드', '점심'),
+            ('2026-10-03 08:05', '관리비', '215,000', '0', '3,217,000', '자동이체', '10월분'),
+            ('2026-10-05 19:22', '예시마트', '64,300', '0', '3,152,700', '체크카드', ''),
+            ('2026-10-07 10:00', '적금', '500,000', '0', '2,652,700', '자동이체', '예시은행 적금'),
+            ('2026-10-10 14:31', '홍길동', '0', '50,000', '2,702,700', '인터넷', '모임 회비'),
+        ],
         'sample': '예시 파일 · 내용은 모두 지어낸 것입니다',
         'company': '예시상사',
         'title': '2026년 3분기 업무 보고서',
@@ -178,10 +203,31 @@ TEXT = {
         'located': 'sample-photo-with-location.jpg',
         'tilted': 'sample-tilted-photo.jpg',
         'car': 'sample-license-plate.jpg',
+        'heics': ['sample-iphone-photo-1.heic', 'sample-iphone-photo-2.heic'],
         'plate': 'ABC 0000',
         'carCard': ('Parking contact', '000-000-0000'),
         'screen': 'sample-screenshot.png',
         'scrolls': ['sample-chat-1.png', 'sample-chat-2.png', 'sample-chat-3.png'],
+        'utf8Csv': 'sample-orders-utf8.csv',
+        'utf8Rows': [
+            ('Order ID', 'Date', 'Customer', 'City', 'Product', 'Qty', 'Total', 'Note'),
+            ('1001', '2026-10-01', 'José García', 'Málaga', 'Café crème beans 1kg', '1', '€24.90', 'Leave at the door'),
+            ('1002', '2026-10-01', 'Zoë Müller', 'Zürich', 'Crêpe pan', '1', '€39.00', 'Gift wrap please 🎁'),
+            ('1003', '2026-10-02', 'François Lefèvre', 'Besançon', 'Piñata kit', '2', '€18.50', ''),
+            ('1004', '2026-10-03', 'Søren Østergaard', 'Århus', 'Smørrebrød board', '1', '€27.00', 'Ring twice'),
+            ('1005', '2026-10-03', 'Ana Núñez', 'São Paulo', 'Açaí bowl set', '3', '€45.60', ''),
+            ('1006', '2026-10-04', 'Chloé Brontë', 'Nîmes', 'Crème brûlée torch', '1', '€32.00', 'Back door, please'),
+        ],
+        'legacyCsv': 'sample-contacts-windows-1252.csv',
+        'legacyCodec': 'cp1252',
+        'legacyRows': [
+            ('Name', 'Company', 'City', 'Phone', 'Note'),
+            ('Renée Dubois', 'Example Café', 'Montréal', '000-000-0000', 'Prefers email — not phone'),
+            ('Björn Lindqvist', 'Example AB', 'Göteborg', '000-000-0000', '“Key account”'),
+            ('Ángel Núñez', 'Ejemplo S.L.', 'Córdoba', '000-000-0000', 'Pays in € only'),
+            ('Mårten Ødegård', 'Example AS', 'Tromsø', '000-000-0000', 'Met at the 2026 fair – booth 12'),
+            ('Inès Brûlé', 'Exemple SARL', 'Besançon', '000-000-0000', ''),
+        ],
         'sample': 'Sample file · Everything in it is made up',
         'company': 'Example Co.',
         'title': 'Q3 2026 Team Report',
@@ -731,6 +777,13 @@ def chat_shots(t) -> list:
     return shots
 
 
+def csv_text(rows) -> str:
+    """쉼표·따옴표가 든 칸은 따옴표로 감싼다. 줄바꿈은 윈도우 프로그램이 내보내는 CRLF"""
+    def cell(value: str) -> str:
+        return '"' + value.replace('"', '""') + '"' if any(c in value for c in ',"\n') else value
+    return ''.join(','.join(cell(value) for value in row) + '\r\n' for row in rows)
+
+
 def located_exif() -> bytes:
     """위치정보 지우기 견본의 촬영 정보. 위치는 공공장소(서울시청 앞), 기기 이름은 지어낸 것"""
     exif = Image.Exif()
@@ -745,12 +798,28 @@ def located_exif() -> bytes:
     return exif.tobytes()
 
 
+def iphone_photos() -> list:
+    """아이폰처럼 찍은 HEIC 두 장 (HEIC 변환). 둘째 장은 세로로 들고 찍은 사진처럼, 화소는 누운 가로로 두고
+    시계 방향으로 돌려 보라는 회전 표시(irot)를 단다 (pillow-heif가 EXIF 방향을 irot로 옮겨 적는다)"""
+    upright = landscape(1600, 1200, 51)
+    portrait = landscape(1200, 1600, 52).transpose(Image.Transpose.ROTATE_90)
+    photos = []
+    for image, orientation in ((upright, 1), (portrait, 6)):
+        buffer = io.BytesIO()
+        exif = Image.Exif()
+        exif[0x0112] = orientation
+        pillow_heif.from_pillow(image).save(buffer, quality=50, exif=exif.tobytes())
+        photos.append(buffer.getvalue())
+    return photos
+
+
 def main():
     hero = jpeg(landscape(1600, 1060, 7), 90)
     gallery = [jpeg(landscape(1400, 1050, seed), 92) for seed in (11, 12, 13)]
     photo = landscape(2000, 1500, 21)
     face = Image.open(os.path.join(HERE, 'face.jpg')).convert('RGB')
     sea = tilted_sea(1600, 1200, 4)
+    heics = iphone_photos()
     for locale, t in TEXT.items():
         folder = os.path.join(OUT, locale)
         os.makedirs(folder, exist_ok=True)
@@ -776,9 +845,16 @@ def main():
         photo.save(os.path.join(folder, t['located']), 'JPEG', quality=90, exif=located_exif())
         sea.save(os.path.join(folder, t['tilted']), 'JPEG', quality=90)
         parked_car(t).save(os.path.join(folder, t['car']), 'JPEG', quality=90)
+        for name, data in zip(t['heics'], heics):
+            with open(os.path.join(folder, name), 'wb') as f:
+                f.write(data)
         screenshot(t).save(os.path.join(folder, t['screen']), 'PNG', optimize=True)
         for name, shot in zip(t['scrolls'], chat_shots(t)):
             shot.save(os.path.join(folder, name), 'PNG', optimize=True)
+        with open(os.path.join(folder, t['utf8Csv']), 'wb') as file:
+            file.write(csv_text(t['utf8Rows']).encode('utf-8'))
+        with open(os.path.join(folder, t['legacyCsv']), 'wb') as file:
+            file.write(csv_text(t['legacyRows']).encode(t['legacyCodec']))
         for name in sorted(os.listdir(folder)):
             print(f'{locale}/{name}  {os.path.getsize(os.path.join(folder, name)) // 1024}KB')
 

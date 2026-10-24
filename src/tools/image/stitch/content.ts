@@ -37,7 +37,7 @@ export default defineContent({
       },
       {
         q: '아주 긴 이미지도 만들 수 있나요?',
-        a: 'PNG는 결과를 조금씩 그려 저장해서 아주 긴 이미지도 만들 수 있습니다. JPG는 한 장에 32,767px, WebP는 16,383px까지라 더 길면 PNG로 저장하거나 나누어 저장하세요. 나누어 저장하면 정한 높이 안에서 빈 줄을 찾아 잘라 글 줄이 반으로 잘리지 않게 합니다. 일부 사이트는 아주 긴 이미지를 줄여 보여 주므로 나누어 올리는 편이 읽기 쉽습니다.',
+        a: 'PNG·JPG는 결과를 조금씩 그려 저장해서 아주 긴 이미지도 만들 수 있습니다. JPG는 한 장에 65,500px, WebP는 16,383px까지라 더 길면 PNG로 저장하거나 나누어 저장하세요. 나누어 저장하면 정한 높이 안에서 빈 줄을 찾아 잘라 글 줄이 반으로 잘리지 않게 합니다. 일부 사이트는 아주 긴 이미지를 줄여 보여 주므로 나누어 올리는 편이 읽기 쉽습니다.',
       },
       {
         q: 'PDF로 받으면 어떻게 되나요?',
@@ -85,7 +85,7 @@ export default defineContent({
       },
       {
         q: 'Can I make a very long image?',
-        a: 'PNG results are drawn and saved bit by bit, so they can be very long. JPG allows up to 32,767px and WebP up to 16,383px in one image, so for longer results save as PNG or split them. When splitting, each cut is made at a blank line within the height you set so lines of text are not cut in half. Some sites shrink very long images, so splitting them often makes them easier to read.',
+        a: 'PNG and JPG results are drawn and saved bit by bit, so they can be very long. JPG allows up to 65,500px and WebP up to 16,383px in one image, so for longer results save as PNG or split them. When splitting, each cut is made at a blank line within the height you set so lines of text are not cut in half. Some sites shrink very long images, so splitting them often makes them easier to read.',
       },
       {
         q: 'What happens if I save as PDF?',
