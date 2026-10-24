@@ -52,7 +52,11 @@
     mode === 'quality' ? { mode, level } : { mode, bytes: targetBytes },
   );
   const plan = $derived(video ? compressPlan(video.info, side, container, setting) : undefined);
-  const impossible = $derived(mode === 'target' && (!plan || plan.videoBitrate <= 0));
+  /** 목표 용량 칸이 비었거나 0보다 큰 숫자가 아니다 */
+  const targetInvalid = $derived(mode === 'target' && targetBytes === 0);
+  const impossible = $derived(
+    mode === 'target' && !targetInvalid && (!plan || plan.videoBitrate <= 0),
+  );
   const canRun = $derived(codecs.video && !!video?.info.video?.canDecode && codec !== null);
 
   const key = $derived(`${side}|${mode}|${level}|${targetBytes}`);
@@ -94,7 +98,7 @@
   }
 
   async function compress() {
-    if (!video || !plan || runner.working || !canRun || impossible) return;
+    if (!video || !plan || runner.working || !canRun || impossible || targetInvalid) return;
     const entitlement = await canUse('video/compress');
     if (!entitlement.allowed) return;
     await runner.start(
@@ -146,6 +150,8 @@
                 ? common.cannotDecode(codecName(loaded.info.video?.codec))
                 : t.outputNone}</strong
           >
+        {:else if targetInvalid}
+          <strong>{t.targetInvalid}</strong>
         {:else if impossible}
           <strong>{t.targetImpossible}</strong>
         {:else if plan && plan.estimate >= loaded.info.size}
@@ -169,7 +175,7 @@
         <button
           type="button"
           class="btn primary"
-          disabled={!canRun || impossible || noGain}
+          disabled={!canRun || impossible || targetInvalid || noGain}
           onclick={compress}>{t.run}</button
         >
       {/if}
@@ -254,11 +260,11 @@
                   autocomplete="off"
                   bind:value={targetText}
                   disabled={runner.working}
-                  aria-invalid={impossible || plan?.tooLow ? 'true' : undefined}
+                  aria-invalid={targetInvalid || impossible || plan?.tooLow ? 'true' : undefined}
                 />
               </label>
               <p class="help">{t.targetHelp}</p>
-              {#if plan?.tooLow && !impossible}
+              {#if plan?.tooLow && !impossible && !targetInvalid}
                 <p class="problem">{t.targetTooSmall}</p>
               {/if}
             {/if}
