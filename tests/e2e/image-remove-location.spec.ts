@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { unzipSync } from 'fflate';
 import { expectLocalOnly } from './local-only';
 import { readPhotoInfo } from '../../src/lib/image/photo-metadata';
+import { readHeifMeta } from '../../src/lib/image/heif-metadata';
 
 const fixture = (name: string) => fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
 
@@ -143,4 +144,72 @@ test('EXIF가 깨진 사진도 그 조각만 빼고 지운다', async ({ page })
   const bytes = new Uint8Array(await readFile(await (await event).path()));
   expect(Buffer.from(bytes).toString('latin1')).not.toContain('Exif');
   expect(await inspect(page, bytes)).toEqual({ width: 200, height: 150 });
+});
+
+/** 원본과 결과가 촬영 정보 항목(EXIF·XMP) 밖에서는 한 바이트도 다르지 않은지 */
+function sameOutsideMetadata(original: Uint8Array, cleaned: Uint8Array): boolean {
+  const meta = readHeifMeta(original);
+  if (!meta || original.length !== cleaned.length) return false;
+  const inside = (at: number) =>
+    meta.items.some((item) => item.ranges.some((range) => at >= range.start && at < range.end));
+  for (let at = 0; at < original.length; at++) {
+    if (original[at] !== cleaned[at] && !inside(at)) return false;
+  }
+  return true;
+}
+
+test('아이폰 사진(HEIC)은 HEIC 그대로 위치만 지우고 그림은 건드리지 않는다', async ({
+  page,
+  baseURL,
+}) => {
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  // 크롬은 HEIC를 스스로 읽지 못해 목록 썸네일은 libheif로 그린다
+  const frame = await openTool(page, ['located.heic']);
+  await expect(
+    frame.getByText('위치 37.5663, 126.9779 · 2024-05-01 14:23 · Apple iPhone 15 Pro'),
+  ).toBeVisible();
+  requests.length = 0;
+
+  await frame.getByText('위치만 지우기').click();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('완료: 사진 1장에서 지웠습니다.')).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const file = await event;
+  expect(file.suggestedFilename()).toBe('located_위치삭제.heic');
+  const bytes = new Uint8Array(await readFile(await file.path()));
+  const original = new Uint8Array(await readFile(fixture('located.heic')));
+
+  const info = readPhotoInfo(bytes);
+  expect(info).toMatchObject({ format: 'heif', location: false });
+  expect(info?.date).toBe('2024-05-01 14:23');
+  expect(info?.device).toBe('Apple iPhone 15 Pro');
+  const text = Buffer.from(bytes).toString('latin1');
+  expect(text).not.toContain('GPSLatitude');
+  expect(text).not.toContain('Secret');
+  expect(text).not.toContain('Near my house');
+  // 다시 저장하지 않는다: 크기가 같고 정보 항목 밖은 한 바이트도 바뀌지 않는다
+  expect(sameOutsideMetadata(original, bytes)).toBe(true);
+  expectLocalOnly(page, requests, baseURL!);
+});
+
+test('HEIC의 정보를 모두 지우면 날짜·기기도 빠진다', async ({ page }) => {
+  const frame = await openTool(page, ['located.heic']);
+  await expect(frame.getByText('사진 1장 중 1장에 위치가 있습니다.')).toBeVisible();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('정보를 모두 지웠습니다', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const file = await event;
+  expect(file.suggestedFilename()).toBe('located_정보삭제.heic');
+  const bytes = new Uint8Array(await readFile(await file.path()));
+  const info = readPhotoInfo(bytes);
+  expect(info).toMatchObject({ location: false });
+  expect(info?.date).toBeUndefined();
+  expect(info?.device).toBeUndefined();
+  expect(Buffer.from(bytes).toString('latin1')).not.toContain('iPhone 15 Pro');
+  expect(sameOutsideMetadata(new Uint8Array(await readFile(fixture('located.heic'))), bytes)).toBe(
+    true,
+  );
 });
