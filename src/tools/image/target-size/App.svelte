@@ -11,7 +11,12 @@
   import { downloadFile } from '../../../frame/download';
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
-  import { EXTENSIONS, ImageBatch, type BatchItem } from '../../../lib/image/batch.svelte';
+  import {
+    EXTENSIONS,
+    ImageBatch,
+    saveType,
+    type BatchItem,
+  } from '../../../lib/image/batch.svelte';
   import ImageBatchTool from '../../../lib/image/ImageBatchTool.svelte';
   import {
     fitImage,
@@ -61,7 +66,8 @@
     | { state: 'over'; smallest: number; reason: OverReason }
     | { state: 'failed'; reason: 'decode' | 'encode' };
 
-  const batch = new ImageBatch();
+  // HEIC(아이폰 사진)는 브라우저가 HEIC로 저장하지 못해 늘 JPG로 맞춘다 (목표 이하여도 원본 HEIC를 두지 않는다)
+  const batch = new ImageBatch({ heic: true });
   let preset: string = $state('200KB');
   let customValue: number | null = $state(300);
   let customUnit: Unit = $state('KB');
@@ -121,7 +127,7 @@
   );
 
   function outputType(item: BatchItem): OutputType {
-    return format === 'jpg' ? 'image/jpeg' : item.type!;
+    return format === 'jpg' ? 'image/jpeg' : saveType(item);
   }
 
   async function run() {
@@ -325,6 +331,9 @@
       {/each}
     </div>
     <p class="help">{t.methodHelp[method]} {t.formatHelp[format]}</p>
+    {#if batch.ready.some((item) => item.type === undefined)}
+      <p class="help">{t.heicNote}</p>
+    {/if}
   {/snippet}
 
   {#snippet meta(item: BatchItem)}

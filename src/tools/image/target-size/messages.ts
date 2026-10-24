@@ -31,6 +31,8 @@ const ko = {
     jpg: 'JPG는 거의 모든 곳에서 받습니다. 투명한 곳은 흰색이 됩니다.',
     same: 'PNG는 색 수를 줄여 맞추고 투명을 지킵니다. 사진은 JPG가 훨씬 작습니다.',
   } satisfies Record<Format, string>,
+  heicNote:
+    'HEIC 사진은 받는 곳이 드물고 브라우저가 HEIC로 저장하지 못해, 이미 목표 이하여도 JPG로 바꿔 맞춥니다.',
   invalidTarget: '목표 용량을 10KB에서 50MB 사이로 적어 주세요.',
   reading: '이미지를 읽는 중입니다…',
   needOne: '용량을 맞출 이미지를 넣어 주세요.',
@@ -84,6 +86,8 @@ const en: typeof ko = {
     jpg: 'JPG is accepted almost everywhere. Transparent areas become white.',
     same: 'PNGs fit by using fewer colors and keep transparency. Photos are much smaller as JPG.',
   },
+  heicNote:
+    'Few places accept HEIC and browsers cannot save it, so HEIC photos are converted to JPG even if they are already under the target.',
   invalidTarget: 'Enter a target between 10 KB and 50 MB.',
   reading: 'Reading images…',
   needOne: 'Add the images you want to fit.',
