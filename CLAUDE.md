@@ -23,6 +23,7 @@ npm run format        # 포맷 정리
 npm run format:check  # 포맷 검사 (CI에서 실행)
 npm run test:e2e      # 빌드 결과로 E2E (먼저 npm run build). 로컬 크롬: PLAYWRIGHT_CHANNEL=chrome
 E2E_PORT=8790 npm run test:e2e  # 다른 작업 공간과 동시에 돌릴 때 포트 변경 (기본 8788, 검사 포트는 +1)
+node scripts/perf/measure.mjs [--port 8852] [--files]  # 페이지가 처음 받는 크기 재기 (먼저 build + wrangler dev, 성능 예산의 기준 수치)
 python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow·pillow-heif 필요)
 python3 tests/fixtures/make_text_fixtures.py  # 테스트용 CSV(CP949·Shift_JIS) 다시 만들기
@@ -48,6 +49,16 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 - 도구별 라이브러리(pdf.js, pdf-lib 등)는 그 도구 페이지에서만 불러온다. 첫 페이지는 가벼워야 한다.
 - 다운로드는 Blob URL + `<a download>`로만 한다.
 - 파일 이름·내용을 URL, 페이지 제목, 통계 이벤트에 넣지 않는다.
+
+### 성능 (2026-10-24, 사용자 철칙: "사이트가 무거워지거나 느려지면 안 된다")
+
+- 도구 전용 라이브러리·데이터(pdf.js, pdf-lib, Tesseract, libheif, MediaPipe, 글꼴·OCR 데이터)는 **그 도구 frame에서, 필요한 때에만** 받는다.
+  파일을 고르기 전 첫 화면에서는 받지 않는다 (동적 `import()`로 필요한 순간에). 바깥 페이지에는 두지 않는다.
+- **바깥 페이지에 새 JS·CSS를 넣지 않는 것이 기본이다.** 꼭 필요하면 작게, 필요한 페이지에서만 넣고 PR에 왜 필요한지 쓴다.
+  모든 페이지에 수십 개씩 반복되는 부품(메뉴·아이콘)은 `<style is:global>` + 루트 클래스로 써서 Astro 범위 속성(`data-astro-cid-*`)이 HTML을 키우지 않게 한다.
+- **성능 예산 E2E** (`tests/e2e/perf-budget.spec.ts`): 페이지 종류별로 처음 받는 HTML·JS·CSS·글꼴·그림 크기와 도구 frame 첫 화면 크기에
+  상한이 있고, 넘으면 CI가 실패한다. 도구·페이지를 더하면 `node scripts/perf/measure.mjs`로 재 본다.
+  **상한을 올릴 때는 spec 주석과 PR 본문에 이유를 적는다** (먼저 줄일 방법을 찾는다). 측정 표·방법은 `docs/foundations/site-structure/README.md`의 "성능 예산".
 
 ### 도구 영역 격리
 
