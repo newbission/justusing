@@ -3,6 +3,7 @@ title: How to check and remove location data (EXIF) from photos
 description: Phone photos carry the latitude and longitude where they were taken, along with the date and device. Learn what is stored, when it travels with the file, how to check and remove it, and how to stop saving it.
 tool: image/remove-location
 published: 2026-10-20
+updated: 2026-10-24
 order: 24
 ---
 
@@ -49,7 +50,7 @@ This is the real result of cleaning a sample photo with a location using this to
 
 ## The quality stays the same
 
-Saving a JPG again lowers its quality a little every time. This tool does not save the photo again; it only takes the info part out of the file, so the image data is not changed by a single byte. Even when removing all info, a single orientation entry is kept so phone photos stay upright.
+Saving a JPG again lowers its quality a little every time. This tool does not save the photo again; it only takes the info part out of the file, so the image data is not changed by a single byte. Even when removing all info, a single orientation entry is kept so phone photos stay upright. iPhone HEIC photos stay HEIC too: the info is blanked out in place, so even the file size stays the same.
 
 Motion photos have a short video attached after the picture. It can hold shooting data too, so the video part is removed as well, leaving only the still photo. Android HDR photos (Ultra HDR) also keep brightness data after the picture; it is removed for the same reason, so they show as regular photos. The tool tells you before removing anything when you add such photos.
 
