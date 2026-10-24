@@ -122,7 +122,14 @@ export function readPhotoInfo(bytes: Uint8Array): PhotoInfo | undefined {
         xmp(data);
       }
     }
-    info.extra = meta.items.length > 0 || meta.unknown;
+    // 쓰지 않는 틈·이름에 남은 글자도 본다 (예전 편집이 남긴 XMP 등)
+    let leftover = false;
+    for (const wipe of meta.wipes) {
+      const data = bytes.subarray(wipe.start, wipe.end);
+      xmp(data);
+      if (data.some((value) => value !== wipe.fill)) leftover = true;
+    }
+    info.extra = meta.items.length > 0 || meta.unknown || leftover;
     return info;
   }
   return undefined;
@@ -427,6 +434,7 @@ function emptyXmp(length: number): Uint8Array {
 
 /**
  * 위치만 지울 때도 모두 지울 때도 XMP는 비운다 (JPG에서 XMP 조각을 빼는 것과 같다).
+ * 어느 항목도 쓰지 않는 바이트(free·skip, 그림 자료 상자의 틈, 끝 뒤 자료)와 이름 글자는 비운다.
  * 무엇이 적혔는지 모르는 항목·상자가 있으면 고치지 않는다 (undefined)
  */
 function cleanHeif(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
@@ -442,6 +450,13 @@ function cleanHeif(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
     if (sameBytes(next, data)) continue;
     out ??= bytes.slice();
     writeItem(out, item, next);
+  }
+  // 어느 항목도 쓰지 않는 바이트와 이름 글자를 비운다 (예전 편집이 남긴 EXIF·XMP·위치 글이 있을 수 있다)
+  for (const wipe of meta.wipes) {
+    const data = (out ?? bytes).subarray(wipe.start, wipe.end);
+    if (data.every((value) => value === wipe.fill)) continue;
+    out ??= bytes.slice();
+    out.fill(wipe.fill, wipe.start, wipe.end);
   }
   return out ?? bytes;
 }
