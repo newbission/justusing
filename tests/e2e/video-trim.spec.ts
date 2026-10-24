@@ -6,6 +6,8 @@
  */
 import { expect, test } from './test';
 import type { FrameLocator } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import {
   colorAt,
   fixture,
@@ -162,4 +164,23 @@ test('영어 화면', async ({ page }) => {
   await frame.locator('input[type=file]').first().setInputFiles(fixture('silent.mp4'));
   await expect(frame.getByText('0:03.0 · 4KB · 640×360 · H.264 · No sound')).toBeVisible();
   await expect(frame.getByRole('button', { name: 'Trim', exact: true })).toBeVisible();
+});
+
+test('mediabunny 허가서와 소스 안내를 사이트에 두고 FAQ에서 알린다', async ({ page, request }) => {
+  const { version } = JSON.parse(
+    await readFile(
+      fileURLToPath(new URL('../../node_modules/mediabunny/package.json', import.meta.url)),
+      'utf8',
+    ),
+  );
+  const license = await request.get('/vendor/mediabunny/LICENSE.txt');
+  expect(license.ok()).toBe(true);
+  expect(await license.text()).toContain('Mozilla Public License Version 2.0');
+  const readme = await (await request.get('/vendor/mediabunny/README.txt')).text();
+  expect(readme).toContain(`mediabunny ${version}`);
+  expect(readme).toContain(`https://github.com/Vanilagy/mediabunny/tree/v${version}`);
+  for (const path of ['/video/trim/', '/video/compress/', '/video/extract-audio/']) {
+    await page.goto(path);
+    await expect(page.getByText(/\/vendor\/mediabunny\/README\.txt/)).toHaveCount(1);
+  }
 });

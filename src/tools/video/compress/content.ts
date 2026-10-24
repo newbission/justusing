@@ -1,4 +1,8 @@
+import { siteConfig } from '../../../site.config';
 import { defineContent } from '../../types';
+
+/** mediabunny 허가서·안내 (scripts/copy-mediabunny-notice.mjs가 만든다) */
+const NOTICE = `${siteConfig.domain}/vendor/mediabunny/README.txt`;
 
 export default defineContent({
   ko: {
@@ -42,6 +46,10 @@ export default defineContent({
       {
         q: '시간은 얼마나 걸리나요?',
         a: '모든 장면을 풀고 다시 저장하므로 기기 성능에 따라 동영상 길이의 몇 분의 일에서 몇 배까지 걸립니다. 진행률과 남은 시간을 보여 주며, 해상도를 낮출수록 빨라집니다. 다른 탭에 가 있어도 계속되지만 기기가 잠들면 멈출 수 있습니다.',
+      },
+      {
+        q: '무엇을 내려받나요?',
+        a: `동영상을 처음 열 때 동영상 파일을 읽고 쓰는 프로그램(mediabunny, 압축 전송 약 120KB)을 이 사이트에서 받습니다. 풀기·다시 저장하기는 브라우저에 든 기능(WebCodecs)이 하고, 동영상은 어디로도 올라가지 않습니다. mediabunny는 Mozilla Public License 2.0 오픈소스이며, 허가서와 소스 안내는 ${NOTICE}에 있습니다.`,
       },
       {
         q: '동영상이 서버로 올라가나요?',
@@ -90,6 +98,10 @@ export default defineContent({
       {
         q: 'How long does it take?',
         a: 'Every frame is decoded and saved again, so it takes from a fraction of the video length to several times longer depending on the device. Progress and time left are shown, and lower resolutions are faster. It keeps going in another tab, but it may pause if the device goes to sleep.',
+      },
+      {
+        q: 'What gets downloaded?',
+        a: `When you first open a video, the page loads a program that reads and writes video files (mediabunny, about 120 KB compressed) from this site. Decoding and saving are done by the WebCodecs built into your browser, and your video is never uploaded. mediabunny is open source under the Mozilla Public License 2.0; the license text and source information are at ${NOTICE}.`,
       },
       {
         q: 'Is my video uploaded?',

@@ -1,4 +1,8 @@
+import { siteConfig } from '../../../site.config';
 import { defineContent } from '../../types';
+
+/** mediabunny 허가서·안내 (scripts/copy-mediabunny-notice.mjs가 만든다) */
+const NOTICE = `${siteConfig.domain}/vendor/mediabunny/README.txt`;
 
 export default defineContent({
   ko: {
@@ -41,6 +45,10 @@ export default defineContent({
       {
         q: '동영상의 일부 구간 소리만 뽑을 수 있나요?',
         a: '이 도구는 소리 전체를 뽑습니다. 일부만 필요하면 동영상 자르기로 구간을 먼저 잘라(빠르게 자르기는 몇 초면 끝남) 그 파일에서 소리를 뽑으세요.',
+      },
+      {
+        q: '무엇을 내려받나요?',
+        a: `동영상을 처음 열 때 동영상 파일을 읽고 쓰는 프로그램(mediabunny, 압축 전송 약 120KB)을 이 사이트에서 받습니다. 풀기·다시 저장하기는 브라우저에 든 기능(WebCodecs)이 하고, 동영상은 어디로도 올라가지 않습니다. mediabunny는 Mozilla Public License 2.0 오픈소스이며, 허가서와 소스 안내는 ${NOTICE}에 있습니다.`,
       },
       {
         q: '동영상이 서버로 올라가나요?',
@@ -88,6 +96,10 @@ export default defineContent({
       {
         q: 'Can I extract the sound of just one part?',
         a: 'This tool extracts the whole sound. If you only need a part, cut it first with Trim Video (fast trimming takes seconds) and extract the sound from that file.',
+      },
+      {
+        q: 'What gets downloaded?',
+        a: `When you first open a video, the page loads a program that reads and writes video files (mediabunny, about 120 KB compressed) from this site. Decoding and saving are done by the WebCodecs built into your browser, and your video is never uploaded. mediabunny is open source under the Mozilla Public License 2.0; the license text and source information are at ${NOTICE}.`,
       },
       {
         q: 'Is my video uploaded?',
