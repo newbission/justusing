@@ -192,7 +192,13 @@ addEventListener('message', async (event: MessageEvent<ProcessRequest>) => {
 
   if (options.limit) {
     try {
-      const result = await fit(bitmap, options.type, options.limit, file.type !== 'image/jpeg');
+      const result = await fit(
+        bitmap,
+        options.type,
+        options.limit,
+        // libheif로 푼 HEIC(ImageBitmap)는 투명이 없는 사진으로 본다
+        file instanceof Blob && file.type !== 'image/jpeg',
+      );
       if (result.kind === 'done') send({ id, ...result }, [result.bytes.buffer]);
       else send({ id, ...result });
     } catch {
