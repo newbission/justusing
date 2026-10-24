@@ -11,7 +11,8 @@
 - 동영상에서 소리만 꺼낸다
 - 입력: 동영상 하나 (MP4·MOV·WebM·MKV). 소리 트랙이 있고 코덱을 알아야 한다
 - 출력: `<이름>_소리.<형식>` (영어 `_audio`)
-  - 원래 소리 그대로(기본): AAC → `.m4a`, MP3 → `.mp3`, Opus·Vorbis → `.ogg`, FLAC → `.flac`, PCM → `.wav`. 다시 인코딩 없음, WebCodecs 없이 됨
+  - 원래 소리 그대로(기본): AAC → `.m4a`, MP3 → `.mp3`, Opus·Vorbis → `.ogg`, FLAC → `.flac`, WAV가 받는 PCM(리틀엔디언 s16·s24·s32·f32·f64·u8, μ-law·A-law) → `.wav`.
+    다시 인코딩 없음, WebCodecs 없이 됨. 빅엔디언 PCM(카메라 MOV의 twos)·pcm-s8은 그대로 못 담아 기본을 WAV(풀어서 저장)로 한다
   - WAV: 풀어서 16비트 PCM (AudioDecoder 필요, Safari는 26부터)
   - M4A(AAC로 다시 저장, 192kbps): 원래 소리가 AAC가 아닐 때만 보인다 (AudioEncoder AAC 필요)
 - 첫 소리 트랙만 (`tracks: 'primary'`)

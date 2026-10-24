@@ -30,6 +30,21 @@ export function audioPlan(
   return encodable.opus ? 'opus' : 'drop';
 }
 
+/**
+ * WAV에 그대로 담을 수 있는 소리 (mediabunny WavOutputFormat이 받는 것). 빅엔디언 PCM(카메라 MOV의 twos)·pcm-s8은
+ * WAV에 그대로 못 담아 풀어서 다시 저장해야 한다
+ */
+const WAV_CODECS = [
+  'pcm-s16',
+  'pcm-s24',
+  'pcm-s32',
+  'pcm-f32',
+  'pcm-f64',
+  'pcm-u8',
+  'ulaw',
+  'alaw',
+];
+
 /** 원래 소리를 다시 인코딩 없이 담을 그릇 (소리 뽑기). 없으면 다시 저장해야 한다 */
 export function audioContainerFor(
   codec: string | null | undefined,
@@ -38,7 +53,7 @@ export function audioContainerFor(
   if (codec === 'mp3') return 'mp3';
   if (codec === 'opus' || codec === 'vorbis') return 'ogg';
   if (codec === 'flac') return 'flac';
-  if (codec?.startsWith('pcm-')) return 'wav';
+  if (codec && WAV_CODECS.includes(codec)) return 'wav';
   return undefined;
 }
 
