@@ -53,6 +53,7 @@ const TOOL_IDS: readonly string[] = [
   'image/crop',
   'image/mosaic',
   'text/csv-encoding',
+  'video/to-gif',
 ];
 
 export interface Tool extends ToolMeta {
