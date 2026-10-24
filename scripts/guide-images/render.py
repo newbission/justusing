@@ -98,6 +98,8 @@ TEXT = {
         'ocrChat': '대화 캡처',
         'ocrLines': lambda n: f'읽은 줄 {n}개',
         'fitted': {'original': '원본', 'resize': '크기도 줄이기', 'keep': '화질만'},
+        'product': '예시-상품사진.jpg',
+        'cutout': {'original': '원본', 'png': '투명 PNG (체크무늬는 지운 곳)', 'white': '흰 배경 JPG, 물체에 맞춰 자름'},
     },
     'en': {
         'report': 'sample-report.pdf',
@@ -160,6 +162,8 @@ TEXT = {
         'ocrChat': 'Chat screenshot',
         'ocrLines': lambda n: f'{n} lines read',
         'fitted': {'original': 'Original', 'resize': 'Also resize', 'keep': 'Quality only'},
+        'product': 'sample-product-photo.jpg',
+        'cutout': {'original': 'Original', 'png': 'Transparent PNG (checkerboard = removed)', 'white': 'JPG on white, cropped to subject'},
     },
 }
 
@@ -737,6 +741,33 @@ def hide_info_in_photo(t, cache, samples, fonts):
         items.append((fit_width(image, 320, Image.LANCZOS), t['hidden'][key], ''))
     return 'hide-info-in-photo', 'compare.png', tiles(items, *fonts, gap=20, cols=2)
 
+def checkerboard(width: int, height: int, cell: int = 12) -> Image.Image:
+    """투명한 곳을 보여 주는 체크무늬 (도구 미리보기와 같은 밝은 칸)"""
+    board = Image.new('RGB', (width, height), BG)
+    draw = ImageDraw.Draw(board)
+    for y in range(0, height, cell):
+        for x in range((y // cell) % 2 * cell, width, cell * 2):
+            draw.rectangle([x, y, x + cell - 1, y + cell - 1], fill=(220, 220, 218))
+    return board
+
+
+def remove_background(t, cache, samples, fonts):
+    # 원본, 투명 PNG(체크무늬 위에 얹어 지운 곳이 보이게), 흰 배경·물체에 맞춰 자른 JPG를 같은 높이로 2칸씩
+    height = 270
+    original = Image.open(os.path.join(samples, t['product'])).convert('RGB')
+    cutout = Image.open(os.path.join(cache, 'remove-bg.png')).convert('RGBA')
+    white = Image.open(os.path.join(cache, 'remove-bg-white.jpg')).convert('RGB')
+    items = []
+    for image, key in [(original, 'original'), (cutout, 'png'), (white, 'white')]:
+        small = image.resize((round(image.width * height / image.height), height), Image.LANCZOS)
+        if small.mode == 'RGBA':
+            board = checkerboard(*small.size)
+            board.paste(small, (0, 0), small)
+            small = board
+        items.append((small, t['cutout'][key], f'{image.width}×{image.height}'))
+    return 'remove-background', 'result.png', tiles(items, *fonts, gap=20, cols=2)
+
+
 def image_ocr(t, cache, samples, fonts):
     # 도구가 읽은 줄 자리(.cache의 ocr-lines.json)를 원래 이미지 위에 상자로 그린다 (초록 말풍선 위에서도 보이게 테두리는 검게).
     # 기운 사진은 바로 세워 읽은 줄이 이미지 위에서는 기운 상자로 돌아온다
@@ -1080,6 +1111,7 @@ GUIDES = {
     'stitch-screenshots': stitch_screenshots,
     'crop-rotate-photo': crop_rotate_photo,
     'hide-info-in-photo': hide_info_in_photo,
+    'remove-background': remove_background,
     'fix-csv-encoding': csv_encoding,
     'image-to-text': image_ocr,
 }

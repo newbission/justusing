@@ -33,6 +33,7 @@ const SAMPLES = {
     chat3: '예시-대화캡처3.png',
     tilted: '예시-기운사진.jpg',
     car: '예시-번호판사진.jpg',
+    product: '예시-상품사진.jpg',
     utf8Csv: '예시-주문목록-UTF8.csv',
     heic: '예시-아이폰사진2.heic',
   },
@@ -52,6 +53,7 @@ const SAMPLES = {
     chat3: 'sample-chat-3.png',
     tilted: 'sample-tilted-photo.jpg',
     car: 'sample-license-plate.jpg',
+    product: 'sample-product-photo.jpg',
     utf8Csv: 'sample-orders-utf8.csv',
     heic: 'sample-iphone-photo-2.heic',
   },
@@ -450,6 +452,38 @@ const JOBS = {
       await drag('.view canvas', [0.385, 0.645], [0.615, 0.745]);
       await save('가린 이미지 받기', `${out}mosaic-${effect}.jpg`);
     }
+  },
+
+  // 배경 제거: 견본 머그잔의 가운데를 저절로 남기고 손잡이를 눌러 더한 뒤, 손잡이 안쪽(벽)을 지우개로 지운다.
+  // 투명 PNG와 흰 배경·물체에 맞춰 자른 JPG를 받는다
+  async 'remove-bg'({ sample, out }) {
+    await open('/image/remove-bg/', sample('product'));
+    const get = frame.getByRole('button', { name: /^데이터 받기/ });
+    const done = frame.getByText('사진 가운데의 물체를 남겼습니다.', { exact: false });
+    await get.or(done).first().waitFor();
+    if (await get.isVisible()) await get.click();
+    await done.waitFor({ timeout: 60_000 });
+    await page.waitForFunction(() => scrollY > 0);
+    const view = frame.getByRole('application');
+    // 손잡이 고리 (사진의 73%, 52% 자리)
+    const box = await view.boundingBox();
+    await view.click({ position: { x: box.width * 0.73, y: box.height * 0.52 } });
+    await frame.getByText('누른 곳 2곳의 물체를 남겼습니다.').waitFor({ timeout: 30_000 });
+    // 손잡이 안쪽 구멍(가로 68%, 세로 44~59%)을 붓 크기 7%의 지우개로 위에서 아래로 찍어 지운다
+    await frame.getByText('지우개', { exact: true }).click();
+    await press(frame.getByLabel('붓 크기'), 'ArrowRight', 3);
+    await view.focus();
+    await press(view, 'Shift+ArrowRight', 3);
+    await press(view, 'ArrowRight', 3);
+    await press(view, 'ArrowUp', 1);
+    for (let i = 0; i < 6; i++) {
+      await view.press('Enter');
+      await view.press('ArrowDown');
+    }
+    await save('PNG 다운로드', `${out}remove-bg.png`);
+    await frame.getByText('흰색', { exact: true }).click();
+    await frame.getByText('물체에 맞춰 자르기').click();
+    await save('JPG 다운로드', `${out}remove-bg-white.jpg`);
   },
 
   // CSV 한글 깨짐 고치기: BOM 없는 UTF-8 견본을 엑셀용 UTF-8(기본)로
