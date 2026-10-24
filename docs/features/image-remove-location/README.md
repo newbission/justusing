@@ -72,6 +72,9 @@
   - XMP: 두 방식 모두 빈 XMP(`<x:xmpmeta xmlns:x="adobe:ns:meta/"/>`)와 공백으로 덮는다 (JPG에서 XMP 조각을 빼는 것과 같다)
   - 허용 목록: 맨 바깥 상자는 `ftyp`·`meta`·`mdat`·`free`·`skip`, `meta` 안은 `hdlr`·`dinf`·`pitm`·`iinf`·`iloc`·`iref`·`iprp`·`idat`·`grpl`,
     항목은 그림 종류(`hvc1`·`grid`·`iden`·`tmap` 등)·EXIF·XMP만. 그 밖의 것이 있으면 `unknown`이라 고치지 않는다
+  - 어느 항목도 쓰지 않는 바이트(`free`·`skip` 상자, `mdat`·`idat` 안에서 위치표가 가리키지 않는 틈, 마지막 상자 뒤 자료)는 0으로,
+    자유 글인 항목 이름은 공백으로(0을 넣으면 뒤 글자의 시작이 바뀐다), `hdlr` 이름은 0으로 비운다. 예전 편집이 남긴 EXIF·XMP·위치 글이
+    있을 수 있다 (Codex #146: free 상자의 GPS 글이 남음). 읽을 때도 이 자리의 XMP GPS 글을 위치로 본다
   - 그림을 풀지 않으므로 libheif가 필요 없다 (크롬에서 목록 썸네일을 그릴 때만 받는다)
 - **WebP**: RIFF 조각을 읽는다. `EXIF`·`XMP `를 빼거나 고치고, VP8X 머리의 표시 비트(EXIF 0x08, XMP 0x04)와 RIFF 크기를 맞춘다.
   WebP EXIF 앞에 `Exif\0\0`을 붙인 프로그램도 있어 둘 다 읽는다
@@ -130,6 +133,7 @@
   - 방식을 바꾸면 이전 결과를 버림
   - HEIC(`located.heic`): 위치만 지우면 HEIC 그대로 날짜·기기가 남고 GPS·XMP·자유 글이 없으며, 모두 지우면 날짜·기기도 없다.
     두 방식 모두 크기가 같고 정보 항목 밖은 한 바이트도 바뀌지 않는다, 로컬 처리
+  - HEIC 뒤에 GPS 글이 든 `free`·`skip` 상자와 덧붙은 자료를 붙여도 결과에 GPS·주소 글이 남지 않는다
 - 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`)
 
 ### 직접 확인
