@@ -35,7 +35,7 @@
 | `src/pages/[category]/index.astro`                                                          | 카테고리 목록 (`ToolSections`, 묶음별 소제목)                                                                                                                        |
 | `src/pages/[category]/[tool].astro`                                                         | 도구 페이지: 넣는 것 → 나오는 것 그림(`ToolFlow`) + 가이드 보기·따라 하기 + `ToolFrame` + 쓰임새(`ToolUses`) + 사용법 + FAQ(도구 + 공통) + 관련 가이드 + 관련 도구   |
 | `src/components/ToolFlow.astro`                                                             | 제목 아래 작은 그림. `meta.ts`의 `flow`(종이 종류·장수·표시)로 그린다. 없으면 안 그림 (PDF 보기)                                                                     |
-| `src/pages/[category]/[tool]/frame.astro`                                                   | 격리 frame 페이지: 도구 폴더의 `Frame.astro`를 그대로 그린다                                                                                                         |
+| `src/integrations/tool-frames.ts`                                                           | 격리 frame 페이지: live 도구마다(한·영) 그 도구의 `Frame.astro`를 진입점으로 하는 라우트를 만든다 (그 도구 CSS만 실린다)                                             |
 | `src/layouts/BaseLayout.astro`                                                              | 모든 바깥 페이지의 `<html>`·`<head>`(제목·설명·canonical·hreflang·OG·소유 확인), 머리글·바닥글, 통계·광고 스크립트, 하단 광고, 광고 차단 안내                        |
 | `src/layouts/ToolLayout.astro`                                                              | 도구 페이지 틀: 브레드크럼 → 제목 → `top-banner` → 도구 칸 → 로컬 처리 안내 → `below-tool` → 쓰임새·사용법 → `in-content` → FAQ → 관련. WebApplication 구조화 데이터 |
 | `src/layouts/DocLayout.astro`                                                               | 글 페이지 틀 (소개·방침·약관·문의·가이드): 위치 표시 → 제목 → 작은 글씨(시행일 등) → 배너 → 본문 → `after` 칸                                                        |
@@ -46,8 +46,10 @@
 | `src/components/MobileMenu.astro`                                                           | 768px 미만 ☰ 버튼 → 전체 화면 `<dialog>`(showModal) + 카테고리별 `<details name>` 아코디언                                                                          |
 | `src/components/Breadcrumb.astro`                                                           | 위치 표시 + BreadcrumbList 구조화 데이터, 도구 페이지에서는 같은 카테고리 도구로 넘어가는 메뉴                                                                       |
 | `src/components/ToolSections.astro`, `ToolGrid.astro`, `ToolCard.astro`, `ToolIcon.astro`   | 묶음별 목록·카드·아이콘. `soon` 도구는 '준비 중'으로 누를 수 없게                                                                                                    |
+| `src/components/ToolIconSprite.astro`, `tool-icons.ts`                                      | 모든 도구 아이콘 모양을 `<symbol>`로 한 번만 적는 숨은 SVG (`BaseLayout` 맨 앞). `ToolIcon`은 `<use>`로 가리킨다                                                     |
 | `src/components/ToolHowTo.astro`, `ToolFaq.astro`, `RelatedTools.astro`, `ToolGuides.astro` | 도구 페이지 아래쪽 글                                                                                                                                                |
-| `src/styles/tokens.css`, `global.css`                                                       | 색·글꼴·크기 토큰(라이트·다크), 전역 스타일, 본문 글꼴 Pretendard(글자 범위별 조각)                                                                                  |
+| `src/styles/tokens.css`, `global.css`                                                       | 색·글꼴·크기 토큰(라이트·다크), 전역 스타일                                                                                                                          |
+| `src/styles/site-font.css`, `src/styles/fonts/`                                             | 본문 글꼴: Pretendard에서 사이트 글자만 덜어 낸 'JUS Modern Gothic' 조각 넷 (`scripts/fonts/build_site_font.py`가 만든다, → 아래 "본문 글꼴")                        |
 | `src/lib/theme.ts`, `components/ThemeInit.astro`, `ThemeToggle.astro`                       | 테마 저장 키(`theme`), 그리기 전 적용(깜빡임 방지), 전환 버튼 + `themechange` 이벤트                                                                                 |
 | `src/brand/logo.ts`                                                                         | 로고 모양·색의 유일한 출처 (`MARK`, `WORDMARK`, `markSvg()`, `lockupSvg()`)                                                                                          |
 | `src/components/Logo.astro`, `src/pages/favicon.svg.ts`, `src/pages/brand/[name].svg.ts`    | 머리글 로고, favicon, 내려받기 SVG (`/brand/mark.svg` 등)                                                                                                            |
@@ -63,8 +65,8 @@
    `section`이 카테고리의 묶음에 없음. 그리고 `related`에 레지스트리에 없는 ID가 있으면 멈춘다
 3. `paths.ts`가 `liveTools`·`visibleCategories`로 주소 목록을 만들고, 한국어(`src/pages/`)와 영어(`src/pages/en/`)
    라우트가 같은 목록을 쓴다
-4. 도구 페이지는 `ToolFrame`으로 `<주소>frame/`을 sandbox iframe으로 띄운다. frame 페이지는
-   `src/tools/<id>/Frame.astro`를 찾아 그린다 (없으면 빌드 오류)
+4. 도구 페이지는 `ToolFrame`으로 `<주소>frame/`을 sandbox iframe으로 띄운다. frame 페이지는 `tool-frames.ts`가
+   live 도구마다 `src/tools/<id>/Frame.astro`를 진입점으로 만든다 (없으면 빌드 오류). 제목·따라 하기 단계는 `FrameLayout`이 주소에서 도구를 찾아 정한다
 5. 허브·카테고리 목록은 `sectionsInCategory()`로 묶음별로 나눠 그린다 (도구 없는 묶음은 뺀다)
 
 새 도구를 더하는 순서는 [`CLAUDE.md`](../../../CLAUDE.md)의 "도구 레지스트리"를 따른다.
@@ -120,24 +122,70 @@
 - 모든 PDF 도구(24개)의 frame 첫 화면 JS가 160KB대에서 40KB 안팎으로 줄었다 (pdf.js 126KB를 파일을 열 때 받는다)
 - 큰 라이브러리(pdf.js·pdf-lib·Tesseract·libheif·MediaPipe)와 워커는 바깥 페이지에 없고, 도구 frame도 쓸 때만 받는다 (테스트가 확인)
 
+**두 번째 줄이기 (2026-10-24, `perf/lighter-pages`)**: 첫 표 뒤에 남은 무거운 곳 셋을 줄였다. 같은 날 dev 빌드(고치기 전)와 비교한다.
+KB, HTML·CSS는 gzip(괄호는 원본), 글꼴은 원본.
+
+| 페이지                        | HTML                        | CSS                       | 글꼴      | 요청수  |
+| ----------------------------- | --------------------------- | ------------------------- | --------- | ------- |
+| `/` 홈 (바깥)                 | 26.2 (138.0) → 25.0 (121.7) | 19.8 (75.8) → 8.7 (35.4)  | 443 → 94  | 23 → 7  |
+| `/pdf/` (바깥)                | 23.7 (122.0) → 23.2 (108.7) | 17.2 (60.3) → 6.0 (20.0)  | 401 → 124 | 20 → 7  |
+| `/image/` (바깥)              | 22.2 (112.6) → 22.2 (100.1) | 17.2 (60.3) → 6.0 (20.0)  | 399 → 124 | 20 → 7  |
+| `/text/` (바깥)               | 20.0 (98.3) → 20.0 (87.5)   | 17.2 (60.3) → 6.0 (20.0)  | 352 → 124 | 17 → 7  |
+| `/pdf/merge/` (바깥)          | 23.5 (115.3) → 23.5 (104.4) | 19.2 (69.5) → 8.0 (29.1)  | 411 → 124 | 24 → 11 |
+| `/pdf/merge/` frame 첫 화면   | 15.0 (76.8) → 6.9 (12.6)    | 19.3 (67.8) → 19.1 (61.9) | 153 → 94  | 26 → 20 |
+| `/image/ocr/` (바깥)          | 24.2 (118.8) → 24.2 (107.7) | 19.2 (69.5) → 8.0 (29.1)  | 331 → 124 | 21 → 11 |
+| `/image/ocr/` frame 첫 화면   | 15.1 (76.9) → 7.6 (16.2)    | 19.3 (67.8) → 17.9 (57.5) | 230 → 94  | 27 → 17 |
+| `/guide/` (바깥)              | 23.7 (126.6) → 23.6 (111.2) | 17.2 (60.3) → 6.0 (20.0)  | 432 → 124 | 20 → 7  |
+| `/guide/compress-pdf/` (바깥) | 22.9 (110.8) → 23.0 (100.1) | 17.2 (60.3) → 6.0 (20.0)  | 460 → 155 | 23 → 9  |
+| `/safety/` (바깥)             | 26.3 (133.8) → 26.1 (114.5) | 20.5 (82.2) → 9.4 (41.9)  | 445 → 155 | 22 → 9  |
+
+- **본문 글꼴** (→ 아래 "본문 글꼴"): Pretendard 글자 범위별 조각 92개 대신 사이트 글자만 담은 조각 넷. 글꼴 전송이 1/3~1/5로,
+  조각 목록(unicode-range) CSS가 gzip 14KB에서 3KB로 줄어 모든 페이지의 공통 CSS가 줄었다. 영어 페이지는 영문·기호 조각(36KB)만 받는다
+- **frame 페이지를 도구마다 따로** (`src/integrations/tool-frames.ts`): 한 라우트가 모든 도구의 `Frame.astro`를 불러 모든 도구의 Svelte CSS가
+  모든 frame HTML에 들어가던 것(HTML 원본 77KB 중 약 50KB, 다른 도구 CSS 파일 4개)을 없앴다
+- **SVG**: 도구 아이콘을 `<symbol>` 하나 + `<use>`로(홈 196개), 안전 그림 네 장면이 같은 무대를 `<use>`로 같이 쓴다. 원본은 12~14% 줄었지만
+  gzip은 거의 그대로다 (반복된 path는 gzip이 이미 잘 줄이고 있었다)
+
 **상한 정하는 법**: 상한 = 잰 값 + 여유 (HTML·CSS·JS 약 15%, 글자 수에 따라 달라지는 글꼴 약 25%). 값과 이유는 spec 주석에 적었다.
-상한을 올려야 하면 먼저 줄일 방법을 찾고, 그래도 올리면 spec 주석과 PR 본문에 이유를 적는다.
+상한을 올려야 하면 먼저 줄일 방법을 찾고, 그래도 올리면 spec 주석과 PR 본문에 이유를 적는다. 글꼴은 조각 단위로 늘어나서(30KB 안팎)
+페이지에 새 드문 글자가 생겨 조각 하나를 더 받으면 상한을 넘는다. 그때는 상한을 올리지 말고 글꼴을 다시 만든다 (많이 쓰는 글자가 앞 조각으로 간다).
 
 **남은 무거운 곳**
 
-- **글꼴이 가장 크다**: 한글 글꼴 조각(`PretendardVariable.subset.*`, 조각마다 20~37KB)을 한글 글자가 쓰인 만큼 받는다 (바깥 페이지 350~460KB,
-  frame 180~230KB). frame은 출처 없는 sandbox라 브라우저 캐시를 못 써서 방문마다 다시 받는다. 사이트 글에 쓰인 글자만 모은 조각을
-  따로 만드는 방법은 글이 늘면 커지고 효과가 불확실해 하지 않았다
-- **frame HTML에 다른 도구의 CSS가 섞인다**: frame 페이지가 한 라우트(`[category]/[tool]/frame.astro`)에서 모든 도구의 `Frame.astro`를
-  불러서 Astro가 모든 도구의 Svelte CSS(약 60KB 원본, gzip 약 9KB)를 모든 frame 페이지에 넣는다. 고치려면 도구마다 frame 라우트를
-  따로 만들어야 해서 구조가 크게 바뀐다. 도구가 늘수록 커지니 frame HTML 상한(16KB)이 먼저 알려 줄 것이다
-- 홈·안전 페이지의 HTML 약 50KB는 인라인 SVG(그림)다
+- **CSP `<meta>`가 HTML gzip의 약 1/5**: Astro는 사이트 전체의 인라인 `<style>`과 CSS 파일 해시(약 100개)를 모든 페이지의 `style-src`에 넣는다
+  (`astro/dist/core/csp/common.js`의 `trackStyleHashes`). 페이지마다 gzip 약 5KB, frame HTML(7KB)의 대부분이다. 빌드 뒤 페이지마다 그 페이지에 있는
+  인라인 스타일 해시만 남기면 줄일 수 있다 (보안 설정이라 따로 다룬다)
+- **frame CSS의 약 14KB(gzip)는 Pretendard 원래 조각 목록**: 도구 화면이 보여 주는 사용자 글자(파일 이름·표 미리보기)를 지금과 같은 글꼴로 그리려고 둔다.
+  frame은 방문마다 다시 받는다
+- 도구 아이콘 모양(symbol, gzip 약 1.6KB)은 모든 페이지 HTML에 있다. 따로 된 SVG 파일로 빼면 캐시되지만 요청이 하나 늘고 첫 화면에서 아이콘이 늦게 뜬다
+
+### 본문 글꼴 (2026-10-24)
+
+- `scripts/fonts/build_site_font.py`가 Pretendard 가변 글꼴에서 사이트 글자(`src/`의 글 + 빌드한 HTML, 약 950자)만 덜어 조각 넷을 만든다
+  - base: 영문·숫자·기호 + 영어 페이지의 한글('한국어' 버튼). 모든 페이지
+  - core: 홈에 나오는 한글 + 많이 쓰는 한글 100자 (HTML 페이지 몇 개에 나오는지로 센다). 한국어 페이지와 도구 화면 첫 화면이 대개 base + core로 끝난다
+  - rest-1·rest-2: 나머지 사이트 한글 (가이드 글·도구 화면 안쪽 문구)
+- 굵기 축은 사이트가 쓰는 400~700만 남긴다 (400·500·600·700이 지금과 같은 모양). 800 이상을 쓰면 700으로 그려지므로 스크립트의 `WEIGHTS`를 같이 넓힌다
+- 글자 모양은 같은 Pretendard다. 화면 비교에서 글자 자리·모양이 같고, 영문은 글자 쌍 간격(kerning)이 조각 경계에서 끊기지 않아 1px 안쪽으로 다르게 그려질 수 있다
+  (예전에는 ASCII가 Pretendard 조각 7개에 나뉘어 있었다)
+- 고친 판이라 OFL 예약 글꼴 이름(Pretendard)을 쓰지 않고 'JUS Modern Gothic'(도구용 Pretendard 글꼴과 같은 이름)이라 부른다. 저작권·허가서 알림은 글꼴 안에 남기고
+  허가서 파일은 `/vendor/pretendard/LICENSE.txt`(`scripts/copy-font-license.mjs`)
+- 한국어 페이지는 base·core를, 영어 페이지는 base를 `<link rel="preload">`로 HTML을 읽을 때 바로 받기 시작한다 (`BaseLayout`)
+- 도구 화면(`FrameLayout`)은 사용자 글자 때문에 Pretendard 원래 조각을 뒤 글꼴(`'Pretendard Variable'`)로 함께 둔다. 사이트 글자는 앞 글꼴이 그려 원래 조각은 받지 않는다
+- **새 글자가 생기면**: 바깥 페이지에는 뒤 글꼴이 없어 빠진 글자가 시스템 글꼴로 그려진다. `tests/e2e/site-font.spec.ts`가 빌드한 바깥 페이지 글자가
+  모두 글꼴에 있는지 확인하고, 빠지면 `npm run build && python3 scripts/fonts/build_site_font.py && npm run build`를 알려 준다. 같은 입력이면 같은 파일이 나온다
 
 ### 결정과 이유
 
 - **메뉴·아이콘 스타일은 전역 + 루트 클래스** (2026-10-24): `MegaMenu`·`MobileMenu`·`ToolIcon`은 모든 페이지에 수십~수백 개 요소가 있어
   Astro 범위 속성이 HTML을 크게 늘렸다. `<style is:global>`로 바꾸고 선택자를 `.mega`·`.mobile-menu-sheet` 아래로만 적용해 다른 곳과 겹치지 않게 했다.
   이런 반복 부품의 스타일을 새로 쓸 때도 같은 방식으로 한다 (일반 부품은 범위 스타일 그대로)
+- **반복되는 SVG 모양은 `<symbol>` + `<use>`** (2026-10-24): 도구 아이콘(`ToolIconSprite`)과 안전 그림의 무대(`SafetyMotionArt`의 `scene={0}`).
+  `<use>`로 그린 모양 안쪽에는 그 자리의 선택자(조상 클래스)가 닿지 않는다. 선·채움처럼 상속되는 속성과 CSS 변수만 넘어가므로,
+  자리마다 달라지는 모양(예: 강조된 칸의 테두리)은 감싼 `<g>`에 CSS 변수로 주고, 움직임은 `<use>`를 감싼 `<g>`에 건다.
+  숨은 SVG는 `display: none` 대신 크기를 0으로 둔다
+- **frame 페이지는 도구마다 라우트 하나** (2026-10-24, `tool-frames.ts`): Astro는 페이지가 불러오는 모든 컴포넌트의 CSS를 그 페이지에 넣는다.
+  `import.meta.glob`으로 모든 도구의 `Frame.astro`를 부르는 한 라우트는 lazy로 바꿔도 모든 도구 CSS가 들어가서, 도구마다 진입점을 따로 둔다
 - **펼침 메뉴와 `summary`** (2026-10-23, 사용자 요청): 도구가 31개로 늘어 카테고리 링크만으로는 도구까지 두 번 이동해야 했다.
   검색용 `description`은 메뉴 칸에 길어 메뉴용 한 줄(`summary`, 한국어 25자·영어 40자 안팎, 하는 일만)을 필수로 더했다.
   모바일 판은 공간이 없어 이름만 보인다. 링크는 데스크톱 판과 모바일 창에 두 번 있지만 판은 `hidden`, 창은 닫혀 있어 화면 읽기에는 한 번만 보인다
@@ -153,7 +201,8 @@
 - **모든 페이지 CSP** (`e95c228`): Astro `security.csp`로 페이지마다 CSP `<meta>`. 우리 스크립트·스타일은 해시로 허용된다.
   그래서 가이드 마크다운의 코드 색칠(inline style)을 껐다
 - **본문 글꼴 Pretendard** (`d7e62dc`, 2026-10-14): 시스템 글꼴은 기기마다 달라 화면이 고르지 않았다. 글자 범위별 조각
-  파일을 `/_astro/`로 함께 내보내 CDN 없이, 바깥 페이지와 격리 frame이 같은 파일을 쓴다
+  파일을 `/_astro/`로 함께 내보내 CDN 없이, 바깥 페이지와 격리 frame이 같은 파일을 쓴다.
+  2026-10-24부터 사이트 글자만 담은 조각 넷을 쓴다 (→ "본문 글꼴"). 시스템 글꼴로 바꾸는 방법은 화면이 바뀌어 하지 않았다
 - **로고는 한 파일에서** (2026-10-14): 머리글·favicon·내려받기 SVG·PNG가 모두 `logo.ts`에서 그린다.
   **점핏(Jumpit)과 겹치지 않게**: 검정 네모 + 기울인 흰 j + 머리 위 초록 점이 점핏과 거의 같아서 점을 u 그릇 안으로
   옮기고, 줄기를 길게 하고, 기울기를 30°에서 15°로 줄였다(`5bfd919`). 글자 로고는 `justus.ing`, 마침표만 초록(`f5f0c84`)
@@ -195,10 +244,12 @@
 - [x] 묶음별 소제목, 도구 아이콘 (홈·카테고리)
 - [x] 머리글 펼침 메뉴(데스크톱)·전체 화면 메뉴(휴대폰), 도구 `summary` (2026-10-23)
 - [x] 다크 모드: OS 설정 + 전환 버튼 + 깜빡임 방지 + frame에 알리기
-- [x] 본문 글꼴 Pretendard 직접 호스팅
+- [x] 본문 글꼴 Pretendard 직접 호스팅, 사이트 글자만 담은 조각 넷으로 줄이기 (2026-10-24)
 - [x] 로고(심볼·글자), favicon·홈 화면 아이콘·og:image·내려받기 파일, 점핏과 겹치지 않게 수정
 - [x] 모든 페이지 CSP
 - [x] 성능 예산 E2E와 재는 도구, 큰 라이브러리를 쓸 때만 받기 (2026-10-24)
+- [x] frame 페이지에 그 도구 CSS만, 반복 SVG를 `<use>`로 (2026-10-24)
+- [ ] CSP `<meta>`에 그 페이지의 해시만 남기기 (페이지마다 gzip 약 5KB)
 - [x] `canUse()` (늘 허용)
 - [x] 개발용 `/_dev/layout/`
 - [ ] `canUse()`에 실제 정책 붙이기 (계획만 있음)
@@ -226,6 +277,7 @@
 - `tests/e2e/home-motion.spec.ts`: 홈 설명 그림이 움직임 줄이기에서는 멈춘 완성 그림, 아니면 보일 때 움직여 완성 그림에서 멈춘다, 링크로 /safety/ 그림에 간다 (한·영)
 - `tests/e2e/perf-budget.spec.ts`: 페이지 종류별(홈·카테고리 3·도구 2·가이드 2·안전) 바깥 페이지 크기 상한, 도구 frame 첫 화면 크기 상한,
   큰 라이브러리·워커·데이터가 바깥 페이지·도구 frame 첫 화면에 없음
+- `tests/e2e/site-font.spec.ts`: 빌드한 바깥 페이지의 글자가 모두 사이트 글꼴에 있다, 도구 페이지가 사이트 글꼴 조각만 받고 그것으로 그린다
 - `tests/e2e/pages.spec.ts`: 바닥글에서 글 페이지로 간다 (→ [검색·가이드](../seo-and-guides/README.md))
 - 각 도구 E2E가 도구 페이지·frame 라우트를 함께 거친다
 
