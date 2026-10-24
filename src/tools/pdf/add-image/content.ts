@@ -33,7 +33,7 @@ export default defineContent({
       },
       {
         q: '이미지 화질이 떨어지나요?',
-        a: 'JPG와 PNG는 다시 압축하지 않고 원본 그대로 넣습니다. 사진 속 촬영 정보(위치·카메라 등 EXIF)와 설명은 빼고 넣습니다. 휴대폰 사진은 방향을 바로잡기 위해 높은 화질로 다시 저장합니다.',
+        a: 'JPG와 PNG는 다시 압축하지 않고 원본 그대로 넣습니다. 사진 속 촬영 정보(위치·카메라 등 EXIF)와 설명은 빼고 넣습니다. 휴대폰 사진은 방향을 바로잡기 위해 높은 화질로 다시 저장합니다. 아이폰 사진(HEIC)은 PDF에 그대로 넣을 수 없어 높은 화질의 JPG로 바꿔 넣습니다. 크롬·엣지처럼 HEIC를 스스로 열지 못하는 브라우저에서는 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받아 이 기기에서 엽니다.',
       },
       {
         q: '넣은 이미지를 나중에 옮기거나 지울 수 있나요?',
@@ -73,7 +73,7 @@ export default defineContent({
       },
       {
         q: 'Will the image lose quality?',
-        a: 'JPG and PNG files are added as they are, without recompression. Shooting details stored in photos (location, camera and other EXIF data) and descriptions are left out. Phone photos are saved again at high quality to fix their orientation.',
+        a: 'JPG and PNG files are added as they are, without recompression. Shooting details stored in photos (location, camera and other EXIF data) and descriptions are left out. Phone photos are saved again at high quality to fix their orientation. iPhone photos (HEIC) cannot go into a PDF as they are, so they are converted to a high-quality JPG. Browsers that cannot open HEIC on their own, such as Chrome and Edge, download a HEIC reader (libheif, about 0.5 MB) from this site and open the photo on this device.',
       },
       {
         q: 'Can I move or remove the image later?',
