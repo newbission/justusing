@@ -23,6 +23,8 @@ const ko = {
     webp: { label: 'WebP로 바꾸기 (더 작음)', short: 'WebP' },
   } satisfies Record<Format, { label: string; short: string }>,
   note: '가로·세로 크기는 그대로 둡니다. 크기까지 줄이려면 "이미지 크기 조절"을 쓰세요.',
+  heicNote:
+    'HEIC 사진은 브라우저가 HEIC로 저장하지 못해 JPG로 줄입니다("WebP로 바꾸기"를 고르면 WebP). HEIC는 원래 아주 작게 저장되는 형식이라 바꾼 결과가 더 크면 원본을 그대로 둡니다.',
   reading: '이미지를 읽는 중입니다…',
   needOne: '줄일 이미지를 넣어 주세요.',
   ready: (count: number) => `이미지 ${count}장을 줄입니다.`,
@@ -39,6 +41,7 @@ const ko = {
   itemDone: (before: string, after: string, percent: number) =>
     `${before} → ${after} (${percent}% 줄어듦)`,
   itemKept: (size: string) => `${size} · 이미 작아서 원본 그대로`,
+  itemKeptHeic: (size: string) => `${size} · 바꿔 저장하면 더 커져서 원본(HEIC) 그대로`,
   broken: '열 수 없는 이미지입니다. 빼고 줄입니다.',
   noWebp: '이 브라우저는 WebP로 저장하지 못합니다. "원래 형식 그대로"로 해 보세요.',
   /** 결과 파일 이름 뒤에 붙는 말 */
@@ -64,6 +67,8 @@ const en: typeof ko = {
     webp: { label: 'Convert to WebP (smaller)', short: 'WebP' },
   },
   note: 'Width and height stay the same. To make the image smaller in pixels too, use "Resize Image".',
+  heicNote:
+    'Browsers cannot save HEIC, so HEIC photos are compressed to JPG (or WebP if you choose "Convert to WebP"). HEIC is already a very compact format, so if the result would be larger, the original is kept.',
   reading: 'Reading images…',
   needOne: 'Add the images you want to compress.',
   ready: (count: number) => `Compress ${count} ${count === 1 ? 'image' : 'images'}.`,
@@ -80,6 +85,7 @@ const en: typeof ko = {
   itemDone: (before: string, after: string, percent: number) =>
     `${before} → ${after} (${percent}% smaller)`,
   itemKept: (size: string) => `${size} · already compact, kept as is`,
+  itemKeptHeic: (size: string) => `${size} · converting would make it larger, original HEIC kept`,
   broken: 'This image cannot be opened. It will be left out.',
   noWebp: 'This browser cannot save WebP. Try "Same format".',
   suffix: 'compressed',
