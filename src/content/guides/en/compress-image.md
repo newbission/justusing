@@ -3,7 +3,7 @@ title: How to reduce image file size (JPG and PNG)
 description: Shrink phone photos and screenshots while keeping them looking the same. How JPG and PNG shrink differently, and when to use WebP.
 tool: image/compress
 published: 2026-10-15
-updated: 2026-10-19
+updated: 2026-10-24
 order: 2
 ---
 
@@ -50,6 +50,7 @@ Pixel count matters most. Shrinking a 4000×3000 photo to 2000×1500 leaves a qu
 ## Good to know
 
 - **Compact images are left alone.** If re-saving would not make an image smaller, the list says "already compact, kept as is", and the ZIP contains the original.
+- **iPhone HEIC photos are compressed to JPG.** Browsers cannot save HEIC, so the result is a JPG (or WebP if you choose it). HEIC is about half the size of a JPG of the same quality, so converting often makes the file larger, and then the original HEIC is kept. To go smaller, reduce the dimensions too.
 - **Location data is removed.** The image is redrawn and saved again, so EXIF data such as location, date and device is not kept. This is also handy for removing location data before sharing a photo.
 - **Orientation is kept.** Phone photo rotation is applied first, so photos stay upright.
 - **Nothing is uploaded.** Everything happens inside your browser, and several images are compressed at once, matched to your CPU cores.
