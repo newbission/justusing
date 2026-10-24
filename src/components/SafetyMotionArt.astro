@@ -90,7 +90,7 @@ const probes = [
   xmlns="http://www.w3.org/2000/svg"
   focusable="false"
 >
-  <!-- 바깥 페이지 (브라우저 창) -->
+  {/* 바깥 페이지 (브라우저 창) */}
   <g class="window">
     <rect x="4" y="4" width="352" height="236" rx="10" class="win" />
     <path d="M4 28H356" class="win-line" />
@@ -115,7 +115,7 @@ const probes = [
     </g>
   </g>
 
-  <!-- 도구 칸 (격리된 iframe) -->
+  {/* 도구 칸 (격리된 iframe) */}
   <g class="frame">
     <rect x="16" y="98" width="328" height="124" rx="8" class="tool" />
     <g transform="translate(26 103.5) scale(0.5)">
@@ -126,7 +126,7 @@ const probes = [
     </text>
   </g>
 
-  <!-- 창 밖: 다운로드 폴더 · 이 사이트 · 다른 사이트 -->
+  {/* 창 밖: 다운로드 폴더 · 이 사이트 · 다른 사이트 */}
   {nodes.map((node) => (
     <g class:list={['node', `node-${node.key}`, nodeState[scene][node.key]]}>
       <rect x={node.cx - 55} y="272" width="110" height="72" rx="8" class="node-box" />
@@ -202,7 +202,7 @@ const probes = [
         {t.onlyOurFiles}
       </text>
 
-      <!-- 다른 사이트로 연결하려다 막힘 -->
+      {/* 다른 사이트로 연결하려다 막힘 */}
       <g class="out">
         <path d="M301 222V240" pathLength="1" class="ray" />
         <path d="M301 254V270" class="dash" />
@@ -216,7 +216,7 @@ const probes = [
           {t.blocked}
         </text>
       </g>
-      <!-- 이 사이트의 파일만 들어온다 -->
+      {/* 이 사이트의 파일만 들어온다 */}
       <g class="in">
         <path d="M166 270V225" pathLength="1" class="flow" />
         <path d="M161.5 229.5 166 225l4.5 4.5" class="flow-head" />
@@ -229,7 +229,7 @@ const probes = [
 
   {scene === 3 && (
     <g class="process">
-      <!-- 처리 프로그램은 이 사이트에서 받는다 -->
+      {/* 처리 프로그램은 이 사이트에서 받는다 */}
       <g class="in">
         <path d="M166 270V225" pathLength="1" class="flow" />
         <path d="M161.5 229.5 166 225l4.5 4.5" class="flow-head" />
@@ -252,7 +252,7 @@ const probes = [
         </text>
       </g>
 
-      <!-- 놓은 파일: 도구 칸 왼쪽에 자리 잡은 뒤 작업자에게 들어간다 -->
+      {/* 놓은 파일: 도구 칸 왼쪽에 자리 잡은 뒤 작업자에게 들어간다 */}
       <g class="settle">
         <g class="feed">
           <path d={paper(44, 140, 24, 30)} class="sheet" />
@@ -265,7 +265,7 @@ const probes = [
         <path d={lines(284.5, 152, [13, 15, 9], 4.5)} class="ink" />
       </g>
 
-      <!-- 파일을 서버로 보내는 길은 없다 -->
+      {/* 파일을 서버로 보내는 길은 없다 */}
       <g class="cut">
         <path d="M194 222V240M194 254V270" class="dash" />
         <g transform="translate(194 247)">
@@ -279,7 +279,7 @@ const probes = [
         </text>
       </g>
 
-      <!-- 끄는 동안 도구 칸이 화면 전체로 넓어진다 (ToolFrame) -->
+      {/* 끄는 동안 도구 칸이 화면 전체로 넓어진다 (ToolFrame) */}
       <rect x="8" y="32" width="344" height="204" rx="8" class="overlay" />
       <g class="overlay-text">
         <text x="180" y="96" text-anchor="middle" class="t-drop">
@@ -311,7 +311,7 @@ const probes = [
         </text>
       </g>
 
-      <!-- 내 기기로 곧장 -->
+      {/* 내 기기로 곧장 */}
       <g class="save">
         <path d="M59 222V266" pathLength="1" class="flow" />
         <path d="M54.5 261.5 59 266l4.5-4.5" class="flow-head" />
@@ -326,7 +326,7 @@ const probes = [
         </g>
       </g>
 
-      <!-- 인터넷으로는 나가지 않는다 -->
+      {/* 인터넷으로는 나가지 않는다 */}
       <g class="cut">
         <path d="M194 222V240M194 254V270M301 222V240M301 254V270" class="dash" />
         <g transform="translate(194 247)">
