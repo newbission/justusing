@@ -15,6 +15,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format:check
+      # README의 도구 목록이 레지스트리와 같은지 (도구를 더하고 README를 고치지 않으면 실패)
+      - run: node scripts/readme/tools.mjs --check
       - run: npm run check
       - run: npm run build
       - run: npx playwright install --with-deps chromium
