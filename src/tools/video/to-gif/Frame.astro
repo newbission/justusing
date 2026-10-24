@@ -3,16 +3,9 @@
  * 동영상을 GIF로 도구 화면 (격리 frame 페이지 /video/to-gif/frame/).
  */
 import FrameLayout from '../../../frame/FrameLayout.astro';
-
-interface Props {
-  /** frame 문서 제목 (스크린리더가 읽는다). 언어에 맞춰 frame 페이지가 넘긴다 */
-  title: string;
-}
-
-const { title } = Astro.props;
 ---
 
-<FrameLayout {title}>
+<FrameLayout>
   <div id="app"></div>
 </FrameLayout>
 
