@@ -57,6 +57,7 @@ const TOOL_IDS: readonly string[] = [
   'video/compress',
   'video/to-gif',
   'video/frame-capture',
+  'video/extract-audio',
 ];
 
 export interface Tool extends ToolMeta {
