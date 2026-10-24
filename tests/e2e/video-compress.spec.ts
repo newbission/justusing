@@ -6,7 +6,15 @@
  */
 import { expect, test } from './test';
 import { statSync } from 'node:fs';
-import { colorAt, fixture, fixtureKB, inspect, openVideoTool, runAndDownload } from './video';
+import {
+  colorAt,
+  fixture,
+  fixtureKB,
+  inspect,
+  limitEncoderWidth,
+  openVideoTool,
+  runAndDownload,
+} from './video';
 
 test('480p로 줄이면 H.264 MP4로 다시 저장하고 소리는 그대로 옮긴다', async ({ page }) => {
   const frame = await openVideoTool(page, 'compress', 'clip.mp4');
@@ -59,6 +67,16 @@ test('목표 용량으로 줄이고, 소리보다 작은 용량은 막는다', a
   expect(facts.video).toMatchObject({ codec: 'avc', width: 640, height: 360 });
   // Opus 소리는 AAC로 다시 저장한다 (AAC로 저장하지 못하는 브라우저는 MP4에 들어가는 Opus를 그대로 옮긴다)
   expect(['aac', 'opus']).toContain(facts.audio?.codec);
+});
+
+test('저장하지 못하는 해상도는 고를 수 없고 저장할 수 있는 크기로 시작한다', async ({ page }) => {
+  await limitEncoderWidth(page, 1000);
+  const frame = await openVideoTool(page, 'compress', 'clip.mp4');
+  await expect(frame.getByRole('radio', { name: /원래 크기 \(1280×720\)/ })).toBeDisabled();
+  await expect(frame.getByText('· 이 브라우저가 저장하지 못하는 크기')).toBeVisible();
+  await expect(frame.getByRole('radio', { name: /480p \(854×480\)/ })).toBeChecked();
+  const file = await runAndDownload(page, frame, '줄이기', '받기');
+  expect((await inspect(file.bytes)).video).toMatchObject({ width: 854, height: 480 });
 });
 
 test('WebCodecs가 없는 브라우저에서는 미리 알리고 시작하지 않는다', async ({ page }) => {
