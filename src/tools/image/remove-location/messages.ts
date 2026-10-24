@@ -4,7 +4,7 @@ import type { CleanMode } from '../../../lib/image/metadata';
 
 const ko = {
   bar: '정보 지우기',
-  hint: 'JPG·PNG·WebP 사진을 여러 장 한 번에 고를 수 있습니다 · 사진은 이 기기를 떠나지 않습니다',
+  hint: 'JPG·PNG·WebP·HEIC 사진을 여러 장 한 번에 고를 수 있습니다 · 사진은 이 기기를 떠나지 않습니다',
   modeGroup: '지울 정보',
   modes: {
     all: { label: '모든 정보 지우기 (추천)', short: '모두' },
@@ -48,7 +48,7 @@ const ko = {
 
 const en: typeof ko = {
   bar: 'Remove info',
-  hint: 'You can pick several JPG, PNG or WebP photos at once · Your photos never leave this device',
+  hint: 'You can pick several JPG, PNG, WebP or HEIC photos at once · Your photos never leave this device',
   modeGroup: 'What to remove',
   modes: {
     all: { label: 'Remove all info (recommended)', short: 'All' },
