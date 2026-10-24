@@ -170,7 +170,7 @@ flowchart TB
     store["Data store (Cache API)<br/>fonts, OCR data, models"]
     subgraph frame["Isolated iframe: sandbox, no origin, CSP default-src 'none'"]
       app["Tool screen (Svelte)"]
-      worker["Web Worker<br/>pdf-lib, Tesseract, mediabunny, ..."]
+      worker["Web Worker<br/>pdf-lib, Tesseract,<br/>mediabunny, ..."]
     end
   end
   out[("Result file")]
