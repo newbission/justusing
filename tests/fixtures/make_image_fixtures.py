@@ -30,6 +30,8 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow와 
 - deep.heic    10비트 HEIC 400×300 (HDR 사진처럼 8비트보다 깊다). 색은 (200, 40, 40)쯤
 - p3.heic      색 공간이 Display P3(nclx 12번)인 HEIC 200×150, 색 (200, 60, 60). 일반 화면 색으로 바꾸면 빨강이 더 짙다
 - broken.heic  머리만 HEIC이고 내용은 깨진 파일
+- located.heic 촬영 정보가 든 HEIC (위치정보 지우기). located.jpg와 같은 EXIF(GPS·날짜·기기·자유 글)와 GPS가 든 XMP,
+               회전 표시(irot). 화소 400×300 → 바로 세우면 300×400
 
 이 스크립트가 만들지 않는 것:
 - face.jpg     흰 배경 앞 얼굴 사진 (증명사진 도구). 얼굴 인식은 실제 사진이라야 해서 NASA 공개 사진
@@ -288,6 +290,9 @@ def heic_fixtures():
     pillow_heif.from_pillow(Image.new('RGB', (200, 150), (200, 60, 60))).save(
         path('p3.heic'), quality=90, color_primaries=12, transfer_characteristic=13, matrix_coefficients=6)
 
+    pillow_heif.from_pillow(located).save(
+        path('located.heic'), quality=90, exif=located_exif(6), xmp=LOCATED_XMP)
+
     with open(path('iphone.heic'), 'rb') as f:
         head = f.read(64)
     with open(path('broken.heic'), 'wb') as f:
@@ -300,5 +305,5 @@ for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
              'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
              'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg', 'quadrants.png',
-             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic']:
+             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic']:
     print(name, os.path.getsize(path(name)), 'bytes')
