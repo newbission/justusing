@@ -1,6 +1,6 @@
 # 이미지 도구 공통 (`src/lib/image/`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-23
+쓴 날 2026-10-16 · 고친 날 2026-10-24
 
 - 쓰는 곳: [이미지 압축](../../features/image-compress/README.md), [크기 조절](../../features/image-resize/README.md),
   [형식 변환](../../features/image-convert/README.md), [용량 맞추기](../../features/image-target-size/README.md)(`fitImage`), [위치 정보 지우기](../../features/image-remove-location/README.md)(목록 화면만),
@@ -28,7 +28,8 @@
 - 결과 형식은 JPG·PNG·WebP 셋뿐이다 (`OutputType`)
 - 다시 그려 저장하므로 EXIF(위치·날짜·기기)는 남지 않는다. EXIF 방향은 미리 적용해 바로 세운다
 - 움직이는 GIF는 첫 장면만 읽힌다 (브라우저 `createImageBitmap`이 첫 장면만 준다)
-- HEIC는 브라우저가 못 읽으면 libheif로 연다 (2026-10-23, 아래 "HEIC 읽기"). 압축·크기 조절은 원래 형식으로 저장하는 도구라 HEIC를 받지 않는다
+- HEIC는 브라우저가 못 읽으면 libheif로 연다 (2026-10-23, 아래 "HEIC 읽기"). 브라우저가 HEIC로 저장하지 못해, 원래 형식으로 저장하는 도구(압축·크기 조절·용량 맞추기)는
+  HEIC를 JPG로 저장한다 (`saveType()`, 2026-10-24)
 - 브라우저가 그 형식으로 저장하지 못하면 실패로 알린다 (예: WebP 저장을 못 하는 Safari)
 
 ## 2. 어떻게 만드는지
@@ -39,18 +40,19 @@
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/lib/image/ImageBatchTool.svelte`        | 여러 장 도구의 공통 화면. `bar`·`options`·`meta`·`actions` snippet과 `hint`·`broken`·`onremove`·`result`를 받는다                                       |
 | `src/lib/compare/CompareSlider.svelte`       | 원본·결과를 겹쳐 비교하는 부품. 문구를 넘겨받아 도구 화면·가이드 어디서나 쓴다                                                                          |
-| `src/lib/image/batch.svelte.ts`              | `ImageBatch` 클래스(목록 상태), `BATCH_ACCEPT`, `EXTENSIONS`(형식 → 확장자)                                                                             |
+| `src/lib/image/batch.svelte.ts`              | `ImageBatch` 클래스(목록 상태, `heic` 선택), `BATCH_ACCEPT`, `EXTENSIONS`(형식 → 확장자), `saveType()`(원래 형식으로 저장할 때 HEIC는 JPG)              |
 | `src/lib/image/process.ts`                   | `processImage(file, options, signal?)`, `fitImage(file, { type, limit })`, 워커 풀, `ImageProcessError`                                                 |
 | `src/lib/image/process.worker.ts`            | 바로 세워 읽기 → 절반씩 줄이기 → 저장 (OffscreenCanvas, PNG 색 줄이기는 UPNG). `limit`이면 용량에 맞춰 화질·크기 탐색                                   |
 | `src/lib/image/fit-size.ts`                  | 용량 맞추기의 화질 사다리·이분 탐색(`highestFitting`)·다음 배율(`nextScale`)                                                                            |
 | `src/lib/image/upng-globals.ts`              | UPNG.js가 워커에서 찾는 `window`·`pako`를 fflate로 마련한다                                                                                             |
 | `src/lib/image/ConvertTool.svelte`           | 형식 변환·HEIC 변환이 같이 쓰는 화면 (문구 `ConvertMessages`, 고르기 형식만 다름)                                                                       |
 | `src/lib/image/heif.ts` + `heif.worker.ts`   | HEIC 읽기: 브라우저가 못 읽을 때만 libheif로 풀기 (`readable`·`decodeImage`·`readForDisplay`·`heifToJpeg`)                                              |
-| `src/lib/image/heif-container.ts`            | HEIC 파일 구조 읽기: HEVC HEIF인지(`ftyp`), 대표 그림의 색 공간(`colr`)                                                                                 |
+| `src/lib/image/heif-container.ts`            | HEIC 파일 구조 읽기: HEVC HEIF인지(`ftyp`), 대표 그림의 색 공간(`colr`), 상자 읽기 도우미                                                               |
+| `src/lib/image/heif-metadata.ts`             | HEIC의 촬영 정보 항목(EXIF·XMP) 자리 찾기(`iinf`·`iloc`·`idat`)와 같은 길이로 덮어쓰기, 모르는 항목·상자 알리기 (위치 정보 지우기)                      |
 | `src/lib/image/prepare.ts`                   | `readImageInfo()`(바로 세운 가로·세로), `jpegOrientation()`, `toEmbeddable()`(PDF에 넣을 JPG·PNG 준비)                                                  |
-| `src/lib/image/embed.ts` + `embed.worker.ts` | `embedImage()`: `toEmbeddable`을 워커에서 돌린다 (이미지 넣기·서명 넣기)                                                                                |
+| `src/lib/image/embed.ts` + `embed.worker.ts` | `embedImage()`: `toEmbeddable`을 워커에서 돌린다 (이미지 넣기·서명 넣기). 못 읽는 HEIC는 먼저 JPG로, 그 JPG를 미리보기로도 돌려준다                     |
 | `src/lib/image/jpeg-metadata.ts`             | `rewriteJpeg()`: JPEG 정보 조각마다 두기·빼기·바꾸기, `stripJpegMetadata()`: 허용 목록으로 빼기 (다시 압축하지 않음)                                    |
-| `src/lib/image/photo-metadata.ts`            | `readPhotoInfo()`·`cleanPhoto()`: JPG·PNG·WebP의 촬영 정보 읽기·지우기 (위치 정보 지우기)                                                               |
+| `src/lib/image/photo-metadata.ts`            | `readPhotoInfo()`·`cleanPhoto()`: JPG·PNG·WebP·HEIC의 촬영 정보 읽기·지우기 (위치 정보 지우기)                                                          |
 | `src/lib/image/metadata.ts` + `.worker.ts`   | 위 둘을 워커에서 돌린다                                                                                                                                 |
 | `src/lib/image/stitch-layout.ts`             | `layoutStitch()`: 여러 장을 한 장으로 이을 때의 배치 (이어 붙이기)                                                                                      |
 | `src/lib/image/stitch-detect.ts`             | `detectSeam()`: 화면 캡처의 고정 막대·겹친 부분 찾기                                                                                                    |
@@ -92,7 +94,10 @@
 - 도구가 쓰는 길
   - 워커에 넘길 때: `readable(file)` → 파일 그대로 또는 바로 세운 ImageBitmap(transfer). 처리·자르기·모자이크·증명사진·이어 붙이기 워커는 둘 다 받는다
   - 화면에서 그릴 때: `decodeImage(file)`(ImageBitmap), `readForDisplay(file, side)`(크기 + `<img>`에 쓸 Blob: 원본 또는 줄인 JPG)
-  - PDF에 넣을 때: `heifToJpeg(file, { quality })` (이미지를 PDF로)
+  - PDF에 넣을 때: `heifToJpeg(file, { quality })` (이미지를 PDF로, 이미지 넣기·서명 넣기의 `embedImage`)
+  - 여러 장 목록: `new ImageBatch({ heic: true })`. 형식 표시가 없는 줄(`type` 없음)은 내용이 HEIC인지 확인하고, 저장은 `saveType()`(JPG)
+  - 촬영 정보만 고칠 때(위치 정보 지우기)는 그림을 풀지 않으므로 libheif가 필요 없다 (목록 썸네일만 libheif)
+- Safari처럼 스스로 읽은 HEIC를 PDF에 넣을 때는 `toEmbeddable`이 PNG가 아니라 JPG로 다시 그린다 (사진이라 PNG는 몇 배 커진다)
 - 대표 그림만, irot·imir 적용, 8비트, Display P3는 색 공간을 달아 sRGB로. 엔진 받기·라이선스·특허는 [HEIC 변환](../../features/image-heic-to-jpg/README.md)
 - 큰 그림을 한꺼번에 풀지 않는다: 처리 워커 풀은 일을 시작할 때 푼다
 
@@ -160,7 +165,7 @@
 - [x] 모든 형식 받기 설정(`anyFormat`), 고르기 안내·못 읽은 안내 바꾸기(`hint`·`broken`)
 - [x] 원본과 결과 비교 화면 (`result`, `CompareSlider`)
 - [x] HEIC를 모든 브라우저에서 (libheif, 2026-10-23) — 형식 변환·HEIC 변환·자르기·모자이크·증명사진·이어 붙이기·이미지를 PDF로
-- [ ] 압축·크기 조절·위치 정보 지우기·이미지 넣기·서명 넣기에서 HEIC
+- [x] 압축·크기 조절·용량 맞추기·위치 정보 지우기·이미지 넣기·서명 넣기에서 HEIC (2026-10-24)
 - [x] 이어 붙이기 (2026-10-22, 긴 PNG 저장 `PngStream`)
 - [x] 자르기·회전 (2026-10-23)
 - [x] 모자이크 (2026-10-23, 원본을 든 워커의 열기·canvas 확인을 `worker-canvas.ts`로 묶음)
@@ -183,8 +188,9 @@
 - `tests/e2e/image-target-size.spec.ts`: 목표 이하로 맞추기(크기도 줄임·화질만), 원본 유지, ZIP, PNG 색 줄이기, 못 맞춤 안내
 - 줄 묶음 저장(`saveDrawing`): 자르기·회전, 모자이크, 이어 붙이기 E2E가 `tests/e2e/canvas-limit.ts`로 한계를 낮춰 JPG가 만들어지고 canvas 저장·원본과 화소가 거의 같은지(평균 차이 2·3 미만), WebP는 PNG·JPG를 권하는지 본다
 - `tests/e2e/image-heic-to-jpg.spec.ts`: libheif 경로 (방향·대표 그림·10비트·P3·깨진 파일)
+- HEIC 열기: 압축·크기 조절·용량 맞추기·위치 정보 지우기·배경 제거·이미지 넣기·서명 넣기 E2E에 `iphone.heic`(위치 정보 지우기는 `located.heic`) 사례가 있다
 - 테스트 파일은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`photo.jpg`, `rotated.jpg`, `screen.png`, `small.jpg`, `broken.png`, `moving.gif`, `green.bmp`,
-  HEIC는 pillow-heif로 `iphone`·`burst`·`deep`·`p3`·`broken.heic` 등)
+  HEIC는 pillow-heif로 `iphone`·`burst`·`deep`·`p3`·`broken`·`located.heic` 등)
 
 ### 직접 확인
 
