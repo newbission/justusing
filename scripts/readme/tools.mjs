@@ -87,7 +87,9 @@ function renderList(locale, { tools, categories, origin, defaultLocale }) {
       const links = inSection.map(
         (tool) => `[${tool.text[locale].name}](${toolUrl(origin, locale, defaultLocale, tool.id)})`,
       );
-      out.push(`| ${sectionText[locale]} | ${links.join(' · ')} |`);
+      // 묶음 이름이 좁은 칸에서 줄바꿈되지 않게
+      const label = sectionText[locale].replaceAll(' ', '&nbsp;');
+      out.push(`| ${label} | ${links.join(' · ')} |`);
     }
     out.push('');
   }
