@@ -61,6 +61,11 @@ export class VideoError extends Error {
   }
 }
 
+/** 비트레이트(bit/s)로 정한 화질. new Quality(숫자)는 비트레이트가 아니라 화질 단계(0~1)라 쓰지 않는다 */
+function bitrate(value: number) {
+  return new Quality({ bitrate: Math.max(1, Math.round(value)) });
+}
+
 function containerOf(format: InputFormat): Container {
   if (format === QTFF) return 'mov';
   if (format === WEBM) return 'webm';
@@ -145,7 +150,7 @@ export async function probe(file: Blob): Promise<VideoInfo> {
         encodable[side] = (await getFirstEncodableVideoCodec(['avc', 'vp9'], {
           ...size,
           frameRate,
-          quality: new Quality(guessBitrate(size.width, size.height, frameRate, 'medium')),
+          quality: bitrate(guessBitrate(size.width, size.height, frameRate, 'medium')),
         })) as EncodeCodec | null;
       }
     }
@@ -192,14 +197,14 @@ function audioFor(container: 'mp4' | 'webm') {
     if (container === 'mp4') {
       if (codec === 'aac' || codec === 'mp3') return {};
       if (await canEncodeAudio('aac', { numberOfChannels: channels, sampleRate: 48000 })) {
-        return { codec: 'aac', quality: new Quality(128_000), numberOfChannels: channels };
+        return { codec: 'aac', quality: bitrate(128_000), numberOfChannels: channels };
       }
       // AAC로 다시 저장하지 못하면 MP4에 들어가는 원래 소리(Opus·FLAC)를 그대로 옮긴다
       return codec === 'opus' || codec === 'flac' ? {} : { discard: true };
     }
     if (codec === 'opus' || codec === 'vorbis') return {};
     if (await canEncodeAudio('opus', { numberOfChannels: channels, sampleRate: 48000 })) {
-      return { codec: 'opus', quality: new Quality(128_000), numberOfChannels: channels };
+      return { codec: 'opus', quality: bitrate(128_000), numberOfChannels: channels };
     }
     return { discard: true };
   };
@@ -258,7 +263,7 @@ async function planCompress(input: Input, job: CompressJob): Promise<Plan> {
     job.shortSide,
   );
   const stats = await track.computePacketStats(120);
-  const quality = new Quality(job.videoBitrate);
+  const quality = bitrate(job.videoBitrate);
   const codec = await getFirstEncodableVideoCodec(['avc', 'vp9'], {
     ...size,
     frameRate: stats.averagePacketRate || 30,
@@ -295,7 +300,7 @@ async function planAudio(input: Input, job: AudioJob): Promise<Plan> {
       needs: 'audio',
       options: {
         ...common,
-        audio: { codec: 'aac', quality: new Quality(192_000), numberOfChannels: channels },
+        audio: { codec: 'aac', quality: bitrate(192_000), numberOfChannels: channels },
       },
     };
   }
