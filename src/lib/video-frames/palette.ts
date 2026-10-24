@@ -34,7 +34,7 @@ export class Indexer {
 
   constructor(palette: Palette, dither: boolean) {
     this.#palette = palette;
-    this.#spread = dither ? 256 / Math.cbrt(Math.max(2, palette.length)) : 0;
+    this.#spread = dither ? 128 / Math.cbrt(Math.max(2, palette.length)) : 0;
   }
 
   #nearest(r: number, g: number, b: number): number {
