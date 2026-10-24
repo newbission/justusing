@@ -38,7 +38,7 @@ import {
   type OutputFormat,
 } from 'mediabunny';
 import { BlobCollector } from './blob-target';
-import { AUDIO_BITRATE, audioPlan } from './plan';
+import { AUDIO_BITRATE, EXTRACT_AAC_BITRATE, audioContainerFor, audioPlan } from './plan';
 import { SHORT_SIDES, guessBitrate, scaledSize } from './sizes';
 import type {
   AudioJob,
@@ -205,16 +205,6 @@ function audioFor(container: 'mp4' | 'webm') {
   };
 }
 
-/** 원래 소리를 다시 인코딩 없이 담을 그릇 */
-function audioContainerFor(codec: string | null): OutputContainer | undefined {
-  if (codec === 'aac') return 'm4a';
-  if (codec === 'mp3') return 'mp3';
-  if (codec === 'opus' || codec === 'vorbis') return 'ogg';
-  if (codec === 'flac') return 'flac';
-  if (codec?.startsWith('pcm-')) return 'wav';
-  return undefined;
-}
-
 interface Plan {
   container: OutputContainer;
   options: Omit<ConversionOptions, 'input' | 'output'>;
@@ -295,7 +285,7 @@ async function planAudio(input: Input, job: AudioJob): Promise<Plan> {
       needs: 'audio',
       options: {
         ...common,
-        audio: { codec: 'aac', quality: bitrate(192_000), numberOfChannels: channels },
+        audio: { codec: 'aac', quality: bitrate(EXTRACT_AAC_BITRATE), numberOfChannels: channels },
       },
     };
   }
