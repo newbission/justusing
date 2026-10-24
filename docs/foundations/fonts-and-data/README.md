@@ -2,7 +2,7 @@
 
 쓴 날 2026-10-16 · 고친 날 2026-10-23
 
-- 쓰는 곳: 글꼴 — PDF 워터마크·머리말·꼬리말·편집·양식 채우기 / 데이터 보관 — 글꼴 + PDF·이미지 글자 인식(OCR, 같은 묶음) + 증명사진 얼굴 찾기
+- 쓰는 곳: 글꼴 — PDF 워터마크·머리말·꼬리말·편집·양식 채우기 / 데이터 보관 — 글꼴 + PDF·이미지 글자 인식(OCR, 같은 묶음) + 증명사진 얼굴 찾기 + 배경 제거(엔진은 증명사진과 같은 파일)
 - 상태: live (글꼴 기반은 2026-10-15 만들고 PR #47로 dev 병합, 2026-10-16)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../frame-isolation/README.md),
   [PDF 공통](../pdf-common/README.md) (글자를 PDF에 넣는 워커), [OCR 도구](../../features/pdf-ocr/README.md),
@@ -30,6 +30,7 @@ HEIC 읽기 엔진(libheif, 압축 전송 약 0.5MB)은 이 방식을 쓰지 않
 | OCR 엔진                            | `public/data/ocr/tesseract-core-simd-lstm.wasm`                                                        | 약 2.9MB                               |
 | OCR 언어 데이터                     | `public/data/ocr/kor.traineddata.gz`, `eng.traineddata.gz`                                             | 약 1.6MB, 3.0MB                        |
 | 얼굴 찾기 엔진·모델                 | `public/data/face/vision_wasm_module_internal.wasm`, `face_landmarker.task`, `selfie_segmenter.tflite` | 약 13.5MB, 3.7MB, 0.25MB               |
+| 배경 제거 모델 (엔진은 위와 같음)   | `public/data/face/magic_touch.tflite`                                                                  | 약 6.2MB                               |
 
 ## 2. 어떻게 만드는지
 
@@ -68,7 +69,8 @@ HEIC 읽기 엔진(libheif, 압축 전송 약 0.5MB)은 이 방식을 쓰지 않
   시작하고 `..`가 없는 것만 받는다
 - 글꼴 경로에는 `?v=<SHA-256 앞 12자>`를 붙인다(`catalog.ts`). 글꼴이 바뀌면 주소가 바뀌어 예전 보관본을 쓰지 않는다
 - 동의 이름: 글꼴은 글꼴마다 `font:<id>`, OCR은 `ocr` (`src/lib/ocr/ocr.ts`의 `OCR_CONSENT`, PDF·이미지 글자 인식이 같이 쓴다), 얼굴 찾기는 `face`
-  (`src/lib/face/face.ts`, 복사는 `scripts/copy-face-data.mjs`, 모델은 `vendor/mediapipe/`)
+  (`src/lib/face/face.ts`, 복사는 `scripts/copy-face-data.mjs`, 모델은 `vendor/mediapipe/`), 배경 제거는 `cutout`
+  (`src/lib/cutout/objects.ts`). 보관소는 주소로 보관하므로 두 묶음이 같이 쓰는 엔진은 한 번만 받는다 (주소는 `src/lib/face/data-files.ts`)
 - 도구 화면을 바깥 페이지 없이 따로 열면(개발 중) 보관 없이 바로 받고, 확인은 똑같이 한다
 - 받을 크기와 '지워졌다' 안내는 `missingData`(`src/frame/data.ts`)로 정한다. 보관되지 않은 파일만 세고, 묶음의 파일이
   모두 없을 때만 지워진 것으로 본다. 일부만 없으면 새로 더해진 파일(증명사진의 배경 모델), 바뀐 파일, 처음 고른 언어다

@@ -414,7 +414,10 @@ Co-Authored-By: ...
         새 도구 HEIC JPG 변환(`/image/heic-to-jpg/`, 화면은 형식 변환과 같은 `ConvertTool`)과 형식 변환·자르기·모자이크·
         증명사진·이어 붙이기·이미지를 PDF로가 HEIC를 연다. LGPL 허가서·안내는 `scripts/copy-libheif-notice.mjs`가
         `public/vendor/libheif/`에 둔다. 압축·크기 조절·위치 정보 지우기는 아직 (docs/features/image-heic-to-jpg)
-  - [ ] 배경 제거(누끼, 모델 데이터 크기를 밝히고 캐시) 등
+  - [x] 배경 제거 (`/image/remove-bg/`, 2026-10-23): 누른 곳(처음에는 가운데)의 물체를 MediaPipe MagicTouch(6.2MB, Apache-2.0)로
+        나눠 남긴다. 엔진은 증명사진과 같은 파일이라 받아 둔 사람은 모델만 받는다(동의 이름 `cutout`). 지우개·되살리기 붓, 가장자리
+        좁히기·넓히기·부드럽게, 투명 PNG·색 배경 JPG, 물체에 맞춰 자르기. 마스크를 원본 크기로 늘려 씌워 원본 크기로 저장한다
+        (`src/lib/cutout/`). 모델 비교와 한계(머리카락·유리)는 docs/features/image-remove-bg
   - [x] 가이드 글 (`/guide/`, 2026-10-15): 검색 유입과 광고 심사용. 첫 6편 (PDF 압축·합치기·이미지로·서명,
         이미지 압축·크기 조절). 도구를 만들 때마다 그 도구의 가이드를 함께 쓴다
 - [ ] 10단계: 텍스트·CSV 도구 (2026-10-23) — 카테고리 `text`(`/data/`는 데이터 파일 자리라 피함). 도구마다 멈추고 확인
