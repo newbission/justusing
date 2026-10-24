@@ -29,7 +29,7 @@ CLAUDE.md의 "격리 frame 안에서 지킬 것"을 어기면 배포 환경에�
 
 ### 그 밖에
 
-- 사이트명·도메인·광고 설정을 `src/site.config.ts` 밖에 하드코딩 (저장소 첫 화면인 `README.md`의 사이트 링크는 예외)
+- 사이트명·도메인·광고 설정을 `src/site.config.ts` 밖에 하드코딩 (저장소 첫 화면인 `README.md`·영어판 `README.en.md`의 사이트 링크는 예외)
 - 색을 `src/styles/tokens.css`의 토큰 대신 직접 쓰는 CSS, 키보드로 조작할 수 없거나 라벨이 없는 UI
 - 새 도구·기능에 E2E가 없을 때
 
