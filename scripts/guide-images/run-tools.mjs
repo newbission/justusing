@@ -36,6 +36,7 @@ const SAMPLES = {
     product: '예시-상품사진.jpg',
     utf8Csv: '예시-주문목록-UTF8.csv',
     heic: '예시-아이폰사진2.heic',
+    ballClip: '예시-공튀기기.mp4',
   },
   en: {
     report: 'sample-report.pdf',
@@ -56,6 +57,7 @@ const SAMPLES = {
     product: 'sample-product-photo.jpg',
     utf8Csv: 'sample-orders-utf8.csv',
     heic: 'sample-iphone-photo-2.heic',
+    ballClip: 'sample-bouncing-ball.mp4',
   },
 };
 /** 결과에 들어가는 글자 (그림의 언어에 맞춘다) */
@@ -542,6 +544,27 @@ const JOBS = {
         ),
       );
     await writeFile(`${out}ocr-lines.json`, JSON.stringify(lines));
+  },
+  // 동영상을 GIF로: 견본 4초를 설정만 바꿔 여러 번 만든다 (용량 비교). 이름은 render.py의 GIF_VARIANTS와 같게
+  async 'video-to-gif'({ sample, out }) {
+    for (const [name, format, width, fps, colors, dither] of [
+      ['gif-640-20-256', 'GIF', 640, 20, 256, true],
+      ['gif-320-20-256', 'GIF', 320, 20, 256, true],
+      ['gif-320-10-256', 'GIF', 320, 10, 256, true],
+      ['gif-320-10-64', 'GIF', 320, 10, 64, false],
+      ['webp-320-10', 'WebP', 320, 10, 0, false],
+    ]) {
+      await open('/video/to-gif/', sample('ballClip'));
+      if (format === 'WebP') await frame.getByText('움직이는 WebP', { exact: true }).click();
+      await frame.getByText(`${width}px`, { exact: true }).click();
+      await frame.getByRole('slider', { name: '초당 장면 수' }).fill(String(fps));
+      if (format === 'GIF') {
+        await frame.getByText(`${colors}색`, { exact: true }).click();
+        await frame.getByLabel(/디더링/).setChecked(dither);
+      }
+      await frame.getByRole('button', { name: `${format} 만들기` }).click();
+      await save(`${format} 받기`, `${out}${name}.${format.toLowerCase()}`);
+    }
   },
 };
 
