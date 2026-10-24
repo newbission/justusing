@@ -59,6 +59,8 @@ const DOCS = {
   'features/image-heic-to-jpg': { scopes: ['image-heic-to-jpg'], prs: [] },
   'features/image-ocr': { scopes: ['image-ocr', 'ocr'], prs: [] },
   'features/text-csv-encoding': { scopes: ['text-csv-encoding'], prs: [] },
+  'features/video-to-gif': { scopes: ['video-to-gif'], prs: [] },
+  'features/video-frame-capture': { scopes: ['video-frame-capture'], prs: [] },
   // 기반 (여러 도구·페이지가 같이 쓰는 것)
   'foundations/frame-isolation': { scopes: ['frame'], prs: [40] },
   'foundations/pdf-common': { scopes: ['pdf'], prs: [76, 77] },
