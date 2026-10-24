@@ -81,6 +81,27 @@ export const CATEGORIES = {
       encoding: { ko: '인코딩', en: 'Encoding' },
     },
   },
+  video: {
+    text: {
+      ko: {
+        name: '동영상',
+        title: '무료 동영상 도구 - 동영상 GIF 만들기·장면 캡처, 업로드 없이',
+        description:
+          '동영상을 업로드 없이 GIF로 만들고, 원하는 장면을 사진으로 저장하는 도구. 브라우저가 재생하는 동영상을 이 기기 안에서 처리합니다',
+      },
+      en: {
+        name: 'Video',
+        title: 'Free video tools - Video to GIF and frame capture without uploading',
+        description:
+          'Turn videos into GIFs and save frames as images without uploading. Any video your browser can play is processed on this device',
+      },
+    },
+    sections: {
+      edit: { ko: '편집', en: 'Edit' },
+      optimize: { ko: '용량', en: 'Size' },
+      convert: { ko: '변환·추출', en: 'Convert & extract' },
+    },
+  },
 } as const satisfies Record<
   string,
   { text: Record<Locale, CategoryText>; sections: Record<string, SectionText> }
