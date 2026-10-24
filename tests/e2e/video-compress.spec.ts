@@ -49,6 +49,13 @@ test('목표 용량으로 줄이고, 소리보다 작은 용량은 막는다', a
   const frame = await openVideoTool(page, 'compress', 'clip.webm');
   await frame.getByText('목표 용량으로', { exact: true }).click();
   const target = frame.getByRole('textbox', { name: '목표 용량 (MB)' });
+  // 비었거나 숫자가 아니면 입력 오류 (소리 때문에 넘친다고 하지 않는다)
+  for (const text of ['', 'abc', '0']) {
+    await target.fill(text);
+    await expect(frame.getByText('목표 용량을 MB 단위 숫자로 적어 주세요 (예: 25).')).toBeVisible();
+    await expect(frame.getByText(/소리만으로도 넘칩니다/)).toHaveCount(0);
+    await expect(frame.getByRole('button', { name: '줄이기', exact: true })).toBeDisabled();
+  }
   await target.fill('0.001');
   await expect(
     frame.getByText('이 용량은 소리만으로도 넘칩니다. 더 크게 적어 주세요.'),

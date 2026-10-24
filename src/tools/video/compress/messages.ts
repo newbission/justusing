@@ -31,6 +31,7 @@ const ko = {
     '이 용량에 맞게 비트레이트를 정합니다. 인코더에 따라 조금 넘거나 모자랄 수 있으니 제한보다 10% 정도 작게 적으세요.',
   targetTooSmall: '이 용량으로는 화질이 많이 떨어집니다. 해상도를 낮추거나 용량을 늘려 보세요.',
   targetImpossible: '이 용량은 소리만으로도 넘칩니다. 더 크게 적어 주세요.',
+  targetInvalid: '목표 용량을 MB 단위 숫자로 적어 주세요 (예: 25).',
   outputTitle: '저장 형식',
   outputMp4: '화면은 H.264, 그릇은 MP4로 저장합니다 (어디서나 열림).',
   outputWebm:
@@ -80,6 +81,7 @@ const en: typeof ko = {
   targetTooSmall:
     'The quality will drop a lot at this size. Lower the resolution or allow a larger size.',
   targetImpossible: 'The sound alone is larger than this. Please enter a larger size.',
+  targetInvalid: 'Enter the target size as a number in MB (for example 25).',
   outputTitle: 'Format',
   outputMp4: 'The picture is saved as H.264 in an MP4 file (opens everywhere).',
   outputWebm:
