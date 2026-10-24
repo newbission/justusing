@@ -74,7 +74,10 @@ const href = guide && localizePath(`/guide/${slugOf(guide)}/`, locale);
       try {
         const response = await fetch(this.dataset.href!);
         if (!response.ok) throw new Error(String(response.status));
-        const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+        // 가이드 페이지의 <style>은 빼고 읽는다. 본문만 옮겨 넣으므로 필요 없고, 읽기만 해도 브라우저가 이 페이지의
+        // CSP(이 페이지의 스타일 해시만 허용)로 검사해 위반으로 알린다
+        const html = (await response.text()).replace(/<style\b[^>]*>[\s\S]*?<\/style>/g, '');
+        const page = new DOMParser().parseFromString(html, 'text/html');
         const article = page.querySelector('[data-doc-body]');
         if (!article) throw new Error('본문 없음');
         for (const node of article.querySelectorAll('[data-dialog-skip]')) node.remove();
