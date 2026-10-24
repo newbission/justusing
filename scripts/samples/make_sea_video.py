@@ -4,7 +4,9 @@
   python3 scripts/samples/make_sea_video.py   (Pillow, ffmpeg 필요)
 
 - 그림과 소리는 모두 이 스크립트가 직접 만든다 (해 지는 바다를 지나는 돛단배 그림 + 짧은 선율과 파도 소리)
-- 12초, 1280×720, 30fps, H.264 + AAC. 키프레임은 2초마다 (빠르게 자르기의 키프레임 설명과 맞춘다)
+- 10초, 1920×1080(1280×720으로 그려 키움), 30fps, H.264 약 2Mbps + AAC. 휴대폰 영상처럼 비트레이트를 넉넉히 써서
+  용량 줄이기에서 줄어드는 것이 보이게 한다. 키프레임은 2초마다 (빠르게 자르기의 키프레임 설명과 맞춘다)
+- 두 언어 파일은 내용이 같아 저장소에는 한 번만 저장된다
 - 글자가 없어 두 언어가 같은 내용을 쓴다 (언어 폴더마다 이름만 다르다)
 - 같은 입력이면 같은 그림이 나오게 난수 씨앗을 고정한다
 
@@ -27,7 +29,7 @@ NAMES = {'ko': '예시-바다영상.mp4', 'en': 'sample-sea-video.mp4'}
 
 W, H = 1280, 720
 FPS = 30
-SECONDS = 12
+SECONDS = 10
 RATE = 48000
 HORIZON = 430
 
@@ -152,7 +154,9 @@ def main():
                 'ffmpeg', '-v', 'error', '-y',
                 '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', str(FPS), '-i', '-',
                 '-i', audio,
-                '-c:v', 'libx264', '-preset', 'slow', '-crf', '24', '-pix_fmt', 'yuv420p',
+                '-vf', 'scale=1920:1080:flags=lanczos',
+                '-c:v', 'libx264', '-preset', 'slow', '-b:v', '2M', '-maxrate', '2.5M', '-bufsize', '4M',
+                '-pix_fmt', 'yuv420p',
                 '-g', str(FPS * 2), '-keyint_min', str(FPS * 2), '-sc_threshold', '0',
                 '-c:a', 'aac', '-b:a', '128k',
                 '-movflags', '+faststart', '-map_metadata', '-1', '-shortest', target,
