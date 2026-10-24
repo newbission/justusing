@@ -7,6 +7,8 @@ import type { VideoInfo } from './types';
 
 /** 다시 저장한 소리의 비트레이트 (bit/s) */
 export const AUDIO_BITRATE = 128_000;
+/** 소리만 뽑아 M4A(AAC)로 다시 저장할 때의 비트레이트. 소리만 듣는 파일이라 넉넉히 */
+export const EXTRACT_AAC_BITRATE = 192_000;
 
 export type AudioPlan = 'copy' | 'aac' | 'opus' | 'drop';
 
@@ -26,6 +28,18 @@ export function audioPlan(
   }
   if (codec === 'opus' || codec === 'vorbis') return 'copy';
   return encodable.opus ? 'opus' : 'drop';
+}
+
+/** 원래 소리를 다시 인코딩 없이 담을 그릇 (소리 뽑기). 없으면 다시 저장해야 한다 */
+export function audioContainerFor(
+  codec: string | null | undefined,
+): 'm4a' | 'mp3' | 'ogg' | 'flac' | 'wav' | undefined {
+  if (codec === 'aac') return 'm4a';
+  if (codec === 'mp3') return 'mp3';
+  if (codec === 'opus' || codec === 'vorbis') return 'ogg';
+  if (codec === 'flac') return 'flac';
+  if (codec?.startsWith('pcm-')) return 'wav';
+  return undefined;
 }
 
 /** 원본 동영상(화면)의 비트레이트 어림: 파일 전체에서 소리를 뺀다 */
