@@ -3,7 +3,7 @@ title: How to resize an image (change its pixel size)
 description: Change the width and height of photos by percentage or in pixels. How to make many images the same size, the difference between keeping the aspect ratio and an exact size, and how size affects file size.
 tool: image/resize
 published: 2026-10-15
-updated: 2026-10-19
+updated: 2026-10-24
 order: 3
 ---
 
@@ -56,7 +56,7 @@ Enter both the width and the height, and the image is made **exactly** that size
 
 ## Quality and format
 
-- Images are saved in their original format (JPG, PNG or WebP).
+- Images are saved in their original format (JPG, PNG or WebP). iPhone HEIC photos are saved as JPG, because browsers cannot save HEIC.
 - JPG and WebP are saved at high quality, so nothing changes visibly besides the size.
 - PNG is saved without loss, and transparent areas stay transparent.
 - Big reductions are done in several smaller steps so fine lines do not break up or look jagged.
