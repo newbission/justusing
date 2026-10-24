@@ -78,6 +78,8 @@ export type FlowMark =
   | 'stitch'
   /** 사진 위 잘게 나뉜 칸 (모자이크) */
   | 'mosaic'
+  /** 체크무늬(투명) 위에 남은 사람 (배경 제거) */
+  | 'cutout'
   /** 표 칸 속 글자 (CSV) */
   | 'table'
   /** 표 칸 속 깨진 글자 (인코딩이 맞지 않는 CSV) */

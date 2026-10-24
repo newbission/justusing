@@ -159,6 +159,25 @@ function marks(mark: FlowMark): {
         accent: ['M10 9h12v12H10z'],
         texts: [],
       };
+    case 'cutout':
+      return {
+        lines: [],
+        fills: [],
+        // 투명한 배경을 뜻하는 체크무늬 (옅게)
+        photo: [
+          'M5 12h5v5H5z',
+          'M15 12h5v5h-5z',
+          'M10 17h5v5h-5z',
+          'M20 17h5v5h-5z',
+          'M5 22h5v5H5z',
+          'M15 22h5v5h-5z',
+          'M10 27h5v5h-5z',
+          'M20 27h5v5h-5z',
+        ],
+        // 남은 사람 (머리와 어깨)
+        accent: ['M17 13a3.5 3.5 0 1 0 .01 0', 'M9.5 34v-2a7.5 7.5 0 0 1 15 0v2'],
+        texts: [],
+      };
     case 'table':
       return {
         lines: ['M5 12h24v24H5z', 'M5 20h24', 'M5 28h24', 'M15 12v24'],
