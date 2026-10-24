@@ -1,6 +1,6 @@
 # 사진 위치 정보 지우기 (`image/remove-location`)
 
-쓴 날 2026-10-20 · 고친 날 2026-10-22
+쓴 날 2026-10-20 · 고친 날 2026-10-24
 
 - 주소: `/image/remove-location/` (영어 `/en/image/remove-location/`)
 - 상태: live (2026-10-20 배포, PR #116·#117)
@@ -10,7 +10,7 @@
 ## 1. 어떤 기능인지
 
 - 사진을 보내거나 올리기 전에 촬영 위치(GPS)와 찍은 날짜·기기 같은 정보를 지운다
-- 입력: JPG·PNG·WebP 여러 장. 넣으면 목록에 사진마다 위치(위도·경도)·찍은 날짜·기기를 보여 준다
+- 입력: JPG·PNG·WebP·HEIC 여러 장 (HEIC는 2026-10-24). 넣으면 목록에 사진마다 위치(위도·경도)·찍은 날짜·기기를 보여 준다
 - 방식 두 가지
   - **모든 정보 지우기**(기본): 그림을 그리는 데 필요한 것(색 프로필·밀도·Adobe 색 변환, PNG의 감마·색 공간 등)만 남기고
     EXIF·XMP·IPTC·설명 글·고친 시각을 모두 뺀다. 사진이 눕지 않게 방향(Orientation) 한 칸만 새로 적는다
@@ -18,9 +18,10 @@
     찍은 날짜·기기 등 나머지 EXIF는 남긴다
 - 출력: 한 장은 `<이름>_정보삭제.<원래 확장자>`(위치만: `_위치삭제`), 여러 장은 `사진_정보삭제.zip`.
   지울 것이 없던 사진은 원본 그대로 ZIP에 넣는다
-- **다시 압축하지 않는다**: 정보 조각만 빼고 다시 잇는다. 그림 자료는 한 바이트도 바뀌지 않는다
+- **다시 압축하지 않는다**: 정보 조각만 빼고 다시 잇는다. 그림 자료는 한 바이트도 바뀌지 않는다. HEIC는 정보 칸을 그 자리에서 비워 파일 크기까지 같다
 - 하지 않는 것·한계
-  - HEIC는 받지 않는다 (아이폰 Safari는 사진 보관함에서 고르면 보통 JPG로 바꿔 넘긴다). HEIC 도구 때 다시 본다
+  - HEIC에 그림도 EXIF·XMP도 아닌 항목·상자(모르는 항목 종류, 압축한 XMP, 동영상 트랙 `moov`, 글 속성 `udes` 등)가 있으면 고치지 않고 실패로 둔다
+  - HEIC의 HDR 밝기 그림(게인 맵)은 그림이라 남지만, 그 설정이 적힌 XMP·제조사 메모가 비워져 HDR로 보이지 않을 수 있다 (FAQ에 밝힘)
   - JPEG 그림 끝(EOI) 뒤에 덧붙은 자료(움직이는 사진의 영상, MPF의 다른 그림)는 두 방식 모두 뺀다. 거기에도 촬영 정보가 있을 수 있다
     - 안드로이드 Ultra HDR의 밝기 정보(게인 맵)도 여기 붙어 있어, HDR 사진은 일반(SDR) 사진이 된다. 그림이나 영상이 붙은 사진
       (`appended`: 뒤 자료에 `FF D8 FF`나 `ftyp`가 있음)이 있으면 지우기 전에 설정 아래에 알린다 (Codex #116)
@@ -32,17 +33,18 @@
 
 ### 파일
 
-| 파일                                          | 역할                                                                                        |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `src/tools/image/remove-location/meta.ts`     | 이름·설명·아이콘(위치 핀에 빗금)·관련 도구, 흐름 그림 `location` → `photo`                  |
-| `src/tools/image/remove-location/content.ts`  | 쓰임새·사용법·FAQ (한·영)                                                                   |
-| `src/tools/image/remove-location/messages.ts` | 화면 문구 (한·영)                                                                           |
-| `src/tools/image/remove-location/App.svelte`  | `ImageBatchTool` 위의 화면: 방식 고르기, 줄마다 정보·결과, 받기                             |
-| `src/lib/image/photo-metadata.ts`             | `readPhotoInfo()`·`cleanPhoto()`: JPG·PNG·WebP의 정보 조각을 읽고 고친다 (EXIF는 직접 읽음) |
-| `src/lib/image/metadata.ts` + `.worker.ts`    | `readMetadata()`·`removeMetadata()`: 워커에서 읽고 지운 뒤 결과를 다시 읽어 함께 넘긴다     |
-| `src/lib/image/jpeg-metadata.ts`              | `rewriteJpeg()`: JPEG 정보 조각마다 두기·빼기·바꾸기. `stripJpegMetadata()`도 이 위에 있다  |
-| `tests/e2e/image-remove-location.spec.ts`     | E2E                                                                                         |
-| `src/content/guides/*/photo-location.md`      | 가이드 글 (그림: 견본을 두 방식으로 지운 결과의 정보 표)                                    |
+| 파일                                          | 역할                                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `src/tools/image/remove-location/meta.ts`     | 이름·설명·아이콘(위치 핀에 빗금)·관련 도구, 흐름 그림 `location` → `photo`                       |
+| `src/tools/image/remove-location/content.ts`  | 쓰임새·사용법·FAQ (한·영)                                                                        |
+| `src/tools/image/remove-location/messages.ts` | 화면 문구 (한·영)                                                                                |
+| `src/tools/image/remove-location/App.svelte`  | `ImageBatchTool` 위의 화면: 방식 고르기, 줄마다 정보·결과, 받기                                  |
+| `src/lib/image/photo-metadata.ts`             | `readPhotoInfo()`·`cleanPhoto()`: JPG·PNG·WebP·HEIC의 정보 조각을 읽고 고친다 (EXIF는 직접 읽음) |
+| `src/lib/image/heif-metadata.ts`              | HEIC의 EXIF·XMP 항목 자리(`iinf`·`iloc`·`idat`) 찾기, 같은 길이로 덮어쓰기, 모르는 항목 알리기   |
+| `src/lib/image/metadata.ts` + `.worker.ts`    | `readMetadata()`·`removeMetadata()`: 워커에서 읽고 지운 뒤 결과를 다시 읽어 함께 넘긴다          |
+| `src/lib/image/jpeg-metadata.ts`              | `rewriteJpeg()`: JPEG 정보 조각마다 두기·빼기·바꾸기. `stripJpegMetadata()`도 이 위에 있다       |
+| `tests/e2e/image-remove-location.spec.ts`     | E2E                                                                                              |
+| `src/content/guides/*/photo-location.md`      | 가이드 글 (그림: 견본을 두 방식으로 지운 결과의 정보 표)                                         |
 
 ### 처리 흐름
 
@@ -62,6 +64,15 @@
   - 모두: `eXIf`·`tEXt`·`zTXt`·`iTXt`·`tIME`을 빼고, 방향이 1이 아니면 첫 IDAT 앞에 방향만 든 `eXIf`(CRC 새로 계산)
   - 위치만: `eXIf`를 `safeExif`로 새로 만들고 CRC를 다시 계산, `tIME`은 남긴다. 글 조각은 모두 뺀다(XMP·`Raw profile type iptc` 같은 프로필을 담는다)
   - 두 방식 모두 그림용 보조 조각(투명·색·감마·밀도·HDR·APNG)과 필수 조각(첫 글자 대문자)만 남기고, 알 수 없는 보조 조각은 뺀다
+- **HEIC** (2026-10-24): 상자(ISOBMFF)를 읽어 `meta`의 항목 목록(`iinf`)과 위치표(`iloc`, 파일 안 또는 `idat` 안)로 EXIF(`Exif`)·XMP(`mime`
+  `application/rdf+xml`) 항목의 바이트 자리를 찾는다 (`heif-metadata.ts`). 항목 길이를 바꾸면 그 뒤 그림 조각의 위치를 모두 고쳐야 해서
+  **길이를 그대로 두고 그 자리에서 덮어쓴다**
+  - EXIF: 앞 4바이트(TIFF까지 건너뛸 수) 뒤의 TIFF 자리에 새 TIFF(위치만: `safeExif`, 모두: 방향만 또는 빈 TIFF)를 쓰고 나머지는 0으로 지운다
+    (예전 GPS 바이트가 파일에 남지 않게). 새 TIFF가 더 크면 실패. 읽지 못하는 EXIF는 통째로 0
+  - XMP: 두 방식 모두 빈 XMP(`<x:xmpmeta xmlns:x="adobe:ns:meta/"/>`)와 공백으로 덮는다 (JPG에서 XMP 조각을 빼는 것과 같다)
+  - 허용 목록: 맨 바깥 상자는 `ftyp`·`meta`·`mdat`·`free`·`skip`, `meta` 안은 `hdlr`·`dinf`·`pitm`·`iinf`·`iloc`·`iref`·`iprp`·`idat`·`grpl`,
+    항목은 그림 종류(`hvc1`·`grid`·`iden`·`tmap` 등)·EXIF·XMP만. 그 밖의 것이 있으면 `unknown`이라 고치지 않는다
+  - 그림을 풀지 않으므로 libheif가 필요 없다 (크롬에서 목록 썸네일을 그릴 때만 받는다)
 - **WebP**: RIFF 조각을 읽는다. `EXIF`·`XMP `를 빼거나 고치고, VP8X 머리의 표시 비트(EXIF 0x08, XMP 0x04)와 RIFF 크기를 맞춘다.
   WebP EXIF 앞에 `Exif\0\0`을 붙인 프로그램도 있어 둘 다 읽는다
 
@@ -82,6 +93,9 @@
 - **'모두'가 기본**: 남에게 보내는 사진에는 위치 말고도 기기 일련번호·편집 기록 같은 정보가 있을 수 있다. 날짜순 정리가 필요한 사람만 '위치만'을 고른다
 - **방향은 남긴다**: 휴대폰 사진은 화소는 가로로 두고 EXIF 방향으로 세우는 경우가 많아, 지우면 사진이 눕는다
 - **덧붙은 자료는 두 방식 모두 뺀다**: 움직이는 사진의 영상(MP4)에도 위치가 들어갈 수 있다. 그 안을 고치는 대신 통째로 뺀다
+- **HEIC는 JPG로 바꾸지 않고 그 자리에서 고친다** (2026-10-24): JPG로 바꾸면 위치는 확실히 빠지지만 '다시 저장하지 않는다'는 약속이 깨지고
+  화질·용량이 바뀐다. 위치표 길이를 건드리지 않고 정보 항목 안만 덮으면 그림·구조는 그대로라 안전하다고 보았다. 대신 모르는 항목이
+  있으면 고치지 않고(위치가 거기 있을 수 있다), 결과는 같은 읽기 코드로 다시 확인한다
 - **지운 뒤 다시 읽어 확인한다**: 파일 구조가 예상과 다르면 지우지 못한 채 '완료'로 보일 수 있어, 결과를 같은 읽기 코드로 다시 확인한다
 - **목록에 정보를 먼저 보여 준다**: 내 사진에 무엇이 남아 있는지 보는 것만으로도 쓰임새가 있고, 지운 뒤 차이를 알 수 있다
 
@@ -101,7 +115,7 @@
 - [x] E2E (로컬 처리 약속 `expectLocalOnly` 포함)
 - [x] `npm run build` 후 실제 배포 방식(wrangler)으로 확인, 390×844 휴대폰 화면 확인
 - [x] `status: 'live'`, 이 문서와 `CLAUDE.md` 진행 상황 갱신
-- [ ] HEIC (HEIC 도구를 만들 때)
+- [x] HEIC (2026-10-24, EXIF·XMP 항목을 같은 길이로 그 자리에서 덮어쓰기)
 
 ## 4. 검증
 
@@ -114,11 +128,15 @@
   - 지울 정보가 없는 사진: 원본 그대로 두고 알림, 다운로드 버튼 없음
   - EXIF가 머리 4바이트에서 끝난 사진: 그 조각만 빼고 지움, 그림은 그대로 열림
   - 방식을 바꾸면 이전 결과를 버림
-- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`)
+  - HEIC(`located.heic`): 위치만 지우면 HEIC 그대로 날짜·기기가 남고 GPS·XMP·자유 글이 없으며, 모두 지우면 날짜·기기도 없다.
+    두 방식 모두 크기가 같고 정보 항목 밖은 한 바이트도 바뀌지 않는다, 로컬 처리
+- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`)
 
 ### 직접 확인
 
 - 2026-10-20 크롬(빌드 결과): 1280·390 폭 화면, 견본 '예시 파일로 해 보기'·따라 하기
+- 2026-10-24 HEIC: `located.heic`와 실제 아이폰 11 HEIC(공개 시험 파일), 아이폰 사진 한 장(구조만 봄: `ftyp,meta,mdat`, 항목 `hvc1`·`grid`·`Exif`·`mime`)에서
+  두 방식 모두 고쳐지고 위치가 남지 않음, 결과를 pillow-heif로 다시 열어 그림이 열리고 EXIF는 남길 칸만, XMP는 비었는지 확인
 - 2026-10-20 결과 파일을 Pillow로 다시 열어 GPS 칸이 비고 그림이 그대로 열리는지 확인 (JPG·PNG·WebP), EXIF 자유 글(설명·메모)이 빠지고 날짜·기기·렌즈·노출은 남는지 확인
 
 ### 히스토리
