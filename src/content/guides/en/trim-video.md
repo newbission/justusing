@@ -2,7 +2,7 @@
 title: Trimming video - fast vs precise trimming and key frames
 description: How to cut the start and end of a video in seconds without losing quality, and why a trimmed video sometimes starts a little before the point you chose. What key frames are and when to pick trimming without re-encoding or precise trimming.
 tool: video/trim
-published: 2026-10-24
+published: 2026-10-23
 order: 30
 ---
 

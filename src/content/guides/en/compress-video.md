@@ -2,7 +2,7 @@
 title: How to make a video smaller - understanding resolution and bitrate
 description: How to shrink a phone video that is too large for email or chat apps while keeping it watchable. What decides a video's size, why lowering the resolution saves so much, and how to work out a target size.
 tool: video/compress
-published: 2026-10-24
+published: 2026-10-23
 order: 29
 ---
 
