@@ -22,6 +22,8 @@
   const t = pick(MESSAGES);
   const common = pick(VIDEO_MESSAGES);
   const LEVELS: QualityLevel[] = ['high', 'medium', 'low'];
+  /** 목표 용량의 1MB (바이트) */
+  const MB = 1_000_000;
 
   let video = $state.raw<LoadedVideo>();
   let side = $state<number>(0);
@@ -46,7 +48,8 @@
   const container = $derived<'mp4' | 'webm'>(codec === 'vp9' ? 'webm' : 'mp4');
   const targetBytes = $derived.by(() => {
     const value = Number(targetText.replace(',', '.'));
-    return Number.isFinite(value) && value > 0 ? value * 1024 * 1024 : 0;
+    // 1MB = 1,000,000바이트 (이미지 용량 맞추기와 같게, 메일·업로드 제한은 대개 이렇게 센다)
+    return Number.isFinite(value) && value > 0 ? value * MB : 0;
   });
   const setting = $derived<CompressSetting>(
     mode === 'quality' ? { mode, level } : { mode, bytes: targetBytes },
@@ -82,7 +85,7 @@
       : (available.find((option) => loaded.info.encodable[option]) ?? preferred);
     mode = 'quality';
     level = 'medium';
-    targetText = String(Math.max(1, Math.round((loaded.info.size / 1024 / 1024) * 0.5)));
+    targetText = String(Math.max(1, Math.round((loaded.info.size / MB) * 0.5)));
   }
 
   function onclose() {

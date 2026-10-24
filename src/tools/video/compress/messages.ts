@@ -28,7 +28,7 @@ const ko = {
   } satisfies Record<QualityLevel, string>,
   targetLabel: '목표 용량 (MB)',
   targetHelp:
-    '이 용량에 맞게 비트레이트를 정합니다. 인코더에 따라 조금 넘거나 모자랄 수 있으니 제한보다 10% 정도 작게 적으세요.',
+    '이 용량에 맞게 비트레이트를 정합니다 (1MB = 1,000,000바이트). 인코더에 따라 조금 넘거나 모자랄 수 있으니 제한보다 10% 정도 작게 적으세요.',
   targetTooSmall: '이 용량으로는 화질이 많이 떨어집니다. 해상도를 낮추거나 용량을 늘려 보세요.',
   targetImpossible: '이 용량은 소리만으로도 넘칩니다. 더 크게 적어 주세요.',
   targetInvalid: '목표 용량을 MB 단위 숫자로 적어 주세요 (예: 25).',
@@ -77,7 +77,7 @@ const en: typeof ko = {
   },
   targetLabel: 'Target size (MB)',
   targetHelp:
-    'The bitrate is set to fit this size. The encoder may land a little above or below, so aim about 10% under your limit.',
+    'The bitrate is set to fit this size (1 MB = 1,000,000 bytes). The encoder may land a little above or below, so aim about 10% under your limit.',
   targetTooSmall:
     'The quality will drop a lot at this size. Lower the resolution or allow a larger size.',
   targetImpossible: 'The sound alone is larger than this. Please enter a larger size.',

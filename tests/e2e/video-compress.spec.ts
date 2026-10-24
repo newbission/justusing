@@ -69,7 +69,8 @@ test('목표 용량으로 줄이고, 소리보다 작은 용량은 막는다', a
   const file = await runAndDownload(page, frame, '줄이기', '받기');
   expect(file.name).toBe('clip_줄임.mp4');
   // 인코더가 목표를 조금 넘을 수 있다
-  expect(file.bytes.length).toBeLessThan(0.15 * 1024 * 1024 * 1.4);
+  // 1MB = 1,000,000바이트
+  expect(file.bytes.length).toBeLessThan(0.15 * 1_000_000 * 1.4);
   const facts = await inspect(file.bytes);
   expect(facts.video).toMatchObject({ codec: 'avc', width: 640, height: 360 });
   // Opus 소리는 AAC로 다시 저장한다 (AAC로 저장하지 못하는 브라우저는 MP4에 들어가는 Opus를 그대로 옮긴다)
