@@ -18,11 +18,11 @@ export const CUTOUT_FILES: DataFile[] = [MEDIAPIPE_ENGINE, OBJECT_MODEL];
 export type ObjectsRequest =
   | { id: number; type: 'init'; engine: Uint8Array; model: Uint8Array }
   | { id: number; type: 'image'; bitmap: ImageBitmap }
-  | { id: number; type: 'segment'; point: Point };
+  | { id: number; type: 'segment'; points: Point[] };
 
 export type ObjectsResponse =
   | { id: number; kind: 'ready' }
-  | { id: number; kind: 'mask'; mask: Mask }
+  | { id: number; kind: 'mask'; mask: Mask; coverage: number }
   | { id: number; kind: 'error'; message: string };
 
 let nextId = 0;
@@ -77,11 +77,14 @@ export class ObjectFinder {
     await this.call({ id: nextId++, type: 'image', bitmap }, [bitmap]);
   }
 
-  /** 마지막으로 넘긴 사진에서 point가 가리키는 물체의 마스크 (사진과 같은 크기) */
-  async segment(point: Point): Promise<Mask> {
-    const response = await this.call({ id: nextId++, type: 'segment', point });
+  /**
+   * 마지막으로 넘긴 사진에서 점들이 가리키는 물체를 모두 남긴 마스크 (사진과 같은 크기)와,
+   * 그중 물체로 볼 만한 곳(절반 넘게 확신)의 비율
+   */
+  async segment(points: Point[]): Promise<{ mask: Mask; coverage: number }> {
+    const response = await this.call({ id: nextId++, type: 'segment', points });
     if (response.kind !== 'mask') throw new Error('unexpected response');
-    return response.mask;
+    return { mask: response.mask, coverage: response.coverage };
   }
 
   dispose() {
