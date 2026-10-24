@@ -3,7 +3,8 @@
 쓴 날 2026-10-23 · 고친 날 2026-10-23
 
 - 쓰는 곳: [동영상 자르기](../../features/video-trim/README.md), [용량 줄이기](../../features/video-compress/README.md),
-  [소리 추출](../../features/video-extract-audio/README.md)
+  [소리 추출](../../features/video-extract-audio/README.md). 동영상을 GIF로·장면 캡처는 `<video>`·canvas로 장면을 뽑는
+  따로 된 기반(`src/lib/video-frames/`)을 쓴다 (WebCodecs·mediabunny를 쓰지 않음)
 - 상태: PR 진행 중 (feat/video-tools)
 - 관련 문서: [히스토리](./history.md), [격리 frame](../frame-isolation/README.md)
 
@@ -39,7 +40,7 @@
 | `src/lib/video/SingleVideoTool.svelte`                         | 공통 틀. `needs`('video'·'audio') 트랙이 없거나 코덱을 모르면 열지 않고 알린다. 미리보기용 blob URL을 만들고 닫을 때 해제                     |
 | `src/lib/video/job.svelte.ts`                                  | `VideoJobRunner`(설정 key별 결과·실패, 그만두기, 늦게 온 결과 버리기), `progressText()`                                                       |
 | `src/lib/video/messages.ts`, `time.ts`, `files.ts`, `types.ts` | 공통 문구·코덱 이름, 시간 보이기·읽기(`1:05.5`, `65.5`), 결과 파일 이름, 주고받는 타입                                                        |
-| `src/frame/FrameLayout.astro`                                  | frame CSP에 `media-src blob:` (미리보기 `<video>`가 frame 안에서 만든 blob URL만 재생)                                                        |
+| `src/frame/FrameLayout.astro`                                  | 동영상 카테고리 frame에만 CSP `media-src blob:` (미리보기 `<video>`, GIF·장면 캡처와 같이 씀)                                                 |
 | `src/styles/tokens.css`                                        | `--color-video`: 미리보기 바탕(두 테마 같은 검정)                                                                                             |
 
 ### 처리 흐름
