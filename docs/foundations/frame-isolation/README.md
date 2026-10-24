@@ -1,6 +1,6 @@
 # 도구 격리 frame (`src/frame/`, `ToolFrame`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-23
+쓴 날 2026-10-16 · 고친 날 2026-10-24
 
 - 쓰는 곳: 모든 도구 페이지 (`/<카테고리>/<이름>/` 안의 `/<카테고리>/<이름>/frame/`)
 - 상태: 3단계(2026-10-10)부터 모든 도구의 바탕. Safari 수정은 PR #40 (2026-10-15)
@@ -12,7 +12,8 @@
 광고·통계 스크립트는 바깥 페이지에서 돌아 화면의 PDF 글자·파일 이름을 읽을 수 있다.
 그래서 **파일을 고르고, 보고, 처리하고, 받는 일은 모두 출처 없는(sandbox) iframe 안에서만** 한다.
 
-- 바깥 페이지(`[category]/[tool].astro`)가 `ToolFrame`으로 frame 페이지(`[category]/[tool]/frame.astro`)를 띄운다
+- 바깥 페이지(`[category]/[tool].astro`)가 `ToolFrame`으로 frame 페이지(`/<카테고리>/<이름>/frame/`)를 띄운다.
+  frame 페이지는 `tool-frames.ts`가 도구마다 따로 만들어 그 도구의 CSS만 싣는다 (2026-10-24)
 - iframe `sandbox="allow-scripts allow-downloads"` (allow-same-origin 없음) → frame 출처는 `null`
   - 바깥 스크립트는 frame 안을 못 보고, frame도 바깥·사이트 저장소(`localStorage` 등)에 못 닿는다
 - frame CSP: `default-src 'none'`. 우리 사이트 파일 읽기만 허용, 외부 연결은 도구 코드 자신도 못 한다
@@ -32,8 +33,8 @@
 | 파일                                      | 역할                                                                                                                    |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `src/components/ToolFrame.astro`          | 바깥: iframe(sandbox, `allow="fullscreen"`), 높이 고정, 테마 전달, 끌기 때 화면 전체로 넓히기, 신호 받기, `serveData()` |
-| `src/frame/FrameLayout.astro`             | frame 문서 틀: CSP, `<html lang>`, 테마 적용 스크립트, `setupFrameDrop()`·`setupFrameActivity()`                        |
-| `src/pages/[category]/[tool]/frame.astro` | 레지스트리에서 frame 페이지를 만들고 도구의 `Frame.astro`를 그린다                                                      |
+| `src/frame/FrameLayout.astro`             | frame 문서 틀: CSP, `<html lang>`, 제목, 테마 스크립트, `setupFrameDrop()`·`setupFrameActivity()`, 사용자 글자용 글꼴   |
+| `src/integrations/tool-frames.ts`         | live 도구마다(한·영) 그 도구의 `Frame.astro`를 진입점으로 frame 라우트를 만든다                                         |
 | `src/tools/<카테고리>/<이름>/Frame.astro` | `FrameLayout` 안에 `App.svelte`를 `mount`                                                                               |
 | `src/lib/worker.ts`                       | `createWorker(url)`: 워커 스크립트를 받아 blob URL 클래식 워커로 띄운다                                                 |
 | `src/frame/drop.ts`                       | frame 전체를 놓는 곳으로: 덮개, 크기 고정, `onFrameFiles()`                                                             |

@@ -28,6 +28,7 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow·pillow-heif 필요)
 python3 tests/fixtures/make_text_fixtures.py  # 테스트용 CSV(CP949·Shift_JIS) 다시 만들기
 python3 tests/fixtures/make_frame_fixtures.py  # 동영상을 GIF로·장면 캡처 시험 동영상 다시 만들기 (Pillow·ffmpeg 필요)
+npm run build && python3 scripts/fonts/build_site_font.py && npm run build  # 사이트 화면 글꼴 다시 만들기 (새 글자가 생겨 site-font E2E가 실패할 때)
 python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow·pillow-heif, 먼저 npm install)
 python3 scripts/samples/make_video_samples.py  # 동영상을 GIF로·장면 캡처 견본 동영상 다시 만들기 (Pillow·ffmpeg 필요)
 PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
@@ -129,7 +130,7 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 3. 다 만들면 `meta.ts`의 `status`를 `'live'`로 바꾸고 `tests/e2e/`에 E2E를 추가한다.
 
 도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
-frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동으로 만든다.
+frame 페이지는 `src/integrations/tool-frames.ts`가 live 도구마다 그 도구의 `Frame.astro`를 진입점으로 만든다(그 도구 CSS만 실리게).
 새 카테고리·묶음은 `src/tools/categories.ts`에 추가한다 (묶음 순서가 곧 화면 순서). PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
 결과 PDF는 `src/lib/pdf/assemble.ts`의 `assemblePdf()`로 만든다(페이지 고르기·순서·회전, 워커에서 pdf-lib).
 썸네일은 `src/lib/pdf/Thumbnail.svelte`, 다운로드는 `src/frame/download.ts`, 바깥 스크롤 요청은 `src/frame/parent.ts`.
@@ -177,6 +178,8 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   한글 음절·영문·숫자·문장부호만, 한자 없음 → WOFF2). 결과(`public/data/fonts/`, 미리보기 SVG, 허가서,
   `src/lib/fonts/catalog.json`)는 커밋한다. 글꼴을 더하면 `src/lib/fonts/catalog.ts`의 이름도 더한다
 - WOFF2는 글리프 변환(transform)을 끄고 만든다. 켜면 PDF에 넣는 fontkit이 실패한다
+- 사이트 화면 글꼴(본문)은 Pretendard에서 사이트 글자만 덜어 낸 조각 넷이다 (`scripts/fonts/build_site_font.py` → `src/styles/site-font.css`,
+  굵기 400~700, 2026-10-24). 바깥 페이지에는 뒤 글꼴이 없어 새 글자가 생기면 다시 만든다 (E2E `site-font.spec.ts`가 알려 줌)
 - 글자를 덜어 낸 글꼴은 OFL의 '고친 판'이다. 허가서에 **예약 글꼴 이름(Reserved Font Name)**이 있으면
   (Pretendard, Nanum…) 글꼴 파일 안의 이름과 화면 이름에 그 이름을 쓸 수 없어 우리 이름(JUS …, 모던 고딕 등)을
   붙이고 원본 이름은 출처로만 밝힌다. 글꼴을 더할 때 허가서의 예약 이름을 먼저 확인한다
