@@ -11,7 +11,12 @@
   import { downloadFile } from '../../../frame/download';
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
-  import { EXTENSIONS, ImageBatch, type BatchItem } from '../../../lib/image/batch.svelte';
+  import {
+    EXTENSIONS,
+    ImageBatch,
+    saveType,
+    type BatchItem,
+  } from '../../../lib/image/batch.svelte';
   import ImageBatchTool from '../../../lib/image/ImageBatchTool.svelte';
   import { processImage } from '../../../lib/image/process';
   import { makeZip } from '../../../lib/zip';
@@ -31,7 +36,8 @@
     | { state: 'done'; bytes: Uint8Array; name: string; width: number; height: number }
     | { state: 'failed' };
 
-  const batch = new ImageBatch();
+  // HEIC(아이폰 사진)는 브라우저가 HEIC로 저장하지 못해 JPG로 저장한다
+  const batch = new ImageBatch({ heic: true });
   let mode: Mode = $state('percent');
   let percent: number | null = $state(50);
   let width: number | null = $state(null);
@@ -132,7 +138,7 @@
     for (const { item } of targets) outcomes[item.id] = { state: 'working', settings: startedWith };
     await Promise.all(
       targets.map(async ({ item, size }) => {
-        const type = item.type!;
+        const type = saveType(item);
         let outcome: Outcome;
         try {
           const result = await processImage(item.file, {
@@ -159,7 +165,7 @@
 
   function downloadOne(item: BatchItem) {
     const outcome = outcomeOf(item);
-    if (outcome?.state === 'done') downloadFile(outcome.bytes, outcome.name, item.type);
+    if (outcome?.state === 'done') downloadFile(outcome.bytes, outcome.name, saveType(item));
   }
 
   async function downloadAll() {
@@ -272,6 +278,9 @@
         {t.keepRatio}
       </label>
       <p class="help">{keepRatio ? t.help.keep : t.help.exact}</p>
+    {/if}
+    {#if batch.ready.some((item) => item.type === undefined)}
+      <p class="help">{t.heicNote}</p>
     {/if}
   {/snippet}
 

@@ -41,7 +41,7 @@ export default defineContent({
       },
       {
         q: '저장 형식과 화질은 어떻게 되나요?',
-        a: '원래 형식(JPG·PNG·WebP)으로 저장합니다. JPG·WebP는 높은 화질로 저장해 크기를 바꾼 것 말고는 눈에 띄는 차이가 없고, PNG는 화질 손실 없이 저장하며 투명한 부분도 그대로 남습니다. 휴대폰 사진의 회전 정보는 미리 적용하고, 위치 같은 EXIF 정보는 남기지 않습니다.',
+        a: '원래 형식(JPG·PNG·WebP)으로 저장합니다. 아이폰 사진(HEIC)은 브라우저가 HEIC로 저장하지 못해 JPG로 저장합니다. JPG·WebP는 높은 화질로 저장해 크기를 바꾼 것 말고는 눈에 띄는 차이가 없고, PNG는 화질 손실 없이 저장하며 투명한 부분도 그대로 남습니다. 휴대폰 사진의 회전 정보는 미리 적용하고, 위치 같은 EXIF 정보는 남기지 않습니다.',
       },
     ],
   },
@@ -85,7 +85,7 @@ export default defineContent({
       },
       {
         q: 'What format and quality are used?',
-        a: 'Images are saved in their original format (JPG, PNG or WebP). JPG and WebP are saved at high quality, so there is no visible change besides the size. PNG is saved without loss, and transparent areas stay transparent. Phone photo rotation is applied first, and EXIF data such as location is not kept.',
+        a: 'Images are saved in their original format (JPG, PNG or WebP). iPhone photos (HEIC) are saved as JPG, because browsers cannot save HEIC. JPG and WebP are saved at high quality, so there is no visible change besides the size. PNG is saved without loss, and transparent areas stay transparent. Phone photo rotation is applied first, and EXIF data such as location is not kept.',
       },
     ],
   },
