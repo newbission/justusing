@@ -148,6 +148,27 @@ test('고른 구간을 고른 폭·초당 장면 수로 계속 반복하는 GIF�
   expect(first.rgb[1]).toBeLessThan(80);
 });
 
+test('장면 화소는 화면 스레드가 아니라 워커에서 읽는다', async ({ page }) => {
+  // 화면(frame 문서)에서 getImageData를 부르면 센다. 워커의 OffscreenCanvas는 세지 않는다
+  await page.addInitScript(() => {
+    const read = CanvasRenderingContext2D.prototype.getImageData;
+    CanvasRenderingContext2D.prototype.getImageData = function (...args) {
+      const counter = globalThis as { __pixelReads?: number };
+      counter.__pixelReads = (counter.__pixelReads ?? 0) + 1;
+      return read.apply(this, args);
+    };
+  });
+  const frame = await openTool(page, 'color-steps.mp4');
+  await setRange(frame, '0', '1');
+  await expect(frame.getByText(/예상 약/)).toBeVisible();
+  const gif = readGif((await make(page, frame, 'GIF 만들기', 'GIF 받기')).bytes);
+  expect(gif.frames).toBe(10);
+  const tool = page.frames().find((item) => item.url().includes('/video/to-gif/frame/'))!;
+  expect(
+    await tool.evaluate(() => (globalThis as { __pixelReads?: number }).__pixelReads ?? 0),
+  ).toBe(0);
+});
+
 test('한 번만 재생, 초당 장면 수 5, 색 수를 바꿔 만든다', async ({ page }) => {
   const frame = await openTool(page, 'color-steps.mp4');
   await setRange(frame, '1', '3');
