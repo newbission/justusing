@@ -6,7 +6,7 @@
  */
 import { expect, test } from './test';
 import type { FrameLocator } from '@playwright/test';
-import { colorAt, fixture, inspect, openVideoTool, runAndDownload } from './video';
+import { colorAt, fixture, fixtureKB, inspect, openVideoTool, runAndDownload } from './video';
 
 async function setTimes(frame: FrameLocator, start: string, end: string) {
   await frame.getByRole('textbox', { name: '끝' }).fill(end);
@@ -18,7 +18,9 @@ async function setTimes(frame: FrameLocator, start: string, end: string) {
 test('빠르게 자르면 다시 인코딩 없이 고른 시점부터 재생된다', async ({ page }) => {
   const frame = await openVideoTool(page, 'trim', 'clip.mp4');
   await expect(frame.getByText('clip.mp4')).toBeVisible();
-  await expect(frame.getByText('0:06.0 · 87KB · 1280×720 · H.264 · AAC')).toBeVisible();
+  await expect(
+    frame.getByText(`0:06.0 · ${fixtureKB('clip.mp4')} · 1280×720 · H.264 · AAC`),
+  ).toBeVisible();
   await setTimes(frame, '2.5', '4.2');
   await expect(frame.getByText('0:02.5 ~ 0:04.2 (0:01.7) 남기기')).toBeVisible();
 

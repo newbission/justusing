@@ -6,12 +6,16 @@
  */
 import type { FrameLocator } from '@playwright/test';
 import { ALL_FORMATS, BufferSource, EncodedPacketSink, Input } from 'mediabunny';
+import { statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { Page } from './test';
 
 export const fixture = (name: string) =>
   fileURLToPath(new URL(`../fixtures/${name}`, import.meta.url));
+
+/** 테스트 파일 크기를 화면처럼 적은 것 (formatSize와 같게, 1MB 아래만) */
+export const fixtureKB = (name: string) => `${Math.round(statSync(fixture(name)).size / 1024)}KB`;
 
 export async function openVideoTool(page: Page, tool: string, file: string) {
   await page.goto(`/video/${tool}/`);
