@@ -34,6 +34,7 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow와 
                회전 표시(irot). 화소 400×300 → 바로 세우면 300×400
 - located-uuid.heic located.heic에 위치 글이 든 확장 그림 속성(uuid)을 더한 것 (허용 목록 밖이라 지우지 않아야 한다)
 - located-jpeg-item.heic located.heic에 located.jpg를 JPEG 그림 항목으로 더한 것 (그 안의 정보 조각까지 비워야 한다)
+- located-sei.heic  located.heic의 대표 그림 자료 앞에 모르는 SEI(종류 300, 좌표 글)를 더한 것 (지우지 않아야 한다)
 - located-exif-prefix.heic located.heic의 EXIF 항목에서 TIFF 앞 건너뛰는 자리에 주소 글을 넣은 것 (그 자리도 비워야 한다)
 
 이 스크립트가 만들지 않는 것:
@@ -417,9 +418,20 @@ def exif_with_prefix(contents):
 rebuild_heif(path('located.heic'), path('located-exif-prefix.heic'), edit=exif_with_prefix)
 
 
+def sei_with_text(contents):
+    # 대표 그림(1번) 자료 앞에 허용 목록 밖의 SEI(종류 300)에 좌표 글을 넣은 NAL을 더한다 (NAL 길이 4바이트)
+    text = b'GPS 37.5663,126.9779'
+    nal = bytes([39 << 1, 1, 0xFF, 45, len(text)]) + text + b'\x80'
+    contents[1] = struct.pack('>I', len(nal)) + nal + contents[1]
+
+
+# HEVC 그림 자료에 모르는 SEI(위치 글)가 든 HEIC: 지우지 않고 '안전하게 지울 수 없음'으로 알려야 한다
+rebuild_heif(path('located.heic'), path('located-sei.heic'), edit=sei_with_text)
+
+
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
              'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
              'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg', 'quadrants.png',
-             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic', 'located-uuid.heic', 'located-jpeg-item.heic', 'located-exif-prefix.heic']:
+             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic', 'located-uuid.heic', 'located-jpeg-item.heic', 'located-exif-prefix.heic', 'located-sei.heic']:
     print(name, os.path.getsize(path(name)), 'bytes')
