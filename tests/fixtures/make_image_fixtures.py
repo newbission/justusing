@@ -34,6 +34,7 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow와 
                회전 표시(irot). 화소 400×300 → 바로 세우면 300×400
 - located-uuid.heic located.heic에 위치 글이 든 확장 그림 속성(uuid)을 더한 것 (허용 목록 밖이라 지우지 않아야 한다)
 - located-jpeg-item.heic located.heic에 located.jpg를 JPEG 그림 항목으로 더한 것 (그 안의 정보 조각까지 비워야 한다)
+- located-exif-prefix.heic located.heic의 EXIF 항목에서 TIFF 앞 건너뛰는 자리에 주소 글을 넣은 것 (그 자리도 비워야 한다)
 
 이 스크립트가 만들지 않는 것:
 - face.jpg     흰 배경 앞 얼굴 사진 (증명사진 도구). 얼굴 인식은 실제 사진이라야 해서 NASA 공개 사진
@@ -319,10 +320,11 @@ def heif_children(data: bytes, start: int, end: int):
         start += size
 
 
-def rebuild_heif(source: str, target: str, extra_props=(), extra_items=()):
+def rebuild_heif(source: str, target: str, extra_props=(), extra_items=(), edit=None):
     """source HEIC의 항목·속성을 그대로 옮기고 속성·항목을 더해 다시 쓴다 (위치 정보 지우기의 허용 목록 시험).
 
-    extra_props: [(속성 상자, 붙일 항목 번호)], extra_items: [(항목 번호, 종류, 자료)]
+    extra_props: [(속성 상자, 붙일 항목 번호)], extra_items: [(항목 번호, 종류, 자료)],
+    edit: 항목 번호 → 자료 사전을 받아 고치는 함수
     """
     with open(source, 'rb') as file:
         data = file.read()
@@ -366,6 +368,9 @@ def rebuild_heif(source: str, target: str, extra_props=(), extra_items=()):
         infes.append(heif_full_box('infe', struct.pack('>HH', item, 0) + kind.encode('latin1') + b'\0', 2))
         contents[item] = payload
 
+    if edit:
+        edit(contents)
+
     ipma_body = struct.pack('>I', len(associations)) + b''.join(
         struct.pack('>HB', item, len(values)) + bytes(values) for item, values in sorted(associations.items()))
     new_iprp = heif_box('iprp', heif_box('ipco', b''.join(props)) + heif_full_box('ipma', ipma_body))
@@ -400,9 +405,21 @@ rebuild_heif(path('located.heic'), path('located-jpeg-item.heic'),
              extra_props=[(heif_full_box('ispe', struct.pack('>II', 400, 300)), 4)],
              extra_items=[(4, 'jpeg', located_jpeg)])
 
+def exif_with_prefix(contents):
+    # EXIF 항목(2번)의 TIFF 앞에 주소 글을 넣고 건너뛸 수를 맞춘다
+    exif = contents[2]
+    tiff = exif[4 + struct.unpack('>I', exif[:4])[0]:]
+    prefix = b'Home: 123 Secret St, Seoul'
+    contents[2] = struct.pack('>I', len(prefix)) + prefix + tiff
+
+
+# EXIF 항목의 TIFF 앞(건너뛰는 자리)에 주소 글이 든 HEIC: 그 자리도 비워야 한다
+rebuild_heif(path('located.heic'), path('located-exif-prefix.heic'), edit=exif_with_prefix)
+
+
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
              'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
              'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg', 'quadrants.png',
-             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic', 'located-uuid.heic', 'located-jpeg-item.heic']:
+             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic', 'located-uuid.heic', 'located-jpeg-item.heic', 'located-exif-prefix.heic']:
     print(name, os.path.getsize(path(name)), 'bytes')
