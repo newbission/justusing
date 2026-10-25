@@ -68,14 +68,16 @@
 - **HEIC** (2026-10-24): 상자(ISOBMFF)를 읽어 `meta`의 항목 목록(`iinf`)과 위치표(`iloc`, 파일 안 또는 `idat` 안)로 EXIF(`Exif`)·XMP(`mime`
   `application/rdf+xml`) 항목의 바이트 자리를 찾는다 (`heif-metadata.ts`). 항목 길이를 바꾸면 그 뒤 그림 조각의 위치를 모두 고쳐야 해서
   **길이를 그대로 두고 그 자리에서 덮어쓴다**
-  - EXIF: 앞 4바이트(TIFF까지 건너뛸 수) 뒤의 TIFF 자리에 새 TIFF(위치만: `safeExif`, 모두: 방향만 또는 빈 TIFF)를 쓰고 나머지는 0으로 지운다
-    (예전 GPS 바이트가 파일에 남지 않게). 새 TIFF가 더 크면 실패. 읽지 못하는 EXIF는 통째로 0
+  - EXIF: 새 TIFF(위치만: `safeExif`, 모두: 방향만 또는 빈 TIFF)를 쓰고 나머지는 0으로 지운다 (예전 GPS 바이트가 파일에 남지 않게).
+    앞 4바이트(TIFF까지 건너뛸 수) 뒤에는 `Exif\0\0` 머리만 남기고, 그 밖의 앞 바이트(자유 글이 있을 수 있다, Codex #146)는 비우고
+    TIFF를 앞으로 당겨 건너뛸 수를 고친다. 새 TIFF가 들어가지 않으면 실패. 읽지 못하는 EXIF는 통째로 0
   - XMP: 두 방식 모두 빈 XMP(`<x:xmpmeta xmlns:x="adobe:ns:meta/"/>`)와 공백으로 덮는다 (JPG에서 XMP 조각을 빼는 것과 같다)
   - 허용 목록 (모든 단계, Codex #146에서 같은 종류 지적이 세 번 나와 한 번에 바꿈). 밖의 것이 하나라도 있으면 `unknown`이라 고치지 않는다
     - 맨 바깥 상자 `ftyp`·`meta`·`mdat`·`free`·`skip`, `meta` 안 `hdlr`·`dinf`·`pitm`·`iinf`·`iloc`·`iref`·`iprp`·`idat`·`grpl`, `iprp` 안 `ipco`·`ipma`
     - 그림 속성(ipco) `hvcC`·`ispe`·`colr`·`pixi`·`irot`·`imir`·`clap`·`pasp`·`auxC`·`clli`·`mdcv`·`cclv`·`amve`·`lsel`·`rloc`.
       색 프로필(ICC)은 JPG에서 남기는 것과 같은 기준으로 남긴다. `auxC`는 종류 이름이 `urn:`(영문·숫자·`:`)이고 덧붙임에 글이 없어야 한다
-    - 항목 종류(iinf) `hvc1`·`grid`·`iden`·`iovl`·`tmap`·`jpeg`·`Exif`·`mime`(XMP, 압축하지 않은 것). 보호(암호화)된 항목은 받지 않는다
+    - 항목 종류(iinf) `hvc1`·`grid`·`iden`·`iovl`·`tmap`·`jpeg`·`Exif`·`mime`(XMP: 종류 이름이 정확히 `application/rdf+xml`이고 압축하지 않은 것). 보호(암호화)된 항목과
+      항목 정보(infe)의 정해진 칸 뒤에 바이트가 더 있는 것은 받지 않는다
     - 항목 참조(iref) `thmb`·`auxl`·`dimg`·`cdsc`·`base`·`prem`, 묶음(grpl) `altr`·`ster`, 자료 참조(dref)는 '이 파일 안'(`url ` 깃발 1)만
     - HEVC: `hvcC`와 `hvc1` 그림 자료의 NAL은 0~40번만, SEI는 사용자 자료(4·5번, 인코더 이름 같은 글)가 없어야 한다
   - JPEG 그림 항목: 안의 정보 조각을 `stripJpegMetadata`와 같은 기준(JFIF·ICC·Adobe만 남김)으로, 길이를 두고 내용만 0으로 비운다
@@ -145,8 +147,9 @@
     두 방식 모두 크기가 같고 정보 항목 밖은 한 바이트도 바뀌지 않는다, 로컬 처리
   - HEIC 뒤에 GPS 글이 든 `free`·`skip` 상자와 덧붙은 자료를 붙여도 결과에 GPS·주소 글이 남지 않는다
   - `located-uuid.heic`(확장 속성 `uuid`에 위치 글): 지우기 전부터 '안전하게 지울 수 없음', 지우기는 실패, 다운로드 없음
+  - `located-exif-prefix.heic`(EXIF의 TIFF 앞 자리에 주소 글): 주소 글이 남지 않고 남길 칸은 다시 읽힌다
   - `located-jpeg-item.heic`(`located.jpg`를 JPEG 항목으로): 크기가 같고 GPS·주소·설명 글·덧붙은 영상이 남지 않으며 안의 JPEG는 읽히고 정보가 없다
-- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`·`located-uuid.heic`·`located-jpeg-item.heic`, 뒤의 둘은 `rebuild_heif`로 다시 쓴다)
+- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`·`located-uuid.heic`·`located-jpeg-item.heic`·`located-exif-prefix.heic`, 뒤의 셋은 `rebuild_heif`로 다시 쓴다)
 
 ### 직접 확인
 
