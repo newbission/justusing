@@ -22,7 +22,8 @@
  * frame과 주고받는 메시지 (내용 없이 신호만):
  *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height }
  *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
- *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤)
+ *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤),
+ *                 { type: 'tool-change', tool }(결과를 다음 도구로 넘겨 화면이 그 도구로 바뀜, 도구 ID만)
  *   글꼴 같은 도구 데이터 요청은 src/lib/data-store.ts가 받는다 (우리 사이트 공개 파일만, 사용자 파일 없음)
  */
 interface Props {
@@ -107,6 +108,12 @@ import { ui } from '../i18n/ui';
       if (event.data?.type === 'activity') document.dispatchEvent(new CustomEvent('toolactivity'));
       if (event.data?.type === 'show-tool') {
         scrollTo({ top: frame.getBoundingClientRect().top + scrollY - 16, behavior: 'instant' });
+      }
+      // 결과를 다음 도구로 넘겼다 (도구 ID만 온다. 파일은 frame 밖으로 나오지 않는다).
+      // 주소·제목·사용법을 그 도구 것으로 바꾼다. 그 코드는 이때 받는다 (src/lib/tool-switch.ts)
+      const tool = event.data?.type === 'tool-change' ? event.data.tool : undefined;
+      if (typeof tool === 'string' && /^[a-z]+\/[a-z0-9-]+$/.test(tool)) {
+        import('../lib/tool-switch').then(({ switchPage }) => switchPage(frame, tool));
       }
     });
   }
