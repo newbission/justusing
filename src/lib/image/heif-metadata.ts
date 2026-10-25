@@ -202,7 +202,7 @@ function parse(bytes: Uint8Array): HeifMeta | undefined {
     const location = locations.get(id);
     const ranges = location && rangesOf(bytes, location, idat);
     // 보호(암호화)된 항목은 안을 볼 수 없다
-    if (info.protection !== 0) unknown = true;
+    if (info.protection !== 0 || info.trailing) unknown = true;
     if (DERIVED_ITEMS.has(info.type)) continue;
     if (HEVC_ITEMS.has(info.type)) {
       if (!ranges) continue; // 자료가 없는 항목
@@ -362,6 +362,8 @@ interface ItemInfo {
   name: { start: number; end: number };
   /** 보호(암호화) 번호. 0이면 보호하지 않음 */
   protection: number;
+  /** 정해진 칸 뒤에 바이트가 더 있다 */
+  trailing?: boolean;
   contentType?: string;
   encoding?: string;
 }
@@ -396,12 +398,20 @@ function readItemInfos(bytes: Uint8Array, iinf: Box): Map<number, ItemInfo> {
       protection,
       name: { start: at, end: at + name.value.length },
     };
+    let next = name.next;
     if (type === 'mime') {
       const content = cString(bytes, name.next, infe.end);
-      // 'application/rdf+xml; charset=…' 같은 덧붙임은 빼고 본다
-      info.contentType = content.value.split(';')[0]!.trim().toLowerCase();
-      if (content.next < infe.end) info.encoding = cString(bytes, content.next, infe.end).value;
+      // 덧붙임('; …')은 그대로 남는 글이라 받지 않는다: 정확히 같은 종류 이름만 XMP로 본다
+      info.contentType = content.value;
+      next = content.next;
+      if (next < infe.end) {
+        const encoding = cString(bytes, next, infe.end);
+        info.encoding = encoding.value;
+        next = encoding.next;
+      }
     }
+    // 정해진 칸 뒤에 남은 바이트는 무엇이 적혔는지 모른다
+    if (next < infe.end) info.trailing = true;
     infos.set(id, info);
   }
   return infos;
