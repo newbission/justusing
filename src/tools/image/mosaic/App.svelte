@@ -22,6 +22,7 @@
   import { clampRect, resizeRect, type Edge, type Rect } from '../../../lib/image/crop-geometry';
   import {
     MosaicError,
+    closeImage,
     exportImage,
     openImage,
     previewImage,
@@ -126,6 +127,7 @@
       off();
       photo?.preview.close();
       dropFinder();
+      closeImage();
     };
   });
 
