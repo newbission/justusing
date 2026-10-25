@@ -45,6 +45,7 @@ const ko = {
   downloadAll: (count: number) => `모두 받기 (ZIP, ${count}장)`,
   savingMany: (done: number, total: number) => `저장하는 중… ${done}/${total}`,
   savedMany: (count: number, size: string) => `사진 ${count}장을 ZIP(${size})으로 만들었습니다.`,
+  leftOut: (count: number) => `${count}장은 남은 곳이 없거나 저장하지 못해 뺐습니다.`,
   stop: '그만두기',
   stopped: '저장을 그만두었습니다.',
   zipName: '이미지_배경제거.zip',
@@ -168,6 +169,8 @@ const en: typeof ko = {
   downloadAll: (count: number) => `Download all (ZIP, ${count})`,
   savingMany: (done: number, total: number) => `Saving… ${done}/${total}`,
   savedMany: (count: number, size: string) => `Made a ZIP of ${count} photos (${size}).`,
+  leftOut: (count: number) =>
+    `${count} left out: nothing was kept, or ${count === 1 ? 'it' : 'they'} could not be saved.`,
   stop: 'Stop',
   stopped: 'Saving was stopped.',
   zipName: 'background-removed-images.zip',
