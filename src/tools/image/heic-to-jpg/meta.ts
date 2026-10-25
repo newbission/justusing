@@ -28,4 +28,6 @@ export default defineTool({
   },
   related: ['image/convert', 'pdf/from-image', 'image/compress'],
   flow: { from: { kind: 'heic', count: 2 }, to: { kind: 'jpg', count: 2 } },
+  // 결과를 내려받지 않고 바로 넘길 도구 (docs/foundations/tool-chaining)
+  sendTo: ['pdf/from-image'],
 });
