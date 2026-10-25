@@ -33,7 +33,7 @@ export default defineContent({
       },
       {
         q: '화질이 나빠지나요?',
-        a: '아니요. 사진을 다시 저장하지 않고 파일 안의 정보 부분만 떼어 냅니다. 그림 자료는 한 바이트도 바뀌지 않아 화질과 가로·세로가 그대로입니다. 다만 HDR 사진은 사진 뒤에 붙은 밝기 정보가 함께 빠져 일반 사진으로 보입니다.',
+        a: '아니요. 사진을 다시 저장하지 않고 파일 안의 정보 부분만 떼어 냅니다. 그림 자료는 한 바이트도 바뀌지 않아 화질과 가로·세로가 그대로입니다. 다만 HDR 사진은 사진 뒤에 붙은 밝기 정보가 함께 빠져 일반 사진으로 보입니다. 아이폰 HEIC의 HDR 밝기 그림은 남지만 그 설정이 적힌 정보 칸이 비워져 HDR로 보이지 않을 수 있습니다.',
       },
       {
         q: '"모든 정보 지우기"와 "위치만 지우기"는 무엇이 다른가요?',
@@ -41,7 +41,7 @@ export default defineContent({
       },
       {
         q: '어떤 사진을 넣을 수 있나요?',
-        a: 'JPG·PNG·WebP 사진입니다. 아이폰의 HEIC 사진은 아직 넣을 수 없습니다. 아이폰 Safari에서 사진 보관함으로 고르면 보통 JPG로 바뀌어 들어오고, HEIC JPG 변환 도구로 바꾸면 위치를 포함한 촬영 정보가 모두 빠집니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다. 안드로이드의 HDR 사진(Ultra HDR)은 사진 뒤에 붙은 밝기 정보가 빠져 일반 사진으로 보입니다. 이런 사진을 넣으면 지우기 전에 화면에 알려 드립니다.',
+        a: 'JPG·PNG·WebP 사진과 아이폰의 HEIC 사진입니다. HEIC도 다시 저장하지 않고 HEIC 그대로 두며, 정보 칸을 그 자리에서 비워 파일 크기도 그대로입니다. HEIC 안에 든 작은 JPEG 그림의 촬영 정보도 함께 비웁니다. 안전하다고 확인한 내용만 든 HEIC만 고치고, 그 밖의 내용이 하나라도 있으면 거기에도 위치가 적힐 수 있어 고치지 않고 "안전하게 지울 수 없다"고 미리 알려 드립니다(이럴 때는 HEIC JPG 변환 도구로 바꾸면 촬영 정보가 모두 빠집니다). 크롬·엣지처럼 HEIC를 스스로 열지 못하는 브라우저에서는 목록에 사진을 보여 주려고 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받습니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다. 안드로이드의 HDR 사진(Ultra HDR)은 사진 뒤에 붙은 밝기 정보가 빠져 일반 사진으로 보입니다. 이런 사진을 넣으면 지우기 전에 화면에 알려 드립니다.',
       },
       {
         q: '지운 뒤 사진이 옆으로 눕지 않나요?',
@@ -81,7 +81,7 @@ export default defineContent({
       },
       {
         q: 'Will the quality get worse?',
-        a: 'No. The photo is not saved again; only the info part of the file is taken out. The image data is not changed by a single byte, so quality, width and height stay the same. HDR photos, however, lose the brightness data attached after the picture and show as regular photos.',
+        a: 'No. The photo is not saved again; only the info part of the file is taken out. The image data is not changed by a single byte, so quality, width and height stay the same. HDR photos, however, lose the brightness data attached after the picture and show as regular photos. In iPhone HEIC photos the HDR brightness image stays, but the info that describes it is blanked out, so they may no longer show as HDR.',
       },
       {
         q: 'What is the difference between "Remove all info" and "Location only"?',
@@ -89,7 +89,7 @@ export default defineContent({
       },
       {
         q: 'Which photos can I add?',
-        a: 'JPG, PNG and WebP photos. iPhone HEIC photos are not supported yet. When you pick from your photo library in Safari on iPhone, photos usually arrive as JPG, and converting with the HEIC to JPG tool removes all photo information, including the location. For motion photos, the video attached after the picture is removed too, leaving only the still photo. Android HDR photos (Ultra HDR) lose the brightness data attached after the picture and show as regular photos. If you add such photos, the screen tells you before you remove anything.',
+        a: 'JPG, PNG and WebP photos, and iPhone HEIC photos. HEIC photos are not saved again either: they stay HEIC, and the info is blanked out in place, so the file size stays the same. Photo information inside small JPEG pictures stored in the HEIC is blanked out too. Only HEIC files holding content known to be safe are changed; if anything else is inside, a location could be written there, so the file is left unchanged and the list tells you in advance that it cannot be cleaned safely (converting it with the HEIC to JPG tool removes all photo information). Browsers that cannot open HEIC on their own, such as Chrome and Edge, download a HEIC reader (libheif, about 0.5 MB) from this site to show the photo in the list. For motion photos, the video attached after the picture is removed too, leaving only the still photo. Android HDR photos (Ultra HDR) lose the brightness data attached after the picture and show as regular photos. If you add such photos, the screen tells you before you remove anything.',
       },
       {
         q: 'Will my photos turn sideways?',

@@ -171,3 +171,12 @@ test('열 수 없는 파일은 알린다', async ({ page }) => {
     '이 사진을 열 수 없습니다. JPG·PNG 사진으로 다시 해 보세요.',
   );
 });
+
+test('아이폰 사진(HEIC)도 크롬에서 바로 세워 연다', async ({ page }) => {
+  await page.goto('/image/remove-bg/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다. 화소는 가로 400×300이고 회전 표시(irot)가 붙어 있다
+  await frame.locator('input[type=file]').setInputFiles(fixture('iphone.heic'));
+  await expect(frame.getByText('300×400', { exact: true })).toBeVisible();
+  await expect(frame.getByRole('alert')).toHaveCount(0);
+});

@@ -33,7 +33,7 @@ export default defineContent({
       },
       {
         q: '서명 배경이 문서 글자를 가리지 않나요?',
-        a: '그린 서명은 배경이 투명한 그림으로 들어가 아래 글자를 가리지 않습니다. 사진으로 올린 서명은 사진 배경이 함께 들어가니, 배경이 투명한 PNG를 쓰면 더 깔끔합니다.',
+        a: '그린 서명은 배경이 투명한 그림으로 들어가 아래 글자를 가리지 않습니다. 사진으로 올린 서명은 사진 배경이 함께 들어가니, 배경이 투명한 PNG를 쓰면 더 깔끔합니다. 아이폰으로 찍은 HEIC 사진도 올릴 수 있고, 높은 화질의 JPG로 바꿔 넣습니다.',
       },
       {
         q: '여러 쪽에 같은 서명을 넣을 수 있나요?',
@@ -73,7 +73,7 @@ export default defineContent({
       },
       {
         q: 'Will the signature background cover the text?',
-        a: 'A drawn signature is added with a transparent background, so it does not cover the text underneath. An uploaded photo keeps its background, so a PNG with a transparent background looks cleaner.',
+        a: 'A drawn signature is added with a transparent background, so it does not cover the text underneath. An uploaded photo keeps its background, so a PNG with a transparent background looks cleaner. You can also upload an iPhone photo (HEIC); it is converted to a high-quality JPG.',
       },
       {
         q: 'Can I add the same signature to several pages?',

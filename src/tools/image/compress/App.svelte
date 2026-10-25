@@ -11,7 +11,12 @@
   import { downloadFile } from '../../../frame/download';
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
-  import { EXTENSIONS, ImageBatch, type BatchItem } from '../../../lib/image/batch.svelte';
+  import {
+    EXTENSIONS,
+    ImageBatch,
+    saveType,
+    type BatchItem,
+  } from '../../../lib/image/batch.svelte';
   import ImageBatchTool from '../../../lib/image/ImageBatchTool.svelte';
   import { ImageProcessError, processImage, type OutputType } from '../../../lib/image/process';
   import { makeZip } from '../../../lib/zip';
@@ -36,7 +41,8 @@
     | { state: 'kept' }
     | { state: 'failed'; reason: 'decode' | 'encode' };
 
-  const batch = new ImageBatch();
+  // HEIC(아이폰 사진)는 브라우저가 HEIC로 저장하지 못해 JPG(또는 WebP)로 줄인다
+  const batch = new ImageBatch({ heic: true });
   let level: Level = $state('balanced');
   let format: Format = $state('same');
   let working = $state(false);
@@ -80,7 +86,7 @@
   });
 
   function outputType(item: BatchItem): OutputType {
-    return format === 'webp' ? 'image/webp' : item.type!;
+    return format === 'webp' ? 'image/webp' : saveType(item);
   }
 
   async function compress() {
@@ -221,6 +227,9 @@
       {/each}
     </div>
     <p class="help">{t.levelHelp[level]} {t.note}</p>
+    {#if batch.ready.some((item) => item.type === undefined)}
+      <p class="help">{t.heicNote}</p>
+    {/if}
   {/snippet}
 
   {#snippet meta(item: BatchItem)}
@@ -234,7 +243,9 @@
         percentSaved(item.file.size, outcome.bytes.length),
       )}
     {:else if outcome?.state === 'kept'}
-      {t.itemKept(formatSize(item.file.size))}
+      {item.type === undefined
+        ? t.itemKeptHeic(formatSize(item.file.size))
+        : t.itemKept(formatSize(item.file.size))}
     {:else if outcome?.state === 'failed'}
       <strong>{outcome.reason === 'encode' && format === 'webp' ? t.noWebp : t.broken}</strong>
     {:else}

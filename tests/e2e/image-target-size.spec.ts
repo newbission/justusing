@@ -157,3 +157,28 @@ test('목표가 범위를 벗어나면 막고, 열 수 없는 파일은 알려 �
   await frame.getByRole('button', { name: '용량 맞추기' }).click();
   await expect(frame.getByText('모두 이미 5MB 이하라 원본 그대로 둡니다.')).toBeVisible();
 });
+
+test('아이폰 사진(HEIC)은 목표 이하여도 "원래 형식 그대로"에서 JPG로 바꿔 맞춘다', async ({
+  page,
+  baseURL,
+}) => {
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  // iphone.heic: 약 3.5KB, 바로 세우면 300×400. 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다
+  const frame = await openTool(page, ['iphone.heic']);
+  await expect(frame.getByText('300×400', { exact: false })).toBeVisible();
+  requests.length = 0;
+
+  await frame.getByText('원래 형식 그대로').click();
+  await expect(
+    frame.getByText('이미 목표 이하여도 JPG로 바꿔 맞춥니다', { exact: false }),
+  ).toBeVisible();
+  await frame.getByText('100KB', { exact: true }).click();
+  await frame.getByRole('button', { name: '용량 맞추기' }).click();
+  await expect(frame.getByText('완료: 1장 모두 100KB 이하입니다.')).toBeVisible();
+  const file = await download(page, () => frame.getByRole('button', { name: '다운로드' }).click());
+  expect(file.name).toBe('iphone_100KB.jpg');
+  expect(isJpeg(file.bytes)).toBe(true);
+  expect(await inspect(page, file.bytes)).toMatchObject({ width: 300, height: 400 });
+  expectLocalOnly(page, requests, baseURL!);
+});

@@ -38,7 +38,7 @@ export default defineContent({
       },
       {
         q: '이미 목표보다 작은 사진은 어떻게 되나요?',
-        a: '다시 저장하지 않고 원본을 그대로 둡니다. 다시 저장하면 화질만 나빠지기 때문입니다. 다만 "JPG로 저장"을 골랐는데 원본이 PNG·WebP라면 JPG로 바꿔 저장합니다.',
+        a: '다시 저장하지 않고 원본을 그대로 둡니다. 다시 저장하면 화질만 나빠지기 때문입니다. 다만 "JPG로 저장"을 골랐는데 원본이 PNG·WebP라면 JPG로 바꿔 저장합니다. 아이폰 사진(HEIC)은 받는 곳이 드물고 브라우저가 HEIC로 저장하지 못해 늘 JPG로 바꿔 맞춥니다. 크롬·엣지처럼 HEIC를 스스로 열지 못하는 브라우저에서는 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받아 이 기기에서 엽니다.',
       },
       {
         q: 'PNG나 투명한 이미지는 어떻게 되나요?',
@@ -91,7 +91,7 @@ export default defineContent({
       },
       {
         q: 'What happens to photos already under the target?',
-        a: 'They are kept as they are, because saving them again would only lower the quality. If you chose "Save as JPG" and the original is a PNG or WebP, it is converted to JPG.',
+        a: 'They are kept as they are, because saving them again would only lower the quality. If you chose "Save as JPG" and the original is a PNG or WebP, it is converted to JPG. iPhone photos (HEIC) are always converted to JPG, because few places accept HEIC and browsers cannot save it. Browsers that cannot open HEIC on their own, such as Chrome and Edge, download a HEIC reader (libheif, about 0.5 MB) from this site and open the photo on this device.',
       },
       {
         q: 'What about PNGs and transparent images?',

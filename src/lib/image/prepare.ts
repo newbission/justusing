@@ -10,6 +10,7 @@
  * 그래서 화면 canvas 대신 OffscreenCanvas를 쓴다.
  */
 
+import { isHeifHead } from './heif-container';
 import { stripJpegMetadata } from './jpeg-metadata';
 
 export interface ImageInfo {
@@ -128,5 +129,7 @@ export async function toEmbeddable(file: Blob): Promise<EmbeddableImage> {
     return redraw(file, 'image/jpeg');
   }
   if (isPng(bytes)) return { kind: 'png', bytes, ...(await readImageInfo(file)) };
+  // 브라우저가 스스로 읽은 HEIC(Safari)는 사진이라 JPG로 만든다 (PNG로 하면 몇 배 커진다)
+  if (isHeifHead(bytes.subarray(0, 64))) return redraw(file, 'image/jpeg');
   return redraw(file, 'image/png');
 }

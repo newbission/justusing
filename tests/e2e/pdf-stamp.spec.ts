@@ -262,3 +262,47 @@ test('처리하는 동안의 요청에는 파일이 기기 밖으로 나가는 �
 
   expectLocalOnly(page, requests, baseURL!);
 });
+
+test('이미지 넣기: 아이폰 사진(HEIC)도 크롬에서 바로 세운 JPG로 넣는다', async ({
+  page,
+  baseURL,
+}) => {
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  const frame = await openTool(page, 'add-image', 'three-pages.pdf');
+  requests.length = 0;
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다. 화소는 가로 400×300이고 회전 표시(irot)가 붙어 있다
+  await frame.getByText('이미지 선택').locator('input').setInputFiles(fixture('iphone.heic'));
+  // 쪽 위 미리보기도 바로 세운 JPG로 그려진다 (img는 HEIC를 그리지 못한다)
+  const preview = frame.locator('img[draggable="false"]');
+  await expect
+    .poll(() =>
+      preview.evaluate((node: HTMLImageElement) => [node.naturalWidth, node.naturalHeight]),
+    )
+    .toEqual([300, 400]);
+  await frame.getByRole('button', { name: '이미지 넣기' }).click();
+
+  const { bytes } = await download(page, frame);
+  const places = await imagePlaces(bytes.slice());
+  expect(places.map((p) => p.length)).toEqual([1, 0, 0]);
+  const [placed] = places[0]!;
+  expectNear(placed!.width, 0.3, '폭');
+  // 세로로 선 300×400 비율 (A4 595×842)
+  expectNear(placed!.height, (0.3 * 595 * (4 / 3)) / 842, '높이');
+  expect(new TextDecoder('latin1').decode(bytes)).toContain('/DCTDecode');
+  expectLocalOnly(page, requests, baseURL!);
+});
+
+test('서명 넣기: 서명을 찍은 아이폰 사진(HEIC)도 올려 넣는다', async ({ page }) => {
+  const frame = await openTool(page, 'sign', 'three-pages.pdf');
+  await frame
+    .getByText('서명 이미지 올리기')
+    .locator('input')
+    .setInputFiles(fixture('iphone.heic'));
+  await frame.getByRole('button', { name: '서명 넣기' }).click();
+  const { bytes } = await download(page, frame);
+  const places = await imagePlaces(bytes.slice());
+  expect(places.map((p) => p.length)).toEqual([1, 0, 0]);
+  expectNear(places[0]![0]!.width, 0.25, '폭');
+  expectNear(places[0]![0]!.height, (0.25 * 595 * (4 / 3)) / 842, '높이');
+});

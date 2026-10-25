@@ -417,7 +417,7 @@ Co-Authored-By: ...
         배경은 고를 때만 바꾸고(Selfie Segmenter) 여권에는 원래 사진을 쓰라고 알린다. 좌우 반전(앞 카메라).
         엔진·모델(16.8MB)은 받기 전에 묻고 보관한다. 엔진에 든 사용 통계 전송은 워커의 fetch를 없애 막는다.
         견본은 이미지 생성 AI로 만든 가상 인물이다 (`scripts/samples/face.jpg`)
-  - [x] 사진 위치 정보 지우기 (`/image/remove-location/`, 2026-10-20): JPG·PNG·WebP를 다시 저장하지 않고 정보 조각만
+  - [x] 사진 위치 정보 지우기 (`/image/remove-location/`, 2026-10-20): JPG·PNG·WebP(HEIC는 2026-10-24)를 다시 저장하지 않고 정보 조각만
         고친다(`src/lib/image/photo-metadata.ts`). 모두 지우기(방향만 새로 적음)·위치만 지우기(EXIF는 날짜·기기·촬영 설정 칸만 골라 새로 만들고 나머지 조각은 뺌).
         JPEG 끝 뒤에 덧붙은 자료(움직이는 사진 영상)는 두 방식 모두 뺀다. 지운 결과를 다시 읽어 위치가 남았으면 실패로 알린다
   - [x] 이어 붙이기 (`/image/stitch/`, 2026-10-22): 세로·가로로 잇기. 세로로 이을 때 화면 캡처의 고정 막대와 겹친 부분을
@@ -436,7 +436,11 @@ Co-Authored-By: ...
         데이터 보관(동의) 없이 빌드 자산으로 필요할 때 받는다. 대표 그림만, irot·imir 적용, 8비트, P3 → sRGB.
         새 도구 HEIC JPG 변환(`/image/heic-to-jpg/`, 화면은 형식 변환과 같은 `ConvertTool`)과 형식 변환·자르기·모자이크·
         증명사진·이어 붙이기·이미지를 PDF로가 HEIC를 연다. LGPL 허가서·안내는 `scripts/copy-libheif-notice.mjs`가
-        `public/vendor/libheif/`에 둔다. 압축·크기 조절·위치 정보 지우기는 아직 (docs/features/image-heic-to-jpg)
+        `public/vendor/libheif/`에 둔다 (docs/features/image-heic-to-jpg).
+        2026-10-24에 압축·크기 조절·용량 맞추기(HEIC는 JPG로 저장, `ImageBatch({ heic: true })`·`saveType()`)와
+        PDF 이미지 넣기·서명 넣기(`embedImage`가 JPG로 바꿔 미리보기도 그것으로), 위치 정보 지우기도 HEIC를 연다.
+        위치 정보 지우기는 HEIC를 다시 저장하지 않고 EXIF·XMP 항목을 같은 길이로 그 자리에서 덮어쓰며(`heif-metadata.ts`),
+        모르는 항목·상자가 있으면 고치지 않는다. 배경 제거·이미지 글자 추출은 처음부터 HEIC를 열었다
   - [x] 배경 제거 (`/image/remove-bg/`, 2026-10-23): 누른 곳(처음에는 가운데)의 물체를 MediaPipe MagicTouch(6.2MB, Apache-2.0)로
         나눠 남긴다. 엔진은 증명사진과 같은 파일이라 받아 둔 사람은 모델만 받는다(동의 이름 `cutout`). 지우개·되살리기 붓, 가장자리
         좁히기·넓히기·부드럽게, 투명 PNG·색 배경 JPG, 물체에 맞춰 자르기. 마스크를 원본 크기로 늘려 씌워 원본 크기로 저장한다

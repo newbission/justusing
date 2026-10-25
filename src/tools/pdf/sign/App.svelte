@@ -33,9 +33,10 @@
     cannotOpen = false;
     const request = ++latest;
     try {
-      const embed = await embedImage(file);
+      // 브라우저가 못 읽는 HEIC(서명을 찍은 아이폰 사진)는 JPG로 바꿔 그것을 화면에도 그린다
+      const { embed, preview } = await embedImage(file);
       if (request !== latest) return;
-      use({ url: URL.createObjectURL(file), embed });
+      use({ url: URL.createObjectURL(preview), embed });
     } catch {
       if (request === latest) cannotOpen = true;
     }
@@ -60,7 +61,7 @@
               <input
                 type="file"
                 class="visually-hidden"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 onchange={(event) => {
                   upload(event.currentTarget.files?.[0]);
                   event.currentTarget.value = '';

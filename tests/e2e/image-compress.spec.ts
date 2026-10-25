@@ -140,3 +140,26 @@ test('더 줄지 않는 이미지는 원본 그대로 두고, 열 수 없는 파
   await expect(frame.getByText('더 줄일 수 없었습니다.', { exact: false })).toBeVisible();
   await expect(frame.getByRole('button', { name: '다운로드' })).toHaveCount(0);
 });
+
+test('아이폰 사진(HEIC)은 크롬에서도 열어 바로 세운 JPG로 줄인다', async ({ page, baseURL }) => {
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  // 크롬은 HEIC를 스스로 읽지 못해 libheif로 연다. 화소는 가로 400×300이고 회전 표시(irot)가 붙어 있다
+  const frame = await openTool(page, ['iphone.heic']);
+  await expect(frame.getByText('300×400', { exact: false })).toBeVisible();
+  await expect(
+    frame.getByText('HEIC 사진은 브라우저가 HEIC로 저장하지 못해', { exact: false }),
+  ).toBeVisible();
+  requests.length = 0;
+
+  await frame.getByRole('button', { name: '압축하기' }).click();
+  await expect(frame.getByText('완료:', { exact: false })).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const file = await event;
+  expect(file.suggestedFilename()).toBe('iphone_압축.jpg');
+  const bytes = new Uint8Array(await readFile(await file.path()));
+  expect(isJpeg(bytes)).toBe(true);
+  expect(await inspect(page, bytes)).toMatchObject({ width: 300, height: 400 });
+  expectLocalOnly(page, requests, baseURL!);
+});

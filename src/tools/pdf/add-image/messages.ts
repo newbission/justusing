@@ -17,7 +17,7 @@ const ko = {
   scopes: { page: '이 쪽만', all: '모든 쪽' },
   choose: '이미지 선택',
   chooseHint:
-    'JPG·PNG 이미지를 고르세요. 로고·도장처럼 배경이 투명한 PNG는 투명한 채로 들어갑니다.',
+    'JPG·PNG 이미지나 아이폰 사진(HEIC)을 고르세요. 로고·도장처럼 배경이 투명한 PNG는 투명한 채로 들어갑니다.',
   otherImage: '다른 이미지',
   cannotOpen: '이 이미지를 열 수 없습니다. 다른 이미지를 골라 주세요.',
 };
@@ -37,7 +37,7 @@ const en: typeof ko = {
   scopes: { page: 'This page', all: 'All pages' },
   choose: 'Choose image',
   chooseHint:
-    'Choose a JPG or PNG image. PNG images with a transparent background, like logos or stamps, stay transparent.',
+    'Choose a JPG or PNG image, or an iPhone photo (HEIC). PNG images with a transparent background, like logos or stamps, stay transparent.',
   otherImage: 'Change image',
   cannotOpen: 'This image cannot be opened. Please choose a different one.',
 };

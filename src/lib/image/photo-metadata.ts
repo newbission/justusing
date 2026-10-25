@@ -1,6 +1,7 @@
 /**
- * 사진 파일(JPG·PNG·WebP) 안의 촬영 정보(EXIF·GPS, XMP, IPTC, 설명 글)를 읽고 지운다 (위치정보 지우기 도구).
+ * 사진 파일(JPG·PNG·WebP·HEIC) 안의 촬영 정보(EXIF·GPS, XMP, IPTC, 설명 글)를 읽고 지운다 (위치정보 지우기 도구).
  * 그림은 다시 압축하지 않고 정보 조각만 빼거나 고쳐 다시 이어 붙인다. 화질과 그림 바이트가 그대로다.
+ * HEIC는 조각을 빼면 그림 위치표를 고쳐야 해서, EXIF·XMP 항목을 같은 길이로 그 자리에서 덮어쓴다 (heif-metadata.ts).
  *
  * - location: EXIF는 위치가 적힐 수 없는 칸(날짜·기기·촬영 설정)만 골라 새로 만들고, 그림을 그리는 데 필요한 조각 말고는 모두 뺀다
  *   (XMP·IPTC·설명 글·알 수 없는 조각과 그림 끝 뒤에 덧붙은 자료. 어디에든 위치가 적힐 수 있어 남길 것만 정한다).
@@ -10,10 +11,17 @@
  * 구조를 읽지 못하면 undefined (원본을 고치지 않는다). 워커(metadata.worker.ts)에서 돈다.
  */
 import { crc32 } from '../crc32';
-import { rewriteJpeg, stripJpegMetadata, type SegmentAction } from './jpeg-metadata';
+import { isHeifHead } from './heif-container';
+import { itemBytes, readHeifMeta, writeItem, type HeifMeta } from './heif-metadata';
+import {
+  blankJpegMetadata,
+  rewriteJpeg,
+  stripJpegMetadata,
+  type SegmentAction,
+} from './jpeg-metadata';
 
 export type CleanMode = 'location' | 'all';
-export type PhotoFormat = 'jpeg' | 'png' | 'webp';
+export type PhotoFormat = 'jpeg' | 'png' | 'webp' | 'heif';
 
 export interface PhotoInfo {
   format: PhotoFormat;
@@ -34,12 +42,18 @@ export interface PhotoInfo {
    * 두 방식 모두 빼므로 HDR 사진은 일반 사진으로, 움직이는 사진은 멈춘 사진으로 남는다 (화면이 미리 알린다)
    */
   appended: boolean;
+  /**
+   * HEIC에 무엇이 적혔는지 모르는 내용(허용 목록 밖의 상자·속성·항목)이 있어 안전하게 지울 수 없다.
+   * 지우기는 이 파일을 고치지 않고 실패로 둔다
+   */
+  unsafe?: boolean;
 }
 
 export function detectFormat(bytes: Uint8Array): PhotoFormat | undefined {
   if (bytes[0] === 0xff && bytes[1] === 0xd8) return 'jpeg';
   if (startsWith(bytes, 0, '\x89PNG\r\n\x1a\n')) return 'png';
   if (startsWith(bytes, 0, 'RIFF') && startsWith(bytes, 8, 'WEBP')) return 'webp';
+  if (isHeifHead(bytes.subarray(0, 64))) return 'heif';
   return undefined;
 }
 
@@ -106,6 +120,39 @@ export function readPhotoInfo(bytes: Uint8Array): PhotoInfo | undefined {
     if (chunks.trailing) info.extra = true;
     return info;
   }
+  if (format === 'heif') {
+    const meta = readHeifMeta(bytes);
+    if (!meta) return undefined;
+    for (const item of meta.items) {
+      const data = itemBytes(bytes, item);
+      if (item.kind === 'exif') {
+        const start = heifExifStart(data);
+        if (start !== undefined) exif(data.subarray(start));
+      } else if (item.kind === 'jpeg') {
+        // JPEG 그림 항목 안의 정보 조각 (JPG 사진과 같은 기준으로 읽는다)
+        const inner = readPhotoInfo(data);
+        if (!inner) return undefined;
+        info.location ||= inner.location;
+        info.gps ??= inner.gps;
+        info.date ??= inner.date;
+        info.device ??= inner.device;
+      } else {
+        xmp(data);
+      }
+    }
+    // 마지막 안전망: 압축한 그림 자료 밖에 'GPS'나 좌표 같은 글이 남았으면 위치가 있는 것으로 본다
+    if (textLocation(bytes, meta)) info.location = true;
+    if (meta.unknown) info.unsafe = true;
+    // 쓰지 않는 틈·이름에 남은 글자도 본다 (예전 편집이 남긴 XMP 등)
+    let leftover = false;
+    for (const wipe of meta.wipes) {
+      const data = bytes.subarray(wipe.start, wipe.end);
+      xmp(data);
+      if (data.some((value) => value !== wipe.fill)) leftover = true;
+    }
+    info.extra = meta.items.length > 0 || meta.unknown || leftover;
+    return info;
+  }
   return undefined;
 }
 
@@ -115,6 +162,7 @@ export function cleanPhoto(bytes: Uint8Array, mode: CleanMode): Uint8Array | und
   if (format === 'jpeg') return cleanJpeg(bytes, mode);
   if (format === 'png') return cleanPng(bytes, mode);
   if (format === 'webp') return cleanWebp(bytes, mode);
+  if (format === 'heif') return cleanHeif(bytes, mode);
   return undefined;
 }
 
@@ -358,6 +406,110 @@ function cleanWebp(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
   out.set(ascii('WEBP'), 8);
   out.set(body, 12);
   return out;
+}
+
+// ── HEIC·HEIF ──
+
+/**
+ * EXIF 항목 안에서 TIFF가 시작하는 곳. 항목은 'TIFF까지 건너뛸 바이트 수'(4바이트) 뒤에
+ * ('Exif\0\0' 같은 머리를 건너) TIFF가 온다. 읽지 못하면 undefined
+ */
+function heifExifStart(data: Uint8Array): number | undefined {
+  if (data.length < 4) return undefined;
+  const start = 4 + u32be(data, 0);
+  return Tiff.open(data.subarray(start)) ? start : undefined;
+}
+
+/** 칸이 하나도 없는 EXIF (빅 엔디언) */
+const EMPTY_TIFF = Uint8Array.from([0x4d, 0x4d, 0, 0x2a, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0]);
+/** 내용이 없는 XMP. 남는 자리는 공백으로 채운다 (XMP는 뒤에 공백을 둘 수 있다) */
+const EMPTY_XMP = '<x:xmpmeta xmlns:x="adobe:ns:meta/"/>';
+
+/**
+ * EXIF 항목을 같은 길이로 다시 쓴다. 남길 칸만 있는 TIFF를 쓰고 나머지는 0으로 지운다 (예전 GPS 바이트가 파일에 남지 않게).
+ * TIFF 앞(건너뛸 수 4바이트 뒤)에는 'Exif\0\0' 머리만 남긴다. 그 밖의 앞 바이트에는 자유 글이 있을 수 있어 비우고 TIFF를 앞으로 당긴다
+ * (건너뛸 수도 맞춰 고친다). 새 TIFF가 들어갈 자리가 모자라면 undefined
+ */
+function cleanHeifExif(data: Uint8Array, mode: CleanMode, orientation: number) {
+  const start = heifExifStart(data);
+  // 읽지 못하는 EXIF는 통째로 지운다 (건너뛸 수 0, 내용 0 → 읽는 프로그램은 EXIF가 없는 것으로 본다)
+  if (start === undefined) return new Uint8Array(data.length);
+  const tiff = data.subarray(start);
+  const replacement =
+    mode === 'all'
+      ? orientation !== 1
+        ? orientationTiff(orientation)
+        : EMPTY_TIFF
+      : (safeExif(tiff) ?? EMPTY_TIFF);
+  const header = start === 10 && startsWith(data, 4, 'Exif\0\0') ? 6 : 0;
+  const at = 4 + header;
+  if (replacement.length > data.length - at) return undefined;
+  const next = new Uint8Array(data.length);
+  new DataView(next.buffer).setUint32(0, header);
+  if (header) next.set(ascii('Exif\0\0'), 4);
+  next.set(replacement, at);
+  return next;
+}
+
+/** 위치를 적은 글: 'GPS'(EXIF·XMP 칸 이름), 소수점 아래 네 자리 넘는 숫자(위도·경도) */
+const LOCATION_TEXT = /GPS|\d{1,3}[.,]\d{4,}/;
+
+/** 압축한 그림 자료(임의 바이트라 우연히 글처럼 보인다) 밖에 위치 같은 글이 있는지 */
+function textLocation(bytes: Uint8Array, meta: HeifMeta): boolean {
+  const coded = [...meta.coded].sort((a, b) => a.start - b.start);
+  let at = 0;
+  const scan = (start: number, end: number) => {
+    // 이어진 글이 조각 경계에서 끊기지 않게 조금 겹쳐 읽는다
+    for (let from = start; from < end; from += 16_384) {
+      const to = Math.min(end, from + 16_384 + 16);
+      if (LOCATION_TEXT.test(String.fromCharCode(...bytes.subarray(from, to)))) return true;
+    }
+    return false;
+  };
+  for (const range of coded) {
+    if (range.start > at && scan(at, range.start)) return true;
+    at = Math.max(at, range.end);
+  }
+  return at < bytes.length && scan(at, bytes.length);
+}
+
+function emptyXmp(length: number): Uint8Array {
+  const out = new Uint8Array(length).fill(0x20);
+  if (length >= EMPTY_XMP.length) out.set(ascii(EMPTY_XMP));
+  return out;
+}
+
+/**
+ * 위치만 지울 때도 모두 지울 때도 XMP는 비운다 (JPG에서 XMP 조각을 빼는 것과 같다).
+ * 어느 항목도 쓰지 않는 바이트(free·skip, 그림 자료 상자의 틈, 끝 뒤 자료)와 이름 글자는 비운다.
+ * 무엇이 적혔는지 모르는 항목·상자가 있으면 고치지 않는다 (undefined)
+ */
+function cleanHeif(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
+  const meta = readHeifMeta(bytes);
+  if (!meta || meta.unknown) return undefined;
+  const orientation = mode === 'all' ? (readPhotoInfo(bytes)?.orientation ?? 1) : 1;
+  let out: Uint8Array | undefined;
+  for (const item of meta.items) {
+    const data = itemBytes(bytes, item);
+    const next =
+      item.kind === 'exif'
+        ? cleanHeifExif(data, mode, orientation)
+        : item.kind === 'jpeg'
+          ? blankJpegMetadata(data)
+          : emptyXmp(data.length);
+    if (!next) return undefined;
+    if (sameBytes(next, data)) continue;
+    out ??= bytes.slice();
+    writeItem(out, item, next);
+  }
+  // 어느 항목도 쓰지 않는 바이트와 이름 글자를 비운다 (예전 편집이 남긴 EXIF·XMP·위치 글이 있을 수 있다)
+  for (const wipe of meta.wipes) {
+    const data = (out ?? bytes).subarray(wipe.start, wipe.end);
+    if (data.every((value) => value === wipe.fill)) continue;
+    out ??= bytes.slice();
+    out.fill(wipe.fill, wipe.start, wipe.end);
+  }
+  return out ?? bytes;
 }
 
 // ── EXIF (TIFF) ──

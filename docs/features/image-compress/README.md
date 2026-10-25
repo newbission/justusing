@@ -1,6 +1,6 @@
 # 이미지 압축 (`image/compress`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-19
+쓴 날 2026-10-16 · 고친 날 2026-10-24
 
 - 주소: `/image/compress/` (영어 `/en/image/compress/`)
 - 상태: live (PR #36, 2026-10-15 병합)
@@ -11,7 +11,7 @@
 ## 1. 어떤 기능인지
 
 - 사진·화면 캡처의 용량을 가로·세로는 그대로 두고 줄인다. 메신저·메일·웹 올리기용
-- 입력: JPG·PNG·WebP, 여러 장 (개수 제한 없음)
+- 입력: JPG·PNG·WebP·HEIC, 여러 장 (개수 제한 없음). HEIC는 브라우저가 못 읽으면 libheif로 연다 (2026-10-24)
 - 출력
   - 한 장: `<원래 이름>_압축.<확장자>` (영어 `_compressed`)
   - 여러 장: `이미지_압축.zip` (영어 `compressed-images.zip`). 줄어든 것은 결과를, 원본 그대로 둔 것은 원본을 넣는다
@@ -26,6 +26,8 @@
   - EXIF(위치·날짜·기기)는 남지 않는다. 휴대폰 사진 회전은 미리 적용한다
   - "조금"은 PNG 색을 줄이지 않아 PNG 화질이 그대로다
   - 브라우저가 WebP로 저장하지 못하면 알린다 ("원래 형식 그대로"로 해 보세요)
+  - HEIC는 HEIC로 저장하지 못해 "그대로"여도 JPG로 줄인다. JPG가 HEIC보다 크면(흔하다) 원본 HEIC를 둔다
+    ("바꿔 저장하면 더 커져서 원본(HEIC) 그대로", HEIC가 있으면 설정 아래 안내)
   - 휴대폰에서 아주 큰 사진 수십 장은 메모리가 모자랄 수 있다 (FAQ)
 
 ## 2. 어떻게 만드는지
@@ -43,10 +45,10 @@
 
 ### 처리 흐름
 
-1. `ImageBatchTool`로 이미지를 넣는다 (`new ImageBatch()`, JPG·PNG·WebP만)
+1. `ImageBatchTool`로 이미지를 넣는다 (`new ImageBatch({ heic: true })`, JPG·PNG·WebP·HEIC)
 2. "압축하기" → `canUse('image/compress')` → 지금 설정으로 아직 `done`이 아닌 이미지만 처리한다
 3. 이미지마다 `processImage(file, { type, quality, pngColors })` (크기 없음 = 원래 크기)
-   - `type`: "그대로"면 원래 형식(`item.type`), "WebP"면 `image/webp`
+   - `type`: "그대로"면 `saveType(item)`(원래 형식, HEIC는 JPG), "WebP"면 `image/webp`
 4. 결과가 원본보다 작으면 `done`, 아니면 `kept`, 오류면 `failed`(`decode`·`encode`)
 5. 모두 끝나면 막대에 합계 `완료: 전 → 후 (n% 줄어듦)`. 줄어든 것이 없으면 "더 줄일 수 없었습니다"
 6. 받기: 한 장이면 "다운로드", 여러 장이면 "모두 받기 (ZIP, n장)"
@@ -70,7 +72,7 @@
 ### 주의할 점
 
 - 뺀 이미지의 결과는 `onremove`에서 지운다 (리뷰 지적 #36, `a616482`)
-- `item.type!`을 쓰므로 `anyFormat`을 켜면 안 된다 (형식을 모르는 이미지가 들어온다)
+- `saveType()`은 형식을 모르면 JPG로 저장한다. `anyFormat`을 켜면 GIF·BMP도 JPG가 되니 켜지 않는다
 - 버튼 이름("압축하기", "모두 받기")을 바꾸면 `content.ts` 사용법과 가이드 글도 맞춘다
 
 ## 3. 구현 체크리스트
@@ -81,6 +83,7 @@
 - [x] 한·영 문구, 사용법·FAQ, 가이드 글
 - [x] E2E (로컬 처리 약속 `expectLocalOnly` 포함)
 - [x] `status: 'live'`
+- [x] HEIC 받기 (2026-10-24, JPG로 저장, 커지면 원본 유지)
 - [ ] 처리 중에 그만두기 — 없음. 처리하는 동안에는 이미지를 더하거나 뺄 수 없다
 
 ## 4. 검증
@@ -93,6 +96,7 @@
 - 여러 장은 `이미지_압축.zip` 하나로 받고, PNG는 투명(왼쪽 위 alpha 0)을 지킨 채 줄어든다
 - "WebP로 바꾸기"를 고르면 `photo_압축.webp`(WebP)로 저장한다
 - EXIF 방향이 붙은 `rotated.jpg`(400×300 화소)를 300×400으로 바로 세워 저장한다
+- `iphone.heic`(크롬은 libheif 경로)를 바로 선 300×400 JPG `iphone_압축.jpg`로 줄이고, HEIC 안내가 보인다
 - 더 줄지 않는 `small.jpg`는 원본 그대로 두고, 깨진 `broken.png`는 "열 수 없는 이미지"로 알리며 다운로드 버튼이 없다
 
 ### 직접 확인

@@ -26,11 +26,12 @@
     cannotOpen = false;
     const request = ++latest;
     try {
-      // 휴대폰 사진은 바로 세우고, JPG·PNG가 아니면 PNG로 바꾼다 (이미지를 PDF로와 같은 준비, 워커에서)
-      const embed = await embedImage(file);
+      // 휴대폰 사진은 바로 세우고, JPG·PNG가 아니면 PNG로 바꾼다 (이미지를 PDF로와 같은 준비, 워커에서).
+      // 브라우저가 못 읽는 HEIC는 JPG로 바꿔 그것을 화면에도 그린다
+      const { embed, preview } = await embedImage(file);
       if (request !== latest) return;
       if (image) URL.revokeObjectURL(image.url);
-      image = { url: URL.createObjectURL(file), embed };
+      image = { url: URL.createObjectURL(preview), embed };
     } catch {
       if (request === latest) cannotOpen = true;
     }
@@ -43,7 +44,7 @@
     <input
       type="file"
       class="visually-hidden"
-      accept="image/*"
+      accept="image/*,.heic,.heif"
       onchange={(event) => {
         choose(event.currentTarget.files?.[0]);
         event.currentTarget.value = '';

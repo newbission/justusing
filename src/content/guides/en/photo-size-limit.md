@@ -3,6 +3,7 @@ title: How to get a photo under 200 KB or 1 MB (upload size limits)
 description: 'When a form only accepts photos "under 200 KB" or "under 1 MB", how to lower quality and size so the photo still looks clean, the two ways of counting KB, and what to watch out for.'
 tool: image/target-size
 published: 2026-10-23
+updated: 2026-10-24
 order: 28
 ---
 
@@ -51,6 +52,6 @@ PNG images such as screenshots and drawings have no quality setting, so they shr
 ## Good to know
 
 - **Keep the original.** Shrinking an already shrunk photo adds more loss each time. If you need a different target, start again from the original.
-- **Photos already under the target are kept as they are**, because saving them again would only lower the quality. When downloading several, these go into the ZIP unchanged.
+- **Photos already under the target are kept as they are**, because saving them again would only lower the quality. When downloading several, these go into the ZIP unchanged. iPhone HEIC photos are the exception: few places accept HEIC, so they are converted to JPG even when already under the target.
 - **Location data**: photos saved again keep no location or date data. Photos kept as they are keep the original data, so use [Remove Photo Location](/en/image/remove-location/) if you need to strip it.
 - **Nothing is uploaded.** Everything, including the search for the right quality, runs in your browser, and several images are fitted at once to match your CPU cores.

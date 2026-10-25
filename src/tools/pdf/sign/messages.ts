@@ -15,7 +15,7 @@ const ko = {
   scopes: { page: '이 쪽만', all: '모든 쪽' },
   redraw: '다시 그리기',
   upload: '서명 이미지 올리기',
-  uploadHint: '종이에 한 서명을 찍은 사진이나 PNG 서명 이미지도 쓸 수 있습니다.',
+  uploadHint: '종이에 한 서명을 찍은 사진(아이폰 HEIC 포함)이나 PNG 서명 이미지도 쓸 수 있습니다.',
   cannotOpen: '이 이미지를 열 수 없습니다. 다른 이미지를 골라 주세요.',
 };
 
@@ -34,7 +34,8 @@ const en: typeof ko = {
   scopes: { page: 'This page', all: 'All pages' },
   redraw: 'Draw again',
   upload: 'Upload signature image',
-  uploadHint: 'You can also use a photo of a signature on paper or a PNG signature image.',
+  uploadHint:
+    'You can also use a photo of a signature on paper (including iPhone HEIC) or a PNG signature image.',
   cannotOpen: 'This image cannot be opened. Please choose a different one.',
 };
 

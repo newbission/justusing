@@ -2,14 +2,14 @@
  * 여러 이미지를 받아 목록으로 들고 있는다 (이미지 압축·크기 조절 같은 여러 장 도구).
  * 크기를 읽고 썸네일 주소를 만들고, 빼면 썸네일 메모리를 돌려준다. 파일은 어디로도 보내지 않는다.
  */
-import { readForDisplay } from './heif';
+import { isHeif, readForDisplay } from './heif';
 import type { OutputType } from './process';
 
 export interface BatchItem {
   id: number;
   name: string;
   file: File;
-  /** 원래 형식. JPG·PNG·WebP가 아니면 없다 (anyFormat이 아니면 열 수 없음으로 표시) */
+  /** 원래 형식. JPG·PNG·WebP가 아니면 없다 (anyFormat·heic가 아니면 열 수 없음으로 표시) */
   type?: OutputType;
   status: 'loading' | 'ready' | 'error';
   /** 바로 세운 뒤의 가로·세로 화소 */
@@ -24,6 +24,9 @@ export const BATCH_ACCEPT = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.we
 /** 형식 변환처럼 읽을 수 있으면 무엇이든 받을 때 (HEIC는 브라우저가 못 읽으면 libheif로 연다) */
 const ANY_ACCEPT = 'image/*,.heic,.heif,.avif';
 const ANY_IMAGE = /\.(jpe?g|png|webp|gif|bmp|avif|heic|heif|tiff?|ico)$/i;
+/** heic: JPG·PNG·WebP에 더해 HEIC·HEIF(아이폰 사진)도 받을 때 */
+const HEIC_ACCEPT = `${BATCH_ACCEPT},image/heic,image/heif,.heic,.heif`;
+const HEIC_NAME = /\.(heic|heif)$/i;
 
 /** 브라우저가 못 읽는 HEIC의 목록·비교 화면용 미리보기 크기 (긴 변) */
 const HEIF_PREVIEW_SIDE = 2048;
@@ -42,6 +45,14 @@ function typeOf(file: File): OutputType | undefined {
   return undefined;
 }
 
+/**
+ * '원래 형식 그대로' 저장할 때의 형식. HEIC처럼 브라우저가 저장하지 못하는 형식은 JPG로 저장한다
+ * (압축·크기 조절·용량 맞추기)
+ */
+export function saveType(item: BatchItem): OutputType {
+  return item.type ?? 'image/jpeg';
+}
+
 export class ImageBatch {
   items: BatchItem[] = $state([]);
   readonly ready = $derived(this.items.filter((item) => item.status === 'ready'));
@@ -49,16 +60,30 @@ export class ImageBatch {
   readonly totalSize = $derived(this.items.reduce((sum, item) => sum + item.file.size, 0));
   /** 파일 고르기 창에 넘길 형식 */
   readonly accept: string;
+  /** HEIC를 받는다 (anyFormat이면 늘 받는다) */
+  readonly heic: boolean;
   readonly #anyFormat: boolean;
   #nextId = 0;
 
   /**
    * anyFormat: JPG·PNG·WebP가 아니어도 읽을 수 있으면 받는다 (형식 변환)
+   * heic: JPG·PNG·WebP에 더해 HEIC도 받는다. 브라우저가 못 읽으면 libheif로 연다 (heif.ts).
+   *   type이 없는 줄이 HEIC이고, 원래 형식으로 저장하는 도구는 saveType()으로 JPG로 저장한다
    * accept: 파일 고르기 창에 넘길 형식을 바꾼다 (HEIC 변환은 HEIC만 보이게). 끌어다 놓은 파일은 형식으로 거르지 않는다
    */
-  constructor({ anyFormat = false, accept }: { anyFormat?: boolean; accept?: string } = {}) {
+  constructor({
+    anyFormat = false,
+    heic = false,
+    accept,
+  }: { anyFormat?: boolean; heic?: boolean; accept?: string } = {}) {
     this.#anyFormat = anyFormat;
-    this.accept = accept ?? (anyFormat ? ANY_ACCEPT : BATCH_ACCEPT);
+    this.heic = anyFormat || heic;
+    this.accept = accept ?? (anyFormat ? ANY_ACCEPT : heic ? HEIC_ACCEPT : BATCH_ACCEPT);
+  }
+
+  /** 이름·형식 표시로 HEIC로 보이는지 (내용은 읽을 때 확인한다) */
+  #looksHeic(file: File) {
+    return this.heic && (/^image\/hei[cf]/.test(file.type) || HEIC_NAME.test(file.name));
   }
 
   /** 이미지 파일만 더한다. 더한 것이 있으면 true */
@@ -66,11 +91,12 @@ export class ImageBatch {
     const images = files.filter(
       (file) =>
         file.type.startsWith('image/') ||
-        (this.#anyFormat ? ANY_IMAGE : /\.(jpe?g|png|webp)$/i).test(file.name),
+        (this.#anyFormat ? ANY_IMAGE : /\.(jpe?g|png|webp)$/i).test(file.name) ||
+        this.#looksHeic(file),
     );
     for (const file of images) {
       const type = typeOf(file);
-      const readable = type !== undefined || this.#anyFormat;
+      const readable = type !== undefined || this.#anyFormat || this.#looksHeic(file);
       this.items.push({
         id: this.#nextId++,
         name: file.name,
@@ -87,6 +113,10 @@ export class ImageBatch {
 
   async #load(item: BatchItem) {
     try {
+      // JPG·PNG·WebP만 받는 목록에서 형식 표시가 없는 줄은 내용이 HEIC여야 한다 (이름만 .heic인 다른 파일은 열지 않는다)
+      if (!this.#anyFormat && item.type === undefined && !(await isHeif(item.file))) {
+        throw new Error('not heic');
+      }
       // 브라우저가 못 읽는 HEIC(크롬 등의 아이폰 사진)는 libheif로 풀어 크기와 줄인 미리보기를 얻는다
       const info = await readForDisplay(item.file, HEIF_PREVIEW_SIDE);
       // 읽는 동안 목록에서 뺐으면 썸네일 주소를 만들지 않는다 (해제할 곳이 없어 메모리에 남는다)

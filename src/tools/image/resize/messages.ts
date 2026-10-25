@@ -19,6 +19,7 @@ const ko = {
     keep: '비율을 지키며 이 칸 안에 들어가게 맞춥니다. 한쪽만 적으면 그쪽에 맞춥니다.',
     exact: '적은 크기로 정확히 맞춥니다. 원래 비율과 다르면 이미지가 늘어나거나 눌립니다.',
   },
+  heicNote: 'HEIC 사진은 브라우저가 HEIC로 저장하지 못해 JPG로 저장합니다.',
   invalidPercent: '비율은 1에서 400 사이로 적어 주세요.',
   needSize: '가로나 세로 크기를 적어 주세요.',
   needBoth: '비율을 유지하지 않으면 가로와 세로를 모두 적어야 합니다.',
@@ -56,6 +57,7 @@ const en: typeof ko = {
     exact:
       'Makes the image exactly this size. If the shape differs from the original, the image is stretched or squeezed.',
   },
+  heicNote: 'Browsers cannot save HEIC, so HEIC photos are saved as JPG.',
   invalidPercent: 'Enter a percentage from 1 to 400.',
   needSize: 'Enter a width or a height.',
   needBoth: 'Without keeping the aspect ratio, enter both the width and the height.',

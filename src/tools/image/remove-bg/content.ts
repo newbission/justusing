@@ -31,7 +31,7 @@ export default defineContent({
       },
       {
         q: '어떤 사진이 잘 되나요?',
-        a: '남길 물체가 사진에서 크게 나오고 배경과 색·밝기가 다른 사진이 잘 됩니다. 사람·상품·동물·화분처럼 경계가 분명한 물체에 맞습니다. 물체가 아주 작거나 멀리 있으면 놓치기 쉽습니다.',
+        a: '남길 물체가 사진에서 크게 나오고 배경과 색·밝기가 다른 사진이 잘 됩니다. 사람·상품·동물·화분처럼 경계가 분명한 물체에 맞습니다. 물체가 아주 작거나 멀리 있으면 놓치기 쉽습니다. JPG·PNG·WebP 사진과 아이폰 사진(HEIC)을 열 수 있고, HEIC를 스스로 열지 못하는 크롬·엣지에서는 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받아 이 기기에서 엽니다.',
       },
       {
         q: '머리카락이나 털 끝이 깔끔하지 않아요.',
@@ -81,7 +81,7 @@ export default defineContent({
       },
       {
         q: 'Which photos work well?',
-        a: 'Photos where the subject is large and differs in color or brightness from the background. It suits subjects with clear edges such as people, products, animals and plants. Very small or distant subjects are easy to miss.',
+        a: 'Photos where the subject is large and differs in color or brightness from the background. It suits subjects with clear edges such as people, products, animals and plants. Very small or distant subjects are easy to miss. JPG, PNG and WebP photos and iPhone photos (HEIC) can be opened; Chrome and Edge, which cannot open HEIC on their own, download a HEIC reader (libheif, about 0.5 MB) from this site and open the photo on this device.',
       },
       {
         q: 'Hair and fur edges are not clean.',

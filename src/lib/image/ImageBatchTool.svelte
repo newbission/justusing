@@ -28,7 +28,7 @@
     meta: Snippet<[BatchItem]>;
     /** 줄 오른쪽 빼기 버튼 앞의 버튼 (한 장 받기 등) */
     actions?: Snippet<[BatchItem]>;
-    /** 파일 고르기 버튼 아래 안내. 없으면 JPG·PNG·WebP 안내 */
+    /** 파일 고르기 버튼 아래 안내. 없으면 JPG·PNG·WebP(HEIC를 받으면 HEIC까지) 안내 */
     hint?: string;
     /** 읽지 못한 이미지 줄의 안내. 없으면 '열 수 없는 이미지' */
     broken?: string;
@@ -82,7 +82,7 @@
         accept={batch.accept}
         label={t.choose}
         multiple
-        hint={hint ?? t.hint}
+        hint={hint ?? (batch.heic ? t.hintHeic : t.hint)}
         onfiles={add}
       />
     </div>
