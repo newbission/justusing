@@ -41,6 +41,8 @@ const ko = {
   } satisfies Record<CleanMode, (before: string, after: string) => string>,
   itemKept: '지울 정보가 없어 원본 그대로',
   itemFailed: '이 사진은 지우지 못했습니다',
+  itemUnsafe:
+    '이 HEIC는 위치 정보를 안전하게 지울 수 없어 고치지 않습니다. HEIC JPG 변환으로 바꾸면 촬영 정보가 모두 빠집니다.',
   broken: '열 수 없는 사진입니다. 빼고 처리합니다.',
   /** 결과 파일 이름 뒤에 붙는 말 */
   suffix: { all: '정보삭제', location: '위치삭제' } satisfies Record<CleanMode, string>,
@@ -86,6 +88,8 @@ const en: typeof ko = {
   },
   itemKept: 'Nothing to remove, kept as is',
   itemFailed: 'Could not clean this photo',
+  itemUnsafe:
+    'The location in this HEIC cannot be removed safely, so it is left unchanged. Converting it with HEIC to JPG removes all photo information.',
   broken: 'This photo cannot be opened. It will be left out.',
   suffix: { all: 'clean', location: 'no-location' },
 };
