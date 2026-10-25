@@ -85,14 +85,21 @@ const GROUPS = new Set(['altr', 'ster']);
 /** iprp 안의 상자 */
 const IPRP_BOXES = new Set(['ipco', 'ipma']);
 /**
- * HEVC NAL 종류: 0~31 그림 조각, 32~34 매개변수 묶음, 35 접근 단위 구분, 36~38 끝 표시·채움, 39·40 SEI(종류를 따로 본다).
- * 41 이상(예약·지정되지 않음)은 무엇이든 담을 수 있어 받지 않는다
+ * HEVC NAL 종류 (허용 목록): 0~9·16~21 그림 조각, 32~34 매개변수 묶음, 35 접근 단위 구분, 36·37 끝 표시,
+ * 38 채움(0xFF만), 39·40 SEI(메시지 종류를 따로 본다). 예약·지정되지 않은 종류는 무엇이든 담을 수 있어 받지 않는다.
+ * 그림 조각이 아닌 NAL(매개변수 묶음·SEI)에 읽을 수 있는 글이 이어져 있으면 받지 않는다
  */
-const isAllowedNal = (type: number) => type <= 40;
+const isAllowedNal = (type: number) =>
+  type <= 9 || (type >= 16 && type <= 21) || (type >= 32 && type <= 40);
+const isPicture = (type: number) => type <= 31;
+const FILLER = 38;
 const SEI_PREFIX = 39;
 const SEI_SUFFIX = 40;
-/** SEI 중 아무 글이나 담을 수 있는 것: 등록된 사용자 자료(4), 등록 안 된 사용자 자료(5, 인코더 이름 등) */
-const TEXT_SEI = new Set([4, 5]);
+/**
+ * SEI 메시지 종류 (허용 목록). 숫자만 담는 것: 버퍼링(0), 그림 시각(1), 복구 지점(6), 쓰는 매개변수 묶음(129),
+ * 그림 확인값(132), 밝기 범위(137·144), 전송 특성(147), 투명(165), 깊이(177). 사용자 자료(4·5) 등 그 밖의 것은 받지 않는다
+ */
+const SAFE_SEI = new Set([0, 1, 6, 129, 132, 137, 144, 147, 165, 177]);
 /** 보조 그림 종류(auxC)는 'urn:…' 이름 하나다. 숫자·점이 이어진 좌표 같은 글은 받지 않는다 */
 const AUX_TYPE = /^urn:[A-Za-z0-9:_-]+$/;
 
@@ -161,16 +168,30 @@ function parse(bytes: Uint8Array): HeifMeta | undefined {
   if (iref && !onlyChildren(bytes, iref, 4, REFERENCES)) unknown = true;
   const grpl = child(bytes, meta, 'grpl', 4);
   if (grpl && !onlyChildren(bytes, grpl, 0, GROUPS)) unknown = true;
+  // 숫자만 담는 상자에 읽을 수 있는 글이 이어져 있으면 정해진 칸 밖에 글이 있다는 뜻이다
+  for (const box of [dinf, iref, grpl, child(bytes, meta, 'pitm', 4), iloc]) {
+    if (box && hasText(bytes.subarray(box.start, box.end))) unknown = true;
+  }
 
   const iprp = child(bytes, meta, 'iprp', 4);
   const ipco = iprp && child(bytes, iprp, 'ipco');
   /** HEVC 그림 자료의 NAL 길이 바이트 수 (hvcC). 그림마다 다르면 모른다고 본다 */
   let nalLength: number | undefined;
   if (iprp && !onlyChildren(bytes, iprp, 0, IPRP_BOXES)) unknown = true;
+  const ipma = iprp && child(bytes, iprp, 'ipma');
+  if (ipma && hasText(bytes.subarray(ipma.start, ipma.end))) unknown = true;
   if (ipco) {
     if (!onlyChildren(bytes, ipco, 0, PROPERTIES)) unknown = true;
     for (const property of boxes(bytes, ipco.start, ipco.end)) {
-      if (property.type === 'auxC' && !safeAuxType(bytes, property)) unknown = true;
+      if (property.type === 'auxC') {
+        if (!safeAuxType(bytes, property)) unknown = true;
+      } else if (
+        property.type !== 'colr' &&
+        hasText(bytes.subarray(property.start, property.end))
+      ) {
+        // 색 프로필(colr의 ICC)은 설명 글이 있어 빼고, 나머지 속성은 숫자뿐이어야 한다
+        unknown = true;
+      }
       if (property.type === 'hvcC') {
         const config = readHevcConfig(bytes, property);
         if (!config) unknown = true;
@@ -203,7 +224,11 @@ function parse(bytes: Uint8Array): HeifMeta | undefined {
     const ranges = location && rangesOf(bytes, location, idat);
     // 보호(암호화)된 항목은 안을 볼 수 없다
     if (info.protection !== 0 || info.trailing) unknown = true;
-    if (DERIVED_ITEMS.has(info.type)) continue;
+    if (DERIVED_ITEMS.has(info.type)) {
+      // 이어 만드는 항목의 자료(격자 크기·겹침 자리·HDR 밝기 값)는 숫자뿐이다
+      if (ranges && hasText(join(bytes, ranges))) unknown = true;
+      continue;
+    }
     if (HEVC_ITEMS.has(info.type)) {
       if (!ranges) continue; // 자료가 없는 항목
       coded.push(...ranges);
@@ -300,6 +325,9 @@ function safeHevcData(data: Uint8Array, nalLength: number): boolean {
 function safeNal(nal: Uint8Array): boolean {
   const type = (nal[0]! >> 1) & 0x3f;
   if (!isAllowedNal(type)) return false;
+  if (isPicture(type)) return true;
+  if (hasText(nal.subarray(2))) return false;
+  if (type === FILLER) return nal.subarray(2).every((value) => value === 0xff || value === 0x80);
   if (type !== SEI_PREFIX && type !== SEI_SUFFIX) return true;
   // 막음 바이트(00 00 03의 03)를 빼고 SEI 메시지를 하나씩 읽는다
   const raw: number[] = [];
@@ -329,7 +357,7 @@ function safeNal(nal: Uint8Array): boolean {
     }
     if (at >= raw.length) return false;
     size += raw[at++]!;
-    if (TEXT_SEI.has(payloadType)) return false;
+    if (!SAFE_SEI.has(payloadType)) return false;
     at += size;
     if (at > raw.length) return false;
   }
