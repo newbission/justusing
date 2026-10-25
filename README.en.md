@@ -226,3 +226,8 @@ and the licenses and notices that must ship with the site (fonts, libheif, media
 | [libheif](https://github.com/strukturag/libheif) and libde265 (libheif-js)                 | Opening HEIC photos                              | LGPL-3.0    |
 | Korean fonts (Pretendard, Noto, Nanum and more)                                            | Adding text to PDFs                              | SIL OFL 1.1 |
 | fflate, UPNG.js, gifenc                                                                    | ZIP, PNG color reduction, GIF encoding           | MIT         |
+
+## License
+
+The code in this repository is under the [MIT License](LICENSE). The open source projects, fonts and model or data files
+listed above keep their own licenses.
