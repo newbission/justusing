@@ -13,7 +13,6 @@ const ko = {
   otherFile: '다른 이미지',
   previewHelp:
     '사진 위를 끌어 가릴 곳을 그립니다. 그린 칸을 끌어 옮기고, 모서리·변의 점을 끌어 크기를 바꿉니다. 칸을 고른 뒤 방향키로 옮기고(Shift와 함께 크게) Delete 키로 지웁니다.',
-  region: (n: number, effect: string) => `가릴 곳 ${n}: ${effect}`,
   edges: {
     nw: '왼쪽 위 모서리',
     ne: '오른쪽 위 모서리',
@@ -30,6 +29,29 @@ const ko = {
   add: '가릴 곳 추가',
   remove: '고른 곳 지우기',
   clear: '모두 지우기',
+  region: (n: number, effect: string, face: boolean) =>
+    `가릴 곳 ${n}: ${effect}${face ? ' (찾은 얼굴)' : ''}`,
+  findFaces: '얼굴 찾기',
+  faces: {
+    checking: '얼굴 찾기 데이터를 확인하는 중…',
+    ask: (size: string) =>
+      `얼굴을 찾으려면 얼굴 찾기 데이터 ${size}를 한 번 받아야 합니다. 받은 데이터는 이 브라우저에만 보관해 다음부터는 바로 찾습니다. 사진은 어디로도 보내지 않습니다.`,
+    removed: '전에 받은 얼굴 찾기 데이터가 이 브라우저에서 지워졌습니다.',
+    lowSpace: '이 기기의 남은 저장 공간이 적어 데이터를 보관하지 못할 수 있습니다.',
+    getData: (size: string) => `데이터 받기 (${size})`,
+    cancel: '취소',
+    downloading: (percent: number) => `얼굴 찾기 데이터를 받는 중… ${percent}%`,
+    finding: (percent: number) => `얼굴을 찾는 중… ${percent}%`,
+    found: (total: number, added: number) =>
+      added === total
+        ? `얼굴 ${total}개를 찾아 가릴 곳으로 넣었습니다.`
+        : `얼굴 ${total}개를 찾았습니다. 이미 가린 곳과 겹치지 않는 ${added}곳을 넣었습니다.`,
+    none: '얼굴을 찾지 못했습니다. 사진 위를 끌어 직접 가리세요.',
+    check:
+      '자동 찾기는 옆모습·아래를 보는 얼굴·가려지거나 아주 작은 얼굴을 놓칠 수 있습니다. 사진을 끝까지 살펴보고 놓친 얼굴은 직접 그려 더하세요. 얼굴이 아닌 곳은 고른 뒤 지우세요.',
+    failedData: '얼굴 찾기 데이터를 받지 못했습니다. 인터넷 연결을 확인하고 다시 눌러 주세요.',
+    failedFind: '얼굴을 찾다가 멈췄습니다. 다시 눌러 주세요. 계속 안 되면 직접 그려 가리세요.',
+  },
   safety:
     '번호판·전화번호·주민등록번호·이름처럼 꼭 감춰야 하는 정보는 "검게 칠하기"를 고르세요. 흐림과 칸이 작은 모자이크는 원래 내용을 짐작해 되살릴 수 있습니다.',
   settingsNew: '새로 그릴 곳',
@@ -90,7 +112,6 @@ const en: typeof ko = {
   otherFile: 'Other image',
   previewHelp:
     'Drag on the photo to draw an area to hide. Drag an area to move it and drag the dots on its corners and sides to resize it. Select an area to move it with the arrow keys (hold Shift for bigger steps) or remove it with Delete.',
-  region: (n: number, effect: string) => `Area ${n}: ${effect}`,
   edges: {
     nw: 'Top-left corner',
     ne: 'Top-right corner',
@@ -109,6 +130,29 @@ const en: typeof ko = {
   add: 'Add area',
   remove: 'Remove selected',
   clear: 'Remove all',
+  region: (n: number, effect: string, face: boolean) =>
+    `Area ${n}: ${effect}${face ? ' (found face)' : ''}`,
+  findFaces: 'Find faces',
+  faces: {
+    checking: 'Checking the face data…',
+    ask: (size: string) =>
+      `To find faces, download the face data (${size}) once. It is kept only in this browser, so next time faces are found right away. Your photo is never sent anywhere.`,
+    removed: 'The face data you downloaded before has been removed from this browser.',
+    lowSpace: 'This device is low on storage, so the data may not be kept.',
+    getData: (size: string) => `Download data (${size})`,
+    cancel: 'Cancel',
+    downloading: (percent: number) => `Downloading the face data… ${percent}%`,
+    finding: (percent: number) => `Finding faces… ${percent}%`,
+    found: (total: number, added: number) =>
+      added === total
+        ? `Found ${total} ${total === 1 ? 'face' : 'faces'} and added ${total === 1 ? 'it' : 'them'} as areas to hide.`
+        : `Found ${total} ${total === 1 ? 'face' : 'faces'}. Added ${added} that ${added === 1 ? 'does' : 'do'} not overlap areas you already marked.`,
+    none: 'No faces found. Drag on the photo to hide them yourself.',
+    check:
+      'Automatic finding can miss faces in profile, looking down, partly covered or very small. Check the whole photo and draw any missed faces yourself. Select anything that is not a face and remove it.',
+    failedData: 'The face data could not be downloaded. Check your connection and try again.',
+    failedFind: 'Finding faces stopped. Please try again, or hide the faces yourself.',
+  },
   safety:
     'For information that must stay hidden, such as license plates, phone numbers, ID numbers or names, choose "Black out". Blur and fine mosaic can be guessed back.',
   settingsNew: 'Next area you draw',
