@@ -16,11 +16,14 @@ import ThemeInit from '../components/ThemeInit.astro';
 import LocaleRedirect from '../components/LocaleRedirect.astro';
 import DropGuard from '../components/DropGuard.astro';
 import Header from '../components/Header.astro';
+import ToolIconSprite from '../components/ToolIconSprite.astro';
 import Footer from '../components/Footer.astro';
 import MobileAnchor from '../components/MobileAnchor.astro';
 import Analytics from '../components/Analytics.astro';
 import AdsScript from '../components/AdsScript.astro';
 import AdblockNotice from '../components/AdblockNotice.astro';
+import siteFontBase from '../styles/fonts/site-base.woff2?url';
+import siteFontCore from '../styles/fonts/site-core.woff2?url';
 
 interface Props {
   /** 페이지 제목. 없으면 사이트명만 쓴다 (홈). */
@@ -39,6 +42,11 @@ const alternates = LOCALES.map((other) => ({
   locale: other,
   href: new URL(localizePath(path, other), Astro.site).href,
 }));
+/**
+ * 첫 화면 글자에 꼭 쓰는 글꼴 조각을 CSS를 읽기 전에 받기 시작한다 (글자가 늦게 바뀌지 않게).
+ * 영문·기호(base)는 모든 페이지, 많이 쓰는 한글(core)은 한국어 페이지만 쓴다 (src/styles/site-font.css)
+ */
+const preloadFonts = locale === DEFAULT_LOCALE ? [siteFontBase, siteFontCore] : [siteFontBase];
 ---
 
 <!doctype html>
@@ -50,6 +58,9 @@ const alternates = LOCALES.map((other) => ({
     <LocaleRedirect />
     <ThemeInit />
     <title>{fullTitle}</title>
+    {preloadFonts.map((href) => (
+      <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+    ))}
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <!-- 검색엔진에 같은 페이지의 다른 언어판을 알린다 -->
@@ -85,6 +96,7 @@ const alternates = LOCALES.map((other) => ({
     <AdsScript />
   </head>
   <body>
+    <ToolIconSprite />
     <Header />
     <main>
       <slot />

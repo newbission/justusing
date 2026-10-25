@@ -11,20 +11,28 @@
  * blob URL로 띄운 워커도 이 CSP를 그대로 따른다.
  */
 import '../styles/global.css';
+/*
+ * 도구 화면은 파일 이름·표 미리보기처럼 사이트 글꼴(사이트에 쓰는 글자만)에 없는 글자도 보여 준다.
+ * 그런 글자는 Pretendard 원래 글자 범위별 조각으로 그린다 (화면에 나온 글자의 조각만 받는다)
+ */
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import { localeOf, withoutLocale } from '../i18n/locales';
 import { getTool } from '../tools/registry';
 import { siteConfig, siteUrl } from '../site.config';
+import { ui } from '../i18n/ui';
 
-interface Props {
-  /** frame 문서 제목 (스크린리더가 iframe 안에서 읽는다) */
-  title: string;
-}
-
-const { title } = Astro.props;
 const locale = localeOf(Astro.url.pathname);
-/** 따라 하기 단계: 이 도구의 사용법 (src/frame/tour.ts). 바깥 페이지가 보낸 글은 쓰지 않으려고 빌드 때 넣는다 */
+/**
+ * 주소(/<카테고리>/<이름>/frame/)로 도구를 찾는다. frame 페이지는 도구마다 따로 만든다
+ * (src/integrations/tool-frames.ts)
+ */
 const [category, name] = withoutLocale(Astro.url.pathname).split('/').filter(Boolean);
-const tourSteps = getTool(`${category}/${name}`)?.content?.[locale].howTo ?? [];
+const tool = getTool(`${category}/${name}`);
+if (!tool) throw new Error(`도구 화면 주소에 맞는 도구가 없습니다: ${Astro.url.pathname}`);
+/** frame 문서 제목 (스크린리더가 iframe 안에서 읽는다) */
+const title = ui(locale).tool.frameTitle(tool.text[locale].name);
+/** 따라 하기 단계: 이 도구의 사용법 (src/frame/tour.ts). 바깥 페이지가 보낸 글은 쓰지 않으려고 빌드 때 넣는다 */
+const tourSteps = tool.content?.[locale].howTo ?? [];
 
 /**
  * 우리 사이트 주소. Safari(WebKit)는 출처 없는 sandbox 문서에서 'self'를 우리 사이트로 보지 않아

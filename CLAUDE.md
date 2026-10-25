@@ -28,9 +28,12 @@ python3 tests/fixtures/make_fixtures.py  # 테스트용 PDF 다시 만들기
 python3 tests/fixtures/make_image_fixtures.py  # 테스트용 이미지 다시 만들기 (Pillow·pillow-heif 필요)
 python3 tests/fixtures/make_text_fixtures.py  # 테스트용 CSV(CP949·Shift_JIS) 다시 만들기
 python3 tests/fixtures/make_frame_fixtures.py  # 동영상을 GIF로·장면 캡처 시험 동영상 다시 만들기 (Pillow·ffmpeg 필요)
+npm run build && python3 scripts/fonts/build_site_font.py && npm run build  # 사이트 화면 글꼴 다시 만들기 (새 글자가 생겨 site-font E2E가 실패할 때)
 python3 scripts/samples/make_samples.py  # '예시 파일로 해 보기' 견본 다시 만들기 (PyMuPDF·Pillow·pillow-heif, 먼저 npm install)
 python3 scripts/samples/make_video_samples.py  # 동영상을 GIF로·장면 캡처 견본 동영상 다시 만들기 (Pillow·ffmpeg 필요)
 PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scripts/guide-images/render.py  # 가이드 그림 다시 만들기 (먼저 npm run preview)
+node scripts/readme/tools.mjs  # README(한·영) 도구 목록을 레지스트리에서 다시 만들기 (--check: 다르면 실패, CI)
+PLAYWRIGHT_CHANNEL=chrome node scripts/readme/screenshots.mjs  # README 화면 그림 다시 만들기 (먼저 npm run preview)
 ```
 
 개발 서버에서 `/_dev/layout/` 주소로 도구 페이지 틀과 광고 슬롯 위치를 볼 수 있다 (배포에는 없음).
@@ -75,6 +78,8 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 - 광고·통계 스크립트는 바깥 페이지에만 둔다. 광고는 처리 중에도 계속 보인다.
 - frame 높이는 고정(`ToolFrame`), 안에서 스크롤한다. 처리 전후로 바깥 레이아웃이 밀리지 않는다.
 - 모든 페이지에 Astro CSP(`security.csp`)가 켜져 있다. 광고를 붙일 때 바깥 페이지 CSP에 광고 업체를 추가한다.
+  빌드 뒤 `src/integrations/csp-per-page.ts`가 페이지마다 그 페이지의 인라인 스크립트·스타일 해시만 남긴다(2026-10-24). 그래서
+  실행 중에 `<style>`·인라인 `<script>`를 새로 넣는 코드는 막힌다 (E2E가 CSP 위반을 실패로 본다)
 - 파일 놓기: 바깥 페이지에서 파일 끌기가 시작되면 도구 iframe이 화면 전체로 넓어져
   어디에 놓든 격리 frame이 받는다 (`ToolFrame`). 그래도 바깥에 놓이면 `DropGuard`가
   `<head>` 맨 앞에서 가장 먼저 가로채 다른 스크립트(광고 등)에 전달되지 않게 막는다.
@@ -100,7 +105,7 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 ### 설정은 한 곳에
 
 - 사이트명·도메인·설명·광고 설정은 `src/site.config.ts`에만 둔다. 코드·문서에 하드코딩하지 않는다.
-  예외: `README.md`는 저장소를 찾은 사람이 사이트로 바로 가게 사이트 링크를 직접 적는다 (사용자 결정, 2026-10-18). 도메인을 바꾸면 같이 고친다.
+  예외: `README.md`·`README.en.md`(영어판)는 저장소를 찾은 사람이 사이트로 바로 가게 사이트 링크를 직접 적는다 (사용자 결정, 2026-10-18). 도메인을 바꾸면 같이 고친다 (도구 목록은 `scripts/readme/tools.mjs`가 `site.config.ts`의 도메인으로 다시 만든다).
 - 도메인 연결은 코드가 아니라 Cloudflare 대시보드에서 한다 (아래 "배포 수동 설정").
 
 ### 주소 구조
@@ -127,9 +132,10 @@ PLAYWRIGHT_CHANNEL=chrome node scripts/guide-images/run-tools.mjs && python3 scr
 2. `src/tools/registry.ts`의 `TOOL_IDS`에 `'<카테고리>/<이름>'` 한 줄을 넣는다.
    `src/frame/samples.ts`의 `BY_TOOL`에 넣을 견본을 적는다 ('예시 파일로 해 보기', 맞는 견본이 없으면 `make_samples.py`에 더한다).
 3. 다 만들면 `meta.ts`의 `status`를 `'live'`로 바꾸고 `tests/e2e/`에 E2E를 추가한다.
+   `node scripts/readme/tools.mjs`로 README(한·영)의 도구 목록을 다시 만든다 (CI가 `--check`로 레지스트리와 같은지 본다).
 
 도구 ID와 주소는 폴더 경로에서 정해진다. 도구 페이지(`[category]/[tool].astro`)와
-frame 페이지(`[category]/[tool]/frame.astro`)는 레지스트리에서 자동으로 만든다.
+frame 페이지는 `src/integrations/tool-frames.ts`가 live 도구마다 그 도구의 `Frame.astro`를 진입점으로 만든다(그 도구 CSS만 실리게).
 새 카테고리·묶음은 `src/tools/categories.ts`에 추가한다 (묶음 순서가 곧 화면 순서). PDF 도구는 `src/lib/pdf/pdfjs.ts`의 `openPdf()`로 열고(보기·썸네일),
 결과 PDF는 `src/lib/pdf/assemble.ts`의 `assemblePdf()`로 만든다(페이지 고르기·순서·회전, 워커에서 pdf-lib).
 썸네일은 `src/lib/pdf/Thumbnail.svelte`, 다운로드는 `src/frame/download.ts`, 바깥 스크롤 요청은 `src/frame/parent.ts`.
@@ -177,6 +183,8 @@ PDF 하나를 다루는 도구는 `src/lib/pdf/SinglePdfTool.svelte`(파일 고�
   한글 음절·영문·숫자·문장부호만, 한자 없음 → WOFF2). 결과(`public/data/fonts/`, 미리보기 SVG, 허가서,
   `src/lib/fonts/catalog.json`)는 커밋한다. 글꼴을 더하면 `src/lib/fonts/catalog.ts`의 이름도 더한다
 - WOFF2는 글리프 변환(transform)을 끄고 만든다. 켜면 PDF에 넣는 fontkit이 실패한다
+- 사이트 화면 글꼴(본문)은 Pretendard에서 사이트 글자만 덜어 낸 조각 넷이다 (`scripts/fonts/build_site_font.py` → `src/styles/site-font.css`,
+  굵기 400~700, 2026-10-24). 바깥 페이지에는 뒤 글꼴이 없어 새 글자가 생기면 다시 만든다 (E2E `site-font.spec.ts`가 알려 줌)
 - 글자를 덜어 낸 글꼴은 OFL의 '고친 판'이다. 허가서에 **예약 글꼴 이름(Reserved Font Name)**이 있으면
   (Pretendard, Nanum…) 글꼴 파일 안의 이름과 화면 이름에 그 이름을 쓸 수 없어 우리 이름(JUS …, 모던 고딕 등)을
   붙이고 원본 이름은 출처로만 밝힌다. 글꼴을 더할 때 허가서의 예약 이름을 먼저 확인한다

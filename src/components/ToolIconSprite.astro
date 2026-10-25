@@ -1,0 +1,28 @@
+---
+/**
+ * 모든 도구 아이콘 모양을 한 번만 적어 두는 숨은 SVG. `ToolIcon`이 `<use>`로 가리킨다 (tool-icons.ts).
+ * 모든 바깥 페이지(BaseLayout)의 맨 앞에 둔다. 화면에도 화면 읽기에도 나오지 않는다.
+ */
+import { iconSymbols } from './tool-icons';
+---
+
+<svg class="tool-icon-sprite" aria-hidden="true" focusable="false">
+  {iconSymbols.map(({ id, paths }) => (
+    <symbol {id} viewBox="0 0 24 24">
+      {paths.map((d) => (
+        <path {d} />
+      ))}
+    </symbol>
+  ))}
+</svg>
+
+<style is:global>
+  /* 전역 스타일: symbol·path마다 범위 속성(data-astro-cid)이 붙지 않게.
+     display: none이면 일부 브라우저가 가리킨 모양을 그리지 않을 수 있어 크기만 없앤다 */
+  .tool-icon-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+</style>

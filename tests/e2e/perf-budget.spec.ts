@@ -31,53 +31,56 @@ interface Limits {
 
 /** 바깥 페이지 종류별 상한 */
 const OUTER: { name: string; path: string; limits: Limits }[] = [
-  // 홈·안전 페이지는 움직이는 그림(SVG)이 HTML에 들어 있어 HTML이 크다
+  // 홈·안전 페이지는 움직이는 그림(SVG)이 HTML에 들어 있어 HTML이 크다.
+  // 글꼴은 사이트 글자만 담은 조각 네 개(src/styles/site-font.css): 영문·기호 36 + 홈·많이 쓰는 한글 58 + 나머지 31·31.
+  // 줄인 뒤 잰 값(HTML / JS / CSS / 글꼴 / 그림 / 요청, 2026-10-24 글꼴·frame CSS·SVG 줄이기,
+  // HTML은 CSP 해시를 페이지마다 줄인 뒤 src/integrations/csp-per-page.ts)을 줄 끝에 적는다
   {
     name: '홈',
     path: '/',
-    limits: { html: 27, js: 4, css: 23, font: 520, image: 5, requests: 30 }, // 2026-10-24: 22.8 / 0 / 19.8 / 417 / 0 / 22
+    limits: { html: 24, js: 4, css: 10, font: 117, image: 5, requests: 10 }, // 20.7 / 0 / 8.7 / 94 / 0 / 7
   },
   {
     name: '카테고리(PDF)',
     path: '/pdf/',
-    limits: { html: 25, js: 4, css: 20, font: 500, image: 5, requests: 28 }, // 21.1 / 0 / 17.2 / 401 / 0 / 20
+    limits: { html: 22, js: 4, css: 7, font: 155, image: 5, requests: 10 }, // 18.9 / 0 / 6.0 / 124 / 0 / 7
   },
   {
     name: '카테고리(이미지)',
     path: '/image/',
-    limits: { html: 23, js: 4, css: 20, font: 500, image: 5, requests: 28 }, // 19.5 / 0 / 17.2 / 399 / 0 / 20
+    limits: { html: 21, js: 4, css: 7, font: 155, image: 5, requests: 10 }, // 17.9 / 0 / 6.0 / 124 / 0 / 7
   },
   {
     name: '카테고리(텍스트)',
     path: '/text/',
-    limits: { html: 21, js: 4, css: 20, font: 450, image: 5, requests: 25 }, // 17.5 / 0 / 17.2 / 352 / 0 / 17
+    limits: { html: 18.1, js: 4, css: 7, font: 155, image: 5, requests: 10 }, // 15.7 / 0 / 6.0 / 124 / 0 / 7
   },
   // 도구 페이지: 도구 frame은 따로 센다. 바깥 JS는 frame 연결·보관 데이터·따라 하기 스크립트뿐이다
   {
     name: '도구(PDF 합치기)',
     path: '/pdf/merge/',
-    limits: { html: 25, js: 4, css: 22, font: 520, image: 5, requests: 30 }, // 21.1 / 2.2 / 19.2 / 411 / 0 / 24
+    limits: { html: 22.2, js: 4, css: 9.2, font: 155, image: 5, requests: 14 }, // 19.3 / 2.2 / 8.0 / 124 / 0 / 11
   },
   {
     name: '도구(이미지 글자 추출)',
     path: '/image/ocr/',
-    limits: { html: 26, js: 4, css: 22, font: 450, image: 5, requests: 28 }, // 21.9 / 2.2 / 19.2 / 331 / 0 / 21
+    limits: { html: 23, js: 4, css: 9.2, font: 155, image: 5, requests: 14 }, // 20.0 / 2.2 / 8.0 / 124 / 0 / 11
   },
-  // 가이드 글은 글이 길어 한글 글꼴 조각을 더 받는다
+  // 가이드 글은 글이 길어 한글 글꼴 조각을 다 받는다
   {
     name: '가이드 목록',
     path: '/guide/',
-    limits: { html: 24, js: 4, css: 20, font: 550, image: 5, requests: 28 }, // 20.7 / 0 / 17.2 / 432 / 0 / 20
+    limits: { html: 22.2, js: 4, css: 7, font: 155, image: 5, requests: 10 }, // 19.3 / 0 / 6.0 / 124 / 0 / 7
   },
   {
     name: '가이드 글',
     path: '/guide/compress-pdf/',
-    limits: { html: 24, js: 4, css: 20, font: 600, image: 20, requests: 30 }, // 20.4 / 0 / 17.2 / 460 / 7.2 / 23
+    limits: { html: 21.5, js: 4, css: 7, font: 194, image: 20, requests: 12 }, // 18.7 / 0 / 6.0 / 155 / 7.2 / 9
   },
   {
     name: '안전 설명',
     path: '/safety/',
-    limits: { html: 28, js: 4, css: 24, font: 560, image: 5, requests: 30 }, // 23.8 / 0 / 20.5 / 445 / 0 / 22
+    limits: { html: 25.2, js: 4, css: 10.8, font: 194, image: 5, requests: 12 }, // 21.9 / 0 / 9.4 / 155 / 0 / 9
   },
 ];
 
@@ -86,14 +89,16 @@ const FRAMES: { name: string; path: string; limits: Limits }[] = [
   {
     name: 'PDF 합치기',
     path: '/pdf/merge/',
-    // pdf.js(126KB)는 PDF를 열 때 받는다 (src/lib/pdf/pdfjs.ts). 첫 화면에서 받기 시작하면 js 상한을 넘는다
-    limits: { html: 16, js: 46, css: 21, font: 230, image: 5, requests: 32 }, // 13.4 / 39.1 / 18.0 / 178 / 0 / 24
+    // pdf.js(126KB)는 PDF를 열 때 받는다 (src/lib/pdf/pdfjs.ts). 첫 화면에서 받기 시작하면 js 상한을 넘는다.
+    // frame 페이지는 도구마다 따로 만들어 그 도구의 CSS만 싣는다 (src/integrations/tool-frames.ts).
+    // CSS의 약 14KB는 사용자 글자(파일 이름 등)를 그리는 Pretendard 원래 조각 목록이다 (FrameLayout)
+    limits: { html: 3, js: 46, css: 21, font: 117, image: 5, requests: 24 }, // 2.6 / 39.5 / 19.1 / 94 / 0 / 20
   },
   {
     name: '이미지 글자 추출',
     path: '/image/ocr/',
     // 글자 읽는 엔진·언어 데이터는 받기 전에 묻고, 그때 받는다
-    limits: { html: 16, js: 46, css: 21, font: 290, image: 5, requests: 32 }, // 13.4 / 39.6 / 18.0 / 230 / 0 / 25
+    limits: { html: 3.8, js: 46, css: 20.6, font: 117, image: 5, requests: 20 }, // 3.3 / 39.9 / 17.9 / 94 / 0 / 17
   },
 ];
 

@@ -1,6 +1,6 @@
 # 도구 격리 frame (`src/frame/`, `ToolFrame`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-23
+쓴 날 2026-10-16 · 고친 날 2026-10-24
 
 - 쓰는 곳: 모든 도구 페이지 (`/<카테고리>/<이름>/` 안의 `/<카테고리>/<이름>/frame/`)
 - 상태: 3단계(2026-10-10)부터 모든 도구의 바탕. Safari 수정은 PR #40 (2026-10-15)
@@ -12,7 +12,8 @@
 광고·통계 스크립트는 바깥 페이지에서 돌아 화면의 PDF 글자·파일 이름을 읽을 수 있다.
 그래서 **파일을 고르고, 보고, 처리하고, 받는 일은 모두 출처 없는(sandbox) iframe 안에서만** 한다.
 
-- 바깥 페이지(`[category]/[tool].astro`)가 `ToolFrame`으로 frame 페이지(`[category]/[tool]/frame.astro`)를 띄운다
+- 바깥 페이지(`[category]/[tool].astro`)가 `ToolFrame`으로 frame 페이지(`/<카테고리>/<이름>/frame/`)를 띄운다.
+  frame 페이지는 `tool-frames.ts`가 도구마다 따로 만들어 그 도구의 CSS만 싣는다 (2026-10-24)
 - iframe `sandbox="allow-scripts allow-downloads"` (allow-same-origin 없음) → frame 출처는 `null`
   - 바깥 스크립트는 frame 안을 못 보고, frame도 바깥·사이트 저장소(`localStorage` 등)에 못 닿는다
 - frame CSP: `default-src 'none'`. 우리 사이트 파일 읽기만 허용, 외부 연결은 도구 코드 자신도 못 한다
@@ -32,8 +33,8 @@
 | 파일                                      | 역할                                                                                                                    |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `src/components/ToolFrame.astro`          | 바깥: iframe(sandbox, `allow="fullscreen"`), 높이 고정, 테마 전달, 끌기 때 화면 전체로 넓히기, 신호 받기, `serveData()` |
-| `src/frame/FrameLayout.astro`             | frame 문서 틀: CSP, `<html lang>`, 테마 적용 스크립트, `setupFrameDrop()`·`setupFrameActivity()`                        |
-| `src/pages/[category]/[tool]/frame.astro` | 레지스트리에서 frame 페이지를 만들고 도구의 `Frame.astro`를 그린다                                                      |
+| `src/frame/FrameLayout.astro`             | frame 문서 틀: CSP, `<html lang>`, 제목, 테마 스크립트, `setupFrameDrop()`·`setupFrameActivity()`, 사용자 글자용 글꼴   |
+| `src/integrations/tool-frames.ts`         | live 도구마다(한·영) 그 도구의 `Frame.astro`를 진입점으로 frame 라우트를 만든다                                         |
 | `src/tools/<카테고리>/<이름>/Frame.astro` | `FrameLayout` 안에 `App.svelte`를 `mount`                                                                               |
 | `src/lib/worker.ts`                       | `createWorker(url)`: 워커 스크립트를 받아 blob URL 클래식 워커로 띄운다                                                 |
 | `src/frame/drop.ts`                       | frame 전체를 놓는 곳으로: 덮개, 크기 고정, `onFrameFiles()`                                                             |
@@ -58,19 +59,22 @@
 
 ### frame CSP (`FrameLayout.astro`)
 
-| 지시어                    | 값                                                | 이유                                             |
-| ------------------------- | ------------------------------------------------- | ------------------------------------------------ |
-| `default-src`             | `'none'`                                          | 그 밖은 모두 막는다                              |
-| `connect-src`             | `'self'` + 사이트 주소 + `www.` 주소              | 우리 사이트 파일(워커 스크립트·CMap 등)만 받는다 |
-| `worker-src`              | `blob:`                                           | `createWorker()`가 blob URL로 띄운다             |
-| `img-src`                 | 사이트 + `blob:` `data:`                          | 썸네일·미리보기                                  |
-| `font-src`                | 사이트 + `data:`                                  |                                                  |
-| `media-src`               | `blob:` (동영상 카테고리 frame만)                 | 고른 동영상을 `<video>`로 연다. 다른 도구는 막힘 |
-| `script-src`              | `'self'` + 사이트 + `'wasm-unsafe-eval'`          | pdf.js 등이 WebAssembly를 쓴다 (eval은 금지)     |
-| `style-src`               | `'self'` + 사이트 (+ Astro가 넣는 `<style>` 해시) |                                                  |
-| `form-action`, `base-uri` | `'none'`                                          |                                                  |
+| 지시어                    | 값                                             | 이유                                             |
+| ------------------------- | ---------------------------------------------- | ------------------------------------------------ |
+| `default-src`             | `'none'`                                       | 그 밖은 모두 막는다                              |
+| `connect-src`             | `'self'` + 사이트 주소 + `www.` 주소           | 우리 사이트 파일(워커 스크립트·CMap 등)만 받는다 |
+| `worker-src`              | `blob:`                                        | `createWorker()`가 blob URL로 띄운다             |
+| `img-src`                 | 사이트 + `blob:` `data:`                       | 썸네일·미리보기                                  |
+| `font-src`                | 사이트 + `data:`                               |                                                  |
+| `media-src`               | `blob:` (동영상 카테고리 frame만)              | 고른 동영상을 `<video>`로 연다. 다른 도구는 막힘 |
+| `script-src`              | `'self'` + 사이트 + `'wasm-unsafe-eval'`       | pdf.js 등이 WebAssembly를 쓴다 (eval은 금지)     |
+| `style-src`               | `'self'` + 사이트 (+ 그 페이지 `<style>` 해시) | 해시는 그 페이지 것만 (빌드 뒤)                  |
+| `form-action`, `base-uri` | `'none'`                                       |                                                  |
 
 - CSP를 걸 수 없으면(`Astro.csp` 없음) 배포 빌드를 멈춘다
+- Astro는 사이트 전체의 스타일·스크립트 해시를 모든 페이지에 넣는다. 빌드 뒤 `src/integrations/csp-per-page.ts`가 페이지마다 그 페이지의
+  인라인 `<script>`·`<style>`과 부르는 파일의 해시만 남긴다 (frame HTML gzip 7KB → 3KB). 해시가 아닌 값과 다른 지시어는 그대로 둔다.
+  그래서 frame 안에서 실행 중에 `<style>`·인라인 `<script>`를 새로 넣으면 막힌다 (E2E `csp.spec.ts`·공통 `test.ts`가 위반을 찾는다)
 
 ### 바깥 ↔ frame 신호 (`postMessage`, 대상 `'*'`, 내용 없음)
 
