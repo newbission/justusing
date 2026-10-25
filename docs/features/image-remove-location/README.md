@@ -79,7 +79,11 @@
     - 항목 종류(iinf) `hvc1`·`grid`·`iden`·`iovl`·`tmap`·`jpeg`·`Exif`·`mime`(XMP: 종류 이름이 정확히 `application/rdf+xml`이고 압축하지 않은 것). 보호(암호화)된 항목과
       항목 정보(infe)의 정해진 칸 뒤에 바이트가 더 있는 것은 받지 않는다
     - 항목 참조(iref) `thmb`·`auxl`·`dimg`·`cdsc`·`base`·`prem`, 묶음(grpl) `altr`·`ster`, 자료 참조(dref)는 '이 파일 안'(`url ` 깃발 1)만
-    - HEVC: `hvcC`와 `hvc1` 그림 자료의 NAL은 0~40번만, SEI는 사용자 자료(4·5번, 인코더 이름 같은 글)가 없어야 한다
+    - HEVC: `hvcC`와 `hvc1` 그림 자료의 NAL은 그림 조각(0~9·16~21)·매개변수 묶음·구분·끝 표시·채움(0xFF만)·SEI만.
+      그림 조각이 아닌 NAL에 읽을 수 있는 글이 8자 넘게 이어지면 받지 않는다. SEI 메시지는 숫자만 담는 종류
+      (0·1·6·129·132·137·144·147·165·177)만 받는다 (Codex #146: 모르는 종류 300에 좌표 글)
+    - 숫자만 담는 상자·속성(`dinf`·`iref`·`grpl`·`pitm`·`iloc`·`ipma`, `colr`·`auxC` 밖의 속성, 이어 만드는 항목의 자료)에 읽을 수 있는 글이
+      8자 넘게 이어지면 정해진 칸 밖에 글이 있는 것으로 보고 받지 않는다
   - JPEG 그림 항목: 안의 정보 조각을 `stripJpegMetadata`와 같은 기준(JFIF·ICC·Adobe만 남김)으로, 길이를 두고 내용만 0으로 비운다
     (`blankJpegMetadata`, 그림 끝 뒤 자료도 0). 위치만 지울 때도 날짜·기기까지 비운다(작은 그림이라 더 엄격하게). 읽지 못하면 고치지 않는다
   - 마지막 안전망: 압축한 그림 자료(HEVC·JPEG 항목) 밖에 `GPS`나 소수점 아래 네 자리 넘는 숫자(좌표)가 남았으면 위치가 있는 것으로 본다.
@@ -147,9 +151,10 @@
     두 방식 모두 크기가 같고 정보 항목 밖은 한 바이트도 바뀌지 않는다, 로컬 처리
   - HEIC 뒤에 GPS 글이 든 `free`·`skip` 상자와 덧붙은 자료를 붙여도 결과에 GPS·주소 글이 남지 않는다
   - `located-uuid.heic`(확장 속성 `uuid`에 위치 글): 지우기 전부터 '안전하게 지울 수 없음', 지우기는 실패, 다운로드 없음
+  - `located-sei.heic`(대표 그림 자료 앞에 모르는 SEI 종류와 좌표 글): '안전하게 지울 수 없음', 지우기 실패, 다운로드 없음
   - `located-exif-prefix.heic`(EXIF의 TIFF 앞 자리에 주소 글): 주소 글이 남지 않고 남길 칸은 다시 읽힌다
   - `located-jpeg-item.heic`(`located.jpg`를 JPEG 항목으로): 크기가 같고 GPS·주소·설명 글·덧붙은 영상이 남지 않으며 안의 JPEG는 읽히고 정보가 없다
-- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`·`located-uuid.heic`·`located-jpeg-item.heic`·`located-exif-prefix.heic`, 뒤의 셋은 `rebuild_heif`로 다시 쓴다)
+- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`·`located-uuid.heic`·`located-jpeg-item.heic`·`located-exif-prefix.heic`·`located-sei.heic`, 뒤의 넷은 `rebuild_heif`로 다시 쓴다)
 
 ### 직접 확인
 
