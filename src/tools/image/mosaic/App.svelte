@@ -31,6 +31,7 @@
     MAX_STRENGTH,
     MIN_STRENGTH,
     amountOf,
+    inside,
     type Effect,
     type Region,
     type Shape,
@@ -344,12 +345,9 @@
           x: (face.x + face.width / 2) * scale,
           y: (face.y + face.height / 2) * scale,
         };
-        const covered = [...regions, ...added].some(
-          (region) =>
-            center.x >= region.x &&
-            center.x <= region.x + region.width &&
-            center.y >= region.y &&
-            center.y <= region.y + region.height,
+        // 저장과 같은 inside()로 본다 (타원은 바깥 사각형의 귀퉁이를 가리지 않는다)
+        const covered = [...regions, ...added].some((region) =>
+          inside(region, region.shape, center.x - 0.5, center.y - 0.5),
         );
         if (covered) continue;
         const cover = coverOf(face);
