@@ -29,4 +29,6 @@ export default defineTool({
   },
   related: ['pdf/redact', 'image/remove-location', 'image/crop'],
   flow: { from: { kind: 'jpg', mark: 'photo' }, to: { kind: 'jpg', mark: 'mosaic' } },
+  // 다른 도구 결과를 받는다 (사진 한 장, docs/foundations/tool-chaining)
+  receives: { multiple: false },
 });
