@@ -32,6 +32,8 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow와 
 - broken.heic  머리만 HEIC이고 내용은 깨진 파일
 - located.heic 촬영 정보가 든 HEIC (위치정보 지우기). located.jpg와 같은 EXIF(GPS·날짜·기기·자유 글)와 GPS가 든 XMP,
                회전 표시(irot). 화소 400×300 → 바로 세우면 300×400
+- located-uuid.heic located.heic에 위치 글이 든 확장 그림 속성(uuid)을 더한 것 (허용 목록 밖이라 지우지 않아야 한다)
+- located-jpeg-item.heic located.heic에 located.jpg를 JPEG 그림 항목으로 더한 것 (그 안의 정보 조각까지 비워야 한다)
 
 이 스크립트가 만들지 않는 것:
 - face.jpg     흰 배경 앞 얼굴 사진 (증명사진 도구). 얼굴 인식은 실제 사진이라야 해서 NASA 공개 사진
@@ -301,9 +303,106 @@ def heic_fixtures():
 
 heic_fixtures()
 
+
+def heif_box(kind: str, body: bytes) -> bytes:
+    return struct.pack('>I', 8 + len(body)) + kind.encode('latin1') + body
+
+
+def heif_full_box(kind: str, body: bytes, version: int = 0) -> bytes:
+    return heif_box(kind, bytes([version, 0, 0, 0]) + body)
+
+
+def heif_children(data: bytes, start: int, end: int):
+    while start + 8 <= end:
+        size, kind = struct.unpack('>I4s', data[start:start + 8])
+        yield kind.decode('latin1'), data[start:start + size], data[start + 8:start + size]
+        start += size
+
+
+def rebuild_heif(source: str, target: str, extra_props=(), extra_items=()):
+    """source HEIC의 항목·속성을 그대로 옮기고 속성·항목을 더해 다시 쓴다 (위치 정보 지우기의 허용 목록 시험).
+
+    extra_props: [(속성 상자, 붙일 항목 번호)], extra_items: [(항목 번호, 종류, 자료)]
+    """
+    with open(source, 'rb') as file:
+        data = file.read()
+    top = {kind: (raw, body) for kind, raw, body in heif_children(data, 0, len(data))}
+    meta = {kind: (raw, body) for kind, raw, body in heif_children(top['meta'][1], 4, len(top['meta'][1]))}
+    infes = [raw for kind, raw, _ in heif_children(meta['iinf'][1], 6, len(meta['iinf'][1]))]
+    iprp = {kind: body for kind, _, body in heif_children(meta['iprp'][1], 0, len(meta['iprp'][1]))}
+    props = [raw for _, raw, _ in heif_children(iprp['ipco'], 0, len(iprp['ipco']))]
+
+    # iloc (판 0, 파일 안 위치)에서 항목 자료를 읽는다
+    iloc = meta['iloc'][1]
+    sizes = iloc[4], iloc[5]
+    offset_size, length_size, base_size = sizes[0] >> 4, sizes[0] & 15, sizes[1] >> 4
+    read = lambda at, n: (int.from_bytes(iloc[at:at + n], 'big') if n else 0, at + n)
+    count, at = read(6, 2)
+    contents = {}
+    for _ in range(count):
+        item, at = read(at, 2)
+        _, at = read(at, 2)
+        base, at = read(at, base_size)
+        extents, at = read(at, 2)
+        parts = b''
+        for _ in range(extents):
+            offset, at = read(at, offset_size)
+            length, at = read(at, length_size)
+            parts += data[base + offset:base + offset + length]
+        contents[item] = parts
+
+    # ipma (판 0): 항목마다 속성 번호 목록
+    ipma = iprp['ipma']
+    associations = {}
+    at = 8
+    for _ in range(struct.unpack('>I', ipma[4:8])[0]):
+        item, n = struct.unpack('>HB', ipma[at:at + 3])
+        associations[item] = list(ipma[at + 3:at + 3 + n])
+        at += 3 + n
+    for box, item in extra_props:
+        props.append(box)
+        associations.setdefault(item, []).append(len(props))
+    for item, kind, payload in extra_items:
+        infes.append(heif_full_box('infe', struct.pack('>HH', item, 0) + kind.encode('latin1') + b'\0', 2))
+        contents[item] = payload
+
+    ipma_body = struct.pack('>I', len(associations)) + b''.join(
+        struct.pack('>HB', item, len(values)) + bytes(values) for item, values in sorted(associations.items()))
+    new_iprp = heif_box('iprp', heif_box('ipco', b''.join(props)) + heif_full_box('ipma', ipma_body))
+    new_iinf = heif_full_box('iinf', struct.pack('>H', len(infes)) + b''.join(infes))
+    order = sorted(contents)
+
+    def build(mdat_start: int) -> bytes:
+        entries = b''
+        offset = mdat_start
+        for item in order:
+            entries += struct.pack('>HHHII', item, 0, 1, offset, len(contents[item]))
+            offset += len(contents[item])
+        new_iloc = heif_full_box('iloc', bytes([0x44, 0x00]) + struct.pack('>H', len(order)) + entries)
+        rest = meta.get('iref', (b'', b''))[0]
+        return heif_full_box('meta', meta['hdlr'][0] + meta['pitm'][0] + new_iloc + new_iinf + new_iprp + rest)
+
+    ftyp = top['ftyp'][0]
+    size = len(build(0))
+    new_meta = build(len(ftyp) + size + 8)
+    mdat = heif_box('mdat', b''.join(contents[item] for item in order))
+    with open(target, 'wb') as file:
+        file.write(ftyp + new_meta + mdat)
+
+
+# 허용 목록 밖의 그림 속성(uuid)에 위치 글이 든 HEIC: 지우지 않고 '안전하게 지울 수 없음'으로 알려야 한다
+rebuild_heif(path('located.heic'), path('located-uuid.heic'), extra_props=[
+    (heif_box('uuid', bytes(range(16)) + b'GPS 37.5663,126.9779 Home: 123 Secret St'), 1)])
+# JPEG 그림 항목 안에 촬영 정보(EXIF GPS·XMP·설명 글·덧붙은 영상)가 든 HEIC: 그 조각까지 같은 길이로 비워야 한다
+with open(path('located.jpg'), 'rb') as f:
+    located_jpeg = f.read()
+rebuild_heif(path('located.heic'), path('located-jpeg-item.heic'),
+             extra_props=[(heif_full_box('ispe', struct.pack('>II', 400, 300)), 4)],
+             extra_items=[(4, 'jpeg', located_jpeg)])
+
 for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 'photo.jpg',
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
              'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
              'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg', 'quadrants.png',
-             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic']:
+             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic', 'located-uuid.heic', 'located-jpeg-item.heic']:
     print(name, os.path.getsize(path(name)), 'bytes')
