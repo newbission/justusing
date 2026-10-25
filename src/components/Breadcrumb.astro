@@ -77,18 +77,21 @@ const jsonLd = {
 </nav>
 
 <script>
-  // 바깥을 누르거나 Esc를 누르면 닫는다
-  for (const switcher of document.querySelectorAll<HTMLDetailsElement>('[data-switcher]')) {
-    document.addEventListener('click', (event) => {
+  // 바깥을 누르거나 Esc를 누르면 닫는다. 결과를 다음 도구로 넘기면 위치 표시가 새것으로 바뀌므로
+  // (src/lib/tool-switch.ts) 처음 찾은 요소에 붙이지 않고 그때그때 문서에서 찾는다
+  document.addEventListener('click', (event) => {
+    for (const switcher of document.querySelectorAll<HTMLDetailsElement>('[data-switcher][open]')) {
       if (!switcher.contains(event.target as Node)) switcher.open = false;
-    });
-    switcher.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && switcher.open) {
-        switcher.open = false;
-        switcher.querySelector('summary')?.focus();
-      }
-    });
-  }
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !(event.target instanceof Element)) return;
+    const switcher = event.target.closest<HTMLDetailsElement>('[data-switcher]');
+    if (switcher?.open) {
+      switcher.open = false;
+      switcher.querySelector('summary')?.focus();
+    }
+  });
 </script>
 
 <style>
