@@ -426,8 +426,9 @@ const EMPTY_TIFF = Uint8Array.from([0x4d, 0x4d, 0, 0x2a, 0, 0, 0, 8, 0, 0, 0, 0,
 const EMPTY_XMP = '<x:xmpmeta xmlns:x="adobe:ns:meta/"/>';
 
 /**
- * EXIF 항목을 같은 길이로 다시 쓴다. 남길 칸만 있는 TIFF를 원래 자리에 쓰고 나머지는 0으로 지운다
- * (예전 GPS 바이트가 파일에 남지 않게). 새 TIFF가 원래 자리보다 크면 undefined
+ * EXIF 항목을 같은 길이로 다시 쓴다. 남길 칸만 있는 TIFF를 쓰고 나머지는 0으로 지운다 (예전 GPS 바이트가 파일에 남지 않게).
+ * TIFF 앞(건너뛸 수 4바이트 뒤)에는 'Exif\0\0' 머리만 남긴다. 그 밖의 앞 바이트에는 자유 글이 있을 수 있어 비우고 TIFF를 앞으로 당긴다
+ * (건너뛸 수도 맞춰 고친다). 새 TIFF가 들어갈 자리가 모자라면 undefined
  */
 function cleanHeifExif(data: Uint8Array, mode: CleanMode, orientation: number) {
   const start = heifExifStart(data);
@@ -440,10 +441,13 @@ function cleanHeifExif(data: Uint8Array, mode: CleanMode, orientation: number) {
         ? orientationTiff(orientation)
         : EMPTY_TIFF
       : (safeExif(tiff) ?? EMPTY_TIFF);
-  if (replacement.length > tiff.length) return undefined;
-  const next = data.slice();
-  next.fill(0, start);
-  next.set(replacement, start);
+  const header = start === 10 && startsWith(data, 4, 'Exif\0\0') ? 6 : 0;
+  const at = 4 + header;
+  if (replacement.length > data.length - at) return undefined;
+  const next = new Uint8Array(data.length);
+  new DataView(next.buffer).setUint32(0, header);
+  if (header) next.set(ascii('Exif\0\0'), 4);
+  next.set(replacement, at);
   return next;
 }
 
