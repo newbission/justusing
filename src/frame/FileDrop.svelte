@@ -88,7 +88,7 @@
   {#if hint}
     <p class="hint">{hint}</p>
   {/if}
-  {#if hasSamples}
+  {#if hasSamples()}
     <button type="button" class="sample" disabled={sample === 'loading'} onclick={trySample}
       >{sample === 'loading' ? t.drop.sampleLoading : t.drop.sample}</button
     >

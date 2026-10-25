@@ -5,8 +5,8 @@
  * frame이 우리 사이트에서 바로 받는다 (CORS는 public/_headers). 사용자 파일은 오가지 않는다.
  */
 import type { Locale } from '../i18n/locales';
-import { withoutLocale } from '../i18n/locales';
 import { frameLocale } from './locale';
+import { currentTool } from './tool';
 
 type SampleKey =
   | 'report'
@@ -155,24 +155,22 @@ export function toolHasSamples(id: string): boolean {
   return BY_TOOL[id] !== undefined;
 }
 
-/** 이 frame의 도구 ID (주소 /<카테고리>/<이름>/frame/에서 읽는다) */
-function toolId(): string | undefined {
-  if (typeof location === 'undefined') return undefined;
-  const [category, name] = withoutLocale(location.pathname).split('/').filter(Boolean);
-  return category && name ? `${category}/${name}` : undefined;
+/**
+ * 지금 도구에 견본이 있는지. 다음 도구로 넘기면 frame 주소는 그대로이고 도구만 바뀌므로
+ * 주소가 아니라 지금 도구(src/frame/tool.ts)로 고른다
+ */
+export function hasSamples(): boolean {
+  return BY_TOOL[currentTool()] !== undefined;
 }
 
-/** 이 도구에 견본이 있는지 */
-export const hasSamples = BY_TOOL[toolId() ?? ''] !== undefined;
-
-/** 이 도구의 견본 파일 이름 (지금 언어) */
+/** 지금 도구의 견본 파일 이름 (지금 언어) */
 export function sampleNames(): string[] {
-  return (BY_TOOL[toolId() ?? ''] ?? []).map((key) => NAMES[frameLocale][key]);
+  return (BY_TOOL[currentTool()] ?? []).map((key) => NAMES[frameLocale][key]);
 }
 
-/** 이 도구의 견본을 받아 File로 돌려준다 */
+/** 지금 도구의 견본을 받아 File로 돌려준다 */
 export async function loadSamples(): Promise<File[]> {
-  const keys = BY_TOOL[toolId() ?? ''] ?? [];
+  const keys = BY_TOOL[currentTool()] ?? [];
   return Promise.all(
     keys.map(async (key) => {
       const name = NAMES[frameLocale][key];
