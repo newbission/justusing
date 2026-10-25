@@ -123,3 +123,36 @@ export function rewriteJpeg(
   }
   return out;
 }
+
+/**
+ * stripJpegMetadata와 같은 기준(허용 목록)으로 정보 조각을 지우되, 길이를 바꾸지 않고 그 자리에서 비운다
+ * (HEIC 안의 JPEG 그림 항목처럼 바이트 자리가 정해진 곳). 남기지 않는 조각은 머리(FF 표시·길이)만 두고 내용을 0으로,
+ * 그림 끝 뒤 자료도 0으로 채운다 (읽는 프로그램은 이름이 없는 APP 조각을 건너뛴다).
+ * 바뀐 것이 없으면 받은 bytes, 구조를 읽지 못하거나 조각 사이에 군더더기 바이트가 있으면 undefined
+ */
+export function blankJpegMetadata(bytes: Uint8Array): Uint8Array | undefined {
+  const blanks: [number, number][] = [];
+  let trailing = 0;
+  const result = rewriteJpeg(
+    bytes,
+    (marker, segment) => {
+      if (marker !== COM && keepsApp(marker, segment, 4)) return 'keep';
+      const start = segment.byteOffset - bytes.byteOffset;
+      blanks.push([start + 4, start + segment.length]);
+      return 'keep';
+    },
+    (rest) => {
+      trailing = rest.length;
+      blanks.push([bytes.length - rest.length, bytes.length]);
+    },
+  );
+  if (!result) return undefined;
+  // 모두 'keep'이면 rewriteJpeg는 덧붙은 자료와 군더더기만 뺀다. 줄어든 길이가 덧붙은 자료보다 크면 군더더기가 있다
+  if (bytes.length - result.length !== trailing) return undefined;
+  if (blanks.every(([start, end]) => bytes.subarray(start, end).every((value) => value === 0))) {
+    return bytes;
+  }
+  const out = bytes.slice();
+  for (const [start, end] of blanks) out.fill(0, start, end);
+  return out;
+}
