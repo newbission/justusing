@@ -12,8 +12,13 @@
  */
 import { crc32 } from '../crc32';
 import { isHeifHead } from './heif-container';
-import { itemBytes, readHeifMeta, writeItem } from './heif-metadata';
-import { rewriteJpeg, stripJpegMetadata, type SegmentAction } from './jpeg-metadata';
+import { itemBytes, readHeifMeta, writeItem, type HeifMeta } from './heif-metadata';
+import {
+  blankJpegMetadata,
+  rewriteJpeg,
+  stripJpegMetadata,
+  type SegmentAction,
+} from './jpeg-metadata';
 
 export type CleanMode = 'location' | 'all';
 export type PhotoFormat = 'jpeg' | 'png' | 'webp' | 'heif';
@@ -37,6 +42,11 @@ export interface PhotoInfo {
    * 두 방식 모두 빼므로 HDR 사진은 일반 사진으로, 움직이는 사진은 멈춘 사진으로 남는다 (화면이 미리 알린다)
    */
   appended: boolean;
+  /**
+   * HEIC에 무엇이 적혔는지 모르는 내용(허용 목록 밖의 상자·속성·항목)이 있어 안전하게 지울 수 없다.
+   * 지우기는 이 파일을 고치지 않고 실패로 둔다
+   */
+  unsafe?: boolean;
 }
 
 export function detectFormat(bytes: Uint8Array): PhotoFormat | undefined {
@@ -118,10 +128,21 @@ export function readPhotoInfo(bytes: Uint8Array): PhotoInfo | undefined {
       if (item.kind === 'exif') {
         const start = heifExifStart(data);
         if (start !== undefined) exif(data.subarray(start));
+      } else if (item.kind === 'jpeg') {
+        // JPEG 그림 항목 안의 정보 조각 (JPG 사진과 같은 기준으로 읽는다)
+        const inner = readPhotoInfo(data);
+        if (!inner) return undefined;
+        info.location ||= inner.location;
+        info.gps ??= inner.gps;
+        info.date ??= inner.date;
+        info.device ??= inner.device;
       } else {
         xmp(data);
       }
     }
+    // 마지막 안전망: 압축한 그림 자료 밖에 'GPS'나 좌표 같은 글이 남았으면 위치가 있는 것으로 본다
+    if (textLocation(bytes, meta)) info.location = true;
+    if (meta.unknown) info.unsafe = true;
     // 쓰지 않는 틈·이름에 남은 글자도 본다 (예전 편집이 남긴 XMP 등)
     let leftover = false;
     for (const wipe of meta.wipes) {
@@ -426,6 +447,28 @@ function cleanHeifExif(data: Uint8Array, mode: CleanMode, orientation: number) {
   return next;
 }
 
+/** 위치를 적은 글: 'GPS'(EXIF·XMP 칸 이름), 소수점 아래 네 자리 넘는 숫자(위도·경도) */
+const LOCATION_TEXT = /GPS|\d{1,3}[.,]\d{4,}/;
+
+/** 압축한 그림 자료(임의 바이트라 우연히 글처럼 보인다) 밖에 위치 같은 글이 있는지 */
+function textLocation(bytes: Uint8Array, meta: HeifMeta): boolean {
+  const coded = [...meta.coded].sort((a, b) => a.start - b.start);
+  let at = 0;
+  const scan = (start: number, end: number) => {
+    // 이어진 글이 조각 경계에서 끊기지 않게 조금 겹쳐 읽는다
+    for (let from = start; from < end; from += 16_384) {
+      const to = Math.min(end, from + 16_384 + 16);
+      if (LOCATION_TEXT.test(String.fromCharCode(...bytes.subarray(from, to)))) return true;
+    }
+    return false;
+  };
+  for (const range of coded) {
+    if (range.start > at && scan(at, range.start)) return true;
+    at = Math.max(at, range.end);
+  }
+  return at < bytes.length && scan(at, bytes.length);
+}
+
 function emptyXmp(length: number): Uint8Array {
   const out = new Uint8Array(length).fill(0x20);
   if (length >= EMPTY_XMP.length) out.set(ascii(EMPTY_XMP));
@@ -445,7 +488,11 @@ function cleanHeif(bytes: Uint8Array, mode: CleanMode): Uint8Array | undefined {
   for (const item of meta.items) {
     const data = itemBytes(bytes, item);
     const next =
-      item.kind === 'exif' ? cleanHeifExif(data, mode, orientation) : emptyXmp(data.length);
+      item.kind === 'exif'
+        ? cleanHeifExif(data, mode, orientation)
+        : item.kind === 'jpeg'
+          ? blankJpegMetadata(data)
+          : emptyXmp(data.length);
     if (!next) return undefined;
     if (sameBytes(next, data)) continue;
     out ??= bytes.slice();
