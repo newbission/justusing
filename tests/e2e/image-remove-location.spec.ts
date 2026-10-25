@@ -245,3 +245,43 @@ test('HEIC의 빈 상자(free·skip)와 끝 뒤 자료에 남은 위치 글도 �
   // 원래 HEIC 부분은 정보 항목 밖이 그대로다
   expect(sameOutsideMetadata(original, bytes.subarray(0, original.length))).toBe(true);
 });
+
+test('허용 목록 밖의 그림 속성(uuid)에 위치 글이 든 HEIC는 고치지 않고 안전하게 지울 수 없다고 알린다', async ({
+  page,
+}) => {
+  const frame = await openTool(page, ['located-uuid.heic']);
+  const unsafe = frame.getByText('이 HEIC는 위치 정보를 안전하게 지울 수 없어 고치지 않습니다.', {
+    exact: false,
+  });
+  await expect(unsafe).toBeVisible();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(
+    frame.getByText('정보를 지우지 못한 사진이 있습니다.', { exact: false }),
+  ).toBeVisible();
+  await expect(unsafe).toBeVisible();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toHaveCount(0);
+});
+
+test('HEIC 안의 JPEG 그림 항목에 든 촬영 정보도 같은 길이로 비운다', async ({ page }) => {
+  // located-jpeg-item.heic: located.heic에 located.jpg(EXIF GPS·XMP·설명 글·덧붙은 영상)를 JPEG 항목으로 더한 것
+  const frame = await openTool(page, ['located-jpeg-item.heic']);
+  await expect(frame.getByText('사진 1장 중 1장에 위치가 있습니다.')).toBeVisible();
+  await frame.getByText('위치만 지우기').click();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('완료: 사진 1장에서 지웠습니다.')).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const bytes = new Uint8Array(await readFile(await (await event).path()));
+  const original = new Uint8Array(await readFile(fixture('located-jpeg-item.heic')));
+  expect(bytes.length).toBe(original.length);
+  expect(readPhotoInfo(bytes)).toMatchObject({ format: 'heif', location: false });
+  const text = Buffer.from(bytes).toString('latin1');
+  expect(text).not.toContain('GPS');
+  expect(text).not.toContain('Secret');
+  expect(text).not.toContain('taken at home');
+  expect(text).not.toContain('MOTION-PHOTO-VIDEO');
+  // 안의 JPEG는 그대로 읽히는 JPEG이고 촬영 정보가 없다
+  const jpeg = bytes.subarray(text.indexOf('\xff\xd8\xff'));
+  expect(readPhotoInfo(jpeg)).toMatchObject({ format: 'jpeg', location: false });
+  expect(readPhotoInfo(jpeg)?.device).toBeUndefined();
+});
