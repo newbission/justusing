@@ -17,14 +17,14 @@ export default defineTool({
       summary: '얼굴·번호판을 모자이크·흐림·검게 칠해 가립니다',
       title: '이미지 모자이크 - 얼굴·번호판·개인정보 가리기, 업로드 없이',
       description:
-        '사진 속 얼굴·자동차 번호판·전화번호를 모자이크·흐림·검게 칠하기로 가립니다. 여러 곳을 그려 한 번에 가리고, 사진은 서버에 올라가지 않습니다.',
+        '사진 속 얼굴·자동차 번호판·전화번호를 모자이크·흐림·검게 칠하기로 가립니다. 얼굴은 자동으로 찾아 한꺼번에 가리고, 사진은 서버에 올라가지 않습니다.',
     },
     en: {
       name: 'Pixelate & Blur Image',
       summary: 'Pixelate, blur or black out faces and plates',
       title: 'Pixelate image - Blur faces, license plates and personal info in your browser',
       description:
-        'Hide faces, license plates and phone numbers in a photo with mosaic, blur or black boxes. Mark several areas at once. Your images are never uploaded.',
+        'Hide faces, license plates and phone numbers in a photo with mosaic, blur or black boxes. Find faces automatically and hide them all at once. Your images are never uploaded.',
     },
   },
   related: ['pdf/redact', 'image/remove-location', 'image/crop'],
