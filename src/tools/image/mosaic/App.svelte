@@ -1,6 +1,8 @@
 <!--
   이미지 모자이크 도구 화면 (격리 frame 안에서 실행).
   사진 한 장 위에 가릴 곳(사각형·타원)을 여러 개 그리고, 곳마다 모자이크·흐림·검게 칠하기를 골라 다시 저장한다.
+  '얼굴 찾기'를 누르면 사진 속 얼굴들을 찾아 가릴 곳으로 한꺼번에 넣는다. 얼굴 찾기 데이터는 그때 처음 받고(크기를 밝히고 묻는다)
+  이 브라우저에 보관한다. 누르기 전에는 얼굴 찾기 코드도 데이터도 받지 않는다.
   원본은 워커가 들고 있고 화면에는 줄인 미리보기에 같은 계산을 걸어 보여 준다. 사진은 어디로도 전송되지 않는다.
 -->
 <script lang="ts">
@@ -10,6 +12,7 @@
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
+  import { dataStatus, loadData, missingData } from '../../../frame/data';
   import { downloadFile } from '../../../frame/download';
   import { onFrameFiles } from '../../../frame/drop';
   import { baseName, formatSize } from '../../../frame/format';
@@ -28,11 +31,13 @@
     MAX_STRENGTH,
     MIN_STRENGTH,
     amountOf,
+    inside,
     type Effect,
     type Region,
     type Shape,
   } from '../../../lib/image/mosaic-effects';
   import type { OutputType } from '../../../lib/image/process';
+  import type { FacesFinder } from '../../../lib/face/find-faces';
 
   const t = pick(MESSAGES);
 
@@ -48,6 +53,8 @@
   const SHAPES: Shape[] = ['rect', 'ellipse'];
   const EFFECTS: Effect[] = ['mosaic', 'blur', 'fill'];
   const EDGES: Edge[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+  /** 찾은 얼굴의 모자이크 세기 하한. 얼굴은 칸이 작으면 알아볼 수 있어 굵게 넣는다 */
+  const FACE_STRENGTH = 8;
 
   interface Photo {
     name: string;
@@ -90,6 +97,27 @@
   let addButton: HTMLButtonElement | undefined = $state();
   let layer: HTMLDivElement | undefined = $state();
 
+  /** 얼굴 찾기 진행 */
+  type Faces =
+    | { kind: 'idle' }
+    | { kind: 'checking' }
+    | { kind: 'ask'; bytes: number; removed: boolean; lowSpace: boolean }
+    | { kind: 'downloading'; percent: number }
+    | { kind: 'finding'; percent: number }
+    | { kind: 'found'; total: number; added: number }
+    | { kind: 'none' }
+    | { kind: 'failed'; reason: 'data' | 'find' };
+  let faces = $state.raw<Faces>({ kind: 'idle' });
+  /** 얼굴 찾기로 넣은 가릴 곳 (화면 읽기 프로그램에 알린다) */
+  let faceIds = $state.raw(new Set<number>());
+  const facesBusy = $derived(
+    faces.kind === 'checking' || faces.kind === 'downloading' || faces.kind === 'finding',
+  );
+  /** 얼굴 찾기 엔진 (처음 찾을 때 띄우고 사진을 바꿔도 다시 쓴다) */
+  let finder: Promise<FacesFinder> | undefined;
+  let findButton: HTMLButtonElement | undefined = $state();
+  let getDataButton: HTMLButtonElement | undefined = $state();
+
   onMount(() => {
     const off = onFrameFiles(([file]) => {
       if (file) open(file);
@@ -97,6 +125,7 @@
     return () => {
       off();
       photo?.preview.close();
+      dropFinder();
     };
   });
 
@@ -135,6 +164,9 @@
     regions = [];
     selectedId = undefined;
     save = { kind: 'idle' };
+    // 받던 데이터는 사진과 상관없으니 그대로 받고, 찾던 결과는 버린다 (generation)
+    if (faces.kind !== 'downloading') faces = { kind: 'idle' };
+    faceIds = new Set();
     phase = 'idle';
   }
 
@@ -200,6 +232,166 @@
   function setField(field: keyof Rect, value: number) {
     if (!selected || !Number.isFinite(value)) return;
     setRect(selected.id, { ...selected, [field]: value });
+  }
+
+  /**
+   * 얼굴 찾기 코드는 처음 누를 때 불러온다 (모자이크만 쓰는 사람은 받지 않는다).
+   * 데이터 보관소와 주고받는 frame/data는 작고 다른 도구도 바로 불러 쓰므로 그대로 불러 둔다
+   * (여기서만 import()로 부르면 번들러가 이름 묶음 도우미를 큰 공용 조각에서 가져와 다른 도구 첫 화면이 무거워진다)
+   */
+  const faceModule = () => import('../../../lib/face/find-faces');
+
+  function startFinder(bytes: Promise<Map<string, Uint8Array>>) {
+    const started = Promise.all([bytes, faceModule()]).then(([value, { FacesFinder }]) =>
+      FacesFinder.create(value),
+    );
+    started.catch(() => {
+      if (finder === started) finder = undefined;
+    });
+    finder = started;
+    return started;
+  }
+
+  /** 엔진을 버린다 (워커가 죽었을 수 있다). 다음에는 보관본으로 다시 띄운다 */
+  function dropFinder() {
+    finder?.then((value) => value.dispose()).catch(() => {});
+    finder = undefined;
+  }
+
+  /** '얼굴 찾기': 데이터가 보관돼 있으면 바로 찾고, 없으면 크기를 밝히고 받을지 묻는다 */
+  async function findFaces() {
+    if (!photo || facesBusy) return;
+    const ticket = generation;
+    if (!finder) {
+      faces = { kind: 'checking' };
+      try {
+        const { FIND_FACES_FILES, FIND_FACES_CONSENT } = await faceModule();
+        const status = await dataStatus(FIND_FACES_FILES, FIND_FACES_CONSENT);
+        const missing = missingData(FIND_FACES_FILES, status);
+        if (missing.bytes > 0) {
+          faces = {
+            kind: 'ask',
+            bytes: missing.bytes,
+            removed: missing.removed,
+            lowSpace: status.available !== undefined && status.available < missing.bytes * 2,
+          };
+          await tick();
+          getDataButton?.focus();
+          return;
+        }
+        startFinder(loadData(FIND_FACES_FILES, FIND_FACES_CONSENT));
+      } catch {
+        faces = { kind: 'failed', reason: 'data' };
+        return;
+      }
+    }
+    await detect(ticket);
+  }
+
+  /** 받기로 했다: 받아서 보관하고 바로 찾는다 */
+  async function downloadFaceData() {
+    if (faces.kind !== 'ask') return;
+    const need = faces.bytes;
+    faces = { kind: 'downloading', percent: 0 };
+    try {
+      const { FIND_FACES_FILES, FIND_FACES_CONSENT } = await faceModule();
+      const bytes = await loadData(FIND_FACES_FILES, FIND_FACES_CONSENT, (received) => {
+        faces = {
+          kind: 'downloading',
+          percent: Math.min(99, Math.floor((received / Math.max(1, need)) * 100)),
+        };
+      });
+      // 받은 바이트로 바로 띄운다. 보관소를 쓸 수 없는 창(시크릿 모드 등)에서 다시 받지 않게 한다
+      startFinder(Promise.resolve(bytes));
+    } catch {
+      faces = { kind: 'failed', reason: 'data' };
+      return;
+    }
+    if (photo) await detect(generation);
+    else faces = { kind: 'idle' };
+  }
+
+  async function cancelFaceData() {
+    faces = { kind: 'idle' };
+    await tick();
+    findButton?.focus();
+  }
+
+  /** 미리보기 사진에서 얼굴을 찾아 가릴 곳으로 넣는다 (이미 가린 곳과 겹치는 얼굴은 넣지 않는다) */
+  async function detect(ticket: number) {
+    const current = photo;
+    // 데이터를 확인하는 사이 사진을 바꿨으면 새 사진에서 다시 누르게 한다
+    if (!current || !finder || ticket !== generation) {
+      faces = { kind: 'idle' };
+      return;
+    }
+    faces = { kind: 'finding', percent: 0 };
+    try {
+      const [found, { coverOf }] = await Promise.all([
+        (await finder).find(await createImageBitmap(current.preview), (done, total) => {
+          if (ticket === generation)
+            faces = { kind: 'finding', percent: Math.floor((done / total) * 100) };
+        }),
+        faceModule(),
+      ]);
+      if (ticket !== generation) return;
+      const scale = current.width / current.preview.width;
+      const effect = defaults.effect === 'fill' ? 'fill' : 'mosaic';
+      const strength = Math.max(defaults.strength, FACE_STRENGTH);
+      const added: Region[] = [];
+      // 왼쪽 얼굴부터 번호를 붙인다
+      for (const face of [...found].sort((a, b) => a.x - b.x)) {
+        const center = {
+          x: (face.x + face.width / 2) * scale,
+          y: (face.y + face.height / 2) * scale,
+        };
+        // 저장과 같은 inside()로 본다 (타원은 바깥 사각형의 귀퉁이를 가리지 않는다)
+        const covered = [...regions, ...added].some((region) =>
+          inside(region, region.shape, center.x - 0.5, center.y - 0.5),
+        );
+        if (covered) continue;
+        const cover = coverOf(face);
+        const left = cover.x * scale;
+        const top = cover.y * scale;
+        const right = (cover.x + cover.width) * scale;
+        const bottom = (cover.y + cover.height) * scale;
+        const x = Math.max(0, left);
+        const y = Math.max(0, top);
+        const rect = clampRect(
+          {
+            x,
+            y,
+            width: Math.min(board.width, right) - x,
+            height: Math.min(board.height, bottom) - y,
+          },
+          board,
+        );
+        // 사진 끝에 걸린 얼굴은 타원을 자르면 얼굴 가장자리가 비므로 사각형으로 덮는다
+        const clipped = left < 0 || top < 0 || right > board.width || bottom > board.height;
+        added.push({
+          id: nextId++,
+          shape: clipped ? 'rect' : 'ellipse',
+          effect,
+          strength,
+          ...rect,
+        });
+      }
+      if (added.length > 0) {
+        regions = [...regions, ...added];
+        faceIds = new Set([...faceIds, ...added.map((region) => region.id)]);
+        selectedId = undefined;
+        edited();
+      }
+      faces =
+        found.length === 0
+          ? { kind: 'none' }
+          : { kind: 'found', total: found.length, added: added.length };
+    } catch {
+      if (ticket !== generation) return;
+      // 워커가 죽었을 수 있으니 다음에는 새로 띄운다
+      dropFinder();
+      faces = { kind: 'failed', reason: 'find' };
+    }
   }
 
   // 미리보기: 줄인 사진에 저장과 같은 계산을 걸어 그린다 (칸 크기·흐리는 거리도 줄인 만큼, 워커에서)
@@ -457,7 +649,7 @@
                   style:top={percent(region.y, board.height)}
                   style:width={percent(region.width, board.width)}
                   style:height={percent(region.height, board.height)}
-                  aria-label={t.region(index + 1, t.effects[region.effect])}
+                  aria-label={t.region(index + 1, t.effects[region.effect], faceIds.has(region.id))}
                   aria-describedby="view-help"
                   onpointerdown={(event) => startDrag(event, region, 'move')}
                   onkeydown={(event) => onKey(event, region, 'move')}
@@ -615,6 +807,55 @@
               {/each}
             </div>
             <p class="help">{t.formatHelp[format]} {t.exifNote}</p>
+          </section>
+
+          <!-- 패널 맨 끝에 둔다: 진행·결과 문구와 받기 칸이 늘어도 다른 조작부가 밀리지 않는다 -->
+          <section aria-labelledby="faces-title">
+            <h2 id="faces-title">{t.facesTitle}</h2>
+            <button
+              type="button"
+              class="btn"
+              bind:this={findButton}
+              disabled={facesBusy || faces.kind === 'ask' || save.kind === 'saving'}
+              onclick={findFaces}>{t.findFaces}</button
+            >
+            <!-- 처리 전후 높이가 같게 세 줄을 늘 잡아 둔다 -->
+            <p class="faces-status" role="status">
+              {#if faces.kind === 'checking'}
+                {t.faces.checking}
+              {:else if faces.kind === 'downloading'}
+                {t.faces.downloading(faces.percent)}
+              {:else if faces.kind === 'finding'}
+                {t.faces.finding(faces.percent)}
+              {:else if faces.kind === 'found'}
+                {t.faces.found(faces.total, faces.added)}
+              {:else if faces.kind === 'none'}
+                {t.faces.none}
+              {:else if faces.kind === 'failed'}
+                <strong>{faces.reason === 'data' ? t.faces.failedData : t.faces.failedFind}</strong>
+              {:else}
+                {t.faces.intro}
+              {/if}
+            </p>
+            <p class="help">{t.faces.check}</p>
+            {#if faces.kind === 'ask'}
+              <div class="faces-ask">
+                {#if faces.removed}<p><strong>{t.faces.removed}</strong></p>{/if}
+                <p>{t.faces.ask(formatSize(faces.bytes))}</p>
+                {#if faces.lowSpace}<p class="help">{t.faces.lowSpace}</p>{/if}
+                <div class="row">
+                  <button
+                    type="button"
+                    class="btn primary"
+                    bind:this={getDataButton}
+                    onclick={downloadFaceData}>{t.faces.getData(formatSize(faces.bytes))}</button
+                  >
+                  <button type="button" class="btn" onclick={cancelFaceData}
+                    >{t.faces.cancel}</button
+                  >
+                </div>
+              </div>
+            {/if}
           </section>
         </div>
       </div>
@@ -823,6 +1064,25 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+  }
+  .faces-status {
+    min-height: calc(3 * 1.5em);
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .faces-ask p {
+    margin: 8px 0 0;
+    font-size: 14px;
+  }
+  .faces-ask {
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+  }
+  .faces-ask .row {
+    margin-top: 12px;
   }
   .choices {
     margin-bottom: 0;

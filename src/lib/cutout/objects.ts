@@ -3,7 +3,8 @@
  *
  * 엔진과 모델은 처음 쓸 때 받는다 (크기를 화면에 밝히고 묻는다). 받은 데이터는 바깥 페이지가 이 브라우저에
  * 보관한다 (src/lib/data-store.ts). 엔진은 증명사진과 같은 파일이라, 증명사진에서 받았으면 모델만 받는다.
- * 나누기는 워커 하나에서 한다.
+ * 나누기는 워커 하나에서 한 번에 하나씩 한다. 사진이 여러 장이어도 워커에는 한 장만 두고, 요청마다 어느 사진인지(photo)
+ * 함께 보내 워커가 다른 사진의 그림·마스크로 나누지 않게 한다.
  */
 import type { DataFile } from '../../frame/data';
 import { MEDIAPIPE_ENGINE, OBJECT_MODEL } from '../face/data-files';
@@ -17,17 +18,27 @@ export const CUTOUT_FILES: DataFile[] = [MEDIAPIPE_ENGINE, OBJECT_MODEL];
 
 export type ObjectsRequest =
   | { id: number; type: 'init'; engine: Uint8Array; model: Uint8Array }
-  | { id: number; type: 'image'; bitmap: ImageBitmap }
-  | { id: number; type: 'segment'; points: Point[] };
+  /** bitmap을 주면 그 사진(photo)으로 바꾸고 나눈다. 없으면 워커가 들고 있는 사진이 photo여야 한다 */
+  | { id: number; type: 'segment'; photo: number; points: Point[]; bitmap?: ImageBitmap };
 
 export type ObjectsResponse =
   | { id: number; kind: 'ready' }
-  | { id: number; kind: 'mask'; mask: Mask; coverage: number }
+  | { id: number; kind: 'mask'; photo: number; mask: Mask; coverage: number }
+  /** 워커가 들고 있는 사진이 photo가 아니다 (사진을 함께 보내야 한다) */
+  | { id: number; kind: 'stale' }
   | { id: number; kind: 'error'; message: string };
+
+/** 나눈 결과. needImage: 워커에 그 사진이 없어 사진을 함께 보내야 한다 */
+export type Segmented = { mask: Mask; coverage: number } | 'needImage';
 
 let nextId = 0;
 
 export class ObjectFinder {
+  /** 요청은 한 번에 하나씩 (워커는 사진 한 장만 든다) */
+  private queue: Promise<unknown> = Promise.resolve();
+  /** 워커가 들고 있는 사진 */
+  private loaded: number | undefined;
+
   private constructor(private worker: Worker | undefined) {}
 
   /** 엔진을 띄운다. data: loadData로 받아 확인한 바이트 (경로 → 바이트). 워커로 넘어가 비워진다 */
@@ -72,19 +83,35 @@ export class ObjectFinder {
     });
   }
 
-  /** 나눌 사진을 바꾼다. bitmap은 워커로 넘어간다 */
-  async setImage(bitmap: ImageBitmap): Promise<void> {
-    await this.call({ id: nextId++, type: 'image', bitmap }, [bitmap]);
+  /** 워커가 이 사진을 들고 있는지 (아니면 segment에 사진을 함께 넘긴다) */
+  holds(photo: number): boolean {
+    return this.loaded === photo;
   }
 
   /**
-   * 마지막으로 넘긴 사진에서 점들이 가리키는 물체를 모두 남긴 마스크 (사진과 같은 크기)와,
-   * 그중 물체로 볼 만한 곳(절반 넘게 확신)의 비율
+   * 사진 photo에서 점들이 가리키는 물체를 모두 남긴 마스크 (사진과 같은 크기)와, 그중 물체로 볼 만한 곳(절반 넘게 확신)의
+   * 비율. bitmap을 주면 워커의 사진을 이것으로 바꾼다 (워커로 넘어간다). 주지 않았는데 워커에 다른 사진이 있으면
+   * 'needImage'. 앞선 요청이 끝난 뒤에 보내므로 다른 사진의 요청과 섞이지 않는다
    */
-  async segment(points: Point[]): Promise<{ mask: Mask; coverage: number }> {
-    const response = await this.call({ id: nextId++, type: 'segment', points });
-    if (response.kind !== 'mask') throw new Error('unexpected response');
-    return { mask: response.mask, coverage: response.coverage };
+  segment(photo: number, points: Point[], bitmap?: ImageBitmap): Promise<Segmented> {
+    const next = this.queue.then(async (): Promise<Segmented> => {
+      if (!bitmap && this.loaded !== photo) return 'needImage';
+      if (bitmap) this.loaded = undefined;
+      const response = await this.call(
+        { id: nextId++, type: 'segment', photo, points, bitmap },
+        bitmap ? [bitmap] : [],
+      );
+      if (bitmap) this.loaded = photo;
+      if (response.kind === 'stale') {
+        this.loaded = undefined;
+        return 'needImage';
+      }
+      if (response.kind !== 'mask' || response.photo !== photo)
+        throw new Error('unexpected response');
+      return { mask: response.mask, coverage: response.coverage };
+    });
+    this.queue = next.catch(() => undefined);
+    return next;
   }
 
   dispose() {

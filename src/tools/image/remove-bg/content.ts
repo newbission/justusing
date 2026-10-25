@@ -5,7 +5,7 @@ export default defineContent({
     uses: [
       {
         title: '쇼핑몰·중고 거래에 올릴 상품 사진',
-        text: '탁자 위에서 찍은 상품 사진의 배경을 지우고 흰 배경 JPG로 받으면 상세 페이지처럼 깔끔해집니다. "물체에 맞춰 자르기"로 상품 둘레만 남길 수 있습니다.',
+        text: '탁자 위에서 찍은 상품 사진 여러 장을 한꺼번에 넣고 흰 배경 JPG로 받으면 상세 페이지처럼 깔끔해집니다. "물체에 맞춰 자르기"로 상품 둘레만 남길 수 있습니다.',
       },
       {
         title: '발표 자료·포스터에 넣을 사람·물건 그림',
@@ -17,12 +17,12 @@ export default defineContent({
       },
     ],
     howTo: [
-      '"사진 선택"을 누르거나 사진을 화면으로 끌어다 놓습니다. 남길 물체가 크게, 배경과 다른 색으로 나온 사진일수록 잘 나뉩니다.',
+      '"사진 선택"을 누르거나 사진을 화면으로 끌어다 놓습니다. 여러 장을 한 번에 고를 수 있습니다. 남길 물체가 크게, 배경과 다른 색으로 나온 사진일수록 잘 나뉩니다.',
       '처음 쓸 때는 "데이터 받기"로 물체 나누기 데이터를 받습니다. 받기 전에 크기를 알려 드리고, 받은 데이터는 이 브라우저에 보관해 다음부터 바로 씁니다.',
-      '사진 가운데의 물체를 저절로 남깁니다. 다른 물체도 남기려면 "물체 고르기"를 고른 채 그 물체를 누릅니다. 여러 번 누르면 누른 물체를 모두 남깁니다.',
-      '배경이 남았으면 "지우개", 물체가 잘렸으면 "되살리기"를 고르고 그 부분을 칠합니다. 잘못했으면 "되돌리기"를 누릅니다.',
-      '"가장자리"에서 좁히기·넓히기와 부드럽게를 조절하고, "배경"에서 "투명"·"흰색"·"다른 색"을 고릅니다.',
-      '"PNG 다운로드"(색 배경이면 "JPG 다운로드")를 눌러 원본과 같은 크기로 받습니다.',
+      '사진 가운데의 물체를 저절로 남깁니다. 여러 장이면 사진마다 결과를 목록으로 보여 주고, 고칠 사진의 "고치기"를 눌러 들어갑니다. 다른 물체도 남기려면 "물체 고르기"를 고른 채 그 물체를 누릅니다.',
+      '배경이 남았으면 "지우개", 물체가 잘렸으면 "되살리기"를 고르고 그 부분을 칠합니다. 잘못했으면 "되돌리기"를 누릅니다. 고친 내용은 사진마다 따로 기억합니다.',
+      '"가장자리"에서 좁히기·넓히기와 부드럽게를 조절하고, "배경"에서 "투명"·"흰색"·"다른 색"을 고릅니다. 여러 장이면 모든 사진에 같이 쓰고, 한 사진만 다르게 하려면 "이 사진만 따로 정하기"를 고릅니다.',
+      '"PNG 다운로드"(색 배경이면 "JPG 다운로드")를 눌러 원본과 같은 크기로 받습니다. 여러 장이면 목록에서 "모두 받기"를 눌러 ZIP 하나로 받습니다.',
     ],
     faq: [
       {
@@ -46,6 +46,14 @@ export default defineContent({
         a: '원본과 같은 가로·세로로 저장합니다. 나누기는 줄인 사진으로 하고, 그 결과를 원본 크기로 늘려 원본 사진에 씌웁니다. 투명 배경은 PNG, 색 배경은 JPG(화질 92%)로 받습니다. "물체에 맞춰 자르기"를 고르면 남은 곳 둘레만 남깁니다.',
       },
       {
+        q: '여러 장을 한꺼번에 할 수 있나요?',
+        a: '네. 여러 장을 넣으면 사진마다 가운데 물체를 남긴 결과를 목록으로 보여 줍니다. 잘못 남은 사진만 "고치기"로 들어가 고치면 되고, 고친 내용은 사진마다 따로 기억합니다. 가장자리·배경 설정은 모든 사진에 같이 쓰고, 한 사진만 따로 정할 수도 있습니다. "모두 받기"를 누르면 ZIP 하나로 받습니다.',
+      },
+      {
+        q: '휴대폰에서 여러 장을 받다가 멈추거나 실패해요.',
+        a: '물체 나누기는 줄인 사진으로 하고, 저장할 때만 사진을 한 장씩(기기에 따라 2~3장씩 나란히) 원본 크기로 다시 읽습니다. 다만 받을 결과는 모두 메모리에 모았다가 ZIP으로 묶습니다. 1,200만 화소 사진이면 투명 PNG 한 장이 10MB 안팎이라, 휴대폰에서 큰 사진 수십 장을 한 번에 받으면 메모리가 모자랄 수 있습니다. 휴대폰에서는 10장 안팎씩 나눠 받거나 흰 배경 JPG(더 작음)로 받으세요.',
+      },
+      {
         q: '데이터는 얼마나 받나요?',
         a: '처음 한 번 인식 엔진(약 13MB)과 물체 나누기 모델(약 6MB)을 받습니다. 증명사진 도구에서 엔진을 받아 두었으면 모델만 받습니다. 받은 데이터는 이 브라우저에 보관되어 다음부터 바로 씁니다. 브라우저 설정에서 사이트 데이터를 지우면 다시 받아야 합니다.',
       },
@@ -55,7 +63,7 @@ export default defineContent({
     uses: [
       {
         title: 'Product photos for an online store or marketplace',
-        text: 'Remove the background from a product shot on a table and download a JPG on white for a clean listing. "Crop to subject" keeps only the area around the product.',
+        text: 'Add several product shots taken on a table at once and download JPGs on white for clean listings. "Crop to subject" keeps only the area around the product.',
       },
       {
         title: 'People and objects for slides and posters',
@@ -67,12 +75,12 @@ export default defineContent({
       },
     ],
     howTo: [
-      'Click "Choose photo" or drag a photo onto the page. It works best when the subject is large and differs in color from the background.',
+      'Click "Choose photo" or drag photos onto the page. You can pick several at once. It works best when the subject is large and differs in color from the background.',
       'The first time, click "Download data" to get the object separation data. The size is shown before downloading, and the data is kept in this browser for next time.',
-      'The subject in the middle of the photo is kept automatically. To keep another subject, choose "Pick subject" and click it. Click several subjects to keep them all.',
-      'If background remains, choose "Erase"; if part of the subject is cut off, choose "Restore", then paint over it. Click "Undo" to take back a step.',
-      'Adjust shrink, grow and soften under "Edges", and pick "Transparent", "White" or "Other color" under "Background".',
-      'Click "Download PNG" ("Download JPG" with a color background) to get the result at the original size.',
+      'The subject in the middle of the photo is kept automatically. With several photos, each result is shown in a list; click "Fix" on a photo to adjust it. To keep another subject, choose "Pick subject" and click it.',
+      'If background remains, choose "Erase"; if part of the subject is cut off, choose "Restore", then paint over it. Click "Undo" to take back a step. Your fixes are remembered for each photo.',
+      'Adjust shrink, grow and soften under "Edges", and pick "Transparent", "White" or "Other color" under "Background". With several photos these apply to all of them; choose "Set this photo separately" to set one photo differently.',
+      'Click "Download PNG" ("Download JPG" with a color background) to get the result at the original size. With several photos, click "Download all" in the list to get one ZIP.',
     ],
     faq: [
       {
@@ -94,6 +102,14 @@ export default defineContent({
       {
         q: 'What size and quality is the result?',
         a: 'It is saved at the same width and height as the original. The separation runs on a smaller copy, and the result is scaled up and applied to the original photo. A transparent background gives a PNG; a color background gives a JPG (92% quality). "Crop to subject" keeps only the area around what is kept.',
+      },
+      {
+        q: 'Can I do several photos at once?',
+        a: 'Yes. Add several photos and each one is shown in a list with the subject in the middle kept. Click "Fix" only on the photos that need it; your fixes are remembered for each photo. The edge and background settings apply to every photo, and you can set one photo separately. Click "Download all" to get one ZIP.',
+      },
+      {
+        q: 'Downloading many photos on my phone stalls or fails.',
+        a: 'The separation runs on smaller copies, and only saving reads each photo again at full size, one at a time (or two or three side by side, depending on the device). All results are kept in memory until they are zipped, though. A transparent PNG of a 12-megapixel photo is around 10 MB, so dozens of large photos at once can run a phone out of memory. On a phone, download about 10 photos at a time, or choose a white background (JPG, smaller).',
       },
       {
         q: 'How much data is downloaded?',

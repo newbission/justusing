@@ -3,6 +3,7 @@ title: How to remove a photo background (how cutouts work and how to get clean e
 description: How a computer separates a subject from the background, which photos work well and why hair and glass are hard, whether to download a transparent PNG or a JPG on white, and how to fix background left around the edges.
 tool: image/remove-bg
 published: 2026-10-23
+updated: 2026-10-24
 order: 29
 ---
 
@@ -55,5 +56,13 @@ JPG has no transparency, so transparent areas saved as JPG get filled with black
 - **The edge looks hard on a new background**: Raising "Soften" blurs the edge over a few pixels so it blends in. Too much lets the old background color show around the edge; 1 or 2 is usually right
 
 When you are done, compare with "Show original" to check nothing is missing, and place the PNG on both a dark and a light background. If a thin outline shows on one of them, shrink one more step.
+
+## Doing many photos at once
+
+When you have several similar photos, such as product shots, adding them all at once is faster. Each photo is separated in advance as if you had clicked its middle, and the results are shown in a list. Instead of opening every photo, pick out the ones that went wrong and click "Fix" on them.
+
+- **Add photos with the subject in the middle**: The advance separation uses the center of each photo. If a subject sits to one side, the list will show the wrong thing kept; open that photo and click the subject
+- **One set of settings, with exceptions**: Edges and background apply to every photo, so product shots get the same background color in one go. Choose "Set this photo separately" only for a photo that needs a different background. Brush strokes and clicked points are remembered for each photo
+- **Split the work on a phone**: Saving reads each photo again at full size and keeps every result in memory until they are zipped together. A transparent PNG of a 12-megapixel photo is around 10 MB, so dozens of large photos at once can run a phone out of memory. Download about 10 at a time, or pick a smaller format such as a JPG on white
 
 The first time, the object separation engine and model are downloaded once and kept in this browser. Separating and saving all happen on this device, and your photo is never uploaded. To fit a face to passport size, use the [ID Photo Maker](/en/image/id-photo/).

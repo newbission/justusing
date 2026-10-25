@@ -1,6 +1,6 @@
 /**
  * MediaPipe 엔진·모델 파일 목록 (scripts/copy-face-data.mjs가 쓴 catalog.json).
- * 증명사진(얼굴 찾기)과 배경 지우기가 같은 엔진을 쓴다. 보관소는 경로로 보관하므로 한쪽에서 받은 엔진을
+ * 증명사진(얼굴 찾기), 배경 지우기, 모자이크(여러 얼굴 찾기)가 같은 엔진을 쓴다. 보관소는 경로로 보관하므로 한쪽에서 받은 엔진을
  * 다른 쪽에서 다시 받지 않는다.
  */
 import type { DataFile } from '../../frame/data';
@@ -20,3 +20,5 @@ export const FACE_MODEL = versioned(catalog.model);
 export const SELFIE_MODEL = versioned(catalog.segmenter);
 /** 누른 곳의 물체 나누기 모델 (Interactive Segmenter, MagicTouch) */
 export const OBJECT_MODEL = versioned(catalog.objects);
+/** 여러 얼굴 찾기 모델 (Face Detector, BlazeFace full range) */
+export const DETECTOR_MODEL = versioned(catalog.detector);

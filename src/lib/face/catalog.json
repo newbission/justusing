@@ -18,5 +18,10 @@
     "path": "/data/face/magic_touch.tflite",
     "bytes": 6227884,
     "sha256": "e24338a717c1b7ad8d159666677ef400babb7f33b8ad60c4d96db4ecf694cd25"
+  },
+  "detector": {
+    "path": "/data/face/blaze_face_full_range.tflite",
+    "bytes": 1083786,
+    "sha256": "3698b18f063835bc609069ef052228fbe86d9c9a6dc8dcb7c7c2d69aed2b181b"
   }
 }

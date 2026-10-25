@@ -3,11 +3,52 @@ import type { Locale } from '../../../i18n/locales';
 
 const ko = {
   choose: '사진 선택',
-  hint: '사람·상품·동물이 나온 사진 한 장. 사진은 이 기기 밖으로 나가지 않습니다.',
+  hint: '사람·상품·동물이 나온 사진. 여러 장을 한 번에 고를 수 있습니다. 사진은 이 기기 밖으로 나가지 않습니다.',
   cannotOpen: '이 사진을 열 수 없습니다. JPG·PNG 사진으로 다시 해 보세요.',
   opening: '사진을 여는 중…',
+  loadFailed: '도구 화면을 불러오지 못했습니다. 인터넷 연결을 확인하고 사진을 다시 골라 주세요.',
   otherFile: '다른 사진',
+  addPhotos: '사진 더하기',
   bar: '배경 지우기',
+
+  summary: (count: number, size: string) => `사진 ${count}장 · ${size}`,
+  list: '사진 목록',
+  backToList: '목록으로',
+  previous: '이전 사진',
+  next: '다음 사진',
+  position: (index: number, total: number) => `${index}/${total}`,
+  edit: '고치기',
+  editLabel: (name: string) => `${name} 고치기`,
+  remove: (name: string) => `${name} 빼기`,
+  itemReading: '읽는 중…',
+  itemBroken: '열 수 없는 사진입니다. 빼고 받습니다.',
+  itemWaiting: '차례를 기다리는 중…',
+  itemWorking: '물체와 배경을 나누는 중…',
+  itemFailed: '물체를 나누지 못했습니다.',
+  itemEmpty: '남길 물체를 찾지 못했습니다. "고치기"에서 남길 곳을 눌러 주세요.',
+  itemOwn: '따로 설정',
+  sharedHelp:
+    '아래 설정은 모든 사진에 같이 씁니다. 한 사진만 다르게 하려면 "고치기"에서 "이 사진만 따로 정하기"를 고릅니다.',
+  memoryNote:
+    '사진은 하나씩 원본 크기로 다시 읽어 저장하지만, 받을 결과는 모두 메모리에 모았다가 ZIP으로 묶습니다. 휴대폰에서는 큰 사진을 10장 안팎씩 나눠 받으세요.',
+  ownToggle: '이 사진만 따로 정하기',
+  ownHelp: {
+    own: '아래 가장자리·배경 설정은 이 사진에만 씁니다.',
+    shared: '아래 가장자리·배경 설정은 모든 사진에 같이 씁니다.',
+  },
+  separatingMany: (done: number, total: number) =>
+    `사진마다 물체와 배경을 나누는 중… ${done}/${total}`,
+  readyMany: (count: number) =>
+    `사진 ${count}장의 배경을 지웠습니다. 고칠 사진은 "고치기"를 누르세요.`,
+  skipped: (count: number) => `${count}장은 빼고 받습니다.`,
+  emptyAll: '받을 사진이 없습니다. "고치기"에서 남길 곳을 눌러 주세요.',
+  downloadAll: (count: number) => `모두 받기 (ZIP, ${count}장)`,
+  savingMany: (done: number, total: number) => `저장하는 중… ${done}/${total}`,
+  savedMany: (count: number, size: string) => `사진 ${count}장을 ZIP(${size})으로 만들었습니다.`,
+  leftOut: (count: number) => `${count}장은 남은 곳이 없거나 저장하지 못해 뺐습니다.`,
+  stop: '그만두기',
+  stopped: '저장을 그만두었습니다.',
+  zipName: '이미지_배경제거.zip',
 
   dataTitle: '배경 지우기 데이터',
   dataSize: (size: string) =>
@@ -85,11 +126,54 @@ const ko = {
 
 const en: typeof ko = {
   choose: 'Choose photo',
-  hint: 'One photo of a person, product or animal. Your photo never leaves this device.',
+  hint: 'Photos of a person, product or animal. You can pick several at once. Your photos never leave this device.',
   cannotOpen: 'This photo could not be opened. Try a JPG or PNG photo.',
   opening: 'Opening the photo…',
+  loadFailed: 'The tool could not be loaded. Check your connection and choose the photos again.',
   otherFile: 'Other photo',
+  addPhotos: 'Add photos',
   bar: 'Remove background',
+
+  summary: (count: number, size: string) =>
+    `${count} ${count === 1 ? 'photo' : 'photos'} · ${size}`,
+  list: 'Photo list',
+  backToList: 'Back to list',
+  previous: 'Previous photo',
+  next: 'Next photo',
+  position: (index: number, total: number) => `${index}/${total}`,
+  edit: 'Fix',
+  editLabel: (name: string) => `Fix ${name}`,
+  remove: (name: string) => `Remove ${name}`,
+  itemReading: 'Reading…',
+  itemBroken: 'This photo cannot be opened. It is left out.',
+  itemWaiting: 'Waiting…',
+  itemWorking: 'Separating the subject from the background…',
+  itemFailed: 'The subject could not be separated.',
+  itemEmpty: 'No subject was found. Click "Fix" and click what you want to keep.',
+  itemOwn: 'Own settings',
+  sharedHelp:
+    'These settings apply to every photo. To set one photo differently, click "Fix" and choose "Set this photo separately".',
+  memoryNote:
+    'Each photo is read again at full size one by one, but all results are kept in memory until they are zipped. On a phone, download large photos about 10 at a time.',
+  ownToggle: 'Set this photo separately',
+  ownHelp: {
+    own: 'The edge and background settings below apply to this photo only.',
+    shared: 'The edge and background settings below apply to every photo.',
+  },
+  separatingMany: (done: number, total: number) =>
+    `Separating the subject in each photo… ${done}/${total}`,
+  readyMany: (count: number) =>
+    `Removed the background from ${count} photos. Click "Fix" on any photo to adjust it.`,
+  skipped: (count: number) => `${count} left out.`,
+  emptyAll: 'Nothing to download. Click "Fix" and click what you want to keep.',
+  downloadAll: (count: number) => `Download all (ZIP, ${count})`,
+  savingMany: (done: number, total: number) => `Saving… ${done}/${total}`,
+  savedMany: (count: number, size: string) => `Made a ZIP of ${count} photos (${size}).`,
+  leftOut: (count: number) =>
+    `${count} left out: nothing was kept, or ${count === 1 ? 'it' : 'they'} could not be saved.`,
+  stop: 'Stop',
+  stopped: 'Saving was stopped.',
+  zipName: 'background-removed-images.zip',
 
   dataTitle: 'Background removal data',
   dataSize: (size: string) =>

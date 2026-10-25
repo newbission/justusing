@@ -1,7 +1,7 @@
 /**
  * 물체 나누기 워커 (objects.ts가 부른다). MediaPipe Interactive Segmenter(MagicTouch)를 이 워커 안에서 돌린다.
- * 누른 점마다 그 점이 가리키는 물체·사람·동물을 나누고, 모두 겹친 마스크를 낸다. 점마다 나눈 결과는 사진이 바뀔
- * 때까지 기억해 다시 나누지 않는다 (겹치기도 화면이 멈추지 않게 이 워커에서 한다). 엔진은 화면이 넘겨준 바이트로 띄우고
+ * 누른 점마다 그 점이 가리키는 물체·사람·동물을 나누고, 모두 겹친 마스크를 낸다. 사진은 한 장만 들고(photo 번호와 함께),
+ * 다른 사진의 요청은 그 사진을 함께 받아야 나눈다. 점마다 나눈 결과는 사진이 바뀔 때까지 기억해 다시 나누지 않는다 (겹치기도 화면이 멈추지 않게 이 워커에서 한다). 엔진은 화면이 넘겨준 바이트로 띄우고
  * 워커는 아무 데서도 받지 않는다 (mediapipe-engine.ts). 사진은 메모리에서만 다룬다.
  */
 import { InteractiveSegmenterLegacy } from '@mediapipe/tasks-vision';
@@ -10,8 +10,9 @@ import { coverage, union, type Mask, type Point } from './matte';
 import type { ObjectsRequest, ObjectsResponse } from './objects';
 
 let segmenter: InteractiveSegmenterLegacy | undefined;
-/** 나눌 사진 (살피기용으로 줄인 것). 새 사진을 받으면 바뀐다 */
+/** 나눌 사진 (살피기용으로 줄인 것)과 그 번호. 새 사진을 받으면 바뀐다 */
 let image: ImageBitmap | undefined;
+let photo: number | undefined;
 /** 지금 사진에서 점마다 나눈 마스크 */
 const masks = new Map<string, Mask>();
 const keyOf = (point: Point) => `${point.x.toFixed(4)},${point.y.toFixed(4)}`;
@@ -44,7 +45,14 @@ function segmentPoint(point: Point): Mask {
 
 function segment(request: Extract<ObjectsRequest, { type: 'segment' }>): ObjectsResponse {
   if (!segmenter) throw new Error('not initialized');
-  if (!image) throw new Error('no image');
+  if (request.bitmap) {
+    image?.close();
+    image = request.bitmap;
+    photo = request.photo;
+    masks.clear();
+  }
+  // 다른 사진의 마스크로 나누지 않는다 (화면이 사진을 함께 보내 다시 묻는다)
+  if (!image || photo !== request.photo) return { id: request.id, kind: 'stale' };
   const list = request.points.map((point) => {
     const key = keyOf(point);
     let mask = masks.get(key);
@@ -55,7 +63,13 @@ function segment(request: Extract<ObjectsRequest, { type: 'segment' }>): Objects
     return mask;
   });
   const merged = union(list, image.width, image.height);
-  return { id: request.id, kind: 'mask', mask: merged, coverage: coverage(merged) };
+  return {
+    id: request.id,
+    kind: 'mask',
+    photo: request.photo,
+    mask: merged,
+    coverage: coverage(merged),
+  };
 }
 
 addEventListener('message', async (event: MessageEvent<ObjectsRequest>) => {
@@ -64,15 +78,11 @@ addEventListener('message', async (event: MessageEvent<ObjectsRequest>) => {
     if (request.type === 'init') {
       await init(request);
       postMessage({ id: request.id, kind: 'ready' } satisfies ObjectsResponse);
-    } else if (request.type === 'image') {
-      image?.close();
-      image = request.bitmap;
-      masks.clear();
-      postMessage({ id: request.id, kind: 'ready' } satisfies ObjectsResponse);
     } else {
       const response = segment(request);
-      if (response.kind === 'mask')
-        postMessage(response, { transfer: [response.mask.data.buffer] });
+      postMessage(response, {
+        transfer: response.kind === 'mask' ? [response.mask.data.buffer] : [],
+      });
     }
   } catch (error) {
     postMessage({

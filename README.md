@@ -223,3 +223,7 @@ npm run test:e2e     # 빌드 결과로 E2E (먼저 npm run build)
 | [libheif](https://github.com/strukturag/libheif)·libde265 (libheif-js)                     | HEIC 사진 열기                 | LGPL-3.0    |
 | 한글 글꼴 (Pretendard, Noto, 나눔 등)                                                      | PDF에 글자 넣기                | SIL OFL 1.1 |
 | fflate, UPNG.js, gifenc                                                                    | ZIP, PNG 색 줄이기, GIF 만들기 | MIT         |
+
+## 허가서
+
+이 저장소의 코드는 [MIT 허가서](LICENSE)를 따릅니다. 위 표의 오픈소스, 글꼴, 모델·데이터 파일은 각자의 허가서를 따릅니다.

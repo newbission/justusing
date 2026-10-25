@@ -3,6 +3,7 @@ title: How to hide personal info in a photo (choosing mosaic, blur or black out)
 description: Which to choose when hiding license plates, phone numbers or faces in a photo, why blur and fine mosaic can be recovered, and what to check before you post the hidden photo.
 tool: image/mosaic
 published: 2026-10-23
+updated: 2026-10-24
 order: 27
 ---
 
@@ -37,6 +38,21 @@ So choose like this:
 
 When you use mosaic, draw the area generously around the text and raise the strength. This tool sets the block size from the shorter side of the area (strength 5 is one eighth of it), and the actual block size of the selected area is shown in pixels next to the slider.
 
+## Find faces automatically, then check the result yourself
+
+When a group photo has many faces, drawing each one is tedious. Click "Find faces" to find the faces in the photo and add them all at once as ellipses that cover hair and ears. Faces can still be recognized through small blocks, so they start as a coarse mosaic (strength 8). For a face that must stay hidden, select it and switch to "Black out".
+
+The model that finds faces looks at a shrunken copy of the photo. If the whole photo is shrunk at once, faces in the back row shrink to a few pixels and are easy to miss, so this tool looks at the photo several times in overlapping pieces and merges what it finds for the same face. Even so, do not trust automatic finding blindly. These faces are easy to miss:
+
+- Faces in profile, looking down or turned away, and the back of a head
+- Faces partly covered by a hand, hat, mask or another person
+- Faces smaller than about 1% of the photo's longer side, and blurry or dark faces
+- Faces on posters, screens or in picture frames
+
+It can also mistake a face-like pattern for a face. After it finds faces, look over the whole photo, draw any missed faces yourself and remove areas you do not want to hide. Faces that overlap areas you already marked are not added again, so clicking it more than once does not stack areas on top of each other.
+
+The face data (the recognition engine and model, about 14MB the first time) is downloaded only after you click "Find faces" for the first time and agree, and its size is shown before you do. It is kept only in this browser, so next time faces are found right away, and your photo is never sent anywhere while faces are found. It does not find license plates or text, so mark those yourself.
+
 ## Check before you post
 
 - **Post the result file**: the hidden result is downloaded as a new file. The original you chose is unchanged, so pick the file whose name ends in "\_mosaic"
@@ -44,6 +60,6 @@ When you use mosaic, draw the area generously around the text and raise the stre
 - **Photo information**: phone photos may contain the place where they were taken. This tool redraws the photo, so location, date and device details are not kept in the result. To remove only the location without hiding anything, use [Remove Photo Location](/en/image/remove-location/)
 - **Other clues in the photo**: look for text reflected in glass or mirrors, signs and building names in the background, and other labels on the side of a parcel. Hiding one spot does not help if the same information shows up somewhere else
 
-It does not find faces or license plates automatically. What needs hiding differs in every photo, and checking as you draw keeps you from missing one. For personal information in a PDF, [Redact PDF](/en/pdf/redact/) also removes the hidden text from the file.
+For personal information in a PDF, [Redact PDF](/en/pdf/redact/) also removes the hidden text from the file.
 
 Opening, hiding and saving all happen in this browser, and the photo is never uploaded anywhere.
