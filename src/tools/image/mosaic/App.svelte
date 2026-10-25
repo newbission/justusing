@@ -708,54 +708,6 @@
                 >{t.clear}</button
               >
             </div>
-            <div class="faces">
-              <button
-                type="button"
-                class="btn"
-                bind:this={findButton}
-                disabled={facesBusy || faces.kind === 'ask' || save.kind === 'saving'}
-                onclick={findFaces}>{t.findFaces}</button
-              >
-              <div class="faces-status" role="status">
-                {#if faces.kind === 'checking'}
-                  <p>{t.faces.checking}</p>
-                {:else if faces.kind === 'downloading'}
-                  <p>{t.faces.downloading(faces.percent)}</p>
-                {:else if faces.kind === 'finding'}
-                  <p>{t.faces.finding(faces.percent)}</p>
-                {:else if faces.kind === 'found'}
-                  <p>{t.faces.found(faces.total, faces.added)}</p>
-                  <p class="faces-check">{t.faces.check}</p>
-                {:else if faces.kind === 'none'}
-                  <p>{t.faces.none}</p>
-                  <p class="faces-check">{t.faces.check}</p>
-                {:else if faces.kind === 'failed'}
-                  <p>
-                    <strong
-                      >{faces.reason === 'data' ? t.faces.failedData : t.faces.failedFind}</strong
-                    >
-                  </p>
-                {/if}
-              </div>
-              {#if faces.kind === 'ask'}
-                <div class="faces-ask">
-                  {#if faces.removed}<p><strong>{t.faces.removed}</strong></p>{/if}
-                  <p>{t.faces.ask(formatSize(faces.bytes))}</p>
-                  {#if faces.lowSpace}<p class="help">{t.faces.lowSpace}</p>{/if}
-                  <div class="row">
-                    <button
-                      type="button"
-                      class="btn primary"
-                      bind:this={getDataButton}
-                      onclick={downloadFaceData}>{t.faces.getData(formatSize(faces.bytes))}</button
-                    >
-                    <button type="button" class="btn" onclick={cancelFaceData}
-                      >{t.faces.cancel}</button
-                    >
-                  </div>
-                </div>
-              {/if}
-            </div>
             <p class="safety">{t.safety}</p>
           </section>
 
@@ -855,6 +807,55 @@
               {/each}
             </div>
             <p class="help">{t.formatHelp[format]} {t.exifNote}</p>
+          </section>
+
+          <!-- 패널 맨 끝에 둔다: 진행·결과 문구와 받기 칸이 늘어도 다른 조작부가 밀리지 않는다 -->
+          <section aria-labelledby="faces-title">
+            <h2 id="faces-title">{t.facesTitle}</h2>
+            <button
+              type="button"
+              class="btn"
+              bind:this={findButton}
+              disabled={facesBusy || faces.kind === 'ask' || save.kind === 'saving'}
+              onclick={findFaces}>{t.findFaces}</button
+            >
+            <!-- 처리 전후 높이가 같게 세 줄을 늘 잡아 둔다 -->
+            <p class="faces-status" role="status">
+              {#if faces.kind === 'checking'}
+                {t.faces.checking}
+              {:else if faces.kind === 'downloading'}
+                {t.faces.downloading(faces.percent)}
+              {:else if faces.kind === 'finding'}
+                {t.faces.finding(faces.percent)}
+              {:else if faces.kind === 'found'}
+                {t.faces.found(faces.total, faces.added)}
+              {:else if faces.kind === 'none'}
+                {t.faces.none}
+              {:else if faces.kind === 'failed'}
+                <strong>{faces.reason === 'data' ? t.faces.failedData : t.faces.failedFind}</strong>
+              {:else}
+                {t.faces.intro}
+              {/if}
+            </p>
+            <p class="help">{t.faces.check}</p>
+            {#if faces.kind === 'ask'}
+              <div class="faces-ask">
+                {#if faces.removed}<p><strong>{t.faces.removed}</strong></p>{/if}
+                <p>{t.faces.ask(formatSize(faces.bytes))}</p>
+                {#if faces.lowSpace}<p class="help">{t.faces.lowSpace}</p>{/if}
+                <div class="row">
+                  <button
+                    type="button"
+                    class="btn primary"
+                    bind:this={getDataButton}
+                    onclick={downloadFaceData}>{t.faces.getData(formatSize(faces.bytes))}</button
+                  >
+                  <button type="button" class="btn" onclick={cancelFaceData}
+                    >{t.faces.cancel}</button
+                  >
+                </div>
+              </div>
+            {/if}
           </section>
         </div>
       </div>
@@ -1064,17 +1065,15 @@
     align-items: center;
     gap: 8px;
   }
-  .faces {
-    margin-top: 12px;
+  .faces-status {
+    min-height: calc(3 * 1.5em);
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
   }
-  .faces-status p,
   .faces-ask p {
     margin: 8px 0 0;
     font-size: 14px;
-  }
-  .faces-status .faces-check {
-    color: var(--color-muted);
-    font-size: 13px;
   }
   .faces-ask {
     margin-top: 12px;
