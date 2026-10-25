@@ -10,6 +10,7 @@
   const common = pick(FRAME_MESSAGES);
   const t = pick(MESSAGES);
   import ActionBar from '../../../frame/ActionBar.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
   import { makeZip } from '../../../lib/zip';
@@ -49,7 +50,15 @@
   type Run =
     | { kind: 'idle' }
     | { kind: 'working'; done: number; total: number }
-    | { kind: 'done'; name: string; bytes: Uint8Array; type: string; signature: string }
+    | {
+        kind: 'done';
+        name: string;
+        bytes: Uint8Array;
+        type: string;
+        signature: string;
+        /** 만든 쪽 이미지 수 (여러 장이면 bytes는 ZIP) */
+        count: number;
+      }
     | { kind: 'failed'; message: string };
   let run = $state<Run>({ kind: 'idle' });
 
@@ -99,12 +108,30 @@
             bytes: zip,
             type: 'application/zip',
             signature: startedWith,
+            count: plan.length,
           }
-        : { kind: 'done', ...images[0]!, type, signature: startedWith };
+        : { kind: 'done', ...images[0]!, type, signature: startedWith, count: 1 };
     } catch {
       if (pdf !== source) return;
       run = { kind: 'failed', message: t.failed };
     }
+  }
+
+  /**
+   * 받을 때와 같은 쪽 이미지를 다음 도구로 넘긴다 (src/frame/SendTo.svelte). 여러 장이면 만든 ZIP에서 꺼낸다
+   * (쪽 이미지는 ZIP 워커로 옮겨져 따로 남아 있지 않다). ZIP 풀기는 이때 받는다
+   */
+  async function sendResults(): Promise<File[]> {
+    if (!result) throw new Error('not ready');
+    if (result.type !== 'application/zip') {
+      const bytes = result.bytes as Uint8Array<ArrayBuffer>;
+      return [new File([bytes], result.name, { type: result.type })];
+    }
+    const { unzipSync } = await import('fflate');
+    const type = IMAGE_TYPES[format];
+    return Object.entries(unzipSync(result.bytes)).map(
+      ([name, bytes]) => new File([bytes as Uint8Array<ArrayBuffer>], name, { type }),
+    );
   }
 
   function formatSize(size: number) {
@@ -142,6 +169,7 @@
           {t.manyFiles(pages.length)}
         {/if}
       {/snippet}
+      <SendTo count={result?.count ?? 0} collect={sendResults} disabled={run.kind === 'working'} />
       {#if result}
         <button
           type="button"
