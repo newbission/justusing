@@ -156,6 +156,7 @@ const LAZY_TOOLS = [
   '/pdf/ocr/', // pdf.js + 글자 읽는 엔진
   '/image/ocr/', // 글자 읽는 엔진·언어 데이터
   '/image/id-photo/', // 얼굴 찾는 모델
+  '/image/mosaic/', // 얼굴 찾는 모델 (얼굴 찾기를 누를 때)
   '/image/heic-to-jpg/', // HEIC 해독기
   '/pdf/watermark/', // 글꼴 데이터
 ];
