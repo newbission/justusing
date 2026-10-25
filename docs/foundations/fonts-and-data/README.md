@@ -31,6 +31,7 @@ HEIC 읽기 엔진(libheif, 압축 전송 약 0.5MB)은 이 방식을 쓰지 않
 | OCR 언어 데이터                     | `public/data/ocr/kor.traineddata.gz`, `eng.traineddata.gz`                                             | 약 1.6MB, 3.0MB                        |
 | 얼굴 찾기 엔진·모델                 | `public/data/face/vision_wasm_module_internal.wasm`, `face_landmarker.task`, `selfie_segmenter.tflite` | 약 13.5MB, 3.7MB, 0.25MB               |
 | 배경 제거 모델 (엔진은 위와 같음)   | `public/data/face/magic_touch.tflite`                                                                  | 약 6.2MB                               |
+| 모자이크 얼굴 찾기 모델             | `public/data/face/blaze_face_full_range.tflite`                                                        | 약 1.1MB (엔진은 위와 같음)            |
 
 ## 2. 어떻게 만드는지
 
