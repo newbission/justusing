@@ -41,7 +41,7 @@ export default defineContent({
       },
       {
         q: '어떤 사진을 넣을 수 있나요?',
-        a: 'JPG·PNG·WebP 사진과 아이폰의 HEIC 사진입니다. HEIC도 다시 저장하지 않고 HEIC 그대로 두며, 정보 칸을 그 자리에서 비워 파일 크기도 그대로입니다. 그림도 정보도 아닌 알 수 없는 내용이 든 HEIC는 거기에도 위치가 적힐 수 있어 고치지 않고 지우지 못했다고 알려 드립니다(이럴 때는 HEIC JPG 변환 도구로 바꾸면 촬영 정보가 모두 빠집니다). 크롬·엣지처럼 HEIC를 스스로 열지 못하는 브라우저에서는 목록에 사진을 보여 주려고 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받습니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다. 안드로이드의 HDR 사진(Ultra HDR)은 사진 뒤에 붙은 밝기 정보가 빠져 일반 사진으로 보입니다. 이런 사진을 넣으면 지우기 전에 화면에 알려 드립니다.',
+        a: 'JPG·PNG·WebP 사진과 아이폰의 HEIC 사진입니다. HEIC도 다시 저장하지 않고 HEIC 그대로 두며, 정보 칸을 그 자리에서 비워 파일 크기도 그대로입니다. HEIC 안에 든 작은 JPEG 그림의 촬영 정보도 함께 비웁니다. 안전하다고 확인한 내용만 든 HEIC만 고치고, 그 밖의 내용이 하나라도 있으면 거기에도 위치가 적힐 수 있어 고치지 않고 "안전하게 지울 수 없다"고 미리 알려 드립니다(이럴 때는 HEIC JPG 변환 도구로 바꾸면 촬영 정보가 모두 빠집니다). 크롬·엣지처럼 HEIC를 스스로 열지 못하는 브라우저에서는 목록에 사진을 보여 주려고 HEIC를 여는 프로그램(libheif, 약 0.5MB)을 우리 사이트에서 받습니다. 움직이는 사진(모션 포토)은 사진 뒤에 붙은 영상 부분도 함께 빠지고 멈춘 사진만 남습니다. 안드로이드의 HDR 사진(Ultra HDR)은 사진 뒤에 붙은 밝기 정보가 빠져 일반 사진으로 보입니다. 이런 사진을 넣으면 지우기 전에 화면에 알려 드립니다.',
       },
       {
         q: '지운 뒤 사진이 옆으로 눕지 않나요?',
@@ -89,7 +89,7 @@ export default defineContent({
       },
       {
         q: 'Which photos can I add?',
-        a: 'JPG, PNG and WebP photos, and iPhone HEIC photos. HEIC photos are not saved again either: they stay HEIC, and the info is blanked out in place, so the file size stays the same. A HEIC file holding unknown content that is neither picture nor photo info is not changed, because a location could be written there too, and the list tells you it could not be cleaned (converting it with the HEIC to JPG tool removes all photo information). Browsers that cannot open HEIC on their own, such as Chrome and Edge, download a HEIC reader (libheif, about 0.5 MB) from this site to show the photo in the list. For motion photos, the video attached after the picture is removed too, leaving only the still photo. Android HDR photos (Ultra HDR) lose the brightness data attached after the picture and show as regular photos. If you add such photos, the screen tells you before you remove anything.',
+        a: 'JPG, PNG and WebP photos, and iPhone HEIC photos. HEIC photos are not saved again either: they stay HEIC, and the info is blanked out in place, so the file size stays the same. Photo information inside small JPEG pictures stored in the HEIC is blanked out too. Only HEIC files holding content known to be safe are changed; if anything else is inside, a location could be written there, so the file is left unchanged and the list tells you in advance that it cannot be cleaned safely (converting it with the HEIC to JPG tool removes all photo information). Browsers that cannot open HEIC on their own, such as Chrome and Edge, download a HEIC reader (libheif, about 0.5 MB) from this site to show the photo in the list. For motion photos, the video attached after the picture is removed too, leaving only the still photo. Android HDR photos (Ultra HDR) lose the brightness data attached after the picture and show as regular photos. If you add such photos, the screen tells you before you remove anything.',
       },
       {
         q: 'Will my photos turn sideways?',

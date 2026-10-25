@@ -241,6 +241,9 @@
       {t.itemDone[outcome.mode](formatSize(item.file.size), formatSize(outcome.bytes.length))}
     {:else if outcome?.state === 'kept'}
       {t.itemKept}
+    {:else if typeof info === 'object' && info.unsafe}
+      <!-- 허용 목록 밖의 내용이 든 HEIC: 지우기 전에도 미리 알린다 (지우기는 고치지 않고 실패로 둔다) -->
+      <strong>{t.itemUnsafe}</strong>
     {:else if outcome?.state === 'failed' || info === 'error'}
       <strong>{t.itemFailed}</strong>
     {:else if typeof info === 'object'}
