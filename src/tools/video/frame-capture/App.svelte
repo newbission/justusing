@@ -141,17 +141,22 @@
     return `${baseName(video!.name)}_${timeLabel(time)}.${EXTENSIONS[format]}`;
   }
 
+  /** 지금 보이는 장면 한 장을 저장한다 (받기·다음 도구로 넘기기가 같이 쓴다) */
+  async function stillNow(player: HTMLVideoElement, wanted: StillType) {
+    player.pause();
+    // 막대를 끄는 중이면 그 장면이 나올 때까지 기다린다
+    if (player.seeking) await seekVideo(player, player.currentTime);
+    const time = player.currentTime;
+    return { time, bytes: await saveStill(await captureBitmap(player), wanted) };
+  }
+
   async function saveOne() {
     if (!player || !video) return;
     const ticket = generation;
     save = { kind: 'saving' };
     try {
-      player.pause();
-      // 막대를 끄는 중이면 그 장면이 나올 때까지 기다린다
-      if (player.seeking) await seekVideo(player, player.currentTime);
-      const time = player.currentTime;
       const wanted = format;
-      const bytes = await saveStill(await captureBitmap(player), wanted);
+      const { time, bytes } = await stillNow(player, wanted);
       if (ticket !== generation) return;
       downloadFile(bytes, fileName(time), wanted);
       save = { kind: 'savedOne', time, size: bytes.length };
@@ -168,23 +173,8 @@
     const wanted = { times, format, names: times.map(fileName), base: baseName(video.name) };
     save = { kind: 'making', done: 0, total: wanted.times.length };
     try {
-      const files: { name: string; bytes: Uint8Array }[] = [];
-      const pending: Promise<Uint8Array>[] = [];
-      const settle = async () => {
-        const bytes = await pending.shift()!;
-        files.push({ name: wanted.names[files.length]!, bytes });
-        if (ticket === generation && !controller.signal.aborted) {
-          save = { kind: 'making', done: files.length, total: wanted.times.length };
-        }
-      };
-      for (const time of wanted.times) {
-        if (controller.signal.aborted || ticket !== generation) return;
-        const bitmap = await reader.bitmap(time);
-        pending.push(saveStill(bitmap, wanted.format));
-        if (pending.length >= IN_FLIGHT) await settle();
-      }
-      while (pending.length > 0) await settle();
-      if (controller.signal.aborted || ticket !== generation) return;
+      const files = await captureFrames(reader, wanted, ticket, controller.signal);
+      if (!files) return;
       const zip = await makeZip(files);
       // 묶는 사이 '그만두기'를 눌렀으면 받지 않는다 (그만두기는 generation을 바꾸지 않는다)
       if (controller.signal.aborted || ticket !== generation) return;
@@ -195,6 +185,35 @@
     } finally {
       if (making === controller) making = undefined;
     }
+  }
+
+  /**
+   * 구간의 장면들을 차례로 만든다 (찾기와 저장을 겹치게, 저장을 기다리는 장면은 IN_FLIGHT장까지).
+   * 그만두었거나 다른 동영상을 열었으면 undefined
+   */
+  async function captureFrames(
+    reader: FrameReader,
+    wanted: { times: number[]; format: StillType; names: string[] },
+    ticket: number,
+    signal: AbortSignal,
+  ): Promise<{ name: string; bytes: Uint8Array }[] | undefined> {
+    const files: { name: string; bytes: Uint8Array }[] = [];
+    const pending: Promise<Uint8Array>[] = [];
+    const settle = async () => {
+      const bytes = await pending.shift()!;
+      files.push({ name: wanted.names[files.length]!, bytes });
+      if (ticket === generation && !signal.aborted) {
+        save = { kind: 'making', done: files.length, total: wanted.times.length };
+      }
+    };
+    for (const time of wanted.times) {
+      if (signal.aborted || ticket !== generation) return undefined;
+      const bitmap = await reader.bitmap(time);
+      pending.push(saveStill(bitmap, wanted.format));
+      if (pending.length >= IN_FLIGHT) await settle();
+    }
+    while (pending.length > 0) await settle();
+    return signal.aborted || ticket !== generation ? undefined : files;
   }
 
   async function run() {
