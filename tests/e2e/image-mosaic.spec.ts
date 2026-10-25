@@ -358,10 +358,14 @@ test('얼굴 찾기: 받기 전에 묻고, 찾은 얼굴을 가릴 곳으로 넣
   expect(faceData(requests)).toEqual([]);
 
   await find.click();
+  // 진행·결과 줄은 처리 전후 높이가 같다 (얼굴 찾기 칸은 패널 맨 끝이라 다른 조작부를 밀지 않는다)
+  const status = frame.locator('.faces-status');
+  const statusHeight = (await status.boundingBox())!.height;
   await getData.click();
   await expect(frame.getByText('얼굴 5개를 찾아 가릴 곳으로 넣었습니다.')).toBeVisible({
     timeout: 60_000,
   });
+  expect((await status.boundingBox())!.height).toBe(statusHeight);
   await expect(frame.getByText('놓친 얼굴은 직접 그려 더하세요', { exact: false })).toBeVisible();
   await expect(frame.getByText('5곳', { exact: true })).toBeVisible();
 
@@ -440,18 +444,32 @@ test('얼굴 찾기: 보관본으로 바로 찾고, 엔진이 있으면 모델�
   await expect(frame.getByText('아직 없습니다.', { exact: false })).toBeVisible();
   expect(faceData(requests)).toEqual([]);
 
-  // 이미 가린 곳과 겹치는 얼굴은 다시 넣지 않는다
+  // 타원 바깥 사각형의 귀퉁이(실제로는 가리지 않는 곳)에 가운데가 있는 얼굴은 넣는다
   frame = await openTool(page, 'faces.jpg');
+  await frame.getByText('타원', { exact: true }).click();
+  await frame.getByRole('button', { name: '가릴 곳 추가' }).click();
+  for (const [label, value] of [
+    ['폭 (px)', 400],
+    ['높이 (px)', 400],
+    ['왼쪽 (px)', 230],
+    ['위 (px)', 610],
+  ] as const) {
+    await frame.getByLabel(label).fill(String(value));
+    await frame.getByLabel(label).press('Enter');
+  }
   const find = frame.getByRole('button', { name: '얼굴 찾기', exact: true });
   await find.click();
-  await expect(frame.getByText('얼굴 5개를 찾아', { exact: false })).toBeVisible({
+  await expect(frame.getByText('얼굴 5개를 찾아 가릴 곳으로 넣었습니다.')).toBeVisible({
     timeout: 60_000,
   });
+  await expect(frame.getByText('6곳', { exact: true })).toBeVisible();
+
+  // 이미 가린 곳과 겹치는 얼굴은 다시 넣지 않는다
   await find.click();
   await expect(
     frame.getByText('얼굴 5개를 찾았습니다. 이미 가린 곳과 겹치지 않는 0곳을 넣었습니다.'),
   ).toBeVisible({ timeout: 60_000 });
-  await expect(frame.getByText('5곳', { exact: true })).toBeVisible();
+  await expect(frame.getByText('6곳', { exact: true })).toBeVisible();
 
   // 증명사진·배경 지우기에서 엔진을 받아 둔 사람: 모델만 받는다 (지워졌다고 하지 않는다)
   await page.evaluate(async () => {
