@@ -20,7 +20,8 @@
   지울 것이 없던 사진은 원본 그대로 ZIP에 넣는다
 - **다시 압축하지 않는다**: 정보 조각만 빼고 다시 잇는다. 그림 자료는 한 바이트도 바뀌지 않는다. HEIC는 정보 칸을 그 자리에서 비워 파일 크기까지 같다
 - 하지 않는 것·한계
-  - HEIC에 그림도 EXIF·XMP도 아닌 항목·상자(모르는 항목 종류, 압축한 XMP, 동영상 트랙 `moov`, 글 속성 `udes` 등)가 있으면 고치지 않고 실패로 둔다
+  - HEIC에 허용 목록 밖의 상자·속성·항목·참조(동영상 트랙 `moov`, 확장 속성 `uuid`, 글 속성 `udes`, 압축한 XMP, 사용자 자료 SEI 등)가 하나라도 있으면
+    고치지 않고, 목록에 "이 HEIC는 위치 정보를 안전하게 지울 수 없어 고치지 않습니다"를 지우기 전부터 보인다 (`PhotoInfo.unsafe`)
   - HEIC의 HDR 밝기 그림(게인 맵)은 그림이라 남지만, 그 설정이 적힌 XMP·제조사 메모가 비워져 HDR로 보이지 않을 수 있다 (FAQ에 밝힘)
   - JPEG 그림 끝(EOI) 뒤에 덧붙은 자료(움직이는 사진의 영상, MPF의 다른 그림)는 두 방식 모두 뺀다. 거기에도 촬영 정보가 있을 수 있다
     - 안드로이드 Ultra HDR의 밝기 정보(게인 맵)도 여기 붙어 있어, HDR 사진은 일반(SDR) 사진이 된다. 그림이나 영상이 붙은 사진
@@ -70,8 +71,17 @@
   - EXIF: 앞 4바이트(TIFF까지 건너뛸 수) 뒤의 TIFF 자리에 새 TIFF(위치만: `safeExif`, 모두: 방향만 또는 빈 TIFF)를 쓰고 나머지는 0으로 지운다
     (예전 GPS 바이트가 파일에 남지 않게). 새 TIFF가 더 크면 실패. 읽지 못하는 EXIF는 통째로 0
   - XMP: 두 방식 모두 빈 XMP(`<x:xmpmeta xmlns:x="adobe:ns:meta/"/>`)와 공백으로 덮는다 (JPG에서 XMP 조각을 빼는 것과 같다)
-  - 허용 목록: 맨 바깥 상자는 `ftyp`·`meta`·`mdat`·`free`·`skip`, `meta` 안은 `hdlr`·`dinf`·`pitm`·`iinf`·`iloc`·`iref`·`iprp`·`idat`·`grpl`,
-    항목은 그림 종류(`hvc1`·`grid`·`iden`·`tmap` 등)·EXIF·XMP만. 그 밖의 것이 있으면 `unknown`이라 고치지 않는다
+  - 허용 목록 (모든 단계, Codex #146에서 같은 종류 지적이 세 번 나와 한 번에 바꿈). 밖의 것이 하나라도 있으면 `unknown`이라 고치지 않는다
+    - 맨 바깥 상자 `ftyp`·`meta`·`mdat`·`free`·`skip`, `meta` 안 `hdlr`·`dinf`·`pitm`·`iinf`·`iloc`·`iref`·`iprp`·`idat`·`grpl`, `iprp` 안 `ipco`·`ipma`
+    - 그림 속성(ipco) `hvcC`·`ispe`·`colr`·`pixi`·`irot`·`imir`·`clap`·`pasp`·`auxC`·`clli`·`mdcv`·`cclv`·`amve`·`lsel`·`rloc`.
+      색 프로필(ICC)은 JPG에서 남기는 것과 같은 기준으로 남긴다. `auxC`는 종류 이름이 `urn:`(영문·숫자·`:`)이고 덧붙임에 글이 없어야 한다
+    - 항목 종류(iinf) `hvc1`·`grid`·`iden`·`iovl`·`tmap`·`jpeg`·`Exif`·`mime`(XMP, 압축하지 않은 것). 보호(암호화)된 항목은 받지 않는다
+    - 항목 참조(iref) `thmb`·`auxl`·`dimg`·`cdsc`·`base`·`prem`, 묶음(grpl) `altr`·`ster`, 자료 참조(dref)는 '이 파일 안'(`url ` 깃발 1)만
+    - HEVC: `hvcC`와 `hvc1` 그림 자료의 NAL은 0~40번만, SEI는 사용자 자료(4·5번, 인코더 이름 같은 글)가 없어야 한다
+  - JPEG 그림 항목: 안의 정보 조각을 `stripJpegMetadata`와 같은 기준(JFIF·ICC·Adobe만 남김)으로, 길이를 두고 내용만 0으로 비운다
+    (`blankJpegMetadata`, 그림 끝 뒤 자료도 0). 위치만 지울 때도 날짜·기기까지 비운다(작은 그림이라 더 엄격하게). 읽지 못하면 고치지 않는다
+  - 마지막 안전망: 압축한 그림 자료(HEVC·JPEG 항목) 밖에 `GPS`나 소수점 아래 네 자리 넘는 숫자(좌표)가 남았으면 위치가 있는 것으로 본다.
+    지운 결과를 다시 읽을 때도 같으니 남으면 실패가 된다
   - 어느 항목도 쓰지 않는 바이트(`free`·`skip` 상자, `mdat`·`idat` 안에서 위치표가 가리키지 않는 틈, 마지막 상자 뒤 자료)는 0으로,
     자유 글인 항목 이름은 공백으로(0을 넣으면 뒤 글자의 시작이 바뀐다), `hdlr` 이름은 0으로 비운다. 예전 편집이 남긴 EXIF·XMP·위치 글이
     있을 수 있다 (Codex #146: free 상자의 GPS 글이 남음). 읽을 때도 이 자리의 XMP GPS 글을 위치로 본다
@@ -134,11 +144,15 @@
   - HEIC(`located.heic`): 위치만 지우면 HEIC 그대로 날짜·기기가 남고 GPS·XMP·자유 글이 없으며, 모두 지우면 날짜·기기도 없다.
     두 방식 모두 크기가 같고 정보 항목 밖은 한 바이트도 바뀌지 않는다, 로컬 처리
   - HEIC 뒤에 GPS 글이 든 `free`·`skip` 상자와 덧붙은 자료를 붙여도 결과에 GPS·주소 글이 남지 않는다
-- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`)
+  - `located-uuid.heic`(확장 속성 `uuid`에 위치 글): 지우기 전부터 '안전하게 지울 수 없음', 지우기는 실패, 다운로드 없음
+  - `located-jpeg-item.heic`(`located.jpg`를 JPEG 항목으로): 크기가 같고 GPS·주소·설명 글·덧붙은 영상이 남지 않으며 안의 JPEG는 읽히고 정보가 없다
+- 시험 사진은 `tests/fixtures/make_image_fixtures.py`가 만든다 (`located.jpg`·`located.png`·`located.webp`·`located.heic`·`located-uuid.heic`·`located-jpeg-item.heic`, 뒤의 둘은 `rebuild_heif`로 다시 쓴다)
 
 ### 직접 확인
 
 - 2026-10-20 크롬(빌드 결과): 1280·390 폭 화면, 견본 '예시 파일로 해 보기'·따라 하기
+- 2026-10-24 허용 목록으로 바꾼 뒤: 견본 HEIC 7개(공용 시험·사이트 견본), 아이폰 11 HEIC, 아이폰 사진 한 장(상자 종류만 봄: `hdlr,dinf,pitm,iinf,iref,iprp,idat,iloc`,
+  속성 `colr,hvcC,ispe,irot,pixi`, 참조 `dimg,cdsc`)이 모두 허용 목록 안이라 두 방식 모두 고쳐지고, 결과의 대표 그림을 pillow-heif로 다시 연다
 - 2026-10-24 HEIC: `located.heic`와 실제 아이폰 11 HEIC(공개 시험 파일), 아이폰 사진 한 장(구조만 봄: `ftyp,meta,mdat`, 항목 `hvc1`·`grid`·`Exif`·`mime`)에서
   두 방식 모두 고쳐지고 위치가 남지 않음, 결과를 pillow-heif로 다시 열어 그림이 열리고 EXIF는 남길 칸만, XMP는 비었는지 확인
 - 2026-10-20 결과 파일을 Pillow로 다시 열어 GPS 칸이 비고 그림이 그대로 열리는지 확인 (JPG·PNG·WebP), EXIF 자유 글(설명·메모)이 빠지고 날짜·기기·렌즈·노출은 남는지 확인
