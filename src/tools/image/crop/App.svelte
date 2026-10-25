@@ -16,7 +16,13 @@
   import { requestShowTool } from '../../../frame/parent';
   import { canUse } from '../../../lib/entitlement';
   import { EXTENSIONS } from '../../../lib/image/batch.svelte';
-  import { CropError, exportImage, openImage, type CropFailure } from '../../../lib/image/crop';
+  import {
+    CropError,
+    closeImage,
+    exportImage,
+    openImage,
+    type CropFailure,
+  } from '../../../lib/image/crop';
   import {
     MAX_ANGLE,
     NO_TURN,
@@ -87,6 +93,7 @@
     return () => {
       off();
       photo?.preview.close();
+      closeImage();
     };
   });
 
