@@ -302,3 +302,19 @@ test('HEIC EXIF 항목의 TIFF 앞 자리에 든 주소 글도 비운다', async
   // 남길 칸(날짜·기기)은 다시 읽힌다
   expect(readPhotoInfo(bytes)).toMatchObject({ location: false, device: 'Apple iPhone 15 Pro' });
 });
+
+test('HEVC 그림 자료에 모르는 SEI(위치 글)가 든 HEIC는 고치지 않고 안전하게 지울 수 없다고 알린다', async ({
+  page,
+}) => {
+  const frame = await openTool(page, ['located-sei.heic']);
+  await expect(
+    frame.getByText('이 HEIC는 위치 정보를 안전하게 지울 수 없어 고치지 않습니다.', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(
+    frame.getByText('정보를 지우지 못한 사진이 있습니다.', { exact: false }),
+  ).toBeVisible();
+  await expect(frame.getByRole('button', { name: '다운로드' })).toHaveCount(0);
+});
