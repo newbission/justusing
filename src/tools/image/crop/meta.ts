@@ -29,4 +29,6 @@ export default defineTool({
   flow: { from: { kind: 'jpg', mark: 'photo' }, to: { kind: 'jpg', mark: 'crop' } },
   // 다른 도구 결과를 받는다 (사진 한 장, docs/foundations/tool-chaining)
   receives: { multiple: false },
+  // 결과를 내려받지 않고 바로 넘길 도구 (docs/foundations/tool-chaining)
+  sendTo: ['image/remove-bg', 'image/mosaic', 'image/compress', 'pdf/from-image'],
 });
