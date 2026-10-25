@@ -773,6 +773,8 @@
         size: number;
         /** 한 장만 받았을 때 그 가로·세로와 형식 */
         single?: { pixels: string; format: string };
+        /** 남은 곳이 없거나 저장하지 못해 뺀 장수 */
+        left: number;
       }
     | { kind: 'stopped' }
     | { kind: 'failed'; reason: CutoutFailure };
@@ -827,16 +829,34 @@
     zip = { kind: 'saving', done: 0, total: list.length };
     try {
       let done = 0;
-      // 저장 워커 수만큼만 동시에 돈다 (CutoutJobs). 넣은 순서대로 담는다
-      const files = await Promise.all(
+      // 저장 워커 수만큼만 동시에 돈다 (CutoutJobs). 넣은 순서대로 담는다.
+      // 한 장이 실패해도(붓질로 다 지워 남은 곳이 없음, 너무 커서 못 그림 등) 그 장만 빼고 나머지는 받는다
+      const results = await Promise.all(
         list.map(async (entry) => {
-          const saved = await exportOne(entry, controller.signal);
-          done++;
-          if (!controller.signal.aborted) zip = { kind: 'saving', done, total: list.length };
-          return saved;
+          try {
+            return await exportOne(entry, controller.signal);
+          } catch (error) {
+            if (controller.signal.aborted) throw error;
+            return failure(error);
+          } finally {
+            done++;
+            if (!controller.signal.aborted) zip = { kind: 'saving', done, total: list.length };
+          }
         }),
       );
       if (controller.signal.aborted) return;
+      const files = [];
+      const reasons: CutoutFailure[] = [];
+      for (const result of results) {
+        if (typeof result === 'string') reasons.push(result);
+        else files.push(result);
+      }
+      const left = reasons.length;
+      if (files.length === 0) {
+        // 모두 실패했으면 남은 곳이 없는 것보다 저장하지 못한 까닭을 먼저 알린다
+        zip = { kind: 'failed', reason: reasons.find((reason) => reason !== 'empty') ?? 'empty' };
+        return;
+      }
       if (files.length === 1) {
         const only = files[0]!;
         downloadFile(only.bytes, only.name, only.type);
@@ -848,6 +868,7 @@
             pixels: `${only.width}×${only.height}`,
             format: only.type === 'image/png' ? 'PNG' : 'JPG',
           },
+          left,
         };
         return;
       }
@@ -855,11 +876,10 @@
       // 묶는 사이 '그만두기'를 눌렀으면 받지 않는다
       if (controller.signal.aborted) return;
       downloadFile(bytes, t.zipName, 'application/zip');
-      zip = { kind: 'saved', count: files.length, size: bytes.length };
+      zip = { kind: 'saved', count: files.length, size: bytes.length, left };
     } catch (error) {
       if (controller.signal.aborted) return;
-      // 하나라도 실패하면 나머지 저장도 그만둔다 (큰 사진을 그리던 메모리를 돌려준다)
-      controller.abort();
+      // ZIP으로 묶지 못했다 (메모리 부족)
       zip = { kind: 'failed', reason: failure(error) };
     } finally {
       if (stopper === controller) stopper = undefined;
@@ -1193,6 +1213,9 @@
           {zip.single
             ? t.saved(zip.single.pixels, zip.single.format, formatSize(zip.size))
             : t.savedMany(zip.count, formatSize(zip.size))}
+          {#if zip.left > 0}
+            <strong>{t.leftOut(zip.left)}</strong>
+          {/if}
         {:else if zip.kind === 'stopped'}
           {t.stopped}
         {:else if data.kind !== 'ready'}
