@@ -1210,12 +1210,12 @@
         {:else if zip.kind === 'failed'}
           <strong>{t.failed[zip.reason]}</strong>
         {:else if zip.kind === 'saved'}
+          <!-- 뺀 장이 없을 때 안내 끝에 빈칸이 붙지 않게 한 줄로 잇는다 -->
           {zip.single
             ? t.saved(zip.single.pixels, zip.single.format, formatSize(zip.size))
-            : t.savedMany(zip.count, formatSize(zip.size))}
-          {#if zip.left > 0}
-            <strong>{t.leftOut(zip.left)}</strong>
-          {/if}
+            : t.savedMany(zip.count, formatSize(zip.size))}{#if zip.left > 0}{' '}<strong
+              >{t.leftOut(zip.left)}</strong
+            >{/if}
         {:else if zip.kind === 'stopped'}
           {t.stopped}
         {:else if data.kind !== 'ready'}
@@ -1227,10 +1227,12 @@
         {:else if exportable.length === 0}
           <strong>{t.emptyAll}</strong>
         {:else}
-          {t.readyMany(exportable.length)}
-          {#if exportable.length < entries.length}
-            {t.skipped(entries.length - exportable.length)}
-          {/if}
+          {[
+            t.readyMany(exportable.length),
+            exportable.length < entries.length && t.skipped(entries.length - exportable.length),
+          ]
+            .filter(Boolean)
+            .join(' ')}
         {/if}
       {/snippet}
       {#if busy}
