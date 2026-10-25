@@ -400,6 +400,42 @@ test('나누는 중에 다른 사진을 열어도 마스크가 섞이지 않는�
   await expectCutout(page, entries['예시-증명사진_배경제거.png']!, ID_PHOTO);
 });
 
+test('지우개로 다 지운 사진은 빼고 나머지를 받는다', async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.goto('/image/remove-bg/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await addPhotos(frame, [MUG, ID_PHOTO, PORTRAIT]);
+  await frame.getByRole('button', { name: /^데이터 받기/ }).click();
+  await expect(frame.getByText(done(3), { exact: false })).toBeVisible({ timeout: 90_000 });
+
+  // 머그잔 사진을 가장 큰 지우개로 위에서 아래까지 지그재그로 칠해 모두 지운다
+  await frame.getByRole('button', { name: '예시-상품사진.jpg 고치기' }).click();
+  await expect(frame.getByText('사진 가운데의 물체를 남겼습니다.', { exact: false })).toBeVisible();
+  await frame.getByText('지우개', { exact: true }).click();
+  await frame.getByLabel('붓 크기').press('End');
+  const box = (await frame.getByRole('application', { name: '결과 미리보기' }).boundingBox())!;
+  await page.mouse.move(box.x + 1, box.y + 1);
+  await page.mouse.down();
+  for (let row = 0; row <= 12; row++) {
+    const y = box.y + Math.min(box.height - 1, (box.height * row) / 12);
+    await page.mouse.move(box.x + 1, y, { steps: 4 });
+    await page.mouse.move(box.x + box.width - 1, y, { steps: 20 });
+  }
+  await page.mouse.up();
+  await expect(frame.getByText('남길 곳 1곳, 붓질 1번')).toBeVisible();
+  await frame.getByRole('button', { name: '목록으로' }).click();
+
+  // 다 지운 사진만 빠지고 나머지 두 장은 ZIP으로 받는다
+  const entries = await downloadZip(page, frame, 3);
+  expect(Object.keys(entries).sort()).toEqual(
+    ['portrait_배경제거.png', '예시-증명사진_배경제거.png'].sort(),
+  );
+  await expect(
+    frame.getByText('1장은 남은 곳이 없거나 저장하지 못해 뺐습니다.', { exact: false }),
+  ).toBeVisible();
+  await expectCutout(page, entries['portrait_배경제거.png']!, PORTRAIT);
+});
+
 test('여러 장 저장을 그만두면 받지 않는다', async ({ page }) => {
   test.setTimeout(180_000);
   await page.goto('/image/remove-bg/');
