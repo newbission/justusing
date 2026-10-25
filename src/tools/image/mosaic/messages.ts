@@ -25,14 +25,18 @@ const ko = {
   },
   regionsTitle: '가릴 곳',
   count: (n: number) =>
-    n === 0 ? '아직 없습니다. 사진 위를 끌어 그리거나 "가릴 곳 추가"를 누르세요.' : `${n}곳`,
+    n === 0
+      ? '아직 없습니다. 사진 위를 끌어 그리거나 "가릴 곳 추가"를 누르세요. 얼굴은 아래 "얼굴 찾기"로 한꺼번에 넣을 수 있습니다.'
+      : `${n}곳`,
   add: '가릴 곳 추가',
   remove: '고른 곳 지우기',
   clear: '모두 지우기',
   region: (n: number, effect: string, face: boolean) =>
     `가릴 곳 ${n}: ${effect}${face ? ' (찾은 얼굴)' : ''}`,
+  facesTitle: '얼굴 자동 찾기',
   findFaces: '얼굴 찾기',
   faces: {
+    intro: '사진 속 얼굴들을 찾아 굵은 모자이크로 가릴 곳에 한꺼번에 넣습니다.',
     checking: '얼굴 찾기 데이터를 확인하는 중…',
     ask: (size: string) =>
       `얼굴을 찾으려면 얼굴 찾기 데이터 ${size}를 한 번 받아야 합니다. 받은 데이터는 이 브라우저에만 보관해 다음부터는 바로 찾습니다. 사진은 어디로도 보내지 않습니다.`,
@@ -125,15 +129,17 @@ const en: typeof ko = {
   regionsTitle: 'Areas to hide',
   count: (n: number) =>
     n === 0
-      ? 'None yet. Drag on the photo or click "Add area".'
+      ? 'None yet. Drag on the photo or click "Add area". To add faces at once, use "Find faces" below.'
       : `${n} ${n === 1 ? 'area' : 'areas'}`,
   add: 'Add area',
   remove: 'Remove selected',
   clear: 'Remove all',
   region: (n: number, effect: string, face: boolean) =>
     `Area ${n}: ${effect}${face ? ' (found face)' : ''}`,
+  facesTitle: 'Find faces automatically',
   findFaces: 'Find faces',
   faces: {
+    intro: 'Finds the faces in the photo and adds them all as areas to hide with a coarse mosaic.',
     checking: 'Checking the face data…',
     ask: (size: string) =>
       `To find faces, download the face data (${size}) once. It is kept only in this browser, so next time faces are found right away. Your photo is never sent anywhere.`,
