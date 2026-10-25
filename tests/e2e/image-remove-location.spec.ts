@@ -285,3 +285,20 @@ test('HEIC 안의 JPEG 그림 항목에 든 촬영 정보도 같은 길이로 �
   expect(readPhotoInfo(jpeg)).toMatchObject({ format: 'jpeg', location: false });
   expect(readPhotoInfo(jpeg)?.device).toBeUndefined();
 });
+
+test('HEIC EXIF 항목의 TIFF 앞 자리에 든 주소 글도 비운다', async ({ page }) => {
+  // located-exif-prefix.heic: EXIF 항목의 건너뛰는 자리에 'Home: 123 Secret St, Seoul'을 넣은 것
+  const frame = await openTool(page, ['located-exif-prefix.heic']);
+  await expect(frame.getByText('사진 1장 중 1장에 위치가 있습니다.')).toBeVisible();
+  await frame.getByText('위치만 지우기').click();
+  await frame.getByRole('button', { name: '정보 지우기' }).click();
+  await expect(frame.getByText('완료: 사진 1장에서 지웠습니다.')).toBeVisible();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드' }).click();
+  const bytes = new Uint8Array(await readFile(await (await event).path()));
+  const text = Buffer.from(bytes).toString('latin1');
+  expect(text).not.toContain('Secret');
+  expect(text).not.toContain('GPS');
+  // 남길 칸(날짜·기기)은 다시 읽힌다
+  expect(readPhotoInfo(bytes)).toMatchObject({ location: false, device: 'Apple iPhone 15 Pro' });
+});
