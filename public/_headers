@@ -12,3 +12,7 @@
 # '예시 파일로 해 보기' 견본 (src/frame/samples.ts)
 /samples/*
   Access-Control-Allow-Origin: *
+
+# 결과를 다음 도구로 넘길 때 frame이 받는 그 도구의 자료 목록·CSS (src/frame/chain.ts, 빌드가 만든다)
+/_chain/*
+  Access-Control-Allow-Origin: *
