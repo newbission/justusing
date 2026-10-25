@@ -22,4 +22,6 @@ export default defineTool({
   },
   related: ['video/to-gif', 'image/crop'],
   flow: { from: { kind: 'mp4' }, to: { kind: 'jpg', count: 3 } },
+  // 결과를 내려받지 않고 바로 넘길 도구 (docs/foundations/tool-chaining)
+  sendTo: ['image/crop', 'image/remove-bg', 'pdf/from-image'],
 });

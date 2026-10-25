@@ -10,6 +10,7 @@
   import { MESSAGES, type Mode } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { downloadFile } from '../../../frame/download';
   import { onFrameFiles } from '../../../frame/drop';
   import { baseName, formatSize } from '../../../frame/format';
@@ -216,6 +217,46 @@
     return signal.aborted || ticket !== generation ? undefined : files;
   }
 
+  /** 받을 때와 같은 장면 파일을 만들어 다음 도구로 넘긴다 (src/frame/SendTo.svelte) */
+  async function sendResults(): Promise<File[]> {
+    if (!player || !video || busy) throw new Error('not ready');
+    const entitlement = await canUse('video/frame-capture');
+    if (!entitlement.allowed) throw new Error('not allowed');
+    const ticket = generation;
+    const asFile = (bytes: Uint8Array, name: string, type: StillType) =>
+      new File([bytes as Uint8Array<ArrayBuffer>], name, { type });
+    if (mode === 'one') {
+      save = { kind: 'saving' };
+      try {
+        const wanted = format;
+        const { time, bytes } = await stillNow(player, wanted);
+        if (ticket !== generation) throw new Error('stale');
+        save = { kind: 'idle' };
+        return [asFile(bytes, fileName(time), wanted)];
+      } catch (error) {
+        if (ticket === generation) save = { kind: 'failed' };
+        throw error;
+      }
+    }
+    if (!reader || times.length === 0 || times.length > MAX_FRAMES) throw new Error('not ready');
+    const controller = new AbortController();
+    making = controller;
+    const wanted = { times, format, names: times.map(fileName) };
+    save = { kind: 'making', done: 0, total: wanted.times.length };
+    try {
+      const files = await captureFrames(reader, wanted, ticket, controller.signal);
+      // 그만두었으면 넘기지 않는다
+      if (!files) throw new Error('stopped');
+      save = { kind: 'idle' };
+      return files.map((file) => asFile(file.bytes, file.name, wanted.format));
+    } catch (error) {
+      if (ticket === generation && !controller.signal.aborted) save = { kind: 'failed' };
+      throw error;
+    } finally {
+      if (making === controller) making = undefined;
+    }
+  }
+
   async function run() {
     if (busy) return;
     const entitlement = await canUse('video/frame-capture');
@@ -256,6 +297,11 @@
           {t.readyMany(times.length, t.formats[format])}
         {/if}
       {/snippet}
+      <SendTo
+        count={mode === 'one' ? 1 : times.length <= MAX_FRAMES ? times.length : 0}
+        collect={sendResults}
+        disabled={busy}
+      />
       {#if save.kind === 'making'}
         <button type="button" class="btn primary" onclick={stop}>{t.stop}</button>
       {:else}
