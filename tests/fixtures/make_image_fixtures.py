@@ -20,6 +20,9 @@ E2E 테스트용 이미지를 만든다 (이미지를 PDF로 도구). Pillow와 
                24줄과 제목 막대 48줄, 아래 탭 막대 56줄은 고정이고 가운데 512줄이 360줄씩 내려간다(152줄 겹침)
 - quadrants.png 40×30을 네 칸으로 나눈 색 (자르기·회전). 왼쪽 위 빨강, 오른쪽 위 초록, 왼쪽 아래 파랑, 오른쪽 아래 흰색
 - noise.png    80×60 화소마다 다른 색 (모자이크). 가린 곳 안이 바뀌고 밖은 그대로인지 화소로 견준다
+- faces.jpg    가상 인물(scripts/samples/face.jpg, 이미지 생성 AI로 만든 실존하지 않는 사람)의 머리·어깨를 크기를
+               달리해 다섯 번 붙인 1600×1000 단체 사진 (모자이크 얼굴 찾기). 얼굴 가운데는 FACES의 자리에서 계산한다
+               (E2E의 FACE_CENTERS와 같게). 얼굴 폭은 약 180·100·54·29·119px, 둘째·넷째는 좌우를 뒤집었다
 - scroll-page.png 위 캡처를 제대로 이었을 때 나와야 하는 긴 화면 (360×1360)
 - scroll-2.jpg  scroll-2.png를 JPG로 (JPG 잡음이 있어도 겹침을 찾는지)
 - scan.png     글자를 찍은 그림 (글자 인식 도구). 한글 한 줄, 영어 한 줄. Pretendard로 그린다
@@ -267,6 +270,20 @@ noise = Image.new('RGB', (80, 60))
 noise.putdata([tuple(noise_rng.randrange(256) for _ in range(3)) for _ in range(80 * 60)])
 noise.save(path('noise.png'))
 
+# 가상 인물의 머리·어깨 (800×1000). 얼굴 가운데는 이 조각의 (400, 480)쯤, 얼굴 폭은 360쯤이다
+virtual = Image.open(os.path.join(HERE, '..', '..', 'scripts', 'samples', 'face.jpg')).convert('RGB')
+bust = virtual.crop((112, 250, 912, 1250))
+# (배율, 왼쪽, 위, 좌우 뒤집기)
+FACES = [(0.5, 40, 380, False), (0.28, 520, 560, True), (0.15, 860, 700, False),
+         (0.08, 1080, 820, True), (0.33, 1300, 300, False)]
+group = Image.new('RGB', (1600, 1000), (214, 206, 190))
+for scale, left, top, flip in FACES:
+    person = bust.resize((round(800 * scale), round(1000 * scale)), Image.LANCZOS)
+    if flip:
+        person = person.transpose(Image.FLIP_LEFT_RIGHT)
+    group.paste(person, (left, top))
+group.save(path('faces.jpg'), 'JPEG', quality=88)
+
 
 def heic_fixtures():
     """HEIC 사진들 (HEIC 변환). 크롬은 HEIC를 스스로 읽지 못해 libheif 경로를 시험한다"""
@@ -433,5 +450,5 @@ for name in ['wide.png', 'tall.jpg', 'rotated.jpg', 'broken.png', 'photos.pdf', 
              'screen.png', 'small.jpg', 'moving.gif', 'green.bmp', 'scan.png',
              'located.jpg', 'located.png', 'located.webp', 'short-exif.jpg',
              'scroll-1.png', 'scroll-2.png', 'scroll-3.png', 'scroll-page.png', 'scroll-2.jpg', 'quadrants.png',
-             'noise.png', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic', 'located-uuid.heic', 'located-jpeg-item.heic', 'located-exif-prefix.heic', 'located-sei.heic']:
+             'noise.png', 'faces.jpg', 'iphone.heic', 'burst.heic', 'deep.heic', 'p3.heic', 'broken.heic', 'located.heic', 'located-uuid.heic', 'located-jpeg-item.heic', 'located-exif-prefix.heic', 'located-sei.heic']:
     print(name, os.path.getsize(path(name)), 'bytes')

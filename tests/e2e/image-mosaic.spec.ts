@@ -5,7 +5,7 @@
  * 가린 곳 안만 바뀌었는지 본다. 검게 칠하기는 가린 곳에 원래 화소가 하나도 남지 않아야 한다.
  */
 import type { FrameLocator } from '@playwright/test';
-import { expect, test, type Page } from './test';
+import { expect, test, type Page, type Request } from './test';
 import { difference, isJpeg, limitCanvas } from './canvas-limit';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -291,4 +291,189 @@ test('열 수 없는 파일은 알린다', async ({ page }) => {
   await expect(frame.getByRole('alert')).toHaveText(
     '이 이미지를 열 수 없습니다. 다른 파일을 골라 주세요.',
   );
+});
+
+/**
+ * 얼굴 찾기 견본(faces.jpg, 1600×1000): 가상 인물을 크기를 달리해 다섯 번 붙였다 (make_image_fixtures.py의 FACES).
+ * 얼굴 가운데 자리 (화소). 얼굴 폭은 약 180·100·54·29·119px
+ */
+const FACE_CENTERS = [
+  { x: 240, y: 620 },
+  { x: 632, y: 694 },
+  { x: 920, y: 772 },
+  { x: 1112, y: 858 },
+  { x: 1432, y: 458 },
+];
+type Point = { x: number; y: number };
+type Rect = Point & { width: number; height: number };
+
+/** 화면의 가릴 곳들을 사진 화소 자리로 (가릴 곳 단추의 위치를 사진 칸 크기로 나눈다) */
+async function regionRects(frame: FrameLocator, width: number) {
+  const view = (await frame.locator('.view').boundingBox())!;
+  const k = width / view.width;
+  const rects: (Rect & { label: string })[] = [];
+  for (const region of await frame.locator('[data-region]').all()) {
+    const box = (await region.boundingBox())!;
+    rects.push({
+      x: (box.x - view.x) * k,
+      y: (box.y - view.y) * k,
+      width: box.width * k,
+      height: box.height * k,
+      label: (await region.getAttribute('aria-label'))!,
+    });
+  }
+  return rects;
+}
+
+const contains = (rect: Rect, p: Point) =>
+  p.x >= rect.x && p.x <= rect.x + rect.width && p.y >= rect.y && p.y <= rect.y + rect.height;
+
+/** 받은 데이터 경로들 (얼굴 찾기 엔진·모델) */
+const faceData = (requests: Request[]) =>
+  requests
+    .map((request) => new URL(request.url()).pathname)
+    .filter((path) => path.startsWith('/data/face/'))
+    .sort();
+
+test('얼굴 찾기: 받기 전에 묻고, 찾은 얼굴을 가릴 곳으로 넣고, 뺀 얼굴만 그대로 저장한다', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  const frame = await openTool(page, 'faces.jpg');
+
+  // 누르기 전에는 얼굴 찾기 코드도 데이터도 받지 않는다
+  expect(faceData(requests)).toEqual([]);
+  expect(requests.filter((request) => request.url().includes('find-faces'))).toEqual([]);
+
+  // 처음에는 크기를 밝히고 묻는다. 취소하면 아무것도 받지 않고 초점이 얼굴 찾기로 돌아간다
+  const find = frame.getByRole('button', { name: '얼굴 찾기', exact: true });
+  await find.click();
+  const getData = frame.getByRole('button', { name: /^데이터 받기 \(\d+\.\dMB\)$/ });
+  await expect(getData).toBeFocused();
+  await expect(frame.getByText(/얼굴 찾기 데이터 \d+\.\dMB를 한 번 받아야 합니다/)).toBeVisible();
+  await frame.getByRole('button', { name: '취소' }).click();
+  await expect(find).toBeFocused();
+  expect(faceData(requests)).toEqual([]);
+
+  await find.click();
+  await getData.click();
+  await expect(frame.getByText('얼굴 5개를 찾아 가릴 곳으로 넣었습니다.')).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(frame.getByText('놓친 얼굴은 직접 그려 더하세요', { exact: false })).toBeVisible();
+  await expect(frame.getByText('5곳', { exact: true })).toBeVisible();
+
+  // 얼굴마다 한 곳씩, 얼굴이 아닌 곳은 없다. 굵은 모자이크(세기 8)로 넣는다
+  const rects = await regionRects(frame, 1600);
+  expect(rects).toHaveLength(5);
+  for (const center of FACE_CENTERS) {
+    expect(rects.filter((rect) => contains(rect, center))).toHaveLength(1);
+  }
+  for (const rect of rects) {
+    expect(rect.label).toMatch(/^가릴 곳 \d: 모자이크 \(찾은 얼굴\)$/);
+    expect(FACE_CENTERS.filter((center) => contains(rect, center))).toHaveLength(1);
+  }
+  // 얼굴보다 넉넉하다: 가장 큰 얼굴(폭 약 180px)을 덮는 곳은 폭이 그보다 크다
+  const biggest = rects.find((rect) => contains(rect, FACE_CENTERS[0]!))!;
+  expect(biggest.width).toBeGreaterThan(220);
+  await frame.locator('[data-region]').first().focus();
+  await expect(frame.getByLabel('세기')).toHaveValue('8');
+
+  // 다섯째 얼굴은 빼고 PNG로 받는다
+  const fifth = frame
+    .locator('[data-region]')
+    .nth(rects.findIndex((rect) => contains(rect, FACE_CENTERS[4]!)));
+  await fifth.focus();
+  await fifth.press('Delete');
+  await expect(frame.getByText('4곳', { exact: true })).toBeVisible();
+  await frame.getByText('PNG', { exact: true }).click();
+  const file = await download(page, frame);
+  expect(file.name).toBe('faces_모자이크.png');
+
+  // 가린 얼굴 가운데 둘레(20×20)는 화소가 바뀌었고, 뺀 얼굴은 원본 그대로다
+  const before = await pixels(page, new Uint8Array(await readFile(fixture('faces.jpg'))));
+  const after = await pixels(page, file.bytes);
+  expect([after.width, after.height]).toEqual([1600, 1000]);
+  const changed = (center: Point) => {
+    let count = 0;
+    for (let y = center.y - 10; y < center.y + 10; y++) {
+      for (let x = center.x - 10; x < center.x + 10; x++) {
+        const i = (y * 1600 + x) * 4;
+        if ([0, 1, 2].some((c) => before.data[i + c] !== after.data[i + c])) count++;
+      }
+    }
+    return count / 400;
+  };
+  for (const center of FACE_CENTERS.slice(0, 4)) expect(changed(center)).toBeGreaterThan(0.8);
+  expect(changed(FACE_CENTERS[4]!)).toBe(0);
+
+  // 받은 것은 엔진과 얼굴 찾기 모델 한 번씩뿐이다 (증명사진의 얼굴 점 모델은 받지 않는다)
+  expect(faceData(requests)).toEqual([
+    '/data/face/blaze_face_full_range.tflite',
+    '/data/face/vision_wasm_module_internal.wasm',
+  ]);
+  expect(requests.filter((request) => request.url().includes('googleapis'))).toEqual([]);
+});
+
+test('얼굴 찾기: 보관본으로 바로 찾고, 엔진이 있으면 모델만, 지워졌으면 다시 묻는다', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  let frame = await openTool(page, 'faces.jpg');
+  await frame.getByRole('button', { name: '얼굴 찾기', exact: true }).click();
+  await frame.getByRole('button', { name: /^데이터 받기/ }).click();
+  await expect(frame.getByText('얼굴 5개를 찾아', { exact: false })).toBeVisible({
+    timeout: 60_000,
+  });
+
+  // 다시 들어오면 묻지 않고 보관본으로 찾는다 (데이터를 다시 받지 않는다). 얼굴이 없는 사진은 못 찾았다고 알린다
+  const requests: Request[] = [];
+  page.on('request', (request) => requests.push(request));
+  frame = await openTool(page, 'noise.png');
+  await frame.getByRole('button', { name: '얼굴 찾기', exact: true }).click();
+  await expect(frame.getByText('얼굴을 찾지 못했습니다.', { exact: false })).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(frame.getByRole('button', { name: /^데이터 받기/ })).toHaveCount(0);
+  await expect(frame.getByText('아직 없습니다.', { exact: false })).toBeVisible();
+  expect(faceData(requests)).toEqual([]);
+
+  // 이미 가린 곳과 겹치는 얼굴은 다시 넣지 않는다
+  frame = await openTool(page, 'faces.jpg');
+  const find = frame.getByRole('button', { name: '얼굴 찾기', exact: true });
+  await find.click();
+  await expect(frame.getByText('얼굴 5개를 찾아', { exact: false })).toBeVisible({
+    timeout: 60_000,
+  });
+  await find.click();
+  await expect(
+    frame.getByText('얼굴 5개를 찾았습니다. 이미 가린 곳과 겹치지 않는 0곳을 넣었습니다.'),
+  ).toBeVisible({ timeout: 60_000 });
+  await expect(frame.getByText('5곳', { exact: true })).toBeVisible();
+
+  // 증명사진·배경 지우기에서 엔진을 받아 둔 사람: 모델만 받는다 (지워졌다고 하지 않는다)
+  await page.evaluate(async () => {
+    const cache = await caches.open('justusing-data-v1');
+    for (const request of await cache.keys()) {
+      if (request.url.includes('blaze_face')) await cache.delete(request);
+    }
+  });
+  frame = await openTool(page, 'faces.jpg');
+  await frame.getByRole('button', { name: '얼굴 찾기', exact: true }).click();
+  await expect(frame.getByRole('button', { name: '데이터 받기 (1.0MB)' })).toBeVisible();
+  await expect(frame.getByText('지워졌습니다', { exact: false })).toHaveCount(0);
+
+  // 보관본이 모두 지워졌으면 조용히 받지 않고 다시 묻는다
+  await page.evaluate(async () => {
+    const cache = await caches.open('justusing-data-v1');
+    for (const request of await cache.keys()) await cache.delete(request);
+  });
+  frame = await openTool(page, 'faces.jpg');
+  await frame.getByRole('button', { name: '얼굴 찾기', exact: true }).click();
+  await expect(
+    frame.getByText('전에 받은 얼굴 찾기 데이터가 이 브라우저에서 지워졌습니다.'),
+  ).toBeVisible();
+  await expect(frame.getByRole('button', { name: /^데이터 받기 \(\d+\.\dMB\)$/ })).toBeVisible();
 });
