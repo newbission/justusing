@@ -38,6 +38,16 @@ export interface ToolMeta {
   related?: string[];
   /** 제목 아래 '넣는 것 → 나오는 것' 작은 그림 (ToolFlow). 없으면 그리지 않는다 */
   flow?: { from: FlowDoc; to: FlowDoc };
+  /**
+   * 결과를 내려받지 않고 바로 넘길 수 있는 도구 ID (결과 화면의 '다음 도구로', src/frame/chain.ts).
+   * 받는 도구에는 receives가 있어야 한다. 넘길 수 있는지(CSP 등)는 빌드가 확인한다 (src/integrations/tool-chain.ts)
+   */
+  sendTo?: string[];
+  /**
+   * 다른 도구의 결과를 받는다. 받은 파일은 놓은 파일처럼 들어가 첫 화면(파일 고르기)을 건너뛴다.
+   * multiple: 여러 장을 한꺼번에 받는지 (아니면 결과가 한 장일 때만 넘길 수 있다)
+   */
+  receives?: { multiple: boolean };
 }
 
 /** 그림 속 종이 한 묶음 */
