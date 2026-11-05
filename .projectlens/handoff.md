@@ -49,3 +49,13 @@ C-RECOVERY 최초 실패는 구현 결함이며 수정 후 증거가 있다. C-W
 다음: 최신 PR head의 Codex 리뷰·CI 통과 → rebase merge로 dev 반영 → dev→main PR의 CI 통과 후 squash merge → 즉시 main→dev PR을 merge commit으로 반영 → Cloudflare Workers Builds 성공과 실제 사이트의 새 자산·파일 처리 확인. 배포 설정은 이미 연결되어 있어 새 수동 설정은 하지 않는다.
 
 추가 재검증: PLAYWRIGHT_CHANNEL=chrome을 유지한 단일 E2E 실행에서 복구 12개 + WebKit 3개 = 15개가 통과했다. 증거는 evidence/browser-channel-recovery.log. 전체 통합 E2E의 Chromium 506개 통과와 별개로 채널 상속 결함을 재현하고 고친 증거다.
+
+배포 후 관찰(2026-11-05): PR #159 rebase merge → 배포 PR #160의 CI 통과 및 squash merge 완료. main 3880139c의 Cloudflare 빌드 성공. 실제 도메인의 새 워커 자산 일치와 Chromium/WebKit 390×844 파일 처리·재실행·다운로드 검증 통과. 네이티브 Safari는 Mac 잠금으로 확인 불가이며 사용자에게 알렸다. 현재 남은 작업은 main→dev 동기화 PR #161의 CI #377 통과 후 merge commit 병합이다. 자세한 기록은 reports/deployment.md 및 evidence/production-verification.log에 있다. 병합 뒤 자동 히스토리 네 곳과 배포 후 증거는 로컬 파생 기록이다.
+
+## 최종 완료 (2026-11-05)
+
+요청한 커밋·배포·이력 동기화를 완료했다. PR #159는 Codex 최종 head 리뷰 및 CI 통과 뒤 rebase merge, PR #160은 CI 통과 뒤 squash merge, PR #161은 CI 509개 통과/7개 설정상 제외 뒤 merge commit 병합했다. main=3880139c, dev=c6071ea7. main이 dev의 조상이며 두 트리가 일치함을 실제 git 명령으로 확인했다. Cloudflare 빌드 성공 및 실제 사이트 Chromium/WebKit 390×844 재실행·다운로드 검증도 끝났다.
+
+제품의 16개 개선 커밋은 main에 반영돼 배포됐다. 병합 후 자동 히스토리와 최종 배포 증거는 codex/deployment-records 브랜치에 별도 커밋해 보관한다. 배포 제품 소스와 구별한다. 상세 보고서는 reports/deployment.md다. 원격 PR CI/Cloudflare/실서비스 로그를 최종 증거로 보며 커밋·rebase 이전의 ProjectLens 로컬 fingerprint 통과는 역사적 증거다.
+
+남은 필수 배포 작업은 없다. 다음 선택적 확인은 사용자 Mac 잠금 해제 뒤 실제 Safari에서의 확인이며, 실제 아이폰과 낮음 의존성 3건의 호환 패치 추적도 별도다. 사용자의 제품 전체 인수는 별도로 기록하지 않았다.

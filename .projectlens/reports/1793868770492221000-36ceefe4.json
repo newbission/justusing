@@ -1,0 +1,122 @@
+{
+  "harness_version": "0.6.0",
+  "created_utc": "2026-11-05T08:52:50Z",
+  "mode": "status",
+  "scope": "커밋·리뷰·CI·Cloudflare 배포·main/dev 이력 동기화 완료",
+  "fingerprint": "33d595557c617d9c9d84f69ffe70e8f221999de9ed49177054df0dcd5fa3393e",
+  "source_fingerprint": "33d595557c617d9c9d84f69ffe70e8f221999de9ed49177054df0dcd5fa3393e",
+  "scoped_check_result": "not_assessed",
+  "selected_checks": {},
+  "whole_project": {
+    "complete": false,
+    "problems": [
+      "Planning baseline has no recorded acceptance source",
+      "Check C-RECOVERY: stale",
+      "Check C-TYPES: stale",
+      "Check C-FORMAT: stale",
+      "Check C-DEPS: stale",
+      "Check C-WEBKIT: stale",
+      "Check C-BUILD: stale",
+      "Check C-SYSTEM: stale",
+      "Check C-VISUAL: stale"
+    ],
+    "checks": {
+      "C-RECOVERY": "stale",
+      "C-TYPES": "stale",
+      "C-FORMAT": "stale",
+      "C-DEPS": "stale",
+      "C-WEBKIT": "stale",
+      "C-BUILD": "stale",
+      "C-SYSTEM": "stale",
+      "C-VISUAL": "stale"
+    },
+    "consecutive_failures": {
+      "C-RECOVERY": 0,
+      "C-DEPS": 0,
+      "C-BUILD": 0,
+      "C-TYPES": 0,
+      "C-FORMAT": 0,
+      "C-WEBKIT": 0,
+      "C-SYSTEM": 1,
+      "C-VISUAL": 0
+    }
+  },
+  "reviews": [],
+  "documents": [
+    {
+      "id": "DOC-SPEC",
+      "path": ".projectlens/spec.md",
+      "purpose": "이번 개선 범위·수용 기준·결정 출처",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY",
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "709e6d0ce885e3a182a5ab013e1028390bebf6c054ed1b4911f7d2ac51c7c364",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PDF",
+      "path": "docs/foundations/pdf-common/README.md",
+      "purpose": "PDF 공통 처리의 기준 문서",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "9dd8276240d93060fcb4b9884375b36b09714c062e087986a19c8f8726bccabc",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-FRAME",
+      "path": "docs/foundations/frame-isolation/README.md",
+      "purpose": "격리·CSP·워커·WebKit 검증",
+      "status": "draft",
+      "related": [
+        "R-WEBKIT",
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "3a7381c30deeb393db4ea230a2ea29a47abe3dfc0487a52d4ba07522f6225eb8",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PROCESS",
+      "path": "docs/foundations/process/README.md",
+      "purpose": "검사 범위·의존성 갱신·WebKit 실행 방법",
+      "status": "draft",
+      "related": [
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "8012d3914c6aa74e4583391174a2d8fa32c45351466095d409e8c9939051327d",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "path": ".projectlens/handoff.md",
+      "exists": true,
+      "health": "unregistered",
+      "registered": false,
+      "review_current": false
+    }
+  ],
+  "evidence": {},
+  "interpretation": "Selected check verification is not mode completion or whole-product acceptance. Review findings and unverified areas still require assessment."
+}
