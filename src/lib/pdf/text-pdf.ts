@@ -5,7 +5,7 @@
  * 이 모듈을 import한 도구 frame에서만 로드된다.
  */
 import workerUrl from './text-pdf.worker.ts?worker&url';
-import { createWorker } from '../worker';
+import { createWorkerClient } from '../worker-client';
 import type { WatermarkOptions } from './watermark';
 import type { HeaderFooterOptions } from './header-footer';
 import type { EditOptions } from './edit';
@@ -36,30 +36,15 @@ export class MissingGlyphsError extends Error {
   }
 }
 
-let workerPromise: Promise<Worker> | undefined;
-let nextId = 0;
+const ask = createWorkerClient<TextRequest, TextResponse>(workerUrl);
 
 /** 원본 바이트와 글꼴은 복사해서 보내므로 그대로 남는다 (설정을 바꿔 다시 만들 수 있게) */
 export async function runTextJob(
   source: { bytes: Uint8Array; password?: string },
   job: TextJob,
 ): Promise<Uint8Array> {
-  const worker = await (workerPromise ??= createWorker(workerUrl));
-  const id = nextId++;
-  return new Promise((resolve, reject) => {
-    const listener = (event: MessageEvent<TextResponse>) => {
-      if (event.data.id !== id) return;
-      worker.removeEventListener('message', listener);
-      if (event.data.kind === 'done') resolve(event.data.bytes);
-      else if (event.data.kind === 'missing') reject(new MissingGlyphsError(event.data.chars));
-      else reject(new Error(event.data.message));
-    };
-    worker.addEventListener('message', listener);
-    worker.postMessage({
-      id,
-      bytes: source.bytes,
-      password: source.password,
-      job,
-    } satisfies TextRequest);
-  });
+  const response = await ask({ bytes: source.bytes, password: source.password, job });
+  if (response.kind === 'done') return response.bytes;
+  if (response.kind === 'missing') throw new MissingGlyphsError(response.chars);
+  throw new Error(response.message);
 }

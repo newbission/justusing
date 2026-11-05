@@ -7,7 +7,7 @@
  * 보이는 영역(CropBox)은 워커가 PDF 좌표로 바꿀 때 계산한다 (화면과 결과가 같은 자리가 된다).
  */
 import workerUrl from './modify.worker.ts?worker&url';
-import { createWorker } from '../worker';
+import { createWorkerClient } from '../worker-client';
 
 /** 화면에 보이는 쪽 기준 사각형. 모두 0~1 비율, 왼쪽 위가 (0, 0) */
 export interface PageRect {
@@ -77,29 +77,14 @@ export interface ModifyRequest {
 export type ModifyResponse =
   { id: number; kind: 'done'; bytes: Uint8Array } | { id: number; kind: 'error'; message: string };
 
-let workerPromise: Promise<Worker> | undefined;
-let nextId = 0;
+const ask = createWorkerClient<ModifyRequest, ModifyResponse>(workerUrl);
 
 /** 원본 바이트는 복사해서 보내므로 그대로 남는다 (같은 파일로 다시 만들 수 있게). */
 export async function modifyPdf(
   source: { bytes: Uint8Array; password?: string },
   job: ModifyJob,
 ): Promise<Uint8Array> {
-  const worker = await (workerPromise ??= createWorker(workerUrl));
-  const id = nextId++;
-  return new Promise((resolve, reject) => {
-    const listener = (event: MessageEvent<ModifyResponse>) => {
-      if (event.data.id !== id) return;
-      worker.removeEventListener('message', listener);
-      if (event.data.kind === 'done') resolve(event.data.bytes);
-      else reject(new Error(event.data.message));
-    };
-    worker.addEventListener('message', listener);
-    worker.postMessage({
-      id,
-      bytes: source.bytes,
-      password: source.password,
-      job,
-    } satisfies ModifyRequest);
-  });
+  const response = await ask({ bytes: source.bytes, password: source.password, job });
+  if (response.kind === 'done') return response.bytes;
+  throw new Error(response.message);
 }
