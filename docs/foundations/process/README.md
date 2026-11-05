@@ -79,7 +79,7 @@ npx prettier --check <파일>
 ### 점검 후 검사 개선 (2026-11-05)
 
 - 포맷 검사에서 `.claude/worktrees/`와 `.projectlens/evidence/`, `.projectlens/reports/`를 뺀다 (`.prettierignore`). 다른 작업트리의 생성 파일을 수정하지 않는다. 소스·설정·ProjectLens 상태/명세는 계속 검사한다.
-- `npm run test:e2e`는 Chromium 전체 + WebKit smoke를 실행한다. CI는 두 브라우저를 설치한다. Chromium만은 `--project=chromium`, smoke만은 `--project=webkit-smoke`로 고른다.
+- `npm run test:e2e`는 Chromium 전체 + WebKit smoke를 실행한다. CI는 두 브라우저를 설치한다. Chromium만은 `--project=chromium`, smoke만은 `--project=webkit-smoke`로 고른다. `PLAYWRIGHT_CHANNEL=chrome`은 Chromium 프로젝트에서만 읽어 WebKit에 상속되지 않게 한다.
 - 잠금 파일의 호환 보안 업데이트: Zod·Undici·fast-uri·Wrangler 및 Astro Svelte 통합을 현재 선언 범위 안에서 갱신한다. 감사 기준은 `npm audit --audit-level=moderate`: 낮음 3건(deepmerge 및 의존 경로)은 남아 있음을 보고한다. `--force`로 통합을 오래된 버전으로 내리지는 않는다.
 - `src/frame/clipboard.ts`의 `execCommand('copy')`는 일부 격리 브라우저의 대체 경로라 유지한다. 타입 오류나 접근성 경고가 아니라 폐기 예정 API 안내(hint)다.
 

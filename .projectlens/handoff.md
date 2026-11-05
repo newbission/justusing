@@ -39,3 +39,13 @@ C-RECOVERY 최초 실패는 구현 결함이며 수정 후 증거가 있다. C-W
 요청 범위의 구현·검증·보고 완료. 상세 보고서: [reports/improvements.md](reports/improvements.md). 커밋·PR·배포는 하지 않았다.
 
 다음 정확한 행동: 변경 diff를 검토하고 저장소 규칙에 맞게 작은 단위로 커밋/PR을 만든다. 필요할 때 `npm run build` 후 `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`로 두 브라우저 구성을 한 서버에서 재검증한다. 배포 단계에서는 실제 Safari/아이폰 확인을 별도로 수행한다. 남은 낮음 의존성은 호환 업스트림 패치가 나올 때 갱신한다.
+
+## 커밋·배포 후속 요청 (2026-11-05)
+
+사용자가 “커밋 및 배포 진행해”라고 승인했다. CLAUDE.md와 process 규칙에 따라 코드·테스트·문서를 14개 커밋으로 나누고 원격 dev 82054564 위로 rebase했다. 날짜 충돌 두 곳은 원격의 기능 설명을 보존하고 2026-11-05 수정 날짜를 적용했다. PR #159를 dev 대상으로 만들었고, 초기 head ae5445a에 Codex의 주요 문제 없음 응답이 왔다. 새 head는 반드시 다시 리뷰받는다.
+
+최신 통합본에서 npm ci·빌드·타입·포맷·README 목록 검사가 통과했다. 전체 실행에서는 Chromium 506개 통과/7개 설정상 제외였으나 WebKit 3개가 Chrome 채널 상속으로 시작 실패했다. 이는 테스트 설정 결함이다. 채널을 Chromium 프로젝트로 옮긴 뒤 PLAYWRIGHT_CHANNEL=chrome을 유지한 WebKit 3개가 통과했다. 복구 12개와 두 프로젝트를 함께 실행하는 추가 검증 및 최신 CI를 진행한다. 과거 보고서의 481/3 통과 기록은 통합 전의 역사적 증거다.
+
+다음: 최신 PR head의 Codex 리뷰·CI 통과 → rebase merge로 dev 반영 → dev→main PR의 CI 통과 후 squash merge → 즉시 main→dev PR을 merge commit으로 반영 → Cloudflare Workers Builds 성공과 실제 사이트의 새 자산·파일 처리 확인. 배포 설정은 이미 연결되어 있어 새 수동 설정은 하지 않는다.
+
+추가 재검증: PLAYWRIGHT_CHANNEL=chrome을 유지한 단일 E2E 실행에서 복구 12개 + WebKit 3개 = 15개가 통과했다. 증거는 evidence/browser-channel-recovery.log. 전체 통합 E2E의 Chromium 506개 통과와 별개로 채널 상속 결함을 재현하고 고친 증거다.
