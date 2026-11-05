@@ -1,0 +1,12 @@
+{
+  "id": "1793862787409777000-bb40df6e",
+  "check": "C-VISUAL",
+  "time_ns": 1793862787409865000,
+  "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "에이전트 관찰: 390×844 Chromium에서 워커 첫 요청 실패 후 오류와 활성 실행 버튼을 확인하고, 같은 파일·90도 회전 설정으로 재실행한 뒤 다운로드 버튼과 세 쪽 결과 화면을 실제 캡처로 확인했다. 오류/결과 막대 높이와 바깥 칸은 유지된다. 사용자 인수는 아니다.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/rotation-mobile-recovered.png",
+  "artifact_hash": "ba072de8cab768a299ce58afaf9d1475b0df2f7442db93c1030759d42fb3051d"
+}

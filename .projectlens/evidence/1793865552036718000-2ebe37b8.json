@@ -1,0 +1,16 @@
+{
+  "id": "1793865552036718000-2ebe37b8",
+  "check": "C-SYSTEM",
+  "time_ns": 1793865552036750000,
+  "fingerprint": "b4d0eae2ab76a5daa6d7e5c7764d37576e4a5699813ec44759ec4c65a79b96bc",
+  "harness_version": "0.6.0",
+  "command": [
+    "bash",
+    "-c",
+    "set -o pipefail; PLAYWRIGHT_CHANNEL=chrome E2E_PORT=8910 npm run test:e2e -- --workers=4 --output=test-results/deploy 2>&1 | tee /tmp/justusing-deploy-e2e-progress.log"
+  ],
+  "exit_code": 1,
+  "result": "fail",
+  "artifact": ".projectlens/evidence/1793865552036718000-2ebe37b8.log",
+  "artifact_hash": "478cdccf2e435ba29adf466fb3139a9f0312d03385eaddc404d71f37b1943c73"
+}

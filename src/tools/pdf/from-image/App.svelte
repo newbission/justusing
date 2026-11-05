@@ -285,6 +285,8 @@
         <li class="item" data-item={item.id} animate:flip={{ duration: MOVE_MS }}>
           <div
             class="row"
+            role="group"
+            aria-label={item.name}
             class:moved={movedId === item.id}
             class:dragging={dragId === item.id}
             class:drop-before={dropIndex === index}

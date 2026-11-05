@@ -1,0 +1,16 @@
+{
+  "id": "1793862698220447000-7c5895ef",
+  "check": "C-SYSTEM",
+  "time_ns": 1793862698220484000,
+  "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+  "harness_version": "0.6.0",
+  "command": [
+    "bash",
+    "-c",
+    "set -o pipefail; PLAYWRIGHT_CHANNEL=chrome E2E_PORT=8910 npm run test:e2e -- --project=chromium --workers=4 --output=test-results/chromium 2>&1 | tee /tmp/justusing-full-progress.log"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1793862698220447000-7c5895ef.log",
+  "artifact_hash": "92ca61707a15f19debe2c0ad3ca99bbf176d88567d96e835e7046c8c5b67ef90"
+}

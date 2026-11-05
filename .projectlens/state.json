@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "baseline": {
+    "accepted": false,
+    "source": "2026-11-05 사용자: 앞선 점검 보고서 뒤 “부족한 부분 개선해보자”. 해당 범위의 수정 실행을 허가받음. 상세 기준 및 최종 결과에 대한 별도 사용자 인수는 아직 없음."
+  },
+  "questions": [],
+  "changes": [
+    {
+      "id": "CH-AUDIT",
+      "request": "점검에서 확인한 부족한 부분 개선",
+      "previous": "워커 실패가 재시도를 막거나 처리 중 상태를 유지; 접근성 경고; 포맷에 외부 작업트리 포함; 의존성 경고; Chromium만 검증",
+      "desired": "복구 가능한 오류 상태와 재실행, 관련 경고 제거, 호환 보안 업데이트, WebKit smoke",
+      "source": "현재 채팅의 점검 결과 및 후속 사용자 요청",
+      "requirements": ["R-RECOVERY", "R-QUALITY", "R-DEPS", "R-WEBKIT"]
+    }
+  ],
+  "requirements": [
+    {
+      "id": "R-RECOVERY",
+      "text": "PDF 공통 처리와 ZIP의 워커 다운로드 실패·실행 오류 뒤 파일/설정을 유지하고 재실행할 수 있다.",
+      "included": true
+    },
+    {
+      "id": "R-QUALITY",
+      "text": "드래그 행의 접근성 경고와 로컬 작업트리로 인한 포맷 실패를 없앤다.",
+      "included": true
+    },
+    {
+      "id": "R-DEPS",
+      "text": "호환 범위의 의존성 보안 업데이트를 적용하고 남은 취약점을 숨기지 않는다.",
+      "included": true
+    },
+    {
+      "id": "R-WEBKIT",
+      "text": "배포 CSP를 넓히지 않고 WebKit의 격리·워커·다운로드 경로를 자동 검증한다.",
+      "included": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T-AUDIT",
+      "title": "점검 후 개선 및 전체 회귀",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-RECOVERY", "R-QUALITY", "R-DEPS", "R-WEBKIT"],
+      "checks": ["C-BUILD", "C-SYSTEM", "C-VISUAL"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-RECOVERY",
+      "title": "워커 복구 공통 처리와 E2E",
+      "parent": "T-AUDIT",
+      "depends_on": [],
+      "requirements": ["R-RECOVERY"],
+      "checks": ["C-RECOVERY"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-QUALITY",
+      "title": "접근성 및 포맷 검사 범위",
+      "parent": "T-AUDIT",
+      "depends_on": [],
+      "requirements": ["R-QUALITY"],
+      "checks": ["C-TYPES", "C-FORMAT"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-DEPS",
+      "title": "호환 보안 업데이트",
+      "parent": "T-AUDIT",
+      "depends_on": [],
+      "requirements": ["R-DEPS"],
+      "checks": ["C-DEPS"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-WEBKIT",
+      "title": "격리 WebKit smoke",
+      "parent": "T-AUDIT",
+      "depends_on": [],
+      "requirements": ["R-WEBKIT"],
+      "checks": ["C-WEBKIT"],
+      "blocked_reason": ""
+    }
+  ],
+  "checks": [
+    {
+      "id": "C-RECOVERY",
+      "level": "system",
+      "description": "워커 오류 회귀 E2E: 다운로드 실패/실행 오류 뒤 재실행하고 결과 파일을 검증한다."
+    },
+    {
+      "id": "C-TYPES",
+      "level": "integration",
+      "description": "타입 검사와 Svelte 접근성 경고 0개."
+    },
+    {
+      "id": "C-FORMAT",
+      "level": "integration",
+      "description": "전체 포맷 검사."
+    },
+    {
+      "id": "C-DEPS",
+      "level": "integration",
+      "description": "npm audit 결과 확인; 호환 업데이트 뒤 남은 경고를 기록한다."
+    },
+    {
+      "id": "C-WEBKIT",
+      "level": "system",
+      "description": "로컬 빌드를 배포 주소로 중계한 WebKit smoke: 격리·CSP·PDF/이미지 처리·다운로드."
+    },
+    {
+      "id": "C-BUILD",
+      "level": "integration",
+      "description": "프로덕션 빌드."
+    },
+    {
+      "id": "C-SYSTEM",
+      "level": "system",
+      "description": "전체 Chromium E2E: 로컬 처리·기존 기능·성능 예산 회귀."
+    },
+    {
+      "id": "C-VISUAL",
+      "level": "acceptance",
+      "description": "에이전트가 모바일 PDF 회전 결과 화면을 실제 캡처로 확인한다. 사용자 인수와 구별한다."
+    }
+  ],
+  "documents": [
+    {
+      "id": "DOC-SPEC",
+      "path": ".projectlens/spec.md",
+      "purpose": "이번 개선 범위·수용 기준·결정 출처",
+      "status": "draft",
+      "related": ["R-RECOVERY", "R-QUALITY", "R-DEPS", "R-WEBKIT"]
+    },
+    {
+      "id": "DOC-PDF",
+      "path": "docs/foundations/pdf-common/README.md",
+      "purpose": "PDF 공통 처리의 기준 문서",
+      "status": "draft",
+      "related": ["R-RECOVERY"]
+    },
+    {
+      "id": "DOC-FRAME",
+      "path": "docs/foundations/frame-isolation/README.md",
+      "purpose": "격리·CSP·워커·WebKit 검증",
+      "status": "draft",
+      "related": ["R-WEBKIT", "R-RECOVERY"]
+    },
+    {
+      "id": "DOC-PROCESS",
+      "path": "docs/foundations/process/README.md",
+      "purpose": "검사 범위·의존성 갱신·WebKit 실행 방법",
+      "status": "draft",
+      "related": ["R-QUALITY", "R-DEPS", "R-WEBKIT"]
+    }
+  ]
+}

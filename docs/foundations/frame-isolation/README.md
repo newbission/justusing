@@ -1,6 +1,6 @@
 # 도구 격리 frame (`src/frame/`, `ToolFrame`)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-24
+쓴 날 2026-10-16 · 고친 날 2026-11-05
 
 - 쓰는 곳: 모든 도구 페이지 (`/<카테고리>/<이름>/` 안의 `/<카테고리>/<이름>/frame/`)
 - 상태: 3단계(2026-10-10)부터 모든 도구의 바탕. Safari 수정은 PR #40 (2026-10-15)
@@ -196,7 +196,7 @@
 - [x] `_headers` CORS, `wrangler dev`로 미리보기·E2E
 - [x] Safari: CSP에 사이트 주소 함께 적기 (스크립트·연결·이미지·글꼴·스타일)
 - [x] 도구 데이터를 바깥 보관소에서 받기 (`data.ts`, [글꼴·데이터 보관](../fonts-and-data/README.md))
-- [ ] Safari·WebKit을 E2E에 넣기 — 지금 `playwright.config.ts`는 chromium만 돈다
+- [x] Playwright WebKit smoke를 E2E·CI에 포함 (2026-11-05). 실제 Safari·아이폰 확인은 별도
 - [ ] 광고를 켠 뒤 광고 iframe 위에 바로 놓인 파일 검토 (CLAUDE.md "광고를 켠 뒤 확인")
 
 ## 4. 검증과 히스토리
@@ -225,6 +225,13 @@
   모든 요청(우리 사이트로 가는 GET 포함)의 주소·본문에 테스트 파일 이름·형식 첫머리·내용 일부가 없다
   (2026-10-18 PR #87 리뷰: 같은 출처 GET 주소에 실어 보내는 회귀를 놓쳤다)
 - E2E는 빌드 결과를 `wrangler dev`(포트 8788)로 띄워 돈다 (`playwright.config.ts`)
+
+### 워커 복구·WebKit smoke (2026-11-05)
+
+- `src/lib/worker-client.ts`: PDF 공통 처리와 ZIP의 시작 실패/실행 오류 복구. `createWorker()`를 통해서만 띄우며 워커를 교체할 때 요청 ID와 진행률을 구분한다.
+- `tests/e2e/webkit-smoke.spec.ts`, `playwright.config.ts`의 `webkit-smoke` 프로젝트: 배포 주소로 향하는 요청을 테스트에서 로컬 wrangler 빌드로 중계한다. 브라우저의 URL·opaque 출처·CSP는 그대로 유지하고 실제 배포 서버로는 보내지 않는다.
+- PDF 회전 결과의 각도, 이미지 변환 결과의 형식/크기, 한글 PDF 렌더링과 스타일, 바깥 DOM 접근 차단과 외부 연결 CSP 차단을 확인한다. `npm run test:e2e`와 CI가 Chromium 전체와 WebKit smoke를 함께 돌린다.
+- Playwright WebKit smoke는 실제 Safari·아이폰 확인이나 WebKit 전체 도구 E2E를 대신하지 않는다. 배포 CSP를 로컬 테스트 때문에 넓히지 않는다.
 
 ### 직접 확인
 

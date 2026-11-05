@@ -322,6 +322,8 @@
           <!-- 줄 머리만 끌린다 (펼친 페이지 격자는 따로 끌기를 처리한다) -->
           <div
             class="row"
+            role="group"
+            aria-label={item.name}
             class:moved={movedId === item.id}
             class:dragging={dragId === item.id}
             class:drop-before={dropIndex === index}

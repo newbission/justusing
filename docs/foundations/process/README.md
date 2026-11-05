@@ -1,6 +1,6 @@
 # 작업 방식 (브랜치·커밋·PR·리뷰·배포)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-18
+쓴 날 2026-10-16 · 고친 날 2026-11-05
 
 - 규칙의 원본: [`CLAUDE.md`](../../../CLAUDE.md)의 "작업 방식 (Git)"·"커밋 메시지 규칙", 리뷰 기준 [`AGENTS.md`](../../../AGENTS.md)
 - 이 문서는 그 규칙이 실제로 어떻게 돌아가는지, 그리고 그동안 겪은 문제와 배운 점을 적는다
@@ -71,10 +71,17 @@ npx prettier --check <파일>
 ```
 
 - 개발 서버는 격리·CSP가 꺼져 있어 배포에서만 깨지는 문제를 못 본다. E2E는 빌드 결과를 `wrangler dev`로 띄워 돌린다
-- 로컬 WebKit(Playwright)은 frame CSP가 배포 도메인만 허용해 도구가 돌지 않는다. Safari 확인은 배포된 사이트에서 한다
+- 로컬 주소로 직접 여는 WebKit(Playwright)은 frame CSP가 배포 도메인만 허용해 도구가 돌지 않는다. 2026-11-05부터 smoke는 아래 요청 중계로 로컬 빌드를 검사한다. 실제 Safari 확인은 배포된 사이트에서 한다
 - 배포된 사이트에 E2E를 돌릴 때는 `baseURL`을 사이트 주소로 둔 임시 설정을 쓴다. Playwright WebKit에서는 한글 파일 이름이
   자모로 나뉘어(NFD) 이름 비교가 실패하고, 받은 데이터 다시 쓰기(Cache API)도 실패한다. 이미 배포된 도구도 같아
   테스트 환경 차이로 본다 (2026-10-17). 실제 Safari 확인을 대신하지 못한다
+
+### 점검 후 검사 개선 (2026-11-05)
+
+- 포맷 검사에서 `.claude/worktrees/`와 `.projectlens/evidence/`, `.projectlens/reports/`를 뺀다 (`.prettierignore`). 다른 작업트리의 생성 파일을 수정하지 않는다. 소스·설정·ProjectLens 상태/명세는 계속 검사한다.
+- `npm run test:e2e`는 Chromium 전체 + WebKit smoke를 실행한다. CI는 두 브라우저를 설치한다. Chromium만은 `--project=chromium`, smoke만은 `--project=webkit-smoke`로 고른다. `PLAYWRIGHT_CHANNEL=chrome`은 Chromium 프로젝트에서만 읽어 WebKit에 상속되지 않게 한다.
+- 잠금 파일의 호환 보안 업데이트: Zod·Undici·fast-uri·Wrangler 및 Astro Svelte 통합을 현재 선언 범위 안에서 갱신한다. 감사 기준은 `npm audit --audit-level=moderate`: 낮음 3건(deepmerge 및 의존 경로)은 남아 있음을 보고한다. `--force`로 통합을 오래된 버전으로 내리지는 않는다.
+- `src/frame/clipboard.ts`의 `execCommand('copy')`는 일부 격리 브라우저의 대체 경로라 유지한다. 타입 오류나 접근성 경고가 아니라 폐기 예정 API 안내(hint)다.
 
 ### 문서
 

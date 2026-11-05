@@ -1,0 +1,21 @@
+{
+  "id": "1793862676856695000-1475db68",
+  "check": "C-WEBKIT",
+  "time_ns": 1793862676856730000,
+  "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+  "harness_version": "0.6.0",
+  "command": [
+    "env",
+    "E2E_PORT=8900",
+    "npx",
+    "playwright",
+    "test",
+    "--project=webkit-smoke",
+    "--workers=2",
+    "--output=test-results/webkit"
+  ],
+  "exit_code": 1,
+  "result": "fail",
+  "artifact": ".projectlens/evidence/1793862676856695000-1475db68.log",
+  "artifact_hash": "5830965c1f1e12c3a3c6504a3f43fc5a448510332e5b41d3c69ab889eb1f7e3e"
+}

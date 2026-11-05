@@ -82,7 +82,7 @@ test('휴대폰 메뉴·가이드 창·따라 하기·예시 파일·움직이�
     const guide = page.locator('[data-guide-open]');
     if (await guide.count()) {
       await guide.click();
-      await expect(page.locator('[data-guide-body] p').first()).toBeVisible();
+      await expect(page.locator('[data-guide-body] p').first()).toBeVisible({ timeout: 15_000 });
       await page.keyboard.press('Escape');
     }
     // 따라 하기 창

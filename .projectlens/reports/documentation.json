@@ -1,0 +1,79 @@
+{
+  "documents": [
+    {
+      "id": "DOC-SPEC",
+      "path": ".projectlens/spec.md",
+      "purpose": "이번 개선 범위·수용 기준·결정 출처",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY",
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "709e6d0ce885e3a182a5ab013e1028390bebf6c054ed1b4911f7d2ac51c7c364",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PDF",
+      "path": "docs/foundations/pdf-common/README.md",
+      "purpose": "PDF 공통 처리의 기준 문서",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "9dd8276240d93060fcb4b9884375b36b09714c062e087986a19c8f8726bccabc",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-FRAME",
+      "path": "docs/foundations/frame-isolation/README.md",
+      "purpose": "격리·CSP·워커·WebKit 검증",
+      "status": "draft",
+      "related": [
+        "R-WEBKIT",
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "82f8b69c0bb97e4ce788bfeab08a8f267afaf33d67749675d00c4e46d041aaed",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PROCESS",
+      "path": "docs/foundations/process/README.md",
+      "purpose": "검사 범위·의존성 갱신·WebKit 실행 방법",
+      "status": "draft",
+      "related": [
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "4efd47a11bcc5f9d7c6f9323f17581f9c958288f1b501ab6acf1bf2cd901d269",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "path": ".projectlens/handoff.md",
+      "exists": true,
+      "health": "unregistered",
+      "registered": false,
+      "review_current": false
+    }
+  ],
+  "problems": [],
+  "interpretation": "Document review freshness is not code compatibility or user acceptance. Unregistered files have no review provenance."
+}
