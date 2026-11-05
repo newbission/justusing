@@ -1,0 +1,31 @@
+
+> justusing@0.0.1 check
+> astro check && svelte-check --tsconfig ./tsconfig.json --threshold warning
+
+16:59:14 [content] Syncing content
+16:59:14 [content] Synced content
+16:59:14 [types] Generated 602ms
+16:59:14 [check] Getting diagnostics for Astro files in /Users/jm/development/projects/justusing...
+[96mscripts/readme/tools.mjs[0m:[93m18[0m:[93m1[0m - [93mwarning[0m[90m ts(6387): [0mThe signature '(specifier: string | URL, parentURL?: string | URL | undefined, options?: RegisterOptions<any> | undefined): void' of 'register' is deprecated.
+
+[7m18[0m register(
+[7m  [0m [93m~~~~~~~~[0m
+[96mscripts/readme/tools.mjs[0m:[93m13[0m:[93m10[0m - [93mwarning[0m[90m ts(6385): [0m'register' is deprecated.
+
+[7m13[0m import { register } from 'node:module';
+[7m  [0m [93m         ~~~~~~~~[0m
+
+[96msrc/frame/clipboard.ts[0m:[93m19[0m:[93m23[0m - [93mwarning[0m[90m ts(6387): [0mThe signature '(commandId: string, showUI?: boolean | undefined, value?: string | undefined): boolean' of 'document.execCommand' is deprecated.
+
+[7m19[0m       return document.execCommand('copy');
+[7m  [0m [93m                      ~~~~~~~~~~~[0m
+
+Result (468 files): 
+- 0 errors
+- 0 warnings
+- 3 hints
+
+Loading svelte-check in workspace: /Users/jm/development/projects/justusing
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings

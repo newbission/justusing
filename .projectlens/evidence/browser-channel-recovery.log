@@ -1,0 +1,30 @@
+
+> justusing@0.0.1 test:e2e
+> playwright test tests/e2e/worker-recovery.spec.ts tests/e2e/webkit-smoke.spec.ts --workers=3 --output=test-results/channel-and-recovery
+
+[WebServer] (node:31171) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 15 tests using 2 workers
+
+(node:31222) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:31223) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [webkit-smoke] › tests/e2e/webkit-smoke.spec.ts:20:1 › WebKit: 격리·외부 연결 차단을 유지하며 PDF를 돌려 내려받는다 (1.2s)
+  ✓   2 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 (1.1s)
+  ✓   3 [webkit-smoke] › tests/e2e/webkit-smoke.spec.ts:62:1 › WebKit: 이미지 워커로 PNG를 JPG로 바꾸고 결과를 내려받는다 (868ms)
+  ✓   4 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 (958ms)
+  ✓   5 [webkit-smoke] › tests/e2e/webkit-smoke.spec.ts:89:1 › WebKit: 한글 PDF의 보조 파일과 스타일이 CSP에서 허용된다 (783ms)
+  ✓   6 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 수정: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 (926ms)
+  ✓   7 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 수정: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 (883ms)
+  ✓   8 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 글자: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 (981ms)
+  ✓   9 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 글자: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 (974ms)
+  ✓  10 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 이미지 PDF: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 (620ms)
+  ✓  11 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 이미지 PDF: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 (610ms)
+  ✓  12 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › ZIP: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 (879ms)
+  ✓  13 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › ZIP: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 (889ms)
+  ✓  14 [chromium] › tests/e2e/worker-recovery.spec.ts:80:3 › 조립: messageerror 뒤 대기를 끝내고 다시 실행한다 (946ms)
+  ✓  15 [chromium] › tests/e2e/worker-recovery.spec.ts:80:3 › 조립: postMessage 실패 뒤 대기를 끝내고 다시 실행한다 (875ms)
+
+  15 passed (43.7s)

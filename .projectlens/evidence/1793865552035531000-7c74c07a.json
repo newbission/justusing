@@ -1,0 +1,16 @@
+{
+  "id": "1793865552035531000-7c74c07a",
+  "check": "C-FORMAT",
+  "time_ns": 1793865552035561000,
+  "fingerprint": "b4d0eae2ab76a5daa6d7e5c7764d37576e4a5699813ec44759ec4c65a79b96bc",
+  "harness_version": "0.6.0",
+  "command": [
+    "npm",
+    "run",
+    "format:check"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1793865552035531000-7c74c07a.log",
+  "artifact_hash": "183bb0dbf3d16f91f06aeab4e1b8b8a127d8c6727d7869ec916c63b99485ec60"
+}
