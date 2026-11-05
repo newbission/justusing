@@ -6,3 +6,8 @@ docs/99_inbox/
 public/vendor/
 test-results/
 playwright-report/
+
+# 다른 작업 공간의 생성 파일과 ProjectLens 실행 증거
+.claude/worktrees/
+.projectlens/evidence/
+.projectlens/reports/
