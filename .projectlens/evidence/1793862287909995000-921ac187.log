@@ -1,0 +1,66 @@
+[WebServer] (node:97789) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:97840) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 (8.9s)
+(node:98075) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 (4.8s)
+
+
+  1) [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 ────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('iframe[data-tool-frame]').contentFrame().getByRole('button', { name: '다운로드', exact: true })
+    Expected: visible
+    Timeout: 8000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('iframe[data-tool-frame]').contentFrame().getByRole('button', { name: '다운로드', exact: true }) with timeout 8000ms
+      - waiting for locator('iframe[data-tool-frame]').contentFrame().getByRole('button', { name: '다운로드', exact: true })
+
+
+      56 |       await run.click();
+      57 |       const download = frame.getByRole('button', { name: '다운로드', exact: true });
+    > 58 |       await expect(download).toBeVisible({ timeout: 8000 });
+         |                              ^
+      59 |       expect(attempts).toBe(2);
+      60 |       const event = page.waitForEvent('download');
+      61 |       await download.click();
+        at /Users/jm/development/projects/justusing/tests/e2e/worker-recovery.spec.ts:58:30
+
+    Error Context: test-results/worker-recovery-조립-다운로드-실패-뒤-새로고침-없이-다시-실행해-결과를-받는다-chromium/error-context.md
+
+  2) [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 ──────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('iframe[data-tool-frame]').contentFrame().locator('.action-text strong')
+    Expected: visible
+    Timeout: 4000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('iframe[data-tool-frame]').contentFrame().locator('.action-text strong') with timeout 4000ms
+      - waiting for locator('iframe[data-tool-frame]').contentFrame().locator('.action-text strong')
+
+
+      49 |       await expect(run).toBeEnabled();
+      50 |       await run.click();
+    > 51 |       await expect(frame.locator('.action-text strong')).toBeVisible({ timeout: 4000 });
+         |                                                          ^
+      52 |       await expect(run).toBeEnabled();
+      53 |       expect(attempts).toBe(1);
+      54 |
+        at /Users/jm/development/projects/justusing/tests/e2e/worker-recovery.spec.ts:51:58
+
+    Error Context: test-results/worker-recovery-조립-실행-오류-뒤-새로고침-없이-다시-실행해-결과를-받는다-chromium/error-context.md
+
+  2 failed
+    [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 다운로드 실패 뒤 새로고침 없이 다시 실행해 결과를 받는다 ─────
+    [chromium] › tests/e2e/worker-recovery.spec.ts:36:5 › 조립: 실행 오류 뒤 새로고침 없이 다시 실행해 결과를 받는다 ───────

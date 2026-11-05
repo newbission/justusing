@@ -1,0 +1,16 @@
+[WebServer] (node:3838) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] ✘ [ERROR] *** Uncaught exception ***
+[WebServer] 
+[WebServer]   workerd/util/sqlite.c++:914: failed: SQLite failed; dbErrorMessage(prepareResult, db) = database is locked: SQLITE_BUSY (extended: SQLITE_BUSY_RECOVERY)
+[WebServer] 
+[WebServer] 
+[WebServer] ✘ [ERROR] The Workers runtime failed to start. There was likely a problem with the workerd binary or your configuration.
+[WebServer] 
+[WebServer]   Runtime stderr:
+[WebServer]   {"timestamp":"1793862678949","level":"error","source":"src/workerd/server/server/entry.rs:169","message":"*** Uncaught exception ***\nworkerd/util/sqlite.c++:914: failed: SQLite failed; dbErrorMessage(prepareResult, db) = database is locked: SQLITE_BUSY (extended: SQLITE_BUSY_RECOVERY)","context_depth":0}
+[WebServer] 
+[WebServer] 
+[WebServer] 🪵  Logs were written to "/Users/jm/Library/Preferences/.wrangler/logs/wrangler-2026-11-05_07-11-18_304.log"
+Error: Process from config.webServer was not able to start. Exit code: 1
+
