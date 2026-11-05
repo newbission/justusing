@@ -5,7 +5,7 @@
  * 합치기: 모든 파일의 모든 페이지 / 나누기: 범위마다 결과 파일 하나 / 회전: rotate 지정 / 정리: 순서·생략
  */
 import workerUrl from './assemble.worker.ts?worker&url';
-import { createWorker } from '../worker';
+import { createWorkerClient } from '../worker-client';
 
 export interface AssembleSource {
   bytes: Uint8Array;
@@ -38,8 +38,7 @@ export type AssembleResponse =
   | { id: number; kind: 'done'; files: Uint8Array[] }
   | { id: number; kind: 'error'; message: string };
 
-let workerPromise: Promise<Worker> | undefined;
-let nextId = 0;
+const ask = createWorkerClient<AssembleRequest, AssembleResponse>(workerUrl);
 
 /**
  * 결과 PDF 여러 개를 만들어 outputs 순서대로 돌려준다 (나누기).
@@ -49,24 +48,15 @@ export async function assemblePdfs(
   job: AssembleJob,
   onProgress?: (done: number, total: number) => void,
 ): Promise<Uint8Array[]> {
-  const worker = await (workerPromise ??= createWorker(workerUrl));
-  const id = nextId++;
-
-  return new Promise((resolve, reject) => {
-    const listener = (event: MessageEvent<AssembleResponse>) => {
-      const data = event.data;
-      if (data.id !== id) return;
-      if (data.kind === 'progress') {
-        onProgress?.(data.done, data.total);
-        return;
-      }
-      worker.removeEventListener('message', listener);
-      if (data.kind === 'done') resolve(data.files);
-      else reject(new Error(data.message));
-    };
-    worker.addEventListener('message', listener);
-    worker.postMessage({ id, job } satisfies AssembleRequest);
-  });
+  const response = await ask(
+    { job },
+    {
+      onProgress: (data) => onProgress?.(data.done, data.total),
+    },
+  );
+  if (response.kind !== 'done')
+    throw new Error(response.kind === 'error' ? response.message : 'unexpected response');
+  return response.files;
 }
 
 /** 결과 PDF 하나를 만든다 (합치기·회전·정리) */

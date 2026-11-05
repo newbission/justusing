@@ -4,7 +4,7 @@
  */
 import workerUrl from './images-to-pdf.worker.ts?worker&url';
 import { heifToJpeg, needsHeifDecoder } from '../image/heif';
-import { createWorker } from '../worker';
+import { createWorkerClient } from '../worker-client';
 
 /** 브라우저가 못 읽는 HEIC를 JPG로 바꿀 때의 화질 (prepare.ts가 사진을 다시 만들 때와 같다) */
 const HEIF_JPEG_QUALITY = 0.92;
@@ -33,8 +33,7 @@ export type ImagesToPdfResponse =
   | { id: number; kind: 'done'; bytes: Uint8Array }
   | { id: number; kind: 'error'; message: string };
 
-let workerPromise: Promise<Worker> | undefined;
-let nextId = 0;
+const ask = createWorkerClient<ImagesToPdfRequest, ImagesToPdfResponse>(workerUrl);
 
 /**
  * onProgress는 이미지 한 장을 넣을 때마다 불린다.
@@ -53,22 +52,13 @@ export async function imagesToPdf(
     );
   }
   const job = { ...original, images };
-  const worker = await (workerPromise ??= createWorker(workerUrl));
-  const id = nextId++;
-
-  return new Promise((resolve, reject) => {
-    const listener = (event: MessageEvent<ImagesToPdfResponse>) => {
-      const data = event.data;
-      if (data.id !== id) return;
-      if (data.kind === 'progress') {
-        onProgress?.(data.done, data.total);
-        return;
-      }
-      worker.removeEventListener('message', listener);
-      if (data.kind === 'done') resolve(data.bytes);
-      else reject(new Error(data.message));
-    };
-    worker.addEventListener('message', listener);
-    worker.postMessage({ id, job } satisfies ImagesToPdfRequest);
-  });
+  const response = await ask(
+    { job },
+    {
+      onProgress: (data) => onProgress?.(data.done, data.total),
+    },
+  );
+  if (response.kind !== 'done')
+    throw new Error(response.kind === 'error' ? response.message : 'unexpected response');
+  return response.bytes;
 }
