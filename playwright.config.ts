@@ -9,6 +9,7 @@
  * 로컬에서 설치된 크롬을 쓰려면 PLAYWRIGHT_CHANNEL=chrome 을 붙인다.
  */
 import { defineConfig, devices } from '@playwright/test';
+import { siteUrl } from './src/site.config';
 
 /**
  * npm run preview(4322)와 겹치지 않게 (겹치면 로컬에서 그 서버를 재사용해 버린다).
@@ -27,7 +28,20 @@ export default defineConfig({
     // CI에서만 가끔 실패하는 테스트를 살피려고, 실패한 테스트의 기록(화면·요청·콘솔)을 남긴다
     trace: process.env.CI ? 'retain-on-failure' : 'off',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      testIgnore: '**/webkit-smoke.spec.ts',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      // WebKit은 opaque frame의 'self'를 로컬 주소로 보지 않는다. smoke의 요청 중계로
+      // 배포 주소를 유지하면서 로컬 빌드를 검사한다 (배포 CSP를 바꾸지 않는다).
+      name: 'webkit-smoke',
+      testMatch: '**/webkit-smoke.spec.ts',
+      use: { ...devices['Desktop Safari'], channel: undefined, baseURL: siteUrl },
+    },
+  ],
   webServer: {
     command: `npx wrangler dev --port ${PORT} --inspector-port ${PORT + 1}`,
     port: PORT,
