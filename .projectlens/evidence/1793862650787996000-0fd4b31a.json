@@ -1,0 +1,16 @@
+{
+  "id": "1793862650787996000-0fd4b31a",
+  "check": "C-DEPS",
+  "time_ns": 1793862650788028000,
+  "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+  "harness_version": "0.6.0",
+  "command": [
+    "npm",
+    "audit",
+    "--audit-level=moderate"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1793862650787996000-0fd4b31a.log",
+  "artifact_hash": "64ac4f9f4b9fd4c8dbeef5f81cfe9cd76d3cd0b41facac2f64fd41f522f58923"
+}

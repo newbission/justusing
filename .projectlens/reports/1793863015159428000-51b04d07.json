@@ -1,0 +1,260 @@
+{
+  "harness_version": "0.6.0",
+  "created_utc": "2026-11-05T07:16:55Z",
+  "mode": "fix",
+  "scope": "점검 후 워커 복구·접근성·검사 범위·호환 보안 업데이트·WebKit smoke",
+  "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+  "source_fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+  "scoped_check_result": "verified",
+  "selected_checks": {
+    "C-BUILD": "pass",
+    "C-TYPES": "pass",
+    "C-FORMAT": "pass",
+    "C-DEPS": "pass",
+    "C-RECOVERY": "pass",
+    "C-WEBKIT": "pass",
+    "C-VISUAL": "pass",
+    "C-SYSTEM": "pass"
+  },
+  "whole_project": {
+    "complete": false,
+    "problems": [
+      "Planning baseline has no recorded acceptance source"
+    ],
+    "checks": {
+      "C-RECOVERY": "pass",
+      "C-TYPES": "pass",
+      "C-FORMAT": "pass",
+      "C-DEPS": "pass",
+      "C-WEBKIT": "pass",
+      "C-BUILD": "pass",
+      "C-SYSTEM": "pass",
+      "C-VISUAL": "pass"
+    },
+    "consecutive_failures": {
+      "C-RECOVERY": 0,
+      "C-DEPS": 0,
+      "C-BUILD": 0,
+      "C-TYPES": 0,
+      "C-FORMAT": 0,
+      "C-WEBKIT": 0,
+      "C-SYSTEM": 0,
+      "C-VISUAL": 0
+    }
+  },
+  "reviews": [],
+  "documents": [
+    {
+      "id": "DOC-SPEC",
+      "path": ".projectlens/spec.md",
+      "purpose": "이번 개선 범위·수용 기준·결정 출처",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY",
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "709e6d0ce885e3a182a5ab013e1028390bebf6c054ed1b4911f7d2ac51c7c364",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PDF",
+      "path": "docs/foundations/pdf-common/README.md",
+      "purpose": "PDF 공통 처리의 기준 문서",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "9dd8276240d93060fcb4b9884375b36b09714c062e087986a19c8f8726bccabc",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-FRAME",
+      "path": "docs/foundations/frame-isolation/README.md",
+      "purpose": "격리·CSP·워커·WebKit 검증",
+      "status": "draft",
+      "related": [
+        "R-WEBKIT",
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "82f8b69c0bb97e4ce788bfeab08a8f267afaf33d67749675d00c4e46d041aaed",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PROCESS",
+      "path": "docs/foundations/process/README.md",
+      "purpose": "검사 범위·의존성 갱신·WebKit 실행 방법",
+      "status": "draft",
+      "related": [
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "4efd47a11bcc5f9d7c6f9323f17581f9c958288f1b501ab6acf1bf2cd901d269",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "path": ".projectlens/handoff.md",
+      "exists": true,
+      "health": "unregistered",
+      "registered": false,
+      "review_current": false
+    }
+  ],
+  "evidence": {
+    "C-BUILD": {
+      "id": "1793862650794701000-c7a6a4a4",
+      "check": "C-BUILD",
+      "time_ns": 1793862650794732000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1793862650794701000-c7a6a4a4.log",
+      "artifact_hash": "ffbfae6792ef1e938351546d9eaba29be8572efe33d4e4cdd370e78962472d49"
+    },
+    "C-TYPES": {
+      "id": "1793862650795371000-a6afba1c",
+      "check": "C-TYPES",
+      "time_ns": 1793862650795398000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "command": [
+        "npm",
+        "run",
+        "check"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1793862650795371000-a6afba1c.log",
+      "artifact_hash": "7b7bd6481a9b205b660928cf97819febc97a0d956824ad86f7c12379739c4fd7"
+    },
+    "C-FORMAT": {
+      "id": "1793862650796436000-1bb2edd9",
+      "check": "C-FORMAT",
+      "time_ns": 1793862650796467000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "command": [
+        "npm",
+        "run",
+        "format:check"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1793862650796436000-1bb2edd9.log",
+      "artifact_hash": "183bb0dbf3d16f91f06aeab4e1b8b8a127d8c6727d7869ec916c63b99485ec60"
+    },
+    "C-DEPS": {
+      "id": "1793862650787996000-0fd4b31a",
+      "check": "C-DEPS",
+      "time_ns": 1793862650788028000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "command": [
+        "npm",
+        "audit",
+        "--audit-level=moderate"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1793862650787996000-0fd4b31a.log",
+      "artifact_hash": "64ac4f9f4b9fd4c8dbeef5f81cfe9cd76d3cd0b41facac2f64fd41f522f58923"
+    },
+    "C-RECOVERY": {
+      "id": "1793862676857862000-7400918d",
+      "check": "C-RECOVERY",
+      "time_ns": 1793862676857894000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "command": [
+        "env",
+        "PLAYWRIGHT_CHANNEL=chrome",
+        "E2E_PORT=8890",
+        "npx",
+        "playwright",
+        "test",
+        "tests/e2e/worker-recovery.spec.ts",
+        "--project=chromium",
+        "--workers=2",
+        "--output=test-results/recovery"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1793862676857862000-7400918d.log",
+      "artifact_hash": "270927f71fab92ae30bce7dfce18bb45f18695386e52a61715e6934a8e922ea3"
+    },
+    "C-WEBKIT": {
+      "id": "1793862724935833000-f7030439",
+      "check": "C-WEBKIT",
+      "time_ns": 1793862724935872000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "command": [
+        "env",
+        "E2E_PORT=8910",
+        "npx",
+        "playwright",
+        "test",
+        "--project=webkit-smoke",
+        "--workers=1",
+        "--output=test-results/webkit"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1793862724935833000-f7030439.log",
+      "artifact_hash": "d4cc9ed463590aff2d7c5c1fba5eaf8931077719d4e967353a184c6652ef1937"
+    },
+    "C-VISUAL": {
+      "id": "1793862787409777000-bb40df6e",
+      "check": "C-VISUAL",
+      "time_ns": 1793862787409865000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "result": "pass",
+      "note": "에이전트 관찰: 390×844 Chromium에서 워커 첫 요청 실패 후 오류와 활성 실행 버튼을 확인하고, 같은 파일·90도 회전 설정으로 재실행한 뒤 다운로드 버튼과 세 쪽 결과 화면을 실제 캡처로 확인했다. 오류/결과 막대 높이와 바깥 칸은 유지된다. 사용자 인수는 아니다.",
+      "kind": "manual",
+      "artifact": ".projectlens/evidence/rotation-mobile-recovered.png",
+      "artifact_hash": "ba072de8cab768a299ce58afaf9d1475b0df2f7442db93c1030759d42fb3051d"
+    },
+    "C-SYSTEM": {
+      "id": "1793862698220447000-7c5895ef",
+      "check": "C-SYSTEM",
+      "time_ns": 1793862698220484000,
+      "fingerprint": "facb332443014a041af07980245f41d7da5533c898641f7a27926128438a339e",
+      "harness_version": "0.6.0",
+      "command": [
+        "bash",
+        "-c",
+        "set -o pipefail; PLAYWRIGHT_CHANNEL=chrome E2E_PORT=8910 npm run test:e2e -- --project=chromium --workers=4 --output=test-results/chromium 2>&1 | tee /tmp/justusing-full-progress.log"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1793862698220447000-7c5895ef.log",
+      "artifact_hash": "92ca61707a15f19debe2c0ad3ca99bbf176d88567d96e835e7046c8c5b67ef90"
+    }
+  },
+  "interpretation": "Selected check verification is not mode completion or whole-product acceptance. Review findings and unverified areas still require assessment."
+}

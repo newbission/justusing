@@ -1,0 +1,23 @@
+{
+  "id": "1793862287909995000-921ac187",
+  "check": "C-RECOVERY",
+  "time_ns": 1793862287910043000,
+  "fingerprint": "8e66f6f5e34580d8291108d1fbdcd542ce2e453aa4e9e92d62822ad8cff07a3d",
+  "harness_version": "0.6.0",
+  "command": [
+    "env",
+    "PLAYWRIGHT_CHANNEL=chrome",
+    "E2E_PORT=8890",
+    "npx",
+    "playwright",
+    "test",
+    "tests/e2e/worker-recovery.spec.ts",
+    "--grep",
+    "조립",
+    "--workers=2"
+  ],
+  "exit_code": 1,
+  "result": "fail",
+  "artifact": ".projectlens/evidence/1793862287909995000-921ac187.log",
+  "artifact_hash": "97d25f3b5973872ec30cab51f8124d820a25bde9a775bcb10bc5c6e37aa1d316"
+}
