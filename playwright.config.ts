@@ -24,7 +24,6 @@ export default defineConfig({
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: `http://localhost:${PORT}`,
-    channel: process.env.PLAYWRIGHT_CHANNEL,
     // CI에서만 가끔 실패하는 테스트를 살피려고, 실패한 테스트의 기록(화면·요청·콘솔)을 남긴다
     trace: process.env.CI ? 'retain-on-failure' : 'off',
   },
@@ -32,14 +31,14 @@ export default defineConfig({
     {
       name: 'chromium',
       testIgnore: '**/webkit-smoke.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], channel: process.env.PLAYWRIGHT_CHANNEL },
     },
     {
       // WebKit은 opaque frame의 'self'를 로컬 주소로 보지 않는다. smoke의 요청 중계로
       // 배포 주소를 유지하면서 로컬 빌드를 검사한다 (배포 CSP를 바꾸지 않는다).
       name: 'webkit-smoke',
       testMatch: '**/webkit-smoke.spec.ts',
-      use: { ...devices['Desktop Safari'], channel: undefined, baseURL: siteUrl },
+      use: { ...devices['Desktop Safari'], baseURL: siteUrl },
     },
   ],
   webServer: {
