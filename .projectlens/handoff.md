@@ -129,3 +129,27 @@ HomeValueStory/HomeLocalFlow/index/ui, 사이트 글꼴, 새home-value E2E와 �
 C-VALUE-QUALITY 통과(1794567619360178000-2dd7573e), C-VALUE-E2E 최종 Chromium68개/2.6분 통과(1794567892509664000-0f536312), C-VALUE-VISUAL 실제 CUA KO390/desktop·EN320 두테마 확인(1794567893792622000-69bf4a31). 세 체크 같은 지문이며 별도WebKit18개/34.6초도 통과. 문서 관계 누락 없음. 범위 보고서1794568066147771000-b1436a80는verified, 전체프로젝트인수false. 실제 사용자폰/네이티브Safari 인수와 구별.
 
 현재 로컬 구현·검증 완료, 다음은 작은 커밋→기능PR/현재head Codex리뷰+CI→dev rebase→배포PR/main squash/CI→main을dev로되돌려반영→Cloudflare실배포확인이다. 이전 사용자의 커밋·배포 지시를 이어 적용하며 별도 새호스팅/보안설정을 만들지 않는다.
+
+## 차별점 소개 운영 배포 마감 (2026-11-14)
+
+4개 커밋과 PR #165(현재head864f07a0 Codex주요문제없음/CI535통과·7설정상제외)를 rebase merge했다. 배포 PR #166도 CI535통과·7제외후 squash merge해 운영SHA dff51b15514cca5c38e1936b139c726f5f08d712로 Cloudflare배포성공. main→dev PR #167은 CI535통과·7제외후 merge commit ed286eebb63d49071f139add8f728ffc0ef27334. 배포오케스트레이션 phase complete. main은dev조상이고 두원격소스트리/배포전feature소스트리동일 확인.
+
+2026-11-14 실제운영 한영HTML200/소개순서·문구/참조자산12·11개200 확인. 실제도메인 Chromium+WebKit28개/1.9분모두통과(소개/한영·모바일·JS없음·42도구·실제사진처리/다운로드). root가실제운영IAB데스크톱/390×844캡처확인·뷰포트복원·탭결과유지. evidence/home-value-production-{desktop,mobile}.png 및 같은접두사로그/HTTP/설정, home-value-deployment-{state,ci-summary}.txt보존. 보고서 reports/home-value-story.md에원격리뷰/CI/초기실패/최종재검사를구분했다. 실제사용자폰인수는아님.
+
+병합뒤history생성실행후이번범위의site-structure/fonts-and-data이력만반영. docs/home-value-deployment-record브랜치에는운영뒤증거·문서만보존하며앱을추가배포하는변경아님. 현재요청필수작업완료. 다음정확한행동은사용자피드백/새요청시origin/dev에서기능브랜치를만드는것이다.
+
+## 실제 레퍼런스 기반 홈 재기획 착수 (2026-11-14)
+
+현재 사용자 요청은 실제8~12개운영사이트 desktop/mobile 조사→2~3안비교→선정→구현→독립검증→현재head Codex리뷰/CI→커밋PR운영배포/동기화까지다. 자율진행/역할분리/배포 명시승인. root 조정, planning 조사/카피/와이어, implementation 코드/테스트/문서, verification 독립사실/렌더/접근성/성능검증.
+
+시작clean docs/home-value-deployment-record a373bf14. fetch후origin/dev ed286eeb기준feat/home-reference-redesign 생성, 이전운영증거커밋을98dc6a04로cherry-pick보존. 별도tool-chaining worktree미수정. AGENTS/CLAUDE/관련문서/handoff/ProjectLensstatus·gate확인. 전체gate의과거체크stale은이번범위검증과구별.
+
+기획10사이트1440/390 첫·다음40장실제탐색완료, evidence/home-reference에보존중. B효용/무료작업/즉시진입+자료수신방향/기기안파일경계도식선정방향. 상세보고서·3안·카피작성중이고구현대기. root기준build성공/perf8852서버유지. KO HTML21.7/CSS10.2/글꼴103.2/그림98KB11요청, EN20.4/10.2/36/62.9KB8요청. 초기독립감사는reports/home-redesign-verification-plan.md. 다음행동은기획산출물확인→구현→최종build기준검증이다.
+
+## 실제조사 기반 홈 구현·로컬 검증 완료 (2026-11-14)
+
+B선정보고서reports/home-research.md/3안home-reference-wireframes.html, 기획담당실제12조합리뷰필수지적없음. 구현HomeValueStory/HomeLocalFlow/ui/tagline/홈3spec/새독립review spec·폰트·siteREADME/fontsREADME갱신. 기존사진/4장면/1회auto/광고/격리경계보존. 새JS/의존성/모델없음, 성능상한유지.
+
+자료안내공용CSS충돌수정, 독립검증자의light대비4.00지적을두본문color-text로수정/영구대비E2E추가. 독립검증에이전트는초기36렌더/18WebKit/새바로가기2개완료뒤실행한도. root가최종수정빌드로독립스크립트36렌더·12접근성실행/캡처확인하여본문light13.02/dark11.81확인. 독립agent새pass로과장하지않음.
+
+최종C-REFERENCE-QUALITY1794586823726900000-66e6817c, E2E1794607270399424000-69e0f296(Chromium75pass/7설정상제외2.5분), VISUAL1794607469574974000-0d700176, RESEARCH1794607469795693000-4076c229모두c001849a...같은최종소스지문. 초기74pass실행은대비수정중소스변경harnessfail보존, 최종과구별. 자료/성능서버재build·세션종료경합기록도남김. 최종KO21.5/CSS10.2/font102.8/image98KB11요청. 보고서reports/home-reference-redesign.md와home-reference-verification.md. 다음정확한행동은작은커밋/기능PR현재head리뷰CI→dev→main배포/동기화/운영재확인이다. 사용자최종인수아님.

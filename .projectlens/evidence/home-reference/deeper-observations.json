@@ -1,0 +1,128 @@
+[
+  {
+    "id": "pdf24",
+    "kind": "desktop",
+    "title": "Information",
+    "scroll": 673
+  },
+  {
+    "id": "tinywow",
+    "kind": "desktop",
+    "title": "Our Most Popular Tools",
+    "scroll": 0
+  },
+  {
+    "id": "localsend",
+    "kind": "desktop",
+    "title": "Features",
+    "scroll": 1119
+  },
+  {
+    "id": "pdf24",
+    "kind": "mobile",
+    "title": "Information",
+    "scroll": 1585
+  },
+  {
+    "id": "tinywow",
+    "kind": "mobile",
+    "title": "Our Most Popular Tools",
+    "scroll": 0
+  },
+  {
+    "id": "localsend",
+    "kind": "mobile",
+    "title": "Features",
+    "scroll": 829
+  },
+  {
+    "id": "signal",
+    "kind": "desktop",
+    "title": "Share Without Insecurity",
+    "scroll": 563
+  },
+  {
+    "id": "duckduckgo",
+    "kind": "desktop",
+    "title": "Discover more from DuckDuckGo.",
+    "scroll": 588
+  },
+  {
+    "id": "signal",
+    "kind": "mobile",
+    "title": "Share Without Insecurity",
+    "scroll": 920
+  },
+  {
+    "id": "proton",
+    "kind": "desktop",
+    "title": "Communicate and browse. Privately.",
+    "scroll": 492
+  },
+  {
+    "id": "duckduckgo",
+    "kind": "mobile",
+    "title": "Discover more from DuckDuckGo.",
+    "scroll": 935
+  },
+  {
+    "id": "proton",
+    "kind": "mobile",
+    "title": "Communicate and browse. Privately.",
+    "scroll": 663
+  },
+  {
+    "id": "excalidraw",
+    "kind": "desktop",
+    "title": "Say hi to Excalidraw",
+    "scroll": 1351
+  },
+  {
+    "id": "squoosh",
+    "kind": "desktop",
+    "title": "Small",
+    "scroll": 0
+  },
+  {
+    "id": "linear",
+    "kind": "desktop",
+    "title": "A new species",
+    "scroll": 1130
+  },
+  {
+    "id": "excalidraw",
+    "kind": "mobile",
+    "title": "Say hi to Excalidraw",
+    "scroll": 712
+  },
+  {
+    "id": "squoosh",
+    "kind": "mobile",
+    "title": "Small",
+    "scroll": 0
+  },
+  {
+    "id": "linear",
+    "kind": "mobile",
+    "title": "A new species",
+    "scroll": 716
+  },
+  {
+    "id": "pairdrop",
+    "kind": "desktop",
+    "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Open About PairDrop', exact: true })\u001b[22m\n"
+  },
+  {
+    "id": "pairdrop",
+    "kind": "mobile",
+    "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: 'Open About PairDrop', exact: true })\u001b[22m\n"
+  },
+  {
+    "id": "squoosh",
+    "correction": "window scroll did not move internal scroll container. getByRole heading Small/Secure scrollIntoViewIfNeeded succeeded in both viewports; inspected intro and secure captures."
+  },
+  {
+    "id": "pairdrop",
+    "correction": "Initial getByRole button selector failed because info control is a link. getByRole link Open About PairDrop succeeded in both viewports. intro captures show product version and purpose with public links."
+  }
+]

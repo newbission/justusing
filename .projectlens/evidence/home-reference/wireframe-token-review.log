@@ -1,0 +1,3 @@
+light {"bg":"rgb(246, 246, 244)","text":"rgb(30, 30, 30)","token":"light-dark(#f6f6f4, #151515)","sections":3}
+dark {"bg":"rgb(21, 21, 21)","text":"rgb(228, 228, 225)","token":"light-dark(#f6f6f4, #151515)","sections":3}
+기존직접색상재현/수정본공통토큰사용/두테마실제렌더3안통과

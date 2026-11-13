@@ -1,0 +1,82 @@
+
+Running 18 tests using 1 worker
+
+(node:11274) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/home-motion-review.spec.ts:5:3 › / 처음 보일 때 재생하고 키보드 일시정지는 실제로 멈춘다 (6.3s)
+  ✓   2 tests/e2e/home-motion-review.spec.ts:80:3 › / 네 장면은 각각 첫 노출에 한 번만 재생하고 다시 스크롤해도 반복하지 않는다 (1.4s)
+  ✓   3 tests/e2e/home-motion-review.spec.ts:118:3 › / 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (506ms)
+  ✓   4 tests/e2e/home-motion-review.spec.ts:144:3 › / 수동 정지를 자동 노출이 덮어쓰지 않고 한 장면씩만 움직인다 (5.5s)
+  ✓   5 tests/e2e/home-motion-review.spec.ts:183:3 › / 320px 화면 두 테마에서 핵심 장면과 시작 링크가 잘리지 않는다 (953ms)
+  ✓   6 tests/e2e/home-motion-review.spec.ts:212:5 › / 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 (457ms)
+  ✓   7 tests/e2e/home-motion-review.spec.ts:5:3 › /en 처음 보일 때 재생하고 키보드 일시정지는 실제로 멈춘다 (5.6s)
+  ✓   8 tests/e2e/home-motion-review.spec.ts:80:3 › /en 네 장면은 각각 첫 노출에 한 번만 재생하고 다시 스크롤해도 반복하지 않는다 (1.2s)
+  ✓   9 tests/e2e/home-motion-review.spec.ts:118:3 › /en 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (475ms)
+  ✓  10 tests/e2e/home-motion-review.spec.ts:144:3 › /en 수동 정지를 자동 노출이 덮어쓰지 않고 한 장면씩만 움직인다 (5.5s)
+  ✓  11 tests/e2e/home-motion-review.spec.ts:183:3 › /en 320px 화면 두 테마에서 핵심 장면과 시작 링크가 잘리지 않는다 (274ms)
+  ✘  12 tests/e2e/home-motion-review.spec.ts:212:5 › /en 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 (5.2s)
+(node:12171) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  13 tests/e2e/home-value.spec.ts:26:3 › / 작업과 진입을 먼저 보여 주고 처리 경계·자료 수신·실제 결과로 이어진다 (563ms)
+
+
+  1) tests/e2e/home-motion-review.spec.ts:212:5 › /en 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 ─
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.feature-demo')
+    Expected: 4
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.feature-demo') with timeout 5000ms
+      - waiting for locator('.feature-demo')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      213 |       await page.goto(`${prefix}/`);
+      214 |       const scenes = page.locator('.feature-demo');
+    > 215 |       await expect(scenes).toHaveCount(4);
+          |                            ^
+      216 |       for (const scene of await scenes.all()) {
+      217 |         await scene.scrollIntoViewIfNeeded();
+      218 |         await expect(scene.locator('.demo-stage')).toBeVisible();
+        at /Users/jm/development/projects/justusing/tests/e2e/home-motion-review.spec.ts:215:28
+
+    Error Context: test-results/home-reference-webkit/home-motion-review--en-자바스-a36e8-과-결과가-남고-작동하지-않는-재생-버튼은-숨긴다/error-context.md
+
+  2) tests/e2e/home-value.spec.ts:26:3 › / 작업과 진입을 먼저 보여 주고 처리 경계·자료 수신·실제 결과로 이어진다 ────────────────
+
+    Test was interrupted.
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.home-value-story')
+    Expected: visible
+    Error: Test ended.
+
+    Call log:
+      - Expect "toBeVisible" locator('.home-value-story') with timeout 5000ms
+      - waiting for locator('.home-value-story')
+      - Test ended.
+
+
+      29 |     await page.goto(locale.path);
+      30 |     const story = page.locator('.home-value-story');
+    > 31 |     await expect(story).toBeVisible();
+         |                         ^
+      32 |     const local = story.locator('.local-hero');
+      33 |     for (const text of locale.scope) await expect(local).toContainText(text);
+      34 |     await expect(story.locator('.home-pains')).toHaveCount(0);
+        at /Users/jm/development/projects/justusing/tests/e2e/home-value.spec.ts:31:25
+
+    Error Context: test-results/home-reference-webkit/home-value--작업과-진입을-먼저-보여-주고-처리-경계·자료-수신·실제-결과로-이어진다/error-context.md
+
+  1 failed
+    tests/e2e/home-motion-review.spec.ts:212:5 › /en 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 ──
+  1 interrupted
+    tests/e2e/home-value.spec.ts:26:3 › / 작업과 진입을 먼저 보여 주고 처리 경계·자료 수신·실제 결과로 이어진다 ─────────────────
+  5 did not run
+  11 passed (35.4s)
