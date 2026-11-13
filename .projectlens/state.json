@@ -13,6 +13,38 @@
       "desired": "복구 가능한 오류 상태와 재실행, 관련 경고 제거, 호환 보안 업데이트, WebKit smoke",
       "source": "현재 채팅의 점검 결과 및 후속 사용자 요청",
       "requirements": ["R-RECOVERY", "R-QUALITY", "R-DEPS", "R-WEBKIT"]
+    },
+    {
+      "id": "CH-HOME-MOTION",
+      "request": "2026-11-13 사용자: 이미지→PDF의 결과 표현 수정, 핵심 기능 동작 시뮬레이션 중심으로 재구성, 기획·구현·검증 담당 분리",
+      "previous": "대표 기능 6개가 동급 합성 이미지 카드로 나열되고 사진 PDF가 독립 사진 두 장으로 보임",
+      "desired": "정확한 단일 PDF 결과와 입력→동작→결과를 보여 주는 대표 장면, 모바일에서 이해 가능한 구도와 기획 담당의 문구",
+      "source": "현재 채팅의 사용자 후속 요청. 사용자에게 합리적 기획·구현 진행과 역할 분리 권한을 받음; 최종 시각 인수와 구별",
+      "requirements": ["R-HOME-MOTION"]
+    },
+    {
+      "id": "CH-HOME-DIRECTORY",
+      "request": "대표 기능 소개 아래에 다른 도구 이용을 권하는 소개말을 넣고 그 아래 도구 모아보기를 배치",
+      "previous": "대표 장면과 도구 목록 사이에 다른 도구의 범위를 소개하는 연결 문구가 없음",
+      "desired": "추가 도구를 구체적으로 알리는 짧은 한영 안내 뒤에 기존42개 도구 디렉터리가 이어짐",
+      "source": "2026-11-13 사용자 후속 요청. 기존 기획/구현/검증 역할 분리 선호를 이어 적용",
+      "requirements": ["R-HOME-DIRECTORY"]
+    },
+    {
+      "id": "CH-HOME-AUTOPLAY",
+      "request": "사용자가 대표 동작 장면의 첫 화면 노출 시1회 자동재생, 그다음은 재생 버튼을 누르도록 요청",
+      "previous": "대표4개 장면 모두 수동 재생만 지원",
+      "desired": "각 stage가 화면에 절반 이상 처음 보이면1회 자동재생. 이후 수동 재생/정지/재개. 다른 재생 가로채기와 스크롤재진입 반복 없음",
+      "source": "2026-11-13 사용자 마지막 요청 및 기획 담당의 노출·우선순위 정책. 페이지 내에서만 첫 기회를 기록하며 재방문/새로고침은 새 첫 노출",
+      "requirements": ["R-HOME-AUTOPLAY"]
+    },
+    {
+      "id": "CH-HOME-LOCAL-FIRST",
+      "request": "로컬에서 안전하게 처리되는 차별점을 홈1순위로 어필하고 기존 주요 기능 소개를2번째로 배치",
+      "previous": "사진 압축 실제 결과가 첫hero이며 로컬처리는 짧은약속/목록하단 안내",
+      "desired": "파일이 기기를 떠나지 않는 로컬처리 약속과 기기내 흐름을 첫hero로, 기존사진/4동작소개를2순위로 보존",
+      "source": "2026-11-13 사용자 요청. 기획·구현·검증 분리 선호 유지. 실제 파일 로컬처리/파일내용·이름비전송/격리에 근거하며 완벽보안·외부통신0·오프라인주장금지",
+      "requirements": ["R-HOME-LOCAL-FIRST"]
     }
   ],
   "requirements": [
@@ -34,6 +66,38 @@
     {
       "id": "R-WEBKIT",
       "text": "배포 CSP를 넓히지 않고 WebKit의 격리·워커·다운로드 경로를 자동 검증한다.",
+      "included": true
+    },
+    {
+      "id": "R-HOME",
+      "text": "사용자 요청(2026-11-12)에 따라 실제 사진 결과와 즉시 진입을 중심으로 한영 홈을 개선한다. .projectlens/home-refresh.md 참고.",
+      "included": true
+    },
+    {
+      "id": "R-SHOWCASE",
+      "text": "사용자 요청(2026-11-13): 기존 사진 예시 스타일로 대표 기능 6개의 실제 처리 결과와 도구 연결을 한영 홈에 추가한다. .projectlens/home-refresh.md 참고.",
+      "included": false,
+      "reason": "사용자 후속 피드백으로 동급 6개 카드 요구를 대표 4개 과정 장면으로 변경. R-HOME-MOTION이 대체하며 앞선 구현/검증은 역사적 기록으로 유지.",
+      "source": "2026-11-13 현재 채팅의 구성 재기획 및 역할분리 요청"
+    },
+    {
+      "id": "R-HOME-MOTION",
+      "text": "핵심 기능을 정확한 입력→동작→결과로 보여 주는 한영 홈, 이미지→PDF 단일 문서 표현, 모바일·키보드·reduced-motion·CSP·성능 유지. 상세 baseline은 .projectlens/home-motion-plan.md. 기획/구현/검증 담당을 분리한다.",
+      "included": true
+    },
+    {
+      "id": "R-HOME-DIRECTORY",
+      "text": "대표 기능 소개 뒤, 도구 모아보기 바로 위에 추가 도구 범위와 선택을 안내하는 짧은 한영 문구를 배치한다. 기존42개 탐색/광고간격/성능 유지. .projectlens/home-motion-plan.md 후속 기준 참고.",
+      "included": true
+    },
+    {
+      "id": "R-HOME-AUTOPLAY",
+      "text": "대표4개 장면이 실제 화면에 처음 절반 이상 보일 때 각1회 자동재생하고 이후 수동 재생만 한다. 수동 조작 우선/동시재생 방지/감소모션·JS없음 정적·CSP·성능 유지. home-motion-plan.md 후속 정책 참고.",
+      "included": true
+    },
+    {
+      "id": "R-HOME-LOCAL-FIRST",
+      "text": "홈 최상단에서 파일이 기기를 떠나지 않고 브라우저에서 처리됨을 사실기반 문구·도식으로 전달하고 기존사진압축/4동작을두번째흐름으로배치한다. 한영/모바일/접근성/단회auto/42탐색/CSP·성능유지. .projectlens/home-local-first-plan.md 참고.",
       "included": true
     }
   ],
@@ -82,6 +146,60 @@
       "requirements": ["R-WEBKIT"],
       "checks": ["C-WEBKIT"],
       "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME",
+      "title": "한영 홈과 실제 사진 처리 예시 개선",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME"],
+      "checks": ["C-HOME", "C-HOME-QUALITY"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-SHOWCASE",
+      "title": "대표 기능 6개 실제 전후 예시와 홈 연결",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-SHOWCASE"],
+      "checks": ["C-SHOWCASE", "C-SHOWCASE-QUALITY"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME-MOTION",
+      "title": "대표 기능 장면 중심 홈 재기획·구현·독립 검증",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME-MOTION"],
+      "checks": ["C-MOTION-QUALITY", "C-MOTION-E2E", "C-MOTION-VISUAL"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME-DIRECTORY",
+      "title": "소개 영역과 전체 도구 목록의 연결 문구 추가",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME-DIRECTORY"],
+      "checks": ["C-DIRECTORY-HANDOFF", "C-DIRECTORY-VISUAL"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME-AUTOPLAY",
+      "title": "최초 화면 노출 단회 자동재생과 수동 제어 회귀",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME-AUTOPLAY"],
+      "checks": ["C-AUTOPLAY-QUALITY", "C-AUTOPLAY-E2E", "C-AUTOPLAY-VISUAL"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME-LOCAL-FIRST",
+      "title": "로컬처리 차별점 우선 홈 재구성 및 검증",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME-LOCAL-FIRST"],
+      "checks": ["C-LOCAL-FIRST-QUALITY", "C-LOCAL-FIRST-E2E", "C-LOCAL-FIRST-VISUAL"],
+      "blocked_reason": ""
     }
   ],
   "checks": [
@@ -124,6 +242,81 @@
       "id": "C-VISUAL",
       "level": "acceptance",
       "description": "에이전트가 모바일 PDF 회전 결과 화면을 실제 캡처로 확인한다. 사용자 인수와 구별한다."
+    },
+    {
+      "id": "C-HOME",
+      "level": "system",
+      "description": "한영 홈·탐색·접근성·모바일·검색·CSP·성능·글꼴 회귀 및 시각 확인"
+    },
+    {
+      "id": "C-HOME-QUALITY",
+      "level": "integration",
+      "description": "타입·프로덕션 빌드·포맷 검사"
+    },
+    {
+      "id": "C-SHOWCASE",
+      "level": "system",
+      "description": "실제 도구 결과 생성과 검증, 한영 예시·모바일·진입·보안·성능·글꼴 E2E 및 시각 확인"
+    },
+    {
+      "id": "C-SHOWCASE-QUALITY",
+      "level": "integration",
+      "description": "타입·포맷·프로덕션 빌드"
+    },
+    {
+      "id": "C-MOTION-QUALITY",
+      "level": "integration",
+      "description": "최종 소스의 포맷·타입·프로덕션 빌드 및 문서 일관성"
+    },
+    {
+      "id": "C-MOTION-E2E",
+      "level": "system",
+      "description": "한영 대표 장면의 입력/출력·재생 제어·정적 의미·실제 도구 진입과 홈/목록/CSP/폰트/성능/WebKit 회귀"
+    },
+    {
+      "id": "C-MOTION-VISUAL",
+      "level": "acceptance",
+      "description": "기획 담당·독립 검증 담당 및 조정 에이전트가 실제 모바일/데스크톱 화면을 확인해 사용자 목표와 비교한다. 사용자 인수와 구별."
+    },
+    {
+      "id": "C-DIRECTORY-HANDOFF",
+      "level": "system",
+      "description": "한영 홈 연결 문구와42개 탐색 보존, 타입/포맷/build/기존홈/글꼴/관련성능 검사"
+    },
+    {
+      "id": "C-DIRECTORY-VISUAL",
+      "level": "acceptance",
+      "description": "독립 검증과 실제 모바일 화면에서 소개문→도구 모아보기 순서/가독성 확인. 사용자 인수와 구별."
+    },
+    {
+      "id": "C-AUTOPLAY-QUALITY",
+      "level": "integration",
+      "description": "타입/포맷/프로덕션 build와 diff 일관성"
+    },
+    {
+      "id": "C-AUTOPLAY-E2E",
+      "level": "system",
+      "description": "최초노출 전 정지→첫노출 단회→재진입 무반복→수동재생/정지/재개/우선순위, reduced-motion/JS없음 및 한영 홈/성능/CSP 회귀"
+    },
+    {
+      "id": "C-AUTOPLAY-VISUAL",
+      "level": "acceptance",
+      "description": "독립 검증과 root 실제 브라우저에서 첫 자동재생/완료/재진입/수동제어 확인. 사용자 인수와 구별."
+    },
+    {
+      "id": "C-LOCAL-FIRST-QUALITY",
+      "level": "integration",
+      "description": "한영문구·제목·소스/문서의 포맷·타입·프로덕션빌드·diff 검사"
+    },
+    {
+      "id": "C-LOCAL-FIRST-E2E",
+      "level": "system",
+      "description": "로컬처리 첫hero·기능2순위·키보드탐색/실제처리·단회auto/한영·폰트·기존성능·CSP/local-only 회귀"
+    },
+    {
+      "id": "C-LOCAL-FIRST-VISUAL",
+      "level": "acceptance",
+      "description": "기획/독립검증과 root 실제 모바일/데스크톱에서 사실기반 로컬차별점이 첫인상인지 확인. 사용자 인수와 구별."
     }
   ],
   "documents": [
@@ -154,6 +347,57 @@
       "purpose": "검사 범위·의존성 갱신·WebKit 실행 방법",
       "status": "draft",
       "related": ["R-QUALITY", "R-DEPS", "R-WEBKIT"]
+    },
+    {
+      "id": "DOC-HOME",
+      "path": ".projectlens/home-refresh.md",
+      "purpose": "홈 개선 요청·설계·수용 기준",
+      "status": "draft",
+      "related": [
+        "R-HOME",
+        "T-HOME",
+        "C-HOME",
+        "C-HOME-QUALITY",
+        "R-SHOWCASE",
+        "T-SHOWCASE",
+        "C-SHOWCASE",
+        "C-SHOWCASE-QUALITY"
+      ]
+    },
+    {
+      "id": "DOC-HOME-MOTION",
+      "path": ".projectlens/home-motion-plan.md",
+      "purpose": "기획 담당이 작성하는 대표 장면 baseline·문구·wireframe·수용 기준",
+      "status": "draft",
+      "related": [
+        "R-HOME-MOTION",
+        "T-HOME-MOTION",
+        "C-MOTION-QUALITY",
+        "C-MOTION-E2E",
+        "C-MOTION-VISUAL",
+        "R-HOME-DIRECTORY",
+        "T-HOME-DIRECTORY",
+        "C-DIRECTORY-HANDOFF",
+        "C-DIRECTORY-VISUAL",
+        "R-HOME-AUTOPLAY",
+        "T-HOME-AUTOPLAY",
+        "C-AUTOPLAY-QUALITY",
+        "C-AUTOPLAY-E2E",
+        "C-AUTOPLAY-VISUAL"
+      ]
+    },
+    {
+      "id": "DOC-HOME-LOCAL-FIRST",
+      "path": ".projectlens/home-local-first-plan.md",
+      "purpose": "기획 담당의 로컬처리 우선 정보구조·한영문구·수용 기준",
+      "status": "draft",
+      "related": [
+        "R-HOME-LOCAL-FIRST",
+        "T-HOME-LOCAL-FIRST",
+        "C-LOCAL-FIRST-QUALITY",
+        "C-LOCAL-FIRST-E2E",
+        "C-LOCAL-FIRST-VISUAL"
+      ]
     }
   ]
 }

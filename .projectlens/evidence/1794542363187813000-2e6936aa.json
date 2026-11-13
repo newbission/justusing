@@ -1,0 +1,16 @@
+{
+  "id": "1794542363187813000-2e6936aa",
+  "check": "C-AUTOPLAY-QUALITY",
+  "time_ns": 1794542363187845000,
+  "fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+  "harness_version": "0.6.0",
+  "command": [
+    "/bin/zsh",
+    "-lc",
+    "npm run format:check && npm run check && npm run build && git diff --check"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794542363187813000-2e6936aa.log",
+  "artifact_hash": "45182d42dc6e65e280c417980b5d8c9c60f3b9c3076eeaf22aca1b96ca836d97"
+}

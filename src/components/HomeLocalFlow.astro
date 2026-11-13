@@ -1,0 +1,55 @@
+---
+/** 파일의 세 단계가 모두 기기 안에 있음을 설명하는 정적 도식. 실제 파일 UI가 아니다. */
+import { localeOf } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
+---
+
+<figure class="local-proof" role="img" aria-label={t.alt}>
+  <svg viewBox="0 0 460 310" width="460" height="310" aria-hidden="true">
+    <g
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="8" y="8" width="444" height="294" rx="16" fill="var(--color-accent-soft)" />
+      <rect
+        x="28"
+        y="66"
+        width="404"
+        height="212"
+        rx="8"
+        fill="var(--color-surface)"
+        stroke="var(--color-line)"
+      />
+      <path d="M28 108h404" stroke="var(--color-line)" />
+      <path d="M79 135h24l11 11v41H79zM103 135v11h11M87 156h19M87 165h19M87 174h12" />
+      <path d="M145 162h35m-7-7 7 7-7 7M280 162h35m-7-7 7 7-7 7" />
+      <rect x="209" y="140" width="42" height="42" rx="7" />
+      <path d="m219 161 8 8 14-16M221 131v9m18-9v9m-18 42v9m18-9v9m-39-39h9m-9 18h9m42-18h9m-9 18h9" />
+      <path d="M348 135h24l11 11v41h-35zM372 135v11h11M365 155v21m-6-6 6 6 6-6" />
+    </g>
+    <g fill="var(--color-text)" font-size="18" text-anchor="middle">
+      <text x="28" y="41" text-anchor="start" font-size="17" font-weight="600">
+        {t.device}
+      </text>
+      <text x="47" y="92" text-anchor="start" fill="var(--color-muted)" font-size="17">
+        {t.browser}
+      </text>
+      <text x="96" y="230">
+        {t.choose}
+      </text>
+      <text x="230" y="220">
+        <tspan x="230">{t.process[0]}</tspan>
+        <tspan x="230" dy="20">
+          {t.process[1]}
+        </tspan>
+      </text>
+      <text x="365" y="230">
+        {t.save}
+      </text>
+    </g>
+  </svg>
+</figure>

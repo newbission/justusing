@@ -36,11 +36,11 @@ export const siteConfig = {
   text: {
     ko: {
       description: '파일을 업로드하지 않고 브라우저 안에서 바로 처리하는 무료 도구 모음',
-      tagline: '업로드 없이, 브라우저에서 바로 쓰는 파일 도구',
+      tagline: '파일은 내 기기에. 처리는 브라우저에서.',
     },
     en: {
       description: 'Free file tools that work right in your browser, without uploading your files',
-      tagline: 'File tools that run in your browser, no uploads',
+      tagline: 'Your files stay on your device. Your browser does the work.',
     },
   },
   /** 검색엔진 소유 확인 값. 각 검색엔진의 관리 도구가 준 값을 넣는다 (공개되어도 되는 값). */

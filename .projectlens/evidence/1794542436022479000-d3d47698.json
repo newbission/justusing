@@ -1,0 +1,16 @@
+{
+  "id": "1794542436022479000-d3d47698",
+  "check": "C-AUTOPLAY-E2E",
+  "time_ns": 1794542436022507000,
+  "fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+  "harness_version": "0.6.0",
+  "command": [
+    "/bin/zsh",
+    "-lc",
+    "PLAYWRIGHT_CHANNEL=chrome E2E_PORT=4322 npx playwright test tests/e2e/home-motion-review.spec.ts tests/e2e/home-showcase.spec.ts tests/e2e/home.spec.ts tests/e2e/site-font.spec.ts tests/e2e/perf-budget.spec.ts --project=chromium --workers=4 --output=test-results/home-autoplay-final && npx playwright test --config .cache/home-motion-review.config.ts"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794542436022479000-d3d47698.log",
+  "artifact_hash": "1239e65b1737b08294ca7bb15077d9df13a0e92d4e5360056941dc48e1a8acd4"
+}

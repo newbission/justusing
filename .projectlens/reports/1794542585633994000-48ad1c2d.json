@@ -1,0 +1,254 @@
+{
+  "harness_version": "0.6.0",
+  "created_utc": "2026-11-13T04:03:05Z",
+  "mode": "change",
+  "scope": "대표 장면의 첫 화면 노출 단회 자동재생",
+  "fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+  "source_fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+  "scoped_check_result": "verified",
+  "selected_checks": {
+    "C-AUTOPLAY-QUALITY": "pass",
+    "C-AUTOPLAY-E2E": "pass",
+    "C-AUTOPLAY-VISUAL": "pass"
+  },
+  "whole_project": {
+    "complete": false,
+    "problems": [
+      "Planning baseline has no recorded acceptance source",
+      "Check C-RECOVERY: stale",
+      "Check C-TYPES: stale",
+      "Check C-FORMAT: stale",
+      "Check C-DEPS: stale",
+      "Check C-WEBKIT: stale",
+      "Check C-BUILD: stale",
+      "Check C-SYSTEM: stale",
+      "Check C-VISUAL: stale",
+      "Check C-HOME: stale",
+      "Check C-HOME-QUALITY: stale",
+      "Check C-SHOWCASE: stale",
+      "Check C-SHOWCASE-QUALITY: stale",
+      "Check C-MOTION-QUALITY: stale",
+      "Check C-MOTION-E2E: stale",
+      "Check C-MOTION-VISUAL: stale",
+      "Check C-DIRECTORY-HANDOFF: stale",
+      "Check C-DIRECTORY-VISUAL: stale"
+    ],
+    "checks": {
+      "C-RECOVERY": "stale",
+      "C-TYPES": "stale",
+      "C-FORMAT": "stale",
+      "C-DEPS": "stale",
+      "C-WEBKIT": "stale",
+      "C-BUILD": "stale",
+      "C-SYSTEM": "stale",
+      "C-VISUAL": "stale",
+      "C-HOME": "stale",
+      "C-HOME-QUALITY": "stale",
+      "C-SHOWCASE": "stale",
+      "C-SHOWCASE-QUALITY": "stale",
+      "C-MOTION-QUALITY": "stale",
+      "C-MOTION-E2E": "stale",
+      "C-MOTION-VISUAL": "stale",
+      "C-DIRECTORY-HANDOFF": "stale",
+      "C-DIRECTORY-VISUAL": "stale",
+      "C-AUTOPLAY-QUALITY": "pass",
+      "C-AUTOPLAY-E2E": "pass",
+      "C-AUTOPLAY-VISUAL": "pass"
+    },
+    "consecutive_failures": {
+      "C-RECOVERY": 0,
+      "C-DEPS": 0,
+      "C-BUILD": 0,
+      "C-TYPES": 0,
+      "C-FORMAT": 0,
+      "C-WEBKIT": 0,
+      "C-SYSTEM": 1,
+      "C-VISUAL": 0,
+      "C-HOME-QUALITY": 0,
+      "C-HOME": 0,
+      "C-SHOWCASE-QUALITY": 0,
+      "C-SHOWCASE": 0,
+      "C-MOTION-QUALITY": 0,
+      "C-MOTION-E2E": 0,
+      "C-MOTION-VISUAL": 0,
+      "C-DIRECTORY-HANDOFF": 0,
+      "C-DIRECTORY-VISUAL": 0,
+      "C-AUTOPLAY-QUALITY": 0,
+      "C-AUTOPLAY-E2E": 0,
+      "C-AUTOPLAY-VISUAL": 0
+    }
+  },
+  "reviews": [],
+  "documents": [
+    {
+      "id": "DOC-SPEC",
+      "path": ".projectlens/spec.md",
+      "purpose": "이번 개선 범위·수용 기준·결정 출처",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY",
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "709e6d0ce885e3a182a5ab013e1028390bebf6c054ed1b4911f7d2ac51c7c364",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PDF",
+      "path": "docs/foundations/pdf-common/README.md",
+      "purpose": "PDF 공통 처리의 기준 문서",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "9dd8276240d93060fcb4b9884375b36b09714c062e087986a19c8f8726bccabc",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-FRAME",
+      "path": "docs/foundations/frame-isolation/README.md",
+      "purpose": "격리·CSP·워커·WebKit 검증",
+      "status": "draft",
+      "related": [
+        "R-WEBKIT",
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "3a7381c30deeb393db4ea230a2ea29a47abe3dfc0487a52d4ba07522f6225eb8",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PROCESS",
+      "path": "docs/foundations/process/README.md",
+      "purpose": "검사 범위·의존성 갱신·WebKit 실행 방법",
+      "status": "draft",
+      "related": [
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "8012d3914c6aa74e4583391174a2d8fa32c45351466095d409e8c9939051327d",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-HOME",
+      "path": ".projectlens/home-refresh.md",
+      "purpose": "홈 개선 요청·설계·수용 기준",
+      "status": "draft",
+      "related": [
+        "R-HOME",
+        "T-HOME",
+        "C-HOME",
+        "C-HOME-QUALITY",
+        "R-SHOWCASE",
+        "T-SHOWCASE",
+        "C-SHOWCASE",
+        "C-SHOWCASE-QUALITY"
+      ],
+      "exists": true,
+      "sha256": "52d79124341314c595912948e0c3d1375995c0106502b1fcc2eabd887d99e7f1",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-HOME-MOTION",
+      "path": ".projectlens/home-motion-plan.md",
+      "purpose": "기획 담당이 작성하는 대표 장면 baseline·문구·wireframe·수용 기준",
+      "status": "draft",
+      "related": [
+        "R-HOME-MOTION",
+        "T-HOME-MOTION",
+        "C-MOTION-QUALITY",
+        "C-MOTION-E2E",
+        "C-MOTION-VISUAL",
+        "R-HOME-DIRECTORY",
+        "T-HOME-DIRECTORY",
+        "C-DIRECTORY-HANDOFF",
+        "C-DIRECTORY-VISUAL",
+        "R-HOME-AUTOPLAY",
+        "T-HOME-AUTOPLAY",
+        "C-AUTOPLAY-QUALITY",
+        "C-AUTOPLAY-E2E",
+        "C-AUTOPLAY-VISUAL"
+      ],
+      "exists": true,
+      "sha256": "faaff994534eb07e4b05b434d290e83e09d9e874181b9cc44cbd8ef51bd58110",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "path": ".projectlens/handoff.md",
+      "exists": true,
+      "health": "unregistered",
+      "registered": false,
+      "review_current": false
+    }
+  ],
+  "evidence": {
+    "C-AUTOPLAY-QUALITY": {
+      "id": "1794542363187813000-2e6936aa",
+      "check": "C-AUTOPLAY-QUALITY",
+      "time_ns": 1794542363187845000,
+      "fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+      "harness_version": "0.6.0",
+      "command": [
+        "/bin/zsh",
+        "-lc",
+        "npm run format:check && npm run check && npm run build && git diff --check"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1794542363187813000-2e6936aa.log",
+      "artifact_hash": "45182d42dc6e65e280c417980b5d8c9c60f3b9c3076eeaf22aca1b96ca836d97"
+    },
+    "C-AUTOPLAY-E2E": {
+      "id": "1794542436022479000-d3d47698",
+      "check": "C-AUTOPLAY-E2E",
+      "time_ns": 1794542436022507000,
+      "fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+      "harness_version": "0.6.0",
+      "command": [
+        "/bin/zsh",
+        "-lc",
+        "PLAYWRIGHT_CHANNEL=chrome E2E_PORT=4322 npx playwright test tests/e2e/home-motion-review.spec.ts tests/e2e/home-showcase.spec.ts tests/e2e/home.spec.ts tests/e2e/site-font.spec.ts tests/e2e/perf-budget.spec.ts --project=chromium --workers=4 --output=test-results/home-autoplay-final && npx playwright test --config .cache/home-motion-review.config.ts"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1794542436022479000-d3d47698.log",
+      "artifact_hash": "1239e65b1737b08294ca7bb15077d9df13a0e92d4e5360056941dc48e1a8acd4"
+    },
+    "C-AUTOPLAY-VISUAL": {
+      "id": "1794542584991060000-908b8fe7",
+      "check": "C-AUTOPLAY-VISUAL",
+      "time_ns": 1794542584991095000,
+      "fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+      "harness_version": "0.6.0",
+      "result": "pass",
+      "note": "root가 실제 Tailscale IAB390px에서 첫 화면 모든 장면 idle→스크롤로 첫 장면 노출 직후 playing(클릭없음)→자연 종료 done→스크롤 아웃/재진입에도 done→다시 재생 버튼으로 playing을 확인했다. 재진입 캡처 home-autoplay-reentry.png. 뷰포트 복구/홈 초기화 완료. 사용자 실제 폰 인수와 구별한다.",
+      "kind": "manual",
+      "artifact": ".projectlens/evidence/home-autoplay-first-visible.png",
+      "artifact_hash": "6a77c7209ad9c990374a3b6e35b5d1fb8d685bb13a49681b44cfe0667c50b4e9"
+    }
+  },
+  "interpretation": "Selected check verification is not mode completion or whole-product acceptance. Review findings and unverified areas still require assessment."
+}

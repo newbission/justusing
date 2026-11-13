@@ -1,0 +1,1150 @@
+---
+/** 공개 견본으로 재현하는 주요 동작. 실제 결과 sprite만 쓰며 파일 처리 코드는 불러오지 않는다. */
+import { Image } from 'astro:assets';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+import { getTool } from '../tools/registry';
+import albumInput from '../assets/home/scenes/album-input.webp';
+import albumPages from '../assets/home/scenes/album-pages.webp';
+import plant from '../assets/home/original.webp';
+import cutout from '../assets/home/scenes/plant-cutout.webp';
+import docsKo from '../assets/home/scenes/document-pages-ko.webp';
+import docsEn from '../assets/home/scenes/document-pages-en.webp';
+import redactKo from '../assets/home/scenes/redaction-ko.webp';
+import redactEn from '../assets/home/scenes/redaction-en.webp';
+
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale).home;
+const m = t.motion;
+const docs = locale === 'ko' ? docsKo : docsEn;
+const redaction = locale === 'ko' ? redactKo : redactEn;
+const scenes = [
+  { key: 'album', tool: 'pdf/from-image' },
+  { key: 'cutout', tool: 'image/remove-bg' },
+  { key: 'merge', tool: 'pdf/merge' },
+  { key: 'redact', tool: 'pdf/redact' },
+] as const;
+---
+
+<div class="home-showcase">
+  <div class="showcase-stories">
+    {scenes.map((scene, index) => {
+      const copy = m[scene.key];
+      const tool = getTool(scene.tool)!;
+      return (
+        <article
+          class="feature-demo"
+          data-demo={scene.key}
+          data-playback="idle"
+          aria-labelledby={`demo-${scene.key}`}
+        >
+          <div class="demo-copy">
+            <p class="demo-number">
+              {String(index + 1).padStart(2, '0')} / {tool.text[locale].name}
+            </p>
+            <h3 id={`demo-${scene.key}`}>{copy.title}</h3>
+            <p class="demo-description">{copy.text}</p>
+          </div>
+          <div class="demo-visual">
+            <div class={`demo-stage scene-${scene.key}`} role="img" aria-label={copy.alt}>
+              <div class="scene-labels" aria-hidden="true">
+                <span>{copy.input}</span>
+                <span>{copy.output}</span>
+              </div>
+              {scene.key === 'album' && (
+                <>
+                  <div class="album-inputs" aria-hidden="true">
+                    {[0, 1, 2].map((page) => (
+                      <div class={`input-photo item-${page}`}>
+                        <div class="sprite-window">
+                          <Image
+                            src={albumInput}
+                            width={720}
+                            height={300}
+                            alt=""
+                            class={`sprite sprite-three position-${page}`}
+                            loading="lazy"
+                          />
+                        </div>
+                        <span>{String(page + 1).padStart(2, '0')}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <span class="scene-arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <div class="pdf-viewer album-output" aria-hidden="true">
+                    <div class="viewer-heading">
+                      <b>PDF</b>
+                      <span>
+                        {m.oneFile} · 3{locale === 'ko' ? m.pages : ` ${m.pages}`}
+                      </span>
+                    </div>
+                    <div class="viewer-body">
+                      <div class="page-rail">
+                        {[0, 1, 2].map((page) => (
+                          <div class="rail-page">
+                            <Image
+                              src={albumPages}
+                              width={630}
+                              height={297}
+                              alt=""
+                              class={`sprite sprite-three position-${page}`}
+                              loading="lazy"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div class="page-window">
+                        {[0, 1, 2].map((page) => (
+                          <div class={`pdf-page page-${page}`}>
+                            <Image
+                              src={albumPages}
+                              width={630}
+                              height={297}
+                              alt=""
+                              class={`sprite sprite-three position-${page}`}
+                              loading="lazy"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div class="page-indicator">
+                      {[0, 1, 2].map((page) => (
+                        <span class={`indicator-${page}`}>{page + 1} / 3</span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+              {scene.key === 'cutout' && (
+                <>
+                  <div class="subject-photo" aria-hidden="true">
+                    <Image src={plant} width={560} height={840} alt="" loading="lazy" />
+                    <span class="subject-selection">
+                      <span>+</span>
+                    </span>
+                    <span class="subject-label">{m.subject}</span>
+                  </div>
+                  <span class="scene-arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <div class="cutout-output checkerboard" aria-hidden="true">
+                    <Image src={cutout} width={260} height={390} alt="" loading="lazy" />
+                    <b>PNG</b>
+                  </div>
+                  <span class="transparency-note" aria-hidden="true">
+                    {m.transparent}
+                  </span>
+                </>
+              )}
+              {scene.key === 'merge' && (
+                <>
+                  <div class="merge-inputs" aria-hidden="true">
+                    {[0, 1].map((page) => (
+                      <div class={`merge-source source-${page}`}>
+                        <div class="mini-document">
+                          <Image
+                            src={docs}
+                            width={420}
+                            height={297}
+                            alt=""
+                            class={`sprite sprite-two position-${page}`}
+                            loading="lazy"
+                          />
+                        </div>
+                        <span>{page === 0 ? m.report : m.appendix}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <span class="scene-arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <div class="pdf-viewer merge-output" aria-hidden="true">
+                    <div class="viewer-heading">
+                      <b>PDF</b>
+                      <span>
+                        {m.oneFile} · 6{locale === 'ko' ? m.pages : ` ${m.pages}`}
+                      </span>
+                    </div>
+                    <div class="merged-page">
+                      <Image
+                        src={docs}
+                        width={420}
+                        height={297}
+                        alt=""
+                        class="sprite sprite-two position-0"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div class="merge-order">
+                      <span>1—4</span>
+                      <span>5—6</span>
+                    </div>
+                  </div>
+                </>
+              )}
+              {scene.key === 'redact' && (
+                <>
+                  <div class="redact-document" aria-hidden="true">
+                    <div class="excerpt-heading">
+                      <span>PDF</span>
+                      <span>{m.excerpt}</span>
+                    </div>
+                    <div class="document-lines">
+                      <i></i>
+                      <i></i>
+                    </div>
+                    <div class="redact-window">
+                      <div class="redact-before">
+                        <Image
+                          src={redaction}
+                          width={redaction.width}
+                          height={redaction.height}
+                          alt=""
+                          class="sprite sprite-two position-0"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div class="redact-after">
+                        <Image
+                          src={redaction}
+                          width={redaction.width}
+                          height={redaction.height}
+                          alt=""
+                          class="sprite sprite-two position-1"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div class="redact-selection"></div>
+                    </div>
+                    <div class="document-lines">
+                      <i></i>
+                      <i></i>
+                      <i></i>
+                    </div>
+                  </div>
+                  <span class="redact-result" aria-hidden="true">
+                    {copy.output} <span>✓</span>
+                  </span>
+                </>
+              )}
+            </div>
+            <ol class="demo-steps" aria-label={copy.title}>
+              {copy.steps.map((step, i) => (
+                <li>
+                  <span aria-hidden="true">{i + 1}</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="demo-actions">
+            <button
+              type="button"
+              class="motion-control"
+              data-motion-control
+              hidden
+              data-play={m.play}
+              data-pause={m.pause}
+              data-resume={m.resume}
+              data-replay={m.replay}
+              data-finished={m.finished}
+              aria-describedby={`demo-${scene.key}`}
+            >
+              <span class="control-icon" aria-hidden="true">
+                ▷
+              </span>
+              <span data-control-label>{m.play}</span>
+            </button>
+            <span class="reduced-note">{m.reduced}</span>
+            <a class="demo-tool-link" href={localizePath(tool.href, locale)}>
+              {tool.text[locale].name}
+              <span aria-hidden="true">↗</span>
+            </a>
+            <span class="demo-status" aria-live="polite"></span>
+          </div>
+        </article>
+      );
+    })}
+  </div>
+  <p class="showcase-note">{t.showcaseNote}</p>
+  <p class="showcase-credits">
+    {t.showcaseCredit}:{' '}
+    <a
+      href="https://unsplash.com/photos/green-plant-in-brown-clay-pot-6PkcqHAFsZA"
+      rel="noreferrer"
+    >
+      Patrick Pahlke
+    </a>
+    <span aria-hidden="true">·</span>
+    <a href="https://unsplash.com/photos/coastal-cliffs-over-sea-xYbl6lHASw8" rel="noreferrer">
+      Erik Esly
+    </a>
+    <span aria-hidden="true">·</span>
+    <a href="https://unsplash.com/photos/a-vase-with-yellow-flowers-PpAEAT6jEnw" rel="noreferrer">
+      Yana Hurska
+    </a>{' '}
+    / Unsplash
+  </p>
+</div>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const demos = [...document.querySelectorAll<HTMLElement>('[data-demo]')];
+  const visible = new Set<HTMLElement>();
+  const pending = new Set<HTMLElement>();
+  const autoplay = new Map<HTMLElement, () => void>();
+  const hasPlaying = () => demos.some((demo) => demo.dataset.playback === 'playing');
+  const playVisible = () => {
+    if (reduced.matches || document.hidden || hasPlaying() || pending.size) return;
+    for (const demo of demos) {
+      if (!visible.has(demo) || !autoplay.has(demo)) continue;
+      autoplay.get(demo)!();
+      break;
+    }
+  };
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const demo = entry.target.closest<HTMLElement>('[data-demo]')!;
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) visible.add(demo);
+        else visible.delete(demo);
+      }
+      playVisible();
+    },
+    { threshold: 0.5 },
+  );
+  for (const demo of demos) {
+    const button = demo.querySelector<HTMLButtonElement>('[data-motion-control]')!;
+    const label = button.querySelector('[data-control-label]')!;
+    const icon = button.querySelector('.control-icon')!;
+    const status = demo.querySelector('.demo-status')!;
+    const update = (state: string) => {
+      if (state === 'playing') {
+        for (const other of demos) {
+          if (other !== demo && other.dataset.playback === 'playing')
+            other.querySelector<HTMLButtonElement>('[data-motion-control]')!.click();
+        }
+      }
+      demo.dataset.playback = state;
+      demo.classList.toggle('demo-active', state === 'playing' || state === 'paused');
+      label.textContent =
+        button.dataset[
+          state === 'playing'
+            ? 'pause'
+            : state === 'paused'
+              ? 'resume'
+              : state === 'done'
+                ? 'replay'
+                : 'play'
+        ]!;
+      icon.textContent = state === 'playing' ? '||' : '▷';
+    };
+    const stage = demo.querySelector<HTMLElement>('.demo-stage')!;
+    const consumeAutoplay = () => {
+      autoplay.delete(demo);
+      observer.unobserve(stage);
+    };
+    const start = (automatic = false) => {
+      pending.add(demo);
+      status.textContent = '';
+      update('idle');
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          pending.delete(demo);
+          if (reduced.matches) return;
+          // 자동 대기는 실제로 보일 때만 시작하며, 수동으로 시작한 다른 장면을 멈추지 않는다.
+          if (automatic && (document.hidden || !visible.has(demo) || hasPlaying())) return;
+          consumeAutoplay();
+          update('playing');
+        }),
+      );
+    };
+    autoplay.set(demo, () => start(true));
+    observer.observe(stage);
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      if (reduced.matches) return;
+      consumeAutoplay();
+      if (pending.has(demo)) return;
+      const state = demo.dataset.playback;
+      if (state === 'playing' || state === 'paused')
+        update(state === 'playing' ? 'paused' : 'playing');
+      else start();
+    });
+    demo.addEventListener('animationend', (event) => {
+      if ((event as AnimationEvent).animationName !== 'demo-timing') return;
+      update('done');
+      status.textContent = button.dataset.finished!;
+      playVisible();
+    });
+    reduced.addEventListener('change', () => update('idle'));
+  }
+  document.addEventListener('visibilitychange', playVisible);
+  reduced.addEventListener('change', playVisible);
+</script>
+
+<style is:global>
+  .home-showcase .showcase-stories {
+    display: grid;
+  }
+  .home-showcase .feature-demo {
+    display: grid;
+    grid-template-columns: 0.85fr 1.55fr;
+    grid-template-rows: 1fr auto;
+    gap: 0 36px;
+    padding: 36px 0;
+    border-top: 1px solid var(--color-line);
+    min-width: 0;
+  }
+  .home-showcase .demo-copy {
+    align-self: center;
+    padding-bottom: 16px;
+  }
+  .home-showcase .demo-number {
+    margin: 0 0 18px;
+    color: var(--color-accent);
+    font: 11px var(--font-mono);
+  }
+  .home-showcase .demo-copy h3 {
+    margin: 0;
+    font-size: clamp(23px, 2.5vw, 31px);
+    line-height: 1.4;
+    letter-spacing: -0.045em;
+    word-break: keep-all;
+    text-wrap: balance;
+  }
+  .home-showcase .demo-description {
+    margin: 14px 0 0;
+    color: var(--color-muted);
+    font-size: 14px;
+    word-break: keep-all;
+  }
+  .home-showcase .demo-visual {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    min-width: 0;
+  }
+  .home-showcase .demo-stage {
+    position: relative;
+    aspect-ratio: 1.5;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--color-accent-soft);
+  }
+  .home-showcase .scene-labels {
+    position: absolute;
+    inset: 20px 22px auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--color-muted);
+    font-size: 11px;
+  }
+  .home-showcase .scene-labels span:last-child {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .home-showcase .scene-arrow {
+    position: absolute;
+    left: 45%;
+    top: 46%;
+    color: var(--color-accent);
+    font-size: 24px;
+  }
+  .home-showcase .sprite-window,
+  .home-showcase .rail-page,
+  .home-showcase .page-window,
+  .home-showcase .mini-document,
+  .home-showcase .merged-page,
+  .home-showcase .redact-window {
+    position: relative;
+    overflow: hidden;
+  }
+  .home-showcase .sprite {
+    display: block;
+    position: absolute;
+    max-width: none;
+    height: 100%;
+    top: 0;
+  }
+  .home-showcase .sprite-three {
+    width: 300%;
+  }
+  .home-showcase .sprite-two {
+    width: 200%;
+  }
+  .home-showcase .position-0 {
+    left: 0;
+  }
+  .home-showcase .position-1 {
+    left: -100%;
+  }
+  .home-showcase .position-2 {
+    left: -200%;
+  }
+  .home-showcase .album-inputs {
+    position: absolute;
+    top: 23%;
+    left: 5%;
+    width: 31%;
+    height: 60%;
+  }
+  .home-showcase .input-photo {
+    position: absolute;
+    width: 47%;
+    background: var(--color-paper);
+    padding: 4px 4px 16px;
+    box-shadow: var(--shadow-page);
+  }
+  .home-showcase .input-photo .sprite-window {
+    aspect-ratio: 0.8;
+  }
+  .home-showcase .input-photo > span {
+    position: absolute;
+    bottom: 1px;
+    left: 7px;
+    color: var(--color-paper-text);
+    font: 9px var(--font-mono);
+  }
+  .home-showcase .input-photo.item-0 {
+    left: 0;
+    top: 0;
+  }
+  .home-showcase .input-photo.item-1 {
+    right: 0;
+    top: 11%;
+  }
+  .home-showcase .input-photo.item-2 {
+    left: 25%;
+    top: 43%;
+  }
+  .home-showcase .pdf-viewer {
+    position: absolute;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: 7px;
+    box-shadow: var(--shadow-page);
+    overflow: hidden;
+  }
+  .home-showcase .album-output {
+    top: 17%;
+    bottom: 8%;
+    right: 5%;
+    width: 43%;
+    display: flex;
+    flex-direction: column;
+  }
+  .home-showcase .viewer-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    padding: 9px;
+    border-bottom: 1px solid var(--color-line);
+    font-size: 9px;
+    white-space: nowrap;
+  }
+  .home-showcase .viewer-heading b {
+    color: var(--color-accent);
+    font: 600 10px var(--font-mono);
+  }
+  .home-showcase .viewer-body {
+    display: flex;
+    gap: 7px;
+    padding: 9px;
+    flex: 1;
+    min-height: 0;
+  }
+  .home-showcase .page-rail {
+    flex: 0 0 19%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .home-showcase .rail-page {
+    aspect-ratio: 210 / 297;
+    background: var(--color-paper);
+    border: 1px solid var(--color-line);
+  }
+  .home-showcase .page-window {
+    flex: 1;
+    background: var(--color-paper);
+  }
+  .home-showcase .pdf-page {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+  .home-showcase .pdf-page.page-0 {
+    opacity: 1;
+  }
+  .home-showcase .page-indicator {
+    display: grid;
+    justify-content: center;
+    padding: 0 0 7px;
+    font: 9px var(--font-mono);
+  }
+  .home-showcase .page-indicator span {
+    grid-area: 1/1;
+    opacity: 0;
+  }
+  .home-showcase .page-indicator .indicator-0 {
+    opacity: 1;
+  }
+  .home-showcase .subject-photo,
+  .home-showcase .cutout-output {
+    position: absolute;
+    top: 18%;
+    width: 29%;
+  }
+  .home-showcase .subject-photo {
+    left: 9%;
+  }
+  .home-showcase .subject-photo > img,
+  .home-showcase .cutout-output > img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .home-showcase .subject-photo > img {
+    border: 5px solid var(--color-paper);
+    box-shadow: var(--shadow-page);
+  }
+  .home-showcase .subject-selection {
+    position: absolute;
+    inset: 18% 15% 10%;
+    border: 1px dashed var(--color-accent);
+    border-radius: 48% 48% 30% 30%;
+  }
+  .home-showcase .subject-selection > span {
+    position: absolute;
+    left: 38%;
+    top: 45%;
+    background: var(--color-accent);
+    color: var(--color-bg);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    line-height: 18px;
+    text-align: center;
+  }
+  .home-showcase .subject-label {
+    position: absolute;
+    top: 103%;
+    width: 100%;
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 10px;
+  }
+  .home-showcase .cutout-output {
+    right: 9%;
+  }
+  .home-showcase .checkerboard {
+    background-color: var(--color-paper);
+    background-image: conic-gradient(
+      var(--color-line) 25%,
+      transparent 0 50%,
+      var(--color-line) 0 75%,
+      transparent 0
+    );
+    background-size: 16px 16px;
+  }
+  .home-showcase .cutout-output b {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    padding: 4px 6px;
+    font: 9px var(--font-mono);
+    background: var(--color-surface);
+    color: var(--color-accent);
+  }
+  .home-showcase .transparency-note {
+    position: absolute;
+    bottom: 4%;
+    right: 5%;
+    width: 45%;
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 9px;
+  }
+  .home-showcase .merge-inputs {
+    position: absolute;
+    top: 20%;
+    left: 5%;
+    width: 32%;
+    height: 70%;
+  }
+  .home-showcase .merge-source {
+    position: absolute;
+    width: 69%;
+  }
+  .home-showcase .source-0 {
+    top: 0;
+    left: 0;
+  }
+  .home-showcase .source-1 {
+    top: 27%;
+    right: 0;
+  }
+  .home-showcase .mini-document {
+    aspect-ratio: 210/297;
+    background: var(--color-paper);
+    box-shadow: var(--shadow-page);
+  }
+  .home-showcase .merge-source > span {
+    display: inline-block;
+    position: relative;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: var(--color-text);
+    background: var(--color-surface);
+    font-size: 9px;
+    white-space: nowrap;
+  }
+  .home-showcase .source-0 > span {
+    position: absolute;
+    top: -18px;
+    left: 0;
+  }
+  .home-showcase .merge-output {
+    top: 18%;
+    right: 7%;
+    width: 37%;
+    bottom: 8%;
+    display: flex;
+    flex-direction: column;
+  }
+  .home-showcase .merged-page {
+    margin: 8px 12px;
+    flex: 1;
+    background: var(--color-paper);
+  }
+  .home-showcase .merge-order {
+    display: flex;
+    gap: 3px;
+    margin: 0 9px 9px;
+    font: 9px var(--font-mono);
+  }
+  .home-showcase .merge-order span {
+    text-align: center;
+    padding: 3px;
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    flex: 2;
+  }
+  .home-showcase .merge-order span:last-child {
+    flex: 1;
+    background: var(--color-hover);
+    color: var(--color-muted);
+  }
+  .home-showcase .scene-redact .scene-labels {
+    z-index: 2;
+  }
+  .home-showcase .redact-document {
+    position: absolute;
+    top: 20%;
+    bottom: 15%;
+    left: 11%;
+    right: 11%;
+    padding: 13px 15px;
+    background: var(--color-paper);
+    color: var(--color-paper-text);
+    box-shadow: var(--shadow-page);
+  }
+  .home-showcase .excerpt-heading {
+    display: flex;
+    justify-content: space-between;
+    font: 9px var(--font-mono);
+  }
+  .home-showcase .document-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 15px 0;
+  }
+  .home-showcase .document-lines i {
+    width: 88%;
+    border-top: 2px solid var(--color-line);
+  }
+  .home-showcase .redact-window {
+    aspect-ratio: 600 / 165;
+  }
+  .home-showcase .redact-before,
+  .home-showcase .redact-after {
+    position: absolute;
+    inset: 0;
+  }
+  .home-showcase .redact-before {
+    opacity: 0;
+  }
+  .home-showcase .redact-selection {
+    position: absolute;
+    inset: 7% 4% 7% 0;
+    border: 2px dashed var(--color-accent);
+    opacity: 0;
+  }
+  .home-showcase .redact-result {
+    position: absolute;
+    bottom: 5%;
+    right: 11%;
+    color: var(--color-accent);
+    font-size: 10px;
+  }
+  .home-showcase .demo-steps {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0;
+    padding: 14px 0 0;
+    list-style: none;
+  }
+  .home-showcase .demo-steps li {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--color-muted);
+    min-width: 0;
+    word-break: keep-all;
+  }
+  .home-showcase .demo-steps li > span {
+    font: 9px var(--font-mono);
+    color: var(--color-accent);
+  }
+  .home-showcase .demo-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px 18px;
+    position: relative;
+    align-self: start;
+  }
+  .home-showcase .motion-control {
+    min-height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .home-showcase .motion-control[hidden] {
+    display: none;
+  }
+  .home-showcase .control-icon {
+    width: 14px;
+    text-align: center;
+    color: var(--color-accent);
+  }
+  .home-showcase .demo-tool-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 44px;
+    color: var(--color-accent);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .home-showcase .demo-tool-link:hover,
+  .home-showcase .motion-control:hover {
+    text-decoration: underline;
+  }
+  .home-showcase .reduced-note {
+    display: none;
+    font-size: 10px;
+    color: var(--color-muted);
+  }
+  .home-showcase .demo-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .home-showcase .showcase-note {
+    margin: 20px 0 0;
+    color: var(--color-muted);
+    font-size: 11px;
+    word-break: keep-all;
+  }
+  .home-showcase .showcase-credits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 5px;
+    margin: 6px 0 0;
+    color: var(--color-muted);
+    font-size: 10px;
+  }
+  /* 모든 장면은 최초 노출 또는 수동 시작 후 1회 4.8초. 타이밍 표식도 pause되어 정지/재개가 실제 장면과 일치한다. */
+  .home-showcase .demo-active .demo-stage::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--color-accent);
+    transform-origin: left;
+    animation: demo-timing 4.8s linear both;
+  }
+  .home-showcase .demo-active .input-photo {
+    animation: gather 4.8s ease both;
+  }
+  .home-showcase .demo-active .page-0,
+  .home-showcase .demo-active .indicator-0 {
+    animation: page-one 4.8s step-end both;
+  }
+  .home-showcase .demo-active .page-1,
+  .home-showcase .demo-active .indicator-1 {
+    animation: page-two 4.8s step-end both;
+  }
+  .home-showcase .demo-active .page-2,
+  .home-showcase .demo-active .indicator-2 {
+    animation: page-three 4.8s step-end both;
+  }
+  .home-showcase .demo-active .subject-selection {
+    animation: select-subject 4.8s ease both;
+  }
+  .home-showcase .demo-active .cutout-output {
+    animation: reveal-result 4.8s ease both;
+  }
+  .home-showcase .demo-active .source-1 {
+    animation: order-documents 4.8s ease both;
+  }
+  .home-showcase .demo-active .redact-before {
+    animation: before-redact 4.8s step-end both;
+  }
+  .home-showcase .demo-active .redact-after {
+    animation: after-redact 4.8s step-end both;
+  }
+  .home-showcase .demo-active .redact-selection {
+    animation: select-redact 4.8s ease both;
+  }
+  .home-showcase [data-playback='paused'] .demo-stage::after,
+  .home-showcase [data-playback='paused'] .demo-stage * {
+    animation-play-state: paused;
+  }
+  @keyframes demo-timing {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  @keyframes gather {
+    0%,
+    20% {
+      opacity: 1;
+      translate: 0 0;
+    }
+    38% {
+      opacity: 0.25;
+      translate: 30px 0;
+    }
+    55%,
+    100% {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+  @keyframes page-one {
+    0% {
+      opacity: 1;
+    }
+    53% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes page-two {
+    0% {
+      opacity: 0;
+    }
+    53% {
+      opacity: 1;
+    }
+    73% {
+      opacity: 0;
+    }
+  }
+  @keyframes page-three {
+    0% {
+      opacity: 0;
+    }
+    73% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes select-subject {
+    from {
+      opacity: 0;
+    }
+    25%,
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes reveal-result {
+    0%,
+    38% {
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+    }
+    75%,
+    100% {
+      opacity: 1;
+      clip-path: inset(0);
+    }
+  }
+  @keyframes order-documents {
+    0%,
+    15% {
+      translate: 0 -15px;
+      opacity: 0.5;
+    }
+    35%,
+    100% {
+      translate: 0 0;
+      opacity: 1;
+    }
+  }
+  @keyframes before-redact {
+    0% {
+      opacity: 1;
+    }
+    65% {
+      opacity: 0;
+    }
+  }
+  @keyframes after-redact {
+    0% {
+      opacity: 0;
+    }
+    65% {
+      opacity: 1;
+    }
+  }
+  @keyframes select-redact {
+    0% {
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+    }
+    25%,
+    55% {
+      opacity: 1;
+      clip-path: inset(0);
+    }
+    65%,
+    100% {
+      opacity: 0;
+      clip-path: inset(0);
+    }
+  }
+  @media (min-width: 760px) {
+    .home-showcase .feature-demo:nth-child(even) {
+      grid-template-columns: 1.55fr 0.85fr;
+    }
+    .home-showcase .feature-demo:nth-child(even) .demo-copy,
+    .home-showcase .feature-demo:nth-child(even) .demo-actions {
+      grid-column: 2;
+    }
+    .home-showcase .feature-demo:nth-child(even) .demo-visual {
+      grid-column: 1;
+    }
+  }
+  @media (max-width: 759px) {
+    .home-showcase .showcase-stories {
+      gap: 8px;
+    }
+    .home-showcase .feature-demo {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+      padding: 28px 0;
+    }
+    .home-showcase .demo-copy {
+      padding: 0;
+    }
+    .home-showcase .demo-number {
+      margin-bottom: 10px;
+      font-size: 10px;
+    }
+    .home-showcase .demo-copy h3 {
+      max-width: 20em;
+      font-size: 25px;
+    }
+    .home-showcase .demo-description {
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    .home-showcase .demo-visual {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .home-showcase .demo-actions {
+      gap: 4px 24px;
+    }
+    .home-showcase .demo-steps {
+      padding-top: 12px;
+    }
+    .home-showcase .scene-labels {
+      inset: 15px 15px auto;
+      font-size: 10px;
+    }
+    .home-showcase .viewer-heading {
+      padding: 7px;
+      font-size: 8px;
+    }
+    .home-showcase .viewer-heading b {
+      font-size: 9px;
+    }
+    .home-showcase .viewer-body {
+      gap: 5px;
+      padding: 6px;
+    }
+    .home-showcase .page-rail {
+      gap: 4px;
+    }
+    .home-showcase .subject-label,
+    .home-showcase .transparency-note {
+      font-size: 8px;
+    }
+    .home-showcase .redact-document {
+      padding: 10px 12px;
+    }
+    .home-showcase .document-lines {
+      padding: 12px 0;
+      gap: 5px;
+    }
+    .home-showcase .excerpt-heading {
+      font-size: 8px;
+    }
+    .home-showcase .merge-source > span {
+      font-size: 8px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .home-showcase .motion-control {
+      display: none;
+    }
+    .home-showcase .reduced-note {
+      display: inline;
+    }
+    .home-showcase .demo-stage::after,
+    .home-showcase .demo-stage * {
+      animation: none !important;
+    }
+  }
+</style>

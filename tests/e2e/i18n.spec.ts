@@ -20,12 +20,11 @@ test('영어 페이지는 lang과 문구가 영어다', async ({ page }) => {
   await page.goto('/en/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'File tools that run in your browser, no uploads',
+    'Your files stay on your device. Your browser does the work.',
   );
-  await expect(page.getByRole('link', { name: 'Merge PDF' })).toHaveAttribute(
-    'href',
-    '/en/pdf/merge/',
-  );
+  await expect(
+    page.locator('.quick-tools').getByRole('link', { name: 'Merge PDF', exact: true }),
+  ).toHaveAttribute('href', '/en/pdf/merge/');
 });
 
 for (const path of ['/en/about/', '/en/privacy/', '/en/terms/', '/en/contact/']) {
@@ -123,16 +122,19 @@ test.describe('한국어 브라우저', () => {
   });
 });
 
-test('홈의 안전 그림이 언어에 맞게 나온다', async ({ page }) => {
-  for (const [path, title, local, ads] of [
-    ['/', '왜 안전한가요', '파일이 내 기기를 떠나지 않습니다', '광고는 내 파일을 볼 수 없습니다'],
-    ['/en/', 'Why is it safe?', 'Your files never leave your device', 'Ads cannot see your files'],
+test('홈의 첫 구간에서 로컬 처리 약속과 설명 링크가 언어에 맞게 나온다', async ({ page }) => {
+  for (const [path, title, link, target] of [
+    ['/', '파일은 내 기기에. 처리는 브라우저에서.', '파일 처리 방식 보기', '/safety/'],
+    [
+      '/en/',
+      'Your files stay on your device. Your browser does the work.',
+      'How file processing works',
+      '/en/safety/',
+    ],
   ] as const) {
     await page.goto(path);
     const safety = page.getByRole('region', { name: title });
     await expect(safety.getByRole('heading', { name: title })).toBeVisible();
-    await expect(safety.getByText(local)).toBeVisible();
-    await expect(safety.getByText(ads)).toBeVisible();
-    await expect(safety.getByText('justusing', { exact: true })).toBeVisible();
+    await expect(safety.getByRole('link', { name: link })).toHaveAttribute('href', target);
   }
 });

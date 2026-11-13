@@ -14,7 +14,7 @@
      한글은 HTML 페이지 몇 개에 나오는지(많이 쓰는 순서)로 줄 세운다
   2. 조각으로 나눈다
      - base: 영문·숫자·문장부호와 한글 아닌 글자, 영어 페이지에 나오는 한글('한국어' 버튼). 모든 페이지가 받는다
-     - core: 홈에 나오는 한글 + 많이 쓰는 한글 CORE_EXTRA자. 한국어 페이지와 도구 화면 첫 화면이 대개 이것으로 끝난다
+     - core: 홈·도구 목록에 나오는 한글 + 많이 쓰는 한글 CORE_EXTRA자. 한국어 페이지와 도구 화면 첫 화면이 대개 이것으로 끝난다
      - rest-N: 나머지 한글을 많이 쓰는 순서로 REST_CHUNKS개로 (가이드 글·도구 화면 안쪽 문구)
   3. 굵기 축을 사이트가 쓰는 400~700으로 줄인다 (가변 글꼴 그대로라 400·500·600·700이 지금과 같은 모양).
      800 이상을 쓰면 700으로 그려지므로 이 범위를 같이 넓힌다
@@ -159,7 +159,13 @@ def main():
     english = {c for rel, chars in pages.items() if rel.startswith('en/') for c in chars if is_hangul(c)}
     base = {chr(c) for c in range(0x20, 0x7F)} | other | english
     order = sorted(hangul - english, key=lambda c: (-seen[c], -src_hangul[c], ord(c)))
-    home = {c for c in pages['index.html'] if is_hangul(c)} - english
+    # 홈이 짧아져도 공통 도구 설명의 글자가 작은 조각 둘로 흩어지지 않게 목록 페이지도 함께 센다.
+    # 카테고리는 도구 폴더에서 찾는다. 목록 내용이 바뀌면 같은 입력으로 다시 생성할 수 있다.
+    listing_paths = ['index.html'] + [
+        f'{name}/index.html' for name in sorted(os.listdir(os.path.join(ROOT, 'src', 'tools')))
+        if f'{name}/index.html' in pages
+    ]
+    home = {c for rel in listing_paths for c in pages[rel] if is_hangul(c)} - english
     rest = [c for c in order if c not in home]
     core = home | set(rest[:CORE_EXTRA])
     rest = rest[CORE_EXTRA:]

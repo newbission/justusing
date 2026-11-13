@@ -12,9 +12,10 @@ interface Props {
   tool: Tool;
   /** 카드 제목의 제목 수준. 페이지 구조에 맞춰 h2/h3를 고른다. */
   headingLevel?: 2 | 3 | 4;
+  compact?: boolean;
 }
 
-const { tool, headingLevel = 3 } = Astro.props;
+const { tool, headingLevel = 3, compact = false } = Astro.props;
 const locale = localeOf(Astro.url.pathname);
 const text = tool.text[locale];
 const Heading = `h${headingLevel}` as const;
@@ -28,7 +29,7 @@ const live = tool.status === 'live';
     </span>
     <div class="body">
       <Heading class="name">{text.name}</Heading>
-      <p class="desc">{text.description}</p>
+      <p class="desc">{compact ? text.summary : text.description}</p>
     </div>
   </a>
 ) : (
@@ -41,7 +42,7 @@ const live = tool.status === 'live';
         {text.name}
         <span class="badge">{ui(locale).nav.soon}</span>
       </Heading>
-      <p class="desc">{text.description}</p>
+      <p class="desc">{compact ? text.summary : text.description}</p>
     </div>
   </div>
 )}
