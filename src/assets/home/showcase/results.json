@@ -1,0 +1,30 @@
+{
+  "cutout": {
+    "tool": "image/remove-bg",
+    "transparent": true
+  },
+  "crop": {
+    "tool": "image/crop",
+    "width": 857,
+    "height": 857
+  },
+  "stitch": {
+    "tool": "image/stitch",
+    "inputs": 3,
+    "width": 1200,
+    "height": 857
+  },
+  "photos": {
+    "tool": "pdf/from-image",
+    "pages": 3
+  },
+  "merge": {
+    "tool": "pdf/merge",
+    "files": 2,
+    "pages": 6
+  },
+  "redact": {
+    "tool": "pdf/redact",
+    "searchTerms": 3
+  }
+}
