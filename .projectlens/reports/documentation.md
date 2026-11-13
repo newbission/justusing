@@ -14,6 +14,15 @@ Document review freshness is not code compatibility or user acceptance. Unregist
 - [docs/foundations/process/README.md](../../docs/foundations/process/README.md): draft
   - Purpose: 검사 범위·의존성 갱신·WebKit 실행 방법
   - Related: R-QUALITY, R-DEPS, R-WEBKIT
+- [.projectlens/home-refresh.md](../../.projectlens/home-refresh.md): draft
+  - Purpose: 홈 개선 요청·설계·수용 기준
+  - Related: R-HOME, T-HOME, C-HOME, C-HOME-QUALITY, R-SHOWCASE, T-SHOWCASE, C-SHOWCASE, C-SHOWCASE-QUALITY
+- [.projectlens/home-motion-plan.md](../../.projectlens/home-motion-plan.md): draft
+  - Purpose: 기획 담당이 작성하는 대표 장면 baseline·문구·wireframe·수용 기준
+  - Related: R-HOME-MOTION, T-HOME-MOTION, C-MOTION-QUALITY, C-MOTION-E2E, C-MOTION-VISUAL, R-HOME-DIRECTORY, T-HOME-DIRECTORY, C-DIRECTORY-HANDOFF, C-DIRECTORY-VISUAL, R-HOME-AUTOPLAY, T-HOME-AUTOPLAY, C-AUTOPLAY-QUALITY, C-AUTOPLAY-E2E, C-AUTOPLAY-VISUAL
+- [.projectlens/home-local-first-plan.md](../../.projectlens/home-local-first-plan.md): draft
+  - Purpose: 기획 담당의 로컬처리 우선 정보구조·한영문구·수용 기준
+  - Related: R-HOME-LOCAL-FIRST, T-HOME-LOCAL-FIRST, C-LOCAL-FIRST-QUALITY, C-LOCAL-FIRST-E2E, C-LOCAL-FIRST-VISUAL
 - [.projectlens/handoff.md](../../.projectlens/handoff.md): unregistered
 
 ## Gaps

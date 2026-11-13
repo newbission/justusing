@@ -1,0 +1,12 @@
+{
+  "id": "1794544030816039000-c4f67929",
+  "check": "C-LOCAL-FIRST-VISUAL",
+  "time_ns": 1794544030816070000,
+  "fingerprint": "b5bb6c23ec4ae711680dc98f044651bd0f22e880c31828cfc1416fe02b4196b3",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "기획·독립 검증 담당이 데스크톱/KO390/EN320두테마 실제 캡처에서 로컬 약속 우선·기기 내부 도식·기능2순위·사실성을 따로 확인했다. root는 최종SVG라벨18/browser17 패치 뒤 EN320dark에서 겹침없이 읽힘과 KO390첫화면의H1/CTA/도식전체·후속기능H2를 다시 확인했다. desktop최종 캡처 갱신/뷰포트 및 테마복구 완료. 사용자 실제 폰 인수와 구별.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-local-first-mobile-ko.png",
+  "artifact_hash": "4f1935d4244aa25ebccb5a269be1a70067a33590e21c35a3301a4963a809925f"
+}

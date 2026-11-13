@@ -1,0 +1,16 @@
+{
+  "id": "1794525119123770000-9e57cfee",
+  "check": "C-MOTION-QUALITY",
+  "time_ns": 1794525119123798000,
+  "fingerprint": "5c952007bbda4eb6f6d77ff2f6c94410559f3f78de65fed03c9d8742c7d5e00c",
+  "harness_version": "0.6.0",
+  "command": [
+    "/bin/zsh",
+    "-lc",
+    "npm run format:check && npm run check && npm run build && git diff --check"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794525119123770000-9e57cfee.log",
+  "artifact_hash": "6aa2245b576af91604c17aaf426ee34fa888265f17057f289e09befaa09169ef"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "1794525212659579000-ef7a9937",
+  "check": "C-MOTION-VISUAL",
+  "time_ns": 1794525212659618000,
+  "fingerprint": "5c952007bbda4eb6f6d77ff2f6c94410559f3f78de65fed03c9d8742c7d5e00c",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "독립 기획 담당이 한영 모바일/데스크톱 캡처에서 문구·계층·단일PDF 의미를 검토했고 별도 검증 담당이 실제 출력과 모바일 캡처를 확인했다. root가 최종 수정본 IAB 390px에서 입력4+2 라벨이 가려지지 않고 단계11px가 읽히는 것을 확인했으며, 한영/두테마·PDF재생·최종 데스크톱4장면을 실제로 보았다. 캡처: home-motion-mobile-merge-final.png 및 home-motion-mobile-en-light.png. 사용자 인수는 대신하지 않는다.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-motion-gallery.webp",
+  "artifact_hash": "6ec536e9151f92ed747b8214d95b3701a105af8d6f7d5adaf1730c9f1fe963d7"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "1794543910345073000-e58bdd4b",
+  "check": "C-LOCAL-FIRST-E2E",
+  "time_ns": 1794543910345107000,
+  "fingerprint": "b5bb6c23ec4ae711680dc98f044651bd0f22e880c31828cfc1416fe02b4196b3",
+  "harness_version": "0.6.0",
+  "command": [
+    "/usr/bin/env",
+    "PLAYWRIGHT_CHANNEL=chrome",
+    "E2E_PORT=4322",
+    "npx",
+    "playwright",
+    "test",
+    "tests/e2e/home.spec.ts",
+    "tests/e2e/home-showcase.spec.ts",
+    "tests/e2e/home-motion-review.spec.ts",
+    "tests/e2e/i18n.spec.ts",
+    "tests/e2e/seo.spec.ts",
+    "tests/e2e/site-font.spec.ts",
+    "tests/e2e/perf-budget.spec.ts",
+    "--project=chromium",
+    "--workers=4",
+    "--output=test-results/home-local-first-final"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794543910345073000-e58bdd4b.log",
+  "artifact_hash": "c0c2b9d6314d6b03762ca509953dfe8dfd907544dc8840df6893e78da10bd683"
+}

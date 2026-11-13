@@ -1,0 +1,17 @@
+{
+  "id": "1794488231380813000-9f459000",
+  "check": "C-HOME-QUALITY",
+  "time_ns": 1794488231380852000,
+  "fingerprint": "42e2eeb7ef8ca95da60d1e949a931be5e4df07ce8feab37719edddc718bc9d6b",
+  "harness_version": "0.6.0",
+  "command": [
+    "node",
+    "--input-type=module",
+    "-e",
+    "import { spawnSync } from \"node:child_process\"; for (const args of [[\"run\",\"format:check\"],[\"run\",\"check\"],[\"run\",\"build\"]]) { const result = spawnSync(\"npm\", args, {stdio:\"inherit\"}); if (result.status !== 0) process.exit(result.status ?? 1); }"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794488231380813000-9f459000.log",
+  "artifact_hash": "d38a5c08576aa315b6e56c0e22a1e5badbbde8681d1540aab665827ac0fc0879"
+}
