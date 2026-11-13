@@ -50,3 +50,9 @@
 최종전송실측은KO HTML21.5/CSS10.2/글꼴102.8/그림98KB11요청, EN20.2/10.2/36/98KB10요청. 기존홈CSS10.5KB/그림170KB/18요청상한을유지한다. 같은lazy그림이라도새상단배치에따라첫화면에받는범위가달라지므로언어간그림요청수를기능동일성으로일치시키지않는다.
 
 현재로컬구현·기획리뷰·필수접근성수정·회귀완료. 다음은소규모커밋→현재head Codex리뷰+CI의기능PR→dev rebase→main squash+배포→main을dev로merge→운영확인이다.
+
+## PR 리뷰 보완
+
+PR #168의head3eabcb72 리뷰에서기획와이어HTML의CSS시스템색(GrayText/Canvas/CanvasText/ButtonFace)도색토큰규칙을따르라는지적1건을받았다. 같은파일의모든색지정을찾아src/styles/tokens.css를직접불러오고공통변수로바꿨다. 문서기본head구조도명시했다. 운영앱소스변경없음.
+
+wireframe-token-review.mjs가리뷰대상옛커밋의직접색지정을재현하고수정본토큰사용을검사하며,실제Chrome두테마에서3안렌더/오류없음을확인했다. 최초검증에서prettier가나눈title태그때문에스타일시트link치환이빠진것을잡았고head를명시해수정했다. 최종light배경rgb246/246/244·글자30/30/30, dark배경21/21/21·글자228/228/225로공통토큰과일치했다. 로그/두테마캡처는evidence/home-reference/wireframe-token-*에보존했다. 수정커밋현재head로Codex재리뷰와CI를다시받는다.
