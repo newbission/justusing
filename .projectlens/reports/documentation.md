@@ -23,6 +23,9 @@ Document review freshness is not code compatibility or user acceptance. Unregist
 - [.projectlens/home-local-first-plan.md](../../.projectlens/home-local-first-plan.md): draft
   - Purpose: 기획 담당의 로컬처리 우선 정보구조·한영문구·수용 기준
   - Related: R-HOME-LOCAL-FIRST, T-HOME-LOCAL-FIRST, C-LOCAL-FIRST-QUALITY, C-LOCAL-FIRST-E2E, C-LOCAL-FIRST-VISUAL
+- [.projectlens/home-value-story.md](../../.projectlens/home-value-story.md): draft
+  - Purpose: 홈 차별점 설명 확장 요청·흐름·사실·수용기준
+  - Related: R-HOME-VALUE, T-HOME-VALUE, C-VALUE-QUALITY, C-VALUE-E2E, C-VALUE-VISUAL
 - [.projectlens/handoff.md](../../.projectlens/handoff.md): unregistered
 
 ## Gaps

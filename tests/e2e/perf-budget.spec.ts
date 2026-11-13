@@ -39,8 +39,11 @@ const OUTER: { name: string; path: string; limits: Limits }[] = [
     name: '홈',
     path: '/',
     // 2026-11-13: 사용자 요청으로 실제 전후 예시 6개를 추가(기존 대표 사진 2장 포함).
-    // 고정 크기·지연 로딩 WebP만 전송. 측정 약145KB/16요청에서 여유를 두며 JS·CSS·글꼴 예산은 유지한다.
-    limits: { html: 24, js: 4, css: 10, font: 117, image: 170, requests: 18 },
+    // 고정 크기·지연 로딩 WebP만 전송. 측정 약145KB/16요청에서 여유를 둔다.
+    // 후속 사용자 요청: 고민3항목·처리자료 수신/격리 도식·무료/다운로드 안내를 추가.
+    // 옛 SVG/중복 CSS를 제거한 뒤에도 홈 CSS가 약9.8→10.3KB여서 홈만10.5KB로 조정한다.
+    // 새 JS·이미지·모델 요청은 없으며 나머지 상한과 다른 페이지의 CSS 상한은 유지한다.
+    limits: { html: 24, js: 4, css: 10.5, font: 117, image: 170, requests: 18 },
   },
   {
     name: '카테고리(PDF)',
