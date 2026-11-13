@@ -1,181 +1,185 @@
 <!doctype html>
 <html lang="ko">
-  <meta charset="utf-8" /><meta
-    name="viewport"
-    content="width=device-width,initial-scale=1"
-  /><title>홈 상단 구성안 비교</title
-  ><style>
-    :root {
-      color-scheme: light dark;
-      font-family: system-ui, sans-serif;
-    }
-    body {
-      margin: 32px auto;
-      max-width: 1280px;
-      padding: 0 20px;
-      line-height: 1.6;
-    }
-    h1 {
-      font-size: 28px;
-    }
-    h2 {
-      font-size: 23px;
-      margin-bottom: 6px;
-    }
-    h3 {
-      margin: 0 0 10px;
-    }
-    p {
-      margin: 8px 0;
-    }
-    article {
-      padding: 24px 0;
-      border-top: 2px solid GrayText;
-    }
-    .set {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 280px;
-      gap: 24px;
-      margin: 20px 0;
-    }
-    .screen,
-    .box {
-      border: 1px solid GrayText;
-      border-radius: 6px;
-      padding: 18px;
-    }
-    .screen {
-      background: Canvas;
-    }
-    .nav {
-      font-size: 12px;
-      border-bottom: 1px solid GrayText;
-      padding-bottom: 10px;
-      margin-bottom: 25px;
-    }
-    .hero {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    .large {
-      font-size: 25px;
-      line-height: 1.35;
-      font-weight: 750;
-    }
-    .muted {
-      color: GrayText;
-      font-size: 13px;
-    }
-    .cta {
-      display: inline-block;
-      border: 2px solid CanvasText;
-      border-radius: 5px;
-      padding: 7px 12px;
-      margin: 10px 0;
-      font-weight: bold;
-    }
-    .tools {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .tools span {
-      border-bottom: 1px solid GrayText;
-      padding: 5px 0;
-      margin-right: 8px;
-    }
-    .device {
-      border: 2px solid CanvasText;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 13px;
-    }
-    .download {
-      text-align: center;
-      font-size: 13px;
-      padding-bottom: 10px;
-    }
-    .isolated {
-      border: 2px solid GrayText;
-      border-radius: 5px;
-      padding: 12px;
-      margin: 10px 0;
-    }
-    .flow {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-      padding: 12px 0;
-    }
-    .strip {
-      border-top: 1px solid GrayText;
-      padding: 16px 0;
-      margin-top: 20px;
-    }
-    .mobile .hero {
-      display: block;
-    }
-    .mobile .large {
-      font-size: 22px;
-    }
-    .mobile .device {
-      margin-top: 18px;
-    }
-    .mobile .box {
-      padding: 10px;
-    }
-    .row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-    .result {
-      height: 90px;
-      background: ButtonFace;
-      border: 1px dashed GrayText;
-      display: grid;
-      place-items: center;
-      margin-top: 20px;
-    }
-    .selected {
-      border: 2px solid CanvasText;
-      padding: 20px;
-      border-radius: 8px;
-    }
-    .note {
-      font-size: 14px;
-      max-width: 75ch;
-    }
-    .mobile .flow {
-      font-size: 11px;
-    }
-    .mobile .screen {
-      padding: 14px;
-    }
-    .phone-label {
-      font-size: 12px;
-      margin-bottom: 5px;
-    }
-    .tag {
-      font-size: 13px;
-      font-weight: bold;
-    }
-    @media (max-width: 750px) {
-      .set {
-        grid-template-columns: 1fr;
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>홈 상단 구성안 비교</title>
+    <link rel="stylesheet" href="../src/styles/tokens.css" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: system-ui, sans-serif;
       }
-      .mobile {
-        max-width: 300px;
+      body {
+        background: var(--color-bg);
+        color: var(--color-text);
+        margin: 32px auto;
+        max-width: 1280px;
+        padding: 0 20px;
+        line-height: 1.6;
+      }
+      h1 {
+        font-size: 28px;
+      }
+      h2 {
+        font-size: 23px;
+        margin-bottom: 6px;
+      }
+      h3 {
+        margin: 0 0 10px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      article {
+        padding: 24px 0;
+        border-top: 2px solid var(--color-muted);
+      }
+      .set {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 24px;
+        margin: 20px 0;
+      }
+      .screen,
+      .box {
+        border: 1px solid var(--color-muted);
+        border-radius: 6px;
+        padding: 18px;
+      }
+      .screen {
+        background: var(--color-bg);
+      }
+      .nav {
+        font-size: 12px;
+        border-bottom: 1px solid var(--color-muted);
+        padding-bottom: 10px;
+        margin-bottom: 25px;
       }
       .hero {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      .large {
+        font-size: 25px;
+        line-height: 1.35;
+        font-weight: 750;
+      }
+      .muted {
+        color: var(--color-muted);
+        font-size: 13px;
+      }
+      .cta {
+        display: inline-block;
+        border: 2px solid var(--color-text);
+        border-radius: 5px;
+        padding: 7px 12px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .tools span {
+        border-bottom: 1px solid var(--color-muted);
+        padding: 5px 0;
+        margin-right: 8px;
+      }
+      .device {
+        border: 2px solid var(--color-text);
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 13px;
+      }
+      .download {
+        text-align: center;
+        font-size: 13px;
+        padding-bottom: 10px;
+      }
+      .isolated {
+        border: 2px solid var(--color-muted);
+        border-radius: 5px;
+        padding: 12px;
+        margin: 10px 0;
+      }
+      .flow {
+        display: flex;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 12px 0;
+      }
+      .strip {
+        border-top: 1px solid var(--color-muted);
+        padding: 16px 0;
+        margin-top: 20px;
+      }
+      .mobile .hero {
+        display: block;
+      }
+      .mobile .large {
+        font-size: 22px;
+      }
+      .mobile .device {
+        margin-top: 18px;
+      }
+      .mobile .box {
+        padding: 10px;
       }
       .row {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
       }
-    }
-  </style>
+      .result {
+        height: 90px;
+        background: var(--color-surface);
+        border: 1px dashed var(--color-muted);
+        display: grid;
+        place-items: center;
+        margin-top: 20px;
+      }
+      .selected {
+        border: 2px solid var(--color-text);
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .note {
+        font-size: 14px;
+        max-width: 75ch;
+      }
+      .mobile .flow {
+        font-size: 11px;
+      }
+      .mobile .screen {
+        padding: 14px;
+      }
+      .phone-label {
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      .tag {
+        font-size: 13px;
+        font-weight: bold;
+      }
+      @media (max-width: 750px) {
+        .set {
+          grid-template-columns: 1fr;
+        }
+        .mobile {
+          max-width: 300px;
+        }
+        .hero {
+          grid-template-columns: 1fr;
+        }
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
   <body>
     <h1>홈 첫인상의 구성안 비교</h1>
     <p>
