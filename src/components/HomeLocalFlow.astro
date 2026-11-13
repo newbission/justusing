@@ -1,55 +1,133 @@
 ---
-/** 파일의 세 단계가 모두 기기 안에 있음을 설명하는 정적 도식. 실제 파일 UI가 아니다. */
+/** 받는 공개 처리 파일과 기기 안에 머무는 사용자 파일을 구분하는 정적 도식. */
 import { localeOf } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
 ---
 
-<figure class="local-proof" role="img" aria-label={t.alt}>
-  <svg viewBox="0 0 460 310" width="460" height="310" aria-hidden="true">
-    <g
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.5"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <rect x="8" y="8" width="444" height="294" rx="16" fill="var(--color-accent-soft)" />
-      <rect
-        x="28"
-        y="66"
-        width="404"
-        height="212"
-        rx="8"
-        fill="var(--color-surface)"
-        stroke="var(--color-line)"
-      />
-      <path d="M28 108h404" stroke="var(--color-line)" />
-      <path d="M79 135h24l11 11v41H79zM103 135v11h11M87 156h19M87 165h19M87 174h12" />
-      <path d="M145 162h35m-7-7 7 7-7 7M280 162h35m-7-7 7 7-7 7" />
-      <rect x="209" y="140" width="42" height="42" rx="7" />
-      <path d="m219 161 8 8 14-16M221 131v9m18-9v9m-18 42v9m18-9v9m-39-39h9m-9 18h9m42-18h9m-9 18h9" />
-      <path d="M348 135h24l11 11v41h-35zM372 135v11h11M365 155v21m-6-6 6 6 6-6" />
-    </g>
-    <g fill="var(--color-text)" font-size="18" text-anchor="middle">
-      <text x="28" y="41" text-anchor="start" font-size="17" font-weight="600">
-        {t.device}
-      </text>
-      <text x="47" y="92" text-anchor="start" fill="var(--color-muted)" font-size="17">
-        {t.browser}
-      </text>
-      <text x="96" y="230">
-        {t.choose}
-      </text>
-      <text x="230" y="220">
-        <tspan x="230">{t.process[0]}</tspan>
-        <tspan x="230" dy="20">
-          {t.process[1]}
-        </tspan>
-      </text>
-      <text x="365" y="230">
-        {t.save}
-      </text>
-    </g>
-  </svg>
+<figure class="local-proof">
+  <div class="proof-source">
+    <strong>{t.source}</strong>
+    <span>{t.download}</span>
+    <span aria-hidden="true">↓</span>
+  </div>
+  <div class="proof-device">
+    <strong>{t.device}</strong>
+    <div class="proof-browser">
+      <span>{t.browser}</span>
+      <div class="proof-tool">
+        <strong>{t.toolArea}</strong>
+        <ol class="proof-steps">
+          <li>
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6m-6 4h6" />
+            </svg>
+            <span>{t.choose}</span>
+          </li>
+          <li>
+            <span class="proof-next" aria-hidden="true">
+              →
+            </span>
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path d="M7 6h10v12H7zM10 3v3m4-3v3m-4 12v3m4-3v3M3 10h4m-4 4h4m10-4h4m-4 4h4m-11-3 2 2 3-4" />
+            </svg>
+            <span>{t.process.join(' ')}</span>
+          </li>
+          <li>
+            <span class="proof-next" aria-hidden="true">
+              →
+            </span>
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+              <path d="M6 3h8l4 4v14H6zM14 3v5h4M12 10v7m-3-3 3 3 3-3" />
+            </svg>
+            <span>{t.save}</span>
+          </li>
+        </ol>
+      </div>
+      <p class="proof-outside">{t.outside}</p>
+    </div>
+  </div>
+  <figcaption>{t.alt}</figcaption>
 </figure>
+
+<style is:global>
+  .home .local-proof {
+    margin: 0;
+    font-size: 14px;
+    word-break: keep-all;
+  }
+  .home .proof-source {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+    color: var(--color-muted);
+  }
+  .home .proof-source > span:last-child {
+    color: var(--color-accent);
+    font-size: 24px;
+    line-height: 1;
+  }
+  .home .proof-device {
+    padding: 12px;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius);
+    background: var(--color-accent-soft);
+  }
+  .home .proof-browser {
+    margin-top: 12px;
+    padding: 10px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+  .home .proof-browser > span {
+    color: var(--color-muted);
+  }
+  .home .proof-tool {
+    margin-top: 12px;
+    padding: 10px;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius);
+  }
+  .home .proof-tool > strong {
+    color: var(--color-accent);
+  }
+  .home .proof-steps {
+    display: flex;
+    gap: 8px;
+    padding: 0;
+    margin: 20px 0 8px;
+    list-style: none;
+  }
+  .home .proof-steps li {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+  .home .proof-steps span {
+    display: block;
+    margin-top: 8px;
+  }
+  .home .proof-steps .proof-next {
+    position: absolute;
+    top: 2px;
+    left: -12px;
+    margin: 0;
+    color: var(--color-accent);
+  }
+  .home .proof-steps svg {
+    margin-inline: auto;
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .home .proof-outside {
+    margin: 12px 0 0;
+    color: var(--color-muted);
+  }
+</style>

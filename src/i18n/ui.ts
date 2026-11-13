@@ -10,15 +10,46 @@ const ko = {
   home: {
     localEyebrow: '업로드 없는 무료 파일 도구',
     localIntro:
-      '파일 내용과 이름을 서버로 보내지 않습니다. 파일을 고르고, 처리하고, 결과를 저장하는 일까지 이 브라우저 안에서 끝납니다.',
+      '파일 내용과 이름을 서버로 보내지 않습니다. 파일 처리는 내 기기의 브라우저가 맡습니다.',
     localPrimary: '도구 골라 시작하기',
     localMore: '파일 처리 방식 보기',
     localIsolation: '파일을 다루는 도구 화면은 광고·방문 통계와 분리되어 있습니다.',
+    story: {
+      lead: '간단한 파일 작업인데, 이런 과정은 부담스럽죠.',
+      pains: [
+        '잠깐 쓰려는데, 프로그램 설치?',
+        '한 번 쓰려는데, 유료 결제?',
+        '내 파일을 웹에 올려도 될까?',
+      ],
+      howTitle: '파일을 보내지 않고 처리하는 방법',
+      reasons: [
+        {
+          title: '도구가 내 기기로 옵니다.',
+          text: '이 사이트에서 도구 프로그램과 필요한 데이터를 받아, 브라우저가 파일을 처리합니다.',
+        },
+        {
+          title: '파일을 다루는 화면은 따로 분리합니다.',
+          text: '파일 선택부터 결과 저장까지 도구 영역 안에서 진행되며, 광고·방문 통계는 그 안의 파일을 읽을 수 없습니다.',
+        },
+      ],
+      offerTitle: 'PDF·이미지·텍스트·동영상, 무료로.',
+      offerText:
+        '필요한 도구를 골라 바로 시작하세요. 가입이나 별도 앱 설치 없이 이용할 수 있습니다.',
+      toolCount: (count: number) => `${count}개의 무료 도구`,
+      dataTitle: '일부 도구는 추가 데이터를 내려받습니다.',
+      dataText:
+        '글자 인식·배경 제거 등에 필요한 엔진·모델·언어 데이터입니다. 별도 앱 설치는 아니며, 이런 큰 처리 자료는 도구에서 용량을 확인하고 받을지 선택할 수 있습니다. 이 자료를 내려받을 때 모바일 데이터가 소모될 수 있습니다. 데이터 사용량이 걱정된다면 Wi-Fi에서 이용하세요.',
+      dataReuse: '보관된 데이터는 재사용하며, 브라우저에서 삭제되면 다시 받을 수 있습니다.',
+    },
     localFlow: {
+      source: '이 사이트',
+      download: '도구 프로그램·처리 데이터',
+      toolArea: '파일을 다루는 격리된 도구 영역',
+      outside: '도구 영역 바깥: 광고·방문 통계',
       device: '내 기기',
       browser: '이 브라우저',
       choose: '파일 선택',
-      process: ['브라우저에서', '처리'],
+      process: ['브라우저', '처리'],
       save: '결과 저장',
       alt: '내 기기 안의 이 브라우저에서 파일 선택, 브라우저 처리, 결과 저장까지 세 단계가 모두 끝나는 흐름',
     },
@@ -329,11 +360,39 @@ const en: Ui = {
   home: {
     localEyebrow: 'Free file tools. No uploads.',
     localIntro:
-      'File contents and names are never sent to a server. Choose a file, process it, and save the result—all in your browser.',
+      'File contents and names are never sent to a server. Your browser processes the file on your device.',
     localPrimary: 'Choose a tool',
     localMore: 'How file processing works',
     localIsolation: 'The tool area is isolated from ads and visitor analytics.',
+    story: {
+      lead: 'A quick file task can ask a lot of you.',
+      pains: ['Installing another app', 'Paying for a single task', 'Uploading personal files'],
+      howTitle: 'How it works without uploading your files',
+      reasons: [
+        {
+          title: 'The tools come to your device.',
+          text: 'Your browser downloads the tool code and the data it needs from this site, then processes your file locally.',
+        },
+        {
+          title: 'The tool area is kept separate.',
+          text: 'File selection, processing and saving happen in an isolated tool area. Ads and visitor analytics cannot read the files inside it.',
+        },
+      ],
+      offerTitle: 'PDFs, images, text and video. Free.',
+      offerText:
+        'Choose the tool you need and get started. No account or separate app installation is required.',
+      toolCount: (count: number) => `${count} free tools`,
+      dataTitle: 'Some tools need an extra download.',
+      dataText:
+        'These are processing engines, models and language data for tools such as text recognition and background removal. They do not require a separate app installation. For these large processing files, the tool shows the size and lets you choose whether to download. Downloading these files may use mobile data. Use Wi-Fi if you want to avoid using mobile data.',
+      dataReuse:
+        'Data kept in this browser can be reused. If it is removed, it may need to be downloaded again.',
+    },
     localFlow: {
+      source: 'This site',
+      download: 'Tool code and processing data',
+      toolArea: 'Isolated tool area for your files',
+      outside: 'Outside the tool area: ads and visitor analytics',
       device: 'Your device',
       browser: 'This browser',
       choose: 'Choose a file',
