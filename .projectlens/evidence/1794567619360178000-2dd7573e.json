@@ -1,0 +1,15 @@
+{
+  "id": "1794567619360178000-2dd7573e",
+  "check": "C-VALUE-QUALITY",
+  "time_ns": 1794567619360222000,
+  "fingerprint": "c992f39716cf9d61128737b7e47b088b2feaaf688d427aff87c3205b47c5c0a7",
+  "harness_version": "0.6.0",
+  "command": [
+    "node",
+    ".cache/home-value-quality.mjs"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794567619360178000-2dd7573e.log",
+  "artifact_hash": "9a4ff36b640004de82fae6abcb6eccdeb3305b794e1422cf085b5a43232d8a9e"
+}

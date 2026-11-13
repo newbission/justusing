@@ -1,0 +1,12 @@
+{
+  "id": "1794567893792622000-69bf4a31",
+  "check": "C-VALUE-VISUAL",
+  "time_ns": 1794567893792656000,
+  "fingerprint": "c992f39716cf9d61128737b7e47b088b2feaaf688d427aff87c3205b47c5c0a7",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "실제 CUA로 KO390/기본desktop·EN320 밝고어두운테마의 고민→로컬원리·기기경계→무료→자료/모바일데이터안내→기존기능연결을 확인했다. evidence/home-value-*.png 참조. 독립 기획 담당도 최종KO3장 검토 후 차단사항없음. 사용자 인수와 구별하며 실제 사용자폰 확인은 아니다.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-value-mobile-ko.png",
+  "artifact_hash": "dfebc32a4b65e45e7466af0661658c72a2fd931b2d286bd3b2a2739e99cfce20"
+}

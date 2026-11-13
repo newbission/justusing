@@ -119,3 +119,13 @@ C-LOCAL-FIRST-QUALITY pass(포맷/type/build/diff), 증거1794543823938337000-44
 ## 홈 개편 커밋·배포 착수 (2026-11-13)
 
 사용자가 “우선 커밋했어? 배포까지 해놔”로 현재 전체 홈 변경의 커밋·원격반영·배포를 명시 승인했다. 아직 미커밋 상태였음을 알렸고 저장소 절차로 진행한다. origin/dev는 작업 기준 c6071ea7과 같아 충돌이 없다. 독립 검증/구현 담당의 read-only 릴리스 감사에서 배포 차단 문제나 비밀키/개인 파일은 발견하지 못했다. 실제 견본/compact목록/대표장면/로컬흐름/홈조합/폰트/테스트/문서를 나눠 커밋하고 기능PR→dev(rebase, 현재head Codex리뷰+CI)→main(squash,CI)→main→dev반영→Cloudflare실배포/사이트확인을 수행한다. 기존 배포 연결은 이미 되어 있어 새 수동 설정을 하지 않는다. 로컬 Wrangler는 로그인하지 않았지만 GitHub 연동 Workers Builds가 현재 운영 배포 경로라 별도 로그인은 필요하지 않다.
+
+## 사용자 고민과 차별점 설명 확장 (2026-11-13 후속)
+
+이전 홈 개편은 PR #162→#163으로 운영 배포했고 #164로 main→dev 동기화했다. 배포 뒤 운영 검증 기록은 별도 docs/home-deployment-record 브랜치에 보존했다. 새 요청에 따라 origin/dev에서 feat/home-value-story를 만들고 설치/일회결제/업로드보안 걱정→로컬 처리 원리·격리→여러 무료 도구→추가 자료·모바일 데이터 안내→기존 기능 소개의 흐름을 추가했다. baseline은 home-value-story.md, 사람용 검증 보고서는 reports/home-value-story.md다. 기획/구현/검증 역할을 분리했고 기획·독립 감사에서 최종 필수 수정 요청 없음.
+
+HomeValueStory/HomeLocalFlow/index/ui, 사이트 글꼴, 새home-value E2E와 성능 예산, site-structure 문서를 수정했다. 새JS/이미지/모델요청/의존성 없음. 옛SVG·중복CSS제거 후 CSS실측10.1807KB여서 홈 상한만10.5KB로 조정, 다른 상한 유지. 초기 성능 실패와 가이드 창의 일시 실패/단독 재확인 내역을 지우지 않고 보고서에 구별했다.
+
+C-VALUE-QUALITY 통과(1794567619360178000-2dd7573e), C-VALUE-E2E 최종 Chromium68개/2.6분 통과(1794567892509664000-0f536312), C-VALUE-VISUAL 실제 CUA KO390/desktop·EN320 두테마 확인(1794567893792622000-69bf4a31). 세 체크 같은 지문이며 별도WebKit18개/34.6초도 통과. 문서 관계 누락 없음. 범위 보고서1794568066147771000-b1436a80는verified, 전체프로젝트인수false. 실제 사용자폰/네이티브Safari 인수와 구별.
+
+현재 로컬 구현·검증 완료, 다음은 작은 커밋→기능PR/현재head Codex리뷰+CI→dev rebase→배포PR/main squash/CI→main을dev로되돌려반영→Cloudflare실배포확인이다. 이전 사용자의 커밋·배포 지시를 이어 적용하며 별도 새호스팅/보안설정을 만들지 않는다.

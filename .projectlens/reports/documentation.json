@@ -136,6 +136,25 @@
       "registered": true
     },
     {
+      "id": "DOC-HOME-VALUE",
+      "path": ".projectlens/home-value-story.md",
+      "purpose": "홈 차별점 설명 확장 요청·흐름·사실·수용기준",
+      "status": "draft",
+      "related": [
+        "R-HOME-VALUE",
+        "T-HOME-VALUE",
+        "C-VALUE-QUALITY",
+        "C-VALUE-E2E",
+        "C-VALUE-VISUAL"
+      ],
+      "exists": true,
+      "sha256": "748d82a4a56dad97764e6d3ed61074c8d0d62e7c30a5067fc6ca1c8dc2c83c5f",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
       "path": ".projectlens/handoff.md",
       "exists": true,
       "health": "unregistered",
