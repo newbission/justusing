@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.goto: net::ERR_HTTP_RESPONSE_CODE_FAILURE at http://localhost:8862/en/
+Call log:
+[2m  - navigating to "http://localhost:8862/en/", waiting until "networkidle"[22m
+
+    at /Users/jm/development/projects/justusing/.projectlens/evidence/home-reference/independent/render-review.mjs:22:31 {
+  log: [
+    '  - navigating to "http://localhost:8862/en/", waiting until "networkidle"'
+  ],
+  name: 'Error'
+}
+
+Node.js v24.13.0
