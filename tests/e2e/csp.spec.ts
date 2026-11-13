@@ -55,8 +55,8 @@ test('휴대폰 메뉴·가이드 창·따라 하기·예시 파일·움직이�
   }
   await page.setViewportSize({ width: 1280, height: 800 });
 
-  // 홈·안전 페이지의 움직이는 그림 (보일 때 움직인다)
-  for (const path of ['/', '/safety/', '/en/safety/']) {
+  // 안전 페이지의 움직이는 그림 (홈의 새 동작 장면은 home-motion-review에서 CSP도 검사)
+  for (const path of ['/safety/', '/en/safety/']) {
     await open(page, path);
     await page
       .locator('[data-local-motion], [data-safety-motion]')
