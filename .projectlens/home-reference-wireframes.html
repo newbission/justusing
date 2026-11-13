@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ko">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>홈 상단 구성안 비교</title
+  ><style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+    }
+    body {
+      margin: 32px auto;
+      max-width: 1280px;
+      padding: 0 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      font-size: 23px;
+      margin-bottom: 6px;
+    }
+    h3 {
+      margin: 0 0 10px;
+    }
+    p {
+      margin: 8px 0;
+    }
+    article {
+      padding: 24px 0;
+      border-top: 2px solid GrayText;
+    }
+    .set {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 24px;
+      margin: 20px 0;
+    }
+    .screen,
+    .box {
+      border: 1px solid GrayText;
+      border-radius: 6px;
+      padding: 18px;
+    }
+    .screen {
+      background: Canvas;
+    }
+    .nav {
+      font-size: 12px;
+      border-bottom: 1px solid GrayText;
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .large {
+      font-size: 25px;
+      line-height: 1.35;
+      font-weight: 750;
+    }
+    .muted {
+      color: GrayText;
+      font-size: 13px;
+    }
+    .cta {
+      display: inline-block;
+      border: 2px solid CanvasText;
+      border-radius: 5px;
+      padding: 7px 12px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tools span {
+      border-bottom: 1px solid GrayText;
+      padding: 5px 0;
+      margin-right: 8px;
+    }
+    .device {
+      border: 2px solid CanvasText;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 13px;
+    }
+    .download {
+      text-align: center;
+      font-size: 13px;
+      padding-bottom: 10px;
+    }
+    .isolated {
+      border: 2px solid GrayText;
+      border-radius: 5px;
+      padding: 12px;
+      margin: 10px 0;
+    }
+    .flow {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 12px 0;
+    }
+    .strip {
+      border-top: 1px solid GrayText;
+      padding: 16px 0;
+      margin-top: 20px;
+    }
+    .mobile .hero {
+      display: block;
+    }
+    .mobile .large {
+      font-size: 22px;
+    }
+    .mobile .device {
+      margin-top: 18px;
+    }
+    .mobile .box {
+      padding: 10px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .result {
+      height: 90px;
+      background: ButtonFace;
+      border: 1px dashed GrayText;
+      display: grid;
+      place-items: center;
+      margin-top: 20px;
+    }
+    .selected {
+      border: 2px solid CanvasText;
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .note {
+      font-size: 14px;
+      max-width: 75ch;
+    }
+    .mobile .flow {
+      font-size: 11px;
+    }
+    .mobile .screen {
+      padding: 14px;
+    }
+    .phone-label {
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    .tag {
+      font-size: 13px;
+      font-weight: bold;
+    }
+    @media (max-width: 750px) {
+      .set {
+        grid-template-columns: 1fr;
+      }
+      .mobile {
+        max-width: 300px;
+      }
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <body>
+    <h1>홈 첫인상의 구성안 비교</h1>
+    <p>
+      2026-11-14 기획 와이어프레임. 정보의 위치와 읽는 순서를 비교하며 최종 시각 디자인/실제 결과가
+      아닙니다.
+    </p>
+    <article>
+      <h2>A. 바로 고르는 도구함</h2>
+      <p class="note">
+        구체적인 작업명을 가장 먼저 보여주는 안. 시작은 빠르지만 로컬 처리라는 선택 이유가 전체 목록
+        아래로 밀립니다.
+      </p>
+      <div class="set">
+        <div>
+          <div class="phone-label">데스크톱</div>
+          <div class="screen">
+            <div class="nav">로고　PDF　이미지　텍스트　동영상</div>
+            <div class="large">잠깐 필요한 파일 작업,<br />무료로 바로 끝내세요.</div>
+            <p>PDF · 이미지 · 텍스트 · 동영상</p>
+            <div class="tools">
+              <span>PDF 합치기 ↗</span><span>사진 용량 맞추기 ↗</span><span>CSV 깨짐 고치기 ↗</span
+              ><span>소리 추출 ↗</span>
+            </div>
+            <div class="box">카테고리별 전체 도구 목록</div>
+            <div class="strip">
+              <h3>내 파일은 내 기기에</h3>
+              <p>프로그램 수신 → 기기 안에서 선택·처리·저장</p>
+            </div>
+            <div class="result">기존 실제 사진 비교 · 대표 장면</div>
+          </div>
+        </div>
+        <div class="mobile">
+          <div class="phone-label">390px: 읽는 순서</div>
+          <div class="screen">
+            <div class="nav">로고　　　　　　　메뉴</div>
+            <div class="large">잠깐 필요한<br />파일 작업, 무료로.</div>
+            <p>설치·가입 없이 시작</p>
+            <div class="box">
+              PDF 합치기 ↗
+              <hr />
+              사진 용량 맞추기 ↗
+              <hr />
+              CSV 깨짐 고치기 ↗
+              <hr />
+              소리 추출 ↗
+            </div>
+            <div class="box">전체 도구 목록<br />…길게 이어짐…</div>
+            <div class="strip">로컬 처리 원리 ↓</div>
+            <div class="result">기존 실제 결과</div>
+          </div>
+        </div>
+      </div>
+      <p class="tag">미선택: 차별점 설명이 너무 늦음</p>
+    </article>
+    <article class="selected">
+      <h2>B. 내 브라우저 작업실 — 선택</h2>
+      <p class="note">
+        효용과 즉시 시작 옆에 파일 경로를 한 그림으로 둡니다. 다음 영역은 다운로드의 의미를 보완하고
+        실제 결과로 넘어갑니다. 모바일은 CTA와 대표 작업 뒤에 그림을 둡니다.
+      </p>
+      <div class="set">
+        <div>
+          <div class="phone-label">데스크톱</div>
+          <div class="screen">
+            <div class="nav">로고　PDF　이미지　텍스트　동영상</div>
+            <div class="hero">
+              <div>
+                <p class="muted">무료 파일 도구 모음</p>
+                <div class="large">파일 작업은 가볍게.<br />내 파일은 내 기기에.</div>
+                <p>
+                  PDF를 합치고 사진 용량을 맞추고 형식을 바꿉니다. 파일 내용과 이름은 서버로 보내지
+                  않습니다.
+                </p>
+                <p class="muted">앱 설치 없이 · 가입 없이 · 무료로</p>
+                <span class="cta">무료 도구 보기 ↓</span>　처리 방식 ↗
+                <div class="tools">
+                  <span>PDF 합치기 ↗</span><span>사진 용량 맞추기 ↗</span
+                  ><span>CSV 깨짐 고치기 ↗</span><span>소리 추출 ↗</span>
+                </div>
+              </div>
+              <div>
+                <div class="download">
+                  이 사이트<br />처리 프로그램 · 공개 자료<br />↓ 기기로 받기
+                </div>
+                <div class="device">
+                  <strong>내 기기 · 이 브라우저</strong>
+                  <div class="isolated">
+                    <strong>격리된 도구 영역</strong>
+                    <div class="flow">
+                      <span>파일 선택</span><span>→ 처리 →</span><span>결과 저장</span>
+                    </div>
+                  </div>
+                  <div class="muted">도구 영역 밖: 광고 · 방문 통계</div>
+                </div>
+                <p class="muted">내 파일은 이 기기 안에 머뭅니다.</p>
+              </div>
+            </div>
+            <div class="strip">
+              <h3>파일 대신, 도구가 내 기기로 옵니다.</h3>
+              <p>
+                프로그램은 사이트에서 받습니다. 파일 선택부터 저장까지는 격리된 도구 영역 안에서
+                진행됩니다.
+              </p>
+              <p>
+                <strong>앱 설치와 처리 자료 받기는 달라요.</strong> 큰 자료는 용량을 확인하고 받기를
+                선택합니다. 모바일 데이터를 쓸 수 있고 보관본이 삭제되면 다시 받을 수 있습니다.
+              </p>
+            </div>
+            <div class="result">실제 사진 용량 비교 → 대표 4장면 → 전체 도구 목록</div>
+          </div>
+        </div>
+        <div class="mobile">
+          <div class="phone-label">390px: 읽는 순서</div>
+          <div class="screen">
+            <div class="nav">로고　　　　　　　메뉴</div>
+            <p class="muted">무료 파일 도구 모음</p>
+            <div class="large">파일 작업은 가볍게.<br />내 파일은 내 기기에.</div>
+            <p>PDF·사진·텍스트·동영상.<br />파일 내용과 이름은 서버로 보내지 않습니다.</p>
+            <p class="muted">앱 설치·가입 없이 무료로</p>
+            <span class="cta">무료 도구 보기 ↓</span>
+            <div class="tools"><span>대표 작업 ↗</span><span>대표 작업 ↗</span></div>
+            <div class="download">이 사이트: 프로그램·공개 자료<br />↓</div>
+            <div class="device">
+              <strong>내 기기 · 브라우저</strong>
+              <div class="isolated">
+                격리된 도구 영역
+                <div class="flow">
+                  <span>파일 선택</span><span>→ 처리 →</span><span>결과 저장</span>
+                </div>
+              </div>
+              <span class="muted">도구 밖: 광고·통계</span>
+            </div>
+            <div class="strip">원리 한 문단 +<br />읽히는 크기의 자료 받기 안내</div>
+            <div class="result">기존 실제 사진 · 4장면</div>
+          </div>
+        </div>
+      </div>
+      <p class="tag">
+        선택 이유: 무엇을/왜 여기서/어디서 시작할지 동시에 읽힘. 파일과 프로그램의 방향이 다름을
+        설명.
+      </p>
+    </article>
+    <article>
+      <h2>C. 원리를 먼저 보는 안내</h2>
+      <p class="note">
+        설명 정확도는 높지만 작업 효용과 시작점이 늦어집니다. 사용자가 지적한 설명 자료 같은
+        첫인상을 되풀이할 가능성이 큽니다.
+      </p>
+      <div class="set">
+        <div>
+          <div class="phone-label">데스크톱</div>
+          <div class="screen">
+            <div class="nav">로고　PDF　이미지　텍스트　동영상</div>
+            <div class="large">파일이 이동하지 않는 이유</div>
+            <div class="download">이 사이트: 프로그램 · 공개 자료<br />↓</div>
+            <div class="device">
+              <strong>내 기기</strong>
+              <div class="isolated">
+                격리된 브라우저 도구 영역
+                <div class="flow">
+                  <span>파일 선택</span><span>→ 처리 →</span><span>결과 저장</span>
+                </div>
+              </div>
+              바깥 광고·통계
+            </div>
+            <div class="row">
+              <p>프로그램 수신 설명</p>
+              <p>격리·접근 제한 설명</p>
+              <p>자료 보관 설명</p>
+            </div>
+            <div class="strip">
+              <h3>42개의 무료 파일 도구</h3>
+              <span class="cta">도구 골라 시작하기</span>
+            </div>
+            <div class="result">기존 실제 결과</div>
+          </div>
+        </div>
+        <div class="mobile">
+          <div class="phone-label">390px: 읽는 순서</div>
+          <div class="screen">
+            <div class="nav">로고　　　　　　　메뉴</div>
+            <div class="large">파일이 이동하지 않는 이유</div>
+            <div class="device">
+              공개자료 수신 ↓
+              <div class="isolated">선택→처리→저장</div>
+              격리 밖 광고·통계
+            </div>
+            <div class="strip">프로그램 설명<br /><br />격리 설명<br /><br />보관·재수신 설명</div>
+            <div class="large">무료 파일 도구</div>
+            <span class="cta">시작하기 ↓</span>
+            <div class="result">기존 실제 결과</div>
+          </div>
+        </div>
+      </div>
+      <p class="tag">미선택: 효용보다 기술 설명이 먼저이며 CTA가 늦음</p>
+    </article>
+    <p>
+      구현 기준: 정적 HTML/CSS, 도식과 텍스트 한영 등가, 기존 실제 비교/4장면/최초 1회 자동재생
+      유지. 이 문서는 구현 전 비교 증거입니다.
+    </p>
+  </body>
+</html>

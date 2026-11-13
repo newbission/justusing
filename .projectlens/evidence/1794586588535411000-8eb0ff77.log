@@ -1,0 +1,442 @@
+
+> justusing@0.0.1 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> justusing@0.0.1 check
+> astro check && svelte-check --tsconfig ./tsconfig.json --threshold warning
+
+01:16:41 [content] Syncing content
+01:16:41 [content] Synced content
+01:16:41 [types] Generated 429ms
+01:16:41 [check] Getting diagnostics for Astro files in /Users/jm/development/projects/justusing...
+[96mscripts/home/make-preview.mjs[0m:[93m33[0m:[93m111[0m - [93mwarning[0m[90m ts(6387): [0mThe signature '(start?: number | undefined, end?: number | undefined): Buffer<ArrayBuffer>' of 'result.slice' is deprecated.
+
+[7m33[0m       `용량 맞추기 실패: ${original.length} → ${result.length}, ${download.suggestedFilename()}, header ${[...result.slice(0, 8)]}`,
+[7m  [0m [93m                                                                                                              ~~~~~[0m
+
+[96mscripts/readme/tools.mjs[0m:[93m18[0m:[93m1[0m - [93mwarning[0m[90m ts(6387): [0mThe signature '(specifier: string | URL, parentURL?: string | URL | undefined, options?: RegisterOptions<any> | undefined): void' of 'register' is deprecated.
+
+[7m18[0m register(
+[7m  [0m [93m~~~~~~~~[0m
+[96mscripts/readme/tools.mjs[0m:[93m13[0m:[93m10[0m - [93mwarning[0m[90m ts(6385): [0m'register' is deprecated.
+
+[7m13[0m import { register } from 'node:module';
+[7m  [0m [93m         ~~~~~~~~[0m
+
+[96msrc/frame/clipboard.ts[0m:[93m19[0m:[93m23[0m - [93mwarning[0m[90m ts(6387): [0mThe signature '(commandId: string, showUI?: boolean | undefined, value?: string | undefined): boolean' of 'document.execCommand' is deprecated.
+
+[7m19[0m       return document.execCommand('copy');
+[7m  [0m [93m                      ~~~~~~~~~~~[0m
+
+Result (479 files): 
+- 0 errors
+- 0 warnings
+- 4 hints
+
+Loading svelte-check in workspace: /Users/jm/development/projects/justusing
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings
+
+> justusing@0.0.1 prebuild
+> node scripts/copy-pdfjs-assets.mjs && node scripts/copy-font-license.mjs && node scripts/copy-libheif-notice.mjs && node scripts/copy-mediabunny-notice.mjs && node scripts/copy-ocr-data.mjs && node scripts/copy-face-data.mjs
+
+pdf.js 보조 파일 복사 완료 → public/vendor/pdfjs/
+Pretendard 허가서 복사 완료 → public/vendor/pretendard/LICENSE.txt
+libheif 허가서·안내 → public/vendor/libheif/
+mediabunny 허가서·안내 → public/vendor/mediabunny/
+OCR 엔진·언어 데이터 복사 완료 → public/data/ocr/
+MediaPipe 엔진·모델 복사 완료 → public/data/face/
+
+> justusing@0.0.1 build
+> astro build
+
+01:17:00 [content] Syncing content
+01:17:00 [content] Synced content
+01:17:00 [types] Generated 369ms
+01:17:00 [build] output: "static"
+01:17:00 [build] mode: "static"
+01:17:00 [build] directory: /Users/jm/development/projects/justusing/dist/
+01:17:00 [build] Collecting build info...
+01:17:00 [build] ✓ Completed in 409ms.
+01:17:00 [build] Building static entrypoints...
+01:17:01 [vite] ✓ built in 528ms
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "fs" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/libheif-js/libheif-wasm/libheif.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "path" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/libheif-js/libheif-wasm/libheif.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "crypto" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/libheif-js/libheif-wasm/libheif.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "fs" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/tesseract.js-core/tesseract-core-simd-lstm.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "path" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/tesseract.js-core/tesseract-core-simd-lstm.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "crypto" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/tesseract.js-core/tesseract-core-simd-lstm.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] 
+new URL("vision_wasm_module_raw_internal.wasm", import.meta.url) doesn't exist at build time, it will remain unchanged to be resolved at runtime. If this is intended, you can use the /* @vite-ignore */ comment to suppress this warning.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "node:module" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "node:module" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "node:module" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "path" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/libheif-js/libheif-wasm/libheif.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "fs" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/libheif-js/libheif-wasm/libheif.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [WARN] [vite] [plugin rolldown:vite-resolve] Module "crypto" has been externalized for browser compatibility, imported by "/Users/jm/development/projects/justusing/node_modules/libheif-js/libheif-wasm/libheif.js". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+01:17:02 [vite] ✓ built in 1.75s
+01:17:02 [build] Rearranging server assets...
+
+ generating static routes 
+01:17:02   ├─ /about/index.html (+13ms) 
+01:17:02   ├─ /ads.txt (+2ms) 
+01:17:02   ├─ /brand/mark.svg (+1ms) 
+01:17:02   ├─ /brand/lockup-light.svg (+1ms) 
+01:17:02   ├─ /brand/lockup-dark.svg (+1ms) 
+01:17:02   ├─ /contact/index.html (+5ms) 
+01:17:02   ├─ /en/about/index.html (+5ms) 
+01:17:02   ├─ /en/contact/index.html (+4ms) 
+01:17:02   ├─ /en/guide/pdf/index.html (+4ms) 
+01:17:02   ├─ /en/guide/image/index.html (+4ms) 
+01:17:02   ├─ /en/guide/text/index.html (+3ms) 
+01:17:02   ├─ /en/guide/video/index.html (+3ms) 
+01:17:02   ├─ /en/guide/compress-image/index.html (+15ms) 
+01:17:02   ├─ /en/guide/compress-pdf/index.html (+4ms) 
+01:17:02   ├─ /en/guide/compress-video/index.html (+3ms) 
+01:17:02   ├─ /en/guide/convert-image/index.html (+3ms) 
+01:17:02   ├─ /en/guide/crop-pdf-margins/index.html (+4ms) 
+01:17:02   ├─ /en/guide/crop-rotate-photo/index.html (+3ms) 
+01:17:03   ├─ /en/guide/edit-pdf/index.html (+3ms) 
+01:17:03   ├─ /en/guide/extract-images-pdf/index.html (+3ms) 
+01:17:03   ├─ /en/guide/fill-pdf-form/index.html (+3ms) 
+01:17:03   ├─ /en/guide/fix-csv-encoding/index.html (+2ms) 
+01:17:03   ├─ /en/guide/header-footer-pdf/index.html (+2ms) 
+01:17:03   ├─ /en/guide/heic-to-jpg/index.html (+3ms) 
+01:17:03   ├─ /en/guide/hide-info-in-photo/index.html (+3ms) 
+01:17:03   ├─ /en/guide/id-photo-size/index.html (+2ms) 
+01:17:03   ├─ /en/guide/image-to-text/index.html (+2ms) 
+01:17:03   ├─ /en/guide/merge-pdf/index.html (+2ms) 
+01:17:03   ├─ /en/guide/n-up-pdf/index.html (+2ms) 
+01:17:03   ├─ /en/guide/ocr-pdf/index.html (+3ms) 
+01:17:03   ├─ /en/guide/organize-scanned-pdf/index.html (+2ms) 
+01:17:03   ├─ /en/guide/pdf-metadata/index.html (+2ms) 
+01:17:03   ├─ /en/guide/pdf-to-jpg/index.html (+3ms) 
+01:17:03   ├─ /en/guide/photo-location/index.html (+3ms) 
+01:17:03   ├─ /en/guide/photo-size-limit/index.html (+3ms) 
+01:17:03   ├─ /en/guide/photos-to-pdf/index.html (+2ms) 
+01:17:03   ├─ /en/guide/protect-pdf/index.html (+2ms) 
+01:17:03   ├─ /en/guide/redact-pdf/index.html (+3ms) 
+01:17:03   ├─ /en/guide/reduce-gif-size/index.html (+3ms) 
+01:17:03   ├─ /en/guide/remove-background/index.html (+2ms) 
+01:17:03   ├─ /en/guide/remove-pdf-password/index.html (+2ms) 
+01:17:03   ├─ /en/guide/resize-image/index.html (+2ms) 
+01:17:03   ├─ /en/guide/sign-pdf/index.html (+3ms) 
+01:17:03   ├─ /en/guide/split-pdf/index.html (+3ms) 
+01:17:03   ├─ /en/guide/stitch-screenshots/index.html (+2ms) 
+01:17:03   ├─ /en/guide/trim-video/index.html (+5ms) 
+01:17:03   ├─ /en/guide/watermark-pdf/index.html (+3ms) 
+01:17:03   ├─ /en/guide/index.html (+3ms) 
+01:17:03   ├─ /en/image/compress/frame/index.html (+3ms) 
+01:17:03   ├─ /en/image/convert/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/crop/frame/index.html (+1ms) 
+01:17:03   ├─ /en/image/heic-to-jpg/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/id-photo/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/mosaic/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/ocr/frame/index.html (+1ms) 
+01:17:03   ├─ /en/image/remove-bg/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/remove-location/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/resize/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/stitch/frame/index.html (+2ms) 
+01:17:03   ├─ /en/image/target-size/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/add-image/frame/index.html (+3ms) 
+01:17:03   ├─ /en/pdf/compress/frame/index.html (+4ms) 
+01:17:03   ├─ /en/pdf/crop/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/edit/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/extract-images/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/extract-text/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/fill-form/frame/index.html (+1ms) 
+01:17:03   ├─ /en/pdf/from-image/frame/index.html (+1ms) 
+01:17:03   ├─ /en/pdf/header-footer/frame/index.html (+1ms) 
+01:17:03   ├─ /en/pdf/merge/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/metadata/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/n-up/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/ocr/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/organize/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/page-numbers/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/protect/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/redact/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/rotate/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/sign/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/split/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/to-image/frame/index.html (+4ms) 
+01:17:03   ├─ /en/pdf/unlock/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/view/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/watermark/frame/index.html (+2ms) 
+01:17:03   ├─ /en/privacy/index.html (+3ms) 
+01:17:03   ├─ /en/safety/index.html (+5ms) 
+01:17:03   ├─ /en/terms/index.html (+3ms) 
+01:17:03   ├─ /en/text/csv-encoding/frame/index.html (+2ms) 
+01:17:03   ├─ /en/video/compress/frame/index.html (+2ms) 
+01:17:03   ├─ /en/video/extract-audio/frame/index.html (+2ms) 
+01:17:03   ├─ /en/video/frame-capture/frame/index.html (+2ms) 
+01:17:03   ├─ /en/video/to-gif/frame/index.html (+2ms) 
+01:17:03   ├─ /en/video/trim/frame/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/view/index.html (+4ms) 
+01:17:03   ├─ /en/pdf/extract-text/index.html (+3ms) 
+01:17:03   ├─ /en/pdf/extract-images/index.html (+3ms) 
+01:17:03   ├─ /en/pdf/merge/index.html (+4ms) 
+01:17:03   ├─ /en/pdf/split/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/rotate/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/organize/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/n-up/index.html (+3ms) 
+01:17:03   ├─ /en/pdf/crop/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/to-image/index.html (+3ms) 
+01:17:03   ├─ /en/pdf/from-image/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/ocr/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/compress/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/page-numbers/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/watermark/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/header-footer/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/add-image/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/sign/index.html (+4ms) 
+01:17:03   ├─ /en/pdf/unlock/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/protect/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/metadata/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/redact/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/edit/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/fill-form/index.html (+2ms) 
+01:17:03   ├─ /en/image/compress/index.html (+2ms) 
+01:17:03   ├─ /en/image/resize/index.html (+2ms) 
+01:17:03   ├─ /en/image/target-size/index.html (+2ms) 
+01:17:03   ├─ /en/image/convert/index.html (+2ms) 
+01:17:03   ├─ /en/image/heic-to-jpg/index.html (+2ms) 
+01:17:03   ├─ /en/image/ocr/index.html (+2ms) 
+01:17:03   ├─ /en/image/id-photo/index.html (+2ms) 
+01:17:03   ├─ /en/image/remove-bg/index.html (+2ms) 
+01:17:03   ├─ /en/image/remove-location/index.html (+2ms) 
+01:17:03   ├─ /en/image/stitch/index.html (+2ms) 
+01:17:03   ├─ /en/image/crop/index.html (+2ms) 
+01:17:03   ├─ /en/image/mosaic/index.html (+2ms) 
+01:17:03   ├─ /en/text/csv-encoding/index.html (+2ms) 
+01:17:03   ├─ /en/video/trim/index.html (+2ms) 
+01:17:03   ├─ /en/video/compress/index.html (+2ms) 
+01:17:03   ├─ /en/video/to-gif/index.html (+2ms) 
+01:17:03   ├─ /en/video/frame-capture/index.html (+2ms) 
+01:17:03   ├─ /en/video/extract-audio/index.html (+2ms) 
+01:17:03   ├─ /en/pdf/index.html (+3ms) 
+01:17:03   ├─ /en/image/index.html (+2ms) 
+01:17:03   ├─ /en/text/index.html (+2ms) 
+01:17:03   ├─ /en/video/index.html (+2ms) 
+01:17:03   ├─ /en/index.html (+6ms) 
+01:17:03   ├─ /favicon.svg (+1ms) 
+01:17:03   ├─ /guide/pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/image/index.html (+2ms) 
+01:17:03   ├─ /guide/text/index.html (+2ms) 
+01:17:03   ├─ /guide/video/index.html (+2ms) 
+01:17:03   ├─ /guide/compress-image/index.html (+3ms) 
+01:17:03   ├─ /guide/compress-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/compress-video/index.html (+2ms) 
+01:17:03   ├─ /guide/convert-image/index.html (+2ms) 
+01:17:03   ├─ /guide/crop-pdf-margins/index.html (+2ms) 
+01:17:03   ├─ /guide/crop-rotate-photo/index.html (+2ms) 
+01:17:03   ├─ /guide/edit-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/extract-images-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/fill-pdf-form/index.html (+4ms) 
+01:17:03   ├─ /guide/fix-csv-encoding/index.html (+3ms) 
+01:17:03   ├─ /guide/header-footer-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/heic-to-jpg/index.html (+3ms) 
+01:17:03   ├─ /guide/hide-info-in-photo/index.html (+2ms) 
+01:17:03   ├─ /guide/id-photo-size/index.html (+3ms) 
+01:17:03   ├─ /guide/image-to-text/index.html (+2ms) 
+01:17:03   ├─ /guide/merge-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/n-up-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/ocr-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/organize-scanned-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/pdf-metadata/index.html (+2ms) 
+01:17:03   ├─ /guide/pdf-to-jpg/index.html (+2ms) 
+01:17:03   ├─ /guide/photo-location/index.html (+2ms) 
+01:17:03   ├─ /guide/photo-size-limit/index.html (+2ms) 
+01:17:03   ├─ /guide/photos-to-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/protect-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/redact-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/reduce-gif-size/index.html (+2ms) 
+01:17:03   ├─ /guide/remove-background/index.html (+2ms) 
+01:17:03   ├─ /guide/remove-pdf-password/index.html (+2ms) 
+01:17:03   ├─ /guide/resize-image/index.html (+2ms) 
+01:17:03   ├─ /guide/sign-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/split-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/stitch-screenshots/index.html (+2ms) 
+01:17:03   ├─ /guide/trim-video/index.html (+2ms) 
+01:17:03   ├─ /guide/watermark-pdf/index.html (+2ms) 
+01:17:03   ├─ /guide/index.html (+3ms) 
+01:17:03   ├─ /image/compress/frame/index.html (+2ms) 
+01:17:03   ├─ /image/convert/frame/index.html (+1ms) 
+01:17:03   ├─ /image/crop/frame/index.html (+1ms) 
+01:17:03   ├─ /image/heic-to-jpg/frame/index.html (+1ms) 
+01:17:03   ├─ /image/id-photo/frame/index.html (+1ms) 
+01:17:03   ├─ /image/mosaic/frame/index.html (+1ms) 
+01:17:03   ├─ /image/ocr/frame/index.html (+1ms) 
+01:17:03   ├─ /image/remove-bg/frame/index.html (+1ms) 
+01:17:03   ├─ /image/remove-location/frame/index.html (+1ms) 
+01:17:03   ├─ /image/resize/frame/index.html (+1ms) 
+01:17:03   ├─ /image/stitch/frame/index.html (+1ms) 
+01:17:03   ├─ /image/target-size/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/add-image/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/compress/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/crop/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/edit/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/extract-images/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/extract-text/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/fill-form/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/from-image/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/header-footer/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/merge/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/metadata/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/n-up/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/ocr/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/organize/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/page-numbers/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/protect/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/redact/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/rotate/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/sign/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/split/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/to-image/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/unlock/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/view/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/watermark/frame/index.html (+1ms) 
+01:17:03   ├─ /privacy/index.html (+2ms) 
+01:17:03   ├─ /robots.txt (+3ms) 
+01:17:03   ├─ /safety/index.html (+3ms) 
+01:17:03   ├─ /sitemap.xml (+513ms) 
+01:17:03   ├─ /terms/index.html (+3ms) 
+01:17:03   ├─ /text/csv-encoding/frame/index.html (+1ms) 
+01:17:03   ├─ /video/compress/frame/index.html (+2ms) 
+01:17:03   ├─ /video/extract-audio/frame/index.html (+2ms) 
+01:17:03   ├─ /video/frame-capture/frame/index.html (+2ms) 
+01:17:03   ├─ /video/to-gif/frame/index.html (+1ms) 
+01:17:03   ├─ /video/trim/frame/index.html (+1ms) 
+01:17:03   ├─ /pdf/view/index.html (+3ms) 
+01:17:03   ├─ /pdf/extract-text/index.html (+2ms) 
+01:17:03   ├─ /pdf/extract-images/index.html (+2ms) 
+01:17:03   ├─ /pdf/merge/index.html (+2ms) 
+01:17:03   ├─ /pdf/split/index.html (+2ms) 
+01:17:03   ├─ /pdf/rotate/index.html (+2ms) 
+01:17:03   ├─ /pdf/organize/index.html (+2ms) 
+01:17:03   ├─ /pdf/n-up/index.html (+2ms) 
+01:17:03   ├─ /pdf/crop/index.html (+2ms) 
+01:17:03   ├─ /pdf/to-image/index.html (+2ms) 
+01:17:03   ├─ /pdf/from-image/index.html (+2ms) 
+01:17:03   ├─ /pdf/ocr/index.html (+2ms) 
+01:17:03   ├─ /pdf/compress/index.html (+2ms) 
+01:17:03   ├─ /pdf/page-numbers/index.html (+2ms) 
+01:17:03   ├─ /pdf/watermark/index.html (+2ms) 
+01:17:03   ├─ /pdf/header-footer/index.html (+2ms) 
+01:17:03   ├─ /pdf/add-image/index.html (+2ms) 
+01:17:03   ├─ /pdf/sign/index.html (+2ms) 
+01:17:03   ├─ /pdf/unlock/index.html (+2ms) 
+01:17:03   ├─ /pdf/protect/index.html (+2ms) 
+01:17:03   ├─ /pdf/metadata/index.html (+2ms) 
+01:17:03   ├─ /pdf/redact/index.html (+2ms) 
+01:17:03   ├─ /pdf/edit/index.html (+2ms) 
+01:17:04   ├─ /pdf/fill-form/index.html (+2ms) 
+01:17:04   ├─ /image/compress/index.html (+2ms) 
+01:17:04   ├─ /image/resize/index.html (+2ms) 
+01:17:04   ├─ /image/target-size/index.html (+2ms) 
+01:17:04   ├─ /image/convert/index.html (+2ms) 
+01:17:04   ├─ /image/heic-to-jpg/index.html (+2ms) 
+01:17:04   ├─ /image/ocr/index.html (+2ms) 
+01:17:04   ├─ /image/id-photo/index.html (+2ms) 
+01:17:04   ├─ /image/remove-bg/index.html (+2ms) 
+01:17:04   ├─ /image/remove-location/index.html (+2ms) 
+01:17:04   ├─ /image/stitch/index.html (+2ms) 
+01:17:04   ├─ /image/crop/index.html (+2ms) 
+01:17:04   ├─ /image/mosaic/index.html (+2ms) 
+01:17:04   ├─ /text/csv-encoding/index.html (+2ms) 
+01:17:04   ├─ /video/trim/index.html (+2ms) 
+01:17:04   ├─ /video/compress/index.html (+2ms) 
+01:17:04   ├─ /video/to-gif/index.html (+2ms) 
+01:17:04   ├─ /video/frame-capture/index.html (+2ms) 
+01:17:04   ├─ /video/extract-audio/index.html (+2ms) 
+01:17:04   ├─ /pdf/index.html (+2ms) 
+01:17:04   ├─ /image/index.html (+2ms) 
+01:17:04   ├─ /text/index.html (+2ms) 
+01:17:04   ├─ /video/index.html (+3ms) 
+01:17:04   ├─ /index.html (+4ms) 
+01:17:04 ✓ Completed in 1.22s.
+
+ generating optimized images 
+01:17:04   ▶ /_astro/levels.Evs90vot_2jVcbb.webp (reused cache entry) (+1ms) (1/74)
+01:17:04   ▶ /_astro/formats.B78lI6Qy_Z2vMTih.webp (reused cache entry) (+1ms) (2/74)
+01:17:04   ▶ /_astro/sizes.Bd99kNKd_Z91GiD.webp (reused cache entry) (+1ms) (3/74)
+01:17:04   ▶ /_astro/before-after.Oeh6a0tF_Z1eVPoB.webp (reused cache entry) (+1ms) (4/74)
+01:17:04   ▶ /_astro/levels.DsEgiyw9_1WTUy3.webp (reused cache entry) (+1ms) (5/74)
+01:17:04   ▶ /_astro/white-out.ChEImBrf_1hhbNy.webp (reused cache entry) (+2ms) (6/74)
+01:17:04   ▶ /_astro/compare.DOg2fT4x_tE335.webp (reused cache entry) (+2ms) (7/74)
+01:17:04   ▶ /_astro/filled.CSf7f1mD_269Azg.webp (reused cache entry) (+2ms) (8/74)
+01:17:04   ▶ /_astro/header-footer.0pCxQzOk_ZlWFcK.webp (reused cache entry) (+2ms) (9/74)
+01:17:04   ▶ /_astro/before-after.hP3RST9y_Z26nfPo.webp (reused cache entry) (+2ms) (10/74)
+01:17:04   ▶ /_astro/compare.C9k_0Se3_1yIwTV.webp (reused cache entry) (+1ms) (11/74)
+01:17:04   ▶ /_astro/upright.C_ZiInF__Z12IU0w.webp (reused cache entry) (+1ms) (12/74)
+01:17:04   ▶ /_astro/size.GQzoy3O0_Z24nKDU.svg (reused cache entry) (+1ms) (13/74)
+01:17:04   ▶ /_astro/merged.C60TSYce_1TzfdB.webp (reused cache entry) (+1ms) (14/74)
+01:17:04   ▶ /_astro/sheets.CjZby41s_Z2e24hG.webp (reused cache entry) (+2ms) (15/74)
+01:17:04   ▶ /_astro/lines.B7p-26kb_ZjBb0u.webp (reused cache entry) (+2ms) (16/74)
+01:17:04   ▶ /_astro/text-layer.CPy-rmXf_ZeIhgv.webp (reused cache entry) (+2ms) (17/74)
+01:17:04   ▶ /_astro/cleanup.B36wvwiB_Z2ukfs3.svg (reused cache entry) (+2ms) (18/74)
+01:17:04   ▶ /_astro/before-after.BmefS6JI_Z1F8avq.webp (reused cache entry) (+2ms) (19/74)
+01:17:04   ▶ /_astro/before-after.CLEpj-NP_1zTYFq.webp (reused cache entry) (+1ms) (20/74)
+01:17:04   ▶ /_astro/two-channels.CAaf6J9-_ZfOcJl.svg (reused cache entry) (+1ms) (21/74)
+01:17:04   ▶ /_astro/dpi.DL1qZVSH_rHK6R.webp (reused cache entry) (+2ms) (22/74)
+01:17:04   ▶ /_astro/page-sizes.brE7lHqZ_1tlezi.webp (reused cache entry) (+1ms) (23/74)
+01:17:04   ▶ /_astro/compare.Bp-4yKPv_Z11I2OR.webp (reused cache entry) (+1ms) (24/74)
+01:17:04   ▶ /_astro/before-after.BAIb8cJN_16b3Xc.webp (reused cache entry) (+2ms) (25/74)
+01:17:04   ▶ /_astro/result.Cw0oIemS_Z1xNcVX.webp (reused cache entry) (+2ms) (26/74)
+01:17:04   ▶ /_astro/compare.B46wkxOc_SJHEK.webp (reused cache entry) (+2ms) (27/74)
+01:17:04   ▶ /_astro/two-kinds.LJ-JqRY__Z5tUfy.svg (reused cache entry) (+2ms) (28/74)
+01:17:04   ▶ /_astro/sizes.CJxL7wh__4WrgK.webp (reused cache entry) (+2ms) (29/74)
+01:17:04   ▶ /_astro/signed.DoLcHw1Y_rz1Js.webp (reused cache entry) (+1ms) (30/74)
+01:17:04   ▶ /_astro/ranges.VMNTNAZ1_GxnNW.svg (reused cache entry) (+1ms) (31/74)
+01:17:04   ▶ /_astro/keyframes.1Qv1tIFu_2kNntS.webp (reused cache entry) (+1ms) (32/74)
+01:17:04   ▶ /_astro/layouts.eGRBo0hg_Z16oLdl.webp (reused cache entry) (+1ms) (33/74)
+01:17:04   ▶ /_astro/original.51GpXgYx_1mUumq.webp (reused cache entry) (+1ms) (34/74)
+01:17:04   ▶ /_astro/album-input.D0bPQu61_23VNEL.webp (reused cache entry) (+2ms) (35/74)
+01:17:04   ▶ /_astro/album-pages.KljAyjBp_Z1yTc9j.webp (reused cache entry) (+2ms) (36/74)
+01:17:04   ▶ /_astro/result.CfGvR6DZ_Z1fDD0q.webp (reused cache entry) (+2ms) (37/74)
+01:17:04   ▶ /_astro/document-pages-en.ZjW9nqHN_Z1zL8X0.webp (reused cache entry) (+1ms) (38/74)
+01:17:04   ▶ /_astro/plant-cutout.BVga6ivL_Z1GaAzq.webp (reused cache entry) (+2ms) (39/74)
+01:17:04   ▶ /_astro/redaction-en.CowsJEcs_Zvq80u.webp (reused cache entry) (+1ms) (40/74)
+01:17:04   ▶ /_astro/levels.D_pE-gPG_1sNnhn.webp (reused cache entry) (+1ms) (41/74)
+01:17:04   ▶ /_astro/levels.BsbxGmug_ZBFaO7.webp (reused cache entry) (+1ms) (42/74)
+01:17:04   ▶ /_astro/formats.B5qoVjMA_Z1RXMAx.webp (reused cache entry) (+1ms) (43/74)
+01:17:04   ▶ /_astro/before-after.DoRszTMU_Kj5un.webp (reused cache entry) (+1ms) (44/74)
+01:17:04   ▶ /_astro/sizes.Czlv_Uo2_24PN5k.webp (reused cache entry) (+1ms) (45/74)
+01:17:04   ▶ /_astro/compare.5vTKi9mm_1wmX7P.webp (reused cache entry) (+1ms) (46/74)
+01:17:04   ▶ /_astro/filled.BHVqyZDD_Z265Gnp.webp (reused cache entry) (+1ms) (47/74)
+01:17:04   ▶ /_astro/white-out.DtU355qz_1CVtul.webp (reused cache entry) (+2ms) (48/74)
+01:17:04   ▶ /_astro/header-footer.BqO-t-Cm_zTzqR.webp (reused cache entry) (+1ms) (49/74)
+01:17:04   ▶ /_astro/compare.CHfjnSW-_xrTGJ.webp (reused cache entry) (+1ms) (50/74)
+01:17:04   ▶ /_astro/before-after.B5fsE39W_2lgpz2.webp (reused cache entry) (+1ms) (51/74)
+01:17:04   ▶ /_astro/upright.N2PJy9Ev_Z7SUfV.webp (reused cache entry) (+1ms) (52/74)
+01:17:04   ▶ /_astro/size.mgZu0W19_Z24nKDU.svg (reused cache entry) (+1ms) (53/74)
+01:17:04   ▶ /_astro/merged.Mw7CSucJ_2mVv6S.webp (reused cache entry) (+1ms) (54/74)
+01:17:04   ▶ /_astro/sheets.BLnKWpXc_Z3bzBm.webp (reused cache entry) (+1ms) (55/74)
+01:17:04   ▶ /_astro/cleanup.rBL0iMOZ_Z2ukfs3.svg (reused cache entry) (+1ms) (56/74)
+01:17:04   ▶ /_astro/lines.BwAiryzt_ZrKUKf.webp (reused cache entry) (+2ms) (57/74)
+01:17:04   ▶ /_astro/text-layer.BB4d0RqT_28IcOL.webp (reused cache entry) (+1ms) (58/74)
+01:17:04   ▶ /_astro/before-after.BAHYqFTg_ZLK9Wz.webp (reused cache entry) (+2ms) (59/74)
+01:17:04   ▶ /_astro/dpi.BCIaEoJ4_100pVc.webp (reused cache entry) (+1ms) (60/74)
+01:17:04   ▶ /_astro/before-after.oJIAP1G0_9JThY.webp (reused cache entry) (+1ms) (61/74)
+01:17:04   ▶ /_astro/compare.DdHbGYTb_1lbegh.webp (reused cache entry) (+1ms) (62/74)
+01:17:04   ▶ /_astro/page-sizes.CWejvQ8X_Z1DKkF0.webp (reused cache entry) (+1ms) (63/74)
+01:17:04   ▶ /_astro/two-channels.DfNJwQs7_ZfOcJl.svg (reused cache entry) (+1ms) (64/74)
+01:17:04   ▶ /_astro/compare.BmlTzBrA_Z1M8l3J.webp (reused cache entry) (+1ms) (65/74)
+01:17:04   ▶ /_astro/two-kinds.8NNcSblm_Z5tUfy.svg (reused cache entry) (+1ms) (66/74)
+01:17:04   ▶ /_astro/before-after.dkBCu03P_2e267Q.webp (reused cache entry) (+2ms) (67/74)
+01:17:04   ▶ /_astro/result.X0uajRm5_23i74g.webp (reused cache entry) (+2ms) (68/74)
+01:17:04   ▶ /_astro/keyframes.BZA_KVyw_ZBn2LI.webp (reused cache entry) (+2ms) (69/74)
+01:17:04   ▶ /_astro/signed.B91auxp0_1d9mBp.webp (reused cache entry) (+2ms) (70/74)
+01:17:04   ▶ /_astro/ranges.DizwUxsJ_GxnNW.svg (reused cache entry) (+2ms) (71/74)
+01:17:04   ▶ /_astro/layouts.c3rD-icp_Z1oQvbW.webp (reused cache entry) (+2ms) (72/74)
+01:17:04   ▶ /_astro/document-pages-ko.DzfDkQ-m_Z2sfTvb.webp (reused cache entry) (+2ms) (73/74)
+01:17:04   ▶ /_astro/redaction-ko.C2kBt6iV_Z2391E5.webp (reused cache entry) (+1ms) (74/74)
+01:17:04 ✓ Completed in 14ms.
+
+01:17:04 [build] ✓ Completed in 3.58s.
+01:17:04 [csp-per-page] 페이지 268개의 CSP 해시 30862개 → 1618개
+01:17:04 [build] 268 page(s) built in 4.37s
+01:17:04 [build] Complete!

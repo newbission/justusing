@@ -1,0 +1,342 @@
+[
+  {
+    "id": "squoosh",
+    "url": "https://squoosh.app/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://squoosh.app/",
+        "title": "Squoosh",
+        "headings": [
+          {
+            "tag": "H2",
+            "text": "Small"
+          }
+        ],
+        "height": 1000
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://squoosh.app/",
+        "title": "Squoosh",
+        "headings": [
+          {
+            "tag": "H2",
+            "text": "Small"
+          }
+        ],
+        "height": 844
+      }
+    ]
+  },
+  {
+    "id": "pdf24",
+    "url": "https://tools.pdf24.org/en/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://tools.pdf24.org/en/",
+        "title": "PDF24 Tools: Free PDF solutions for all PDF problems",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "PDF24 Tools"
+          }
+        ],
+        "height": 3353
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://tools.pdf24.org/en/",
+        "title": "PDF24 Tools: Free PDF solutions for all PDF problems",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "PDF24 Tools"
+          }
+        ],
+        "height": 6079
+      }
+    ]
+  },
+  {
+    "id": "tinywow",
+    "url": "https://tinywow.com/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://tinywow.com/",
+        "title": "Free AI Writing, PDF, Image, and other Online Tools - TinyWow",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Free Tools to Make \nBusiness\nYour Life\nEverything\nEducation\n Simple"
+          }
+        ],
+        "height": 3624
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://tinywow.com/",
+        "title": "Free AI Writing, PDF, Image, and other Online Tools - TinyWow",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Free Tools to Make \nBusiness\nYour Life\nEverything\nEducation\n Simple"
+          }
+        ],
+        "height": 3688
+      }
+    ]
+  },
+  {
+    "id": "proton",
+    "url": "https://proton.me/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://proton.me/",
+        "title": "Proton: Privacy by default",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "A better internet starts with privacy and freedom"
+          }
+        ],
+        "height": 10412
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://proton.me/",
+        "title": "Proton: Privacy by default",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "A better internet starts with privacy and freedom"
+          }
+        ],
+        "height": 14245
+      }
+    ]
+  },
+  {
+    "id": "pairdrop",
+    "url": "https://pairdrop.net/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://pairdrop.net/",
+        "title": "PairDrop | Transfer Files Cross-Platform. No Setup, No Signup.",
+        "headings": [
+          {
+            "tag": "H2",
+            "text": "Open PairDrop on other devices to send files"
+          }
+        ],
+        "height": 1012
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://pairdrop.net/",
+        "title": "PairDrop | Transfer Files Cross-Platform. No Setup, No Signup.",
+        "headings": [
+          {
+            "tag": "H2",
+            "text": "Open PairDrop on other devices to send files"
+          }
+        ],
+        "height": 844
+      }
+    ]
+  },
+  {
+    "id": "localsend",
+    "url": "https://localsend.org/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://localsend.org/",
+        "title": "LocalSend: Share files to nearby devices",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Share files without the cloud.\nFast, private, offline."
+          }
+        ],
+        "height": 9026
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://localsend.org/",
+        "title": "LocalSend: Share files to nearby devices",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Share files without the cloud.\nFast, private, offline."
+          }
+        ],
+        "height": 12240
+      }
+    ]
+  },
+  {
+    "id": "signal",
+    "url": "https://signal.org/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://signal.org/",
+        "title": "Signal >> Home",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Speak Freely"
+          }
+        ],
+        "height": 4524
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://signal.org/",
+        "title": "Signal >> Home",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Speak Freely"
+          }
+        ],
+        "height": 5954
+      }
+    ]
+  },
+  {
+    "id": "linear",
+    "url": "https://linear.app/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://linear.app/",
+        "title": "Linear – The system for product development",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "The product development\nsystem for teams and agents\nThe product development system for teams and agents"
+          }
+        ],
+        "height": 9990
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://linear.app/",
+        "title": "Linear – The system for product development",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "The product development system for teams and agents\nThe product development system for teams and agents"
+          }
+        ],
+        "height": 6003
+      }
+    ]
+  },
+  {
+    "id": "duckduckgo",
+    "url": "https://duckduckgo.com/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://duckduckgo.com/",
+        "title": "DuckDuckGo - Protection. Privacy. Peace of mind.",
+        "headings": [
+          {
+            "tag": "H2",
+            "text": "SEARCH"
+          }
+        ],
+        "height": 10500
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://duckduckgo.com/",
+        "title": "DuckDuckGo - Protection. Privacy. Peace of mind.",
+        "headings": [
+          {
+            "tag": "H2",
+            "text": "SEARCH"
+          }
+        ],
+        "height": 13238
+      }
+    ]
+  },
+  {
+    "id": "excalidraw",
+    "url": "https://plus.excalidraw.com/",
+    "widths": [
+      {
+        "kind": "desktop",
+        "width": 1440,
+        "status": 200,
+        "finalURL": "https://plus.excalidraw.com/",
+        "title": "Excalidraw | Online whiteboard collaboration made easy",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Online Whiteboard made simple"
+          }
+        ],
+        "height": 9323
+      },
+      {
+        "kind": "mobile",
+        "width": 390,
+        "status": 200,
+        "finalURL": "https://plus.excalidraw.com/",
+        "title": "Excalidraw | Online whiteboard collaboration made easy",
+        "headings": [
+          {
+            "tag": "H1",
+            "text": "Online Whiteboard made simple"
+          }
+        ],
+        "height": 9559
+      }
+    ]
+  }
+]

@@ -26,6 +26,12 @@ Document review freshness is not code compatibility or user acceptance. Unregist
 - [.projectlens/home-value-story.md](../../.projectlens/home-value-story.md): draft
   - Purpose: 홈 차별점 설명 확장 요청·흐름·사실·수용기준
   - Related: R-HOME-VALUE, T-HOME-VALUE, C-VALUE-QUALITY, C-VALUE-E2E, C-VALUE-VISUAL
+- [.projectlens/reports/home-research.md](../../.projectlens/reports/home-research.md): reviewed
+  - Purpose: 운영10사이트 직접관찰·출처·A/B/C비교·선택정보구조·한영카피·수용기준
+  - Related: R-HOME-REFERENCE, T-REFERENCE-PLAN, C-REFERENCE-RESEARCH
+- [.projectlens/home-reference-wireframes.html](../../.projectlens/home-reference-wireframes.html): draft
+  - Purpose: 서로다른세안의데스크톱/모바일정보순서와선택비교
+  - Related: R-HOME-REFERENCE, T-REFERENCE-PLAN, C-REFERENCE-RESEARCH
 - [.projectlens/handoff.md](../../.projectlens/handoff.md): unregistered
 
 ## Gaps

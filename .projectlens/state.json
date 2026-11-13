@@ -53,6 +53,14 @@
       "desired": "사용자 고민과 구체적 해결 원리·무료 범위·다운로드 안내를 설명한 뒤 기존 기능 소개",
       "source": "현재 채팅 사용자 요청과 첨부 이미지. 기존 자율 진행·역할분리 선호 적용. 최종 사용자 인수 아님",
       "requirements": ["R-HOME-VALUE"]
+    },
+    {
+      "id": "CH-HOME-REFERENCE",
+      "request": "2026-11-14 실제 운영 레퍼런스8~12개 탐색부터 홈 상단 재기획·구현·독립검증·운영배포까지",
+      "previous": "부정적 질문3개가 먼저 노출되고 소개가 설명자료처럼 보임",
+      "desired": "실제10개사이트 데스크톱/모바일 근거와3안비교로 선정한 구성. 효용·무료범위·즉시진입과 자료수신/기기내처리/격리의 시각설명, 기존 실제사진·단회자동장면 보존",
+      "source": "현재 사용자 명시 요청. 중요한 결정이 아니면 합리적으로 계속하고 검증·리뷰뒤 커밋·PR·배포·동기화까지 승인. 최종 사용자 인수와 구별",
+      "requirements": ["R-HOME-REFERENCE"]
     }
   ],
   "requirements": [
@@ -111,6 +119,13 @@
     {
       "id": "R-HOME-VALUE",
       "text": "설치/결제/보안 걱정→로컬 처리 원리와 격리→다양한 무료 도구→일부 처리용 데이터 수신 안내→기존 기능 소개의 한영 홈. .projectlens/home-value-story.md 수용기준 참조.",
+      "included": false,
+      "reason": "2026-11-14사용자가3질문/3열보존이목표아님을명시하고실제조사기반재기획을요청. 현재범위는R-HOME-REFERENCE가대체하며이전자료/검증기록은보존",
+      "source": "현재채팅사용자홈상단재기획요청"
+    },
+    {
+      "id": "R-HOME-REFERENCE",
+      "text": "실제10개사이트 데스크톱/390px 첫화면과후속흐름 조사·URL/캡처·3개와이어비교로 홈상단재기획. 한영 무료작업/앱설치가입결제없음/파일내용이름비전송·자료수신·격리/데이터안내를 정확히 전달. desktop390320 두테마/reduced/noJS/실제처리다운로드/단회자동/폰트CSP성능 독립확인과 저장소절차 운영배포·동기화",
       "included": true
     }
   ],
@@ -221,6 +236,33 @@
       "depends_on": [],
       "requirements": ["R-HOME-VALUE"],
       "checks": ["C-VALUE-QUALITY", "C-VALUE-E2E", "C-VALUE-VISUAL"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME-REFERENCE",
+      "title": "실제조사 기반 홈상단 재기획부터 운영배포",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME-REFERENCE"],
+      "checks": ["C-REFERENCE-E2E", "C-REFERENCE-VISUAL", "C-REFERENCE-RELEASE"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-REFERENCE-PLAN",
+      "title": "실제레퍼런스 조사·구성선정",
+      "parent": "T-HOME-REFERENCE",
+      "depends_on": [],
+      "requirements": ["R-HOME-REFERENCE"],
+      "checks": ["C-REFERENCE-RESEARCH"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-REFERENCE-IMPLEMENT",
+      "title": "홈 구현·한영카피·문서·품질",
+      "parent": "T-HOME-REFERENCE",
+      "depends_on": ["T-REFERENCE-PLAN"],
+      "requirements": ["R-HOME-REFERENCE"],
+      "checks": ["C-REFERENCE-QUALITY"],
       "blocked_reason": ""
     }
   ],
@@ -354,6 +396,31 @@
       "id": "C-VALUE-VISUAL",
       "level": "acceptance",
       "description": "실제 브라우저의 데스크톱/390px/320px·두테마·한영 화면에서 설명 흐름·도식/데이터 안내 가독성과 기존 기능 연결 확인. 에이전트 관찰이며 사용자 인수와 구별"
+    },
+    {
+      "id": "C-REFERENCE-RESEARCH",
+      "level": "acceptance",
+      "description": "실제10개사이트 탐색근거/세와이어/선정이유 및 한영카피의 코드일치 기획검토"
+    },
+    {
+      "id": "C-REFERENCE-QUALITY",
+      "level": "integration",
+      "description": "포맷·타입·프로덕션build·diff 및 문서 정합성"
+    },
+    {
+      "id": "C-REFERENCE-E2E",
+      "level": "system",
+      "description": "최종 빌드의 홈/단회자동/실제처리다운로드/한영/폰트CSP성능 회귀"
+    },
+    {
+      "id": "C-REFERENCE-VISUAL",
+      "level": "acceptance",
+      "description": "독립검증과 root의 실제한영desktop390320 두테마/reduced/noJS 렌더검토"
+    },
+    {
+      "id": "C-REFERENCE-RELEASE",
+      "level": "system",
+      "description": "현재head Codex리뷰·CI→dev rebase→main squash→main/dev동기화·Cloudflare실배포·운영재검증"
     }
   ],
   "documents": [
@@ -448,6 +515,22 @@
         "C-VALUE-E2E",
         "C-VALUE-VISUAL"
       ]
+    },
+    {
+      "id": "DOC-HOME-REFERENCE",
+      "path": ".projectlens/reports/home-research.md",
+      "purpose": "운영10사이트 직접관찰·출처·A/B/C비교·선택정보구조·한영카피·수용기준",
+      "status": "reviewed",
+      "related": ["R-HOME-REFERENCE", "T-REFERENCE-PLAN", "C-REFERENCE-RESEARCH"],
+      "review_source": "기획에이전트직접조사10곳/세안와이어·root의10contact와본문·보완스크린샷검토. 사용자에게위임받은선정B,사용자인수와구별",
+      "reviewed_sha256": "8f26b303e9b58ad4c0822447d17280004e90f30cbb44db402ace61ed13de8c56"
+    },
+    {
+      "id": "DOC-HOME-REFERENCE-WIRES",
+      "path": ".projectlens/home-reference-wireframes.html",
+      "purpose": "서로다른세안의데스크톱/모바일정보순서와선택비교",
+      "status": "draft",
+      "related": ["R-HOME-REFERENCE", "T-REFERENCE-PLAN", "C-REFERENCE-RESEARCH"]
     }
   ]
 }
