@@ -1,124 +1,625 @@
 ---
-/**
- * 허브: 전체 도구 목록. 카테고리와 도구는 레지스트리에서 자동으로 채운다.
- */
+/** 홈: 바로 쓰는 도구와 실제 처리 결과. 견본 사진은 직접 호스팅한다. */
+import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolSections from '../components/ToolSections.astro';
+import HomeShowcase from '../components/HomeShowcase.astro';
+import HomeLocalFlow from '../components/HomeLocalFlow.astro';
 import RailShell from '../components/RailShell.astro';
 import AdSlot from '../components/AdSlot.astro';
-import Promises from '../components/Promises.astro';
-import SafetyDiagram from '../components/SafetyDiagram.astro';
-import LocalProcessing from '../components/LocalProcessing.astro';
 import { siteConfig } from '../site.config';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 import { CATEGORIES } from '../tools/categories';
 import { visibleCategories } from '../tools/registry';
+import original from '../assets/home/original.webp';
+import result from '../assets/home/result.webp';
+import sample from '../assets/home/result.json';
 
 const locale = localeOf(Astro.url.pathname);
 const text = siteConfig.text[locale];
-
-// 검색 결과에 사이트 이름이 제대로 나오게 하는 구조화 데이터 (schema.org WebSite)
+const t = ui(locale).home;
+const href = (path: string) => localizePath(path, locale);
+const kb = (bytes: number) => `${(bytes / 1000).toFixed(1)} KB`;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: siteConfig.name,
-  url: new URL(localizePath('/', locale), Astro.site).href,
+  url: new URL(href('/'), Astro.site).href,
   description: text.description,
   inLanguage: locale,
 };
 ---
 
 <BaseLayout>
-  <!-- 틀 안에 둔다. 틀 밖에 두면 <html>보다 먼저 출력된다 -->
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <RailShell>
-    <section class="hero">
-      <h1>{text.tagline}</h1>
-      <p class="lead">{text.description}</p>
-    </section>
-
-    <!-- 제목 아래 가로 배너 -->
-    <div class="top-banner">
-      <AdSlot id="top-banner" />
-    </div>
-
-    <!-- 이 사이트의 약속: 배너 아래에 크게 -->
-    <section class="promises-section">
-      <Promises />
-    </section>
-
-    <!-- 파일이 브라우저 안에서 처리되는 모습을 움직이는 그림으로. 광고 칸과 떨어진 자리에 둔다 -->
-    <div class="motion-section">
-      <LocalProcessing />
-    </div>
-
-    <!-- 약속을 그림으로: 왜 안전한지 한눈에 -->
-    <div class="safety-section">
-      <SafetyDiagram />
-    </div>
-
-    {visibleCategories.map((category) => (
-      <section class="category">
-        <h2>
-          <a href={localizePath(`/${category}/`, locale)}>
-            {ui(locale).category.title(CATEGORIES[category].text[locale].name)}
-          </a>
-        </h2>
-        <ToolSections {category} headingLevel={3} />
+    <div class="home">
+      <section class="hero local-hero" aria-labelledby="home-title">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span aria-hidden="true"></span>
+            {t.localEyebrow}
+          </p>
+          <h1 id="home-title">{text.tagline}</h1>
+          <p class="intro">{t.localIntro}</p>
+          <div class="hero-actions">
+            <a class="primary" href="#tools">
+              {t.localPrimary}
+              <span aria-hidden="true">↓</span>
+            </a>
+            <a class="browse" href={href('/safety/')}>
+              {t.localMore}
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+          <p class="small-promises">{t.localIsolation}</p>
+        </div>
+        <HomeLocalFlow />
       </section>
-    ))}
 
-    <!-- 도구 목록 아래 본문 광고. 목록 위에 두면 첫 화면에서 도구가 밀려나므로 아래에 둔다 -->
-    <div class="in-content">
-      <AdSlot id="in-content" />
+      <section class="hero feature-intro" aria-labelledby="feature-title">
+        <div class="hero-copy">
+          <h2 id="feature-title">{t.featureTitle}</h2>
+          <p class="intro">{t.intro}</p>
+          <div class="hero-actions">
+            <a class="primary" href={href('/image/target-size/')}>
+              {t.primary}
+              <span aria-hidden="true">↗</span>
+            </a>
+            <a class="browse" href="#tools">
+              {t.browse}
+              <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+        </div>
+
+        <figure class="photo-example" aria-label={t.example}>
+          <div class="photo-stage">
+            <div class="photo photo-original">
+              <Image src={original} alt={t.exampleAlt} width={560} height={840} loading="lazy" />
+              <div class="photo-label">
+                <span>{t.before}</span>
+                <strong>{kb(sample.inputBytes)}</strong>
+              </div>
+            </div>
+            <span class="photo-arrow" aria-hidden="true">
+              ↘
+            </span>
+            <div class="photo photo-result">
+              <Image src={result} alt={t.resultAlt} width={400} height={600} loading="lazy" />
+              <div class="photo-label">
+                <span>{t.after}</span>
+                <strong>{kb(sample.outputBytes)}</strong>
+              </div>
+            </div>
+          </div>
+          <figcaption>
+            <span>{t.sampleNote}</span>
+            <a
+              href="https://unsplash.com/photos/green-plant-in-brown-clay-pot-6PkcqHAFsZA"
+              rel="noreferrer"
+            >
+              {t.photoCredit}
+            </a>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="examples" class="quick-tools" aria-labelledby="quick-title">
+        <div class="section-heading">
+          <h2 id="quick-title">{t.quickTitle}</h2>
+          <p>{t.quickIntro}</p>
+        </div>
+        <HomeShowcase />
+      </section>
+
+      <!-- 실행 링크와 광고 사이에 최소 48px의 여백을 둔다. 슬롯이 비면 칸은 그리지 않는다. -->
+      <div class="home-banner">
+        <AdSlot id="top-banner" />
+      </div>
+
+      <section
+        id="tools"
+        class="directory"
+        aria-labelledby="directory-title"
+        aria-describedby="directory-intro"
+      >
+        <div class="section-heading">
+          <div>
+            <h2>{t.moreTitle}</h2>
+            <p id="directory-intro">{t.moreIntro}</p>
+          </div>
+        </div>
+        <div class="directory-heading">
+          <h2 id="directory-title">{t.directory}</h2>
+          <nav class="category-nav" aria-label={t.categoryNav}>
+            {visibleCategories.map((category) => (
+              <a href={`#tools-${category}`}>{CATEGORIES[category].text[locale].name}</a>
+            ))}
+          </nav>
+        </div>
+        {visibleCategories.map((category, index) => (
+          <section
+            id={`tools-${category}`}
+            class="category"
+            aria-labelledby={`category-${category}`}
+          >
+            <div class="category-heading">
+              <h2 id={`category-${category}`}>
+                <span class="category-number" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <a href={href(`/${category}/`)}>
+                  {ui(locale).category.title(CATEGORIES[category].text[locale].name)}
+                </a>
+              </h2>
+              <a
+                class="category-more"
+                href={href(`/${category}/`)}
+                aria-label={ui(locale).nav.allTools(CATEGORIES[category].text[locale].name)}
+              >
+                {t.categoryLink} <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            <ToolSections {category} headingLevel={3} compact />
+          </section>
+        ))}
+      </section>
+
+      <div class="home-in-content">
+        <AdSlot id="in-content" />
+      </div>
+
+      <section class="guide-note" aria-labelledby="guide-title">
+        <div>
+          <h2 id="guide-title">{t.guideTitle}</h2>
+          <p>{t.guideText}</p>
+        </div>
+        <a href={href('/guide/')}>
+          {t.guideLink} <span aria-hidden="true">↗</span>
+        </a>
+      </section>
     </div>
   </RailShell>
 </BaseLayout>
 
-<style>
-  .hero {
-    padding: 48px 0 32px;
+<style is:global>
+  .home {
+    padding-bottom: 32px;
   }
-  h1 {
+  .home .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 32px;
+    padding: 44px 0 36px;
+  }
+  .home .local-proof {
     margin: 0;
-    font-size: clamp(26px, 5vw, 36px);
+    color: var(--color-accent);
+  }
+  .home .local-proof svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .home .feature-intro {
+    border-top: 1px solid var(--color-line);
+  }
+  .home .feature-intro h2 {
+    margin: 0;
+    font-size: 32px;
     line-height: 1.3;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.04em;
+    word-break: keep-all;
   }
-  .lead {
-    margin: 12px 0 0;
+  .home .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 20px;
+    color: var(--color-accent);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .home .eyebrow span {
+    width: 6px;
+    height: 6px;
+    background: var(--color-accent);
+    border-radius: 50%;
+  }
+  .home h1 {
+    max-width: 8.5em;
+    margin: 0;
+    font-size: clamp(36px, 4.3vw, 54px);
+    line-height: 1.2;
+    letter-spacing: -0.055em;
+    font-weight: 700;
+    word-break: keep-all;
+    text-wrap: balance;
+  }
+  .home .intro {
+    max-width: 25em;
+    margin: 24px 0 0;
+    font-size: 16px;
     color: var(--color-muted);
+    word-break: keep-all;
   }
-  .promises-section {
-    margin-bottom: 40px;
+  .home .hero-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+    margin-top: 28px;
   }
-  .motion-section,
-  .safety-section {
-    margin-bottom: 40px;
-  }
-  .category {
-    margin-top: 16px;
-  }
-  .category h2 {
-    margin: 0 0 16px;
-    font-size: 20px;
-  }
-  .category h2 a {
+  .home .hero-actions a {
+    display: inline-flex;
+    align-items: center;
+    gap: 18px;
+    min-height: 46px;
     text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
   }
-  .category h2 a:hover {
+  .home .primary {
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    background: var(--color-text);
+    color: var(--color-bg);
+  }
+  .home .primary:hover {
     text-decoration: underline;
   }
-  /* 제목 아래 가로 배너. 광고 칸이 없으면 자리도 차지하지 않는다 */
-  .top-banner:not(:has(.ad-slot)) {
-    display: none;
+  .home .browse:hover {
+    text-decoration: underline;
   }
-  .top-banner {
-    margin-bottom: 32px;
+  .home .small-promises {
+    margin: 18px 0 0;
+    color: var(--color-muted);
+    font-size: 12px;
   }
-  /* 도구 카드와 헷갈려 누르지 않게 충분히 띄운다 */
-  .in-content {
+  .home .photo-example {
+    max-width: 400px;
+    justify-self: end;
+    min-width: 0;
+    margin: 0;
+  }
+  .home .photo-stage {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding: 22px 18px 20px;
+    isolation: isolate;
+  }
+  .home .photo-stage::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 15% 0 6%;
+    background: var(--color-accent-soft);
+    border-radius: 50%;
+  }
+  .home .photo {
+    flex: none;
+    padding: 7px;
+    background: var(--color-paper);
+    color: var(--color-paper-text);
+    box-shadow: var(--shadow-page);
+  }
+  .home .photo img {
+    width: 100%;
+    height: auto;
+  }
+  .home .photo-original {
+    width: 58%;
+    transform: rotate(-7deg);
+  }
+  .home .photo-result {
+    width: 49%;
+    margin: 68px 0 0 -7%;
+    transform: rotate(6deg);
+  }
+  .home .photo-label {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 4px;
+    padding: 10px 4px 3px;
+    font-size: 11px;
+  }
+  .home .photo-label strong {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .home .photo-arrow {
+    position: absolute;
+    z-index: 1;
+    left: 53%;
+    top: 3%;
+    font-size: 42px;
+    line-height: 1;
+    color: var(--color-accent);
+  }
+  .home figcaption {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 12px;
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 11px;
+  }
+  .home figcaption a {
+    text-decoration-color: var(--color-line);
+  }
+  .home .quick-tools {
+    scroll-margin-top: 24px;
+  }
+  .home .section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .home .section-heading h2 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+  }
+  .home .section-heading p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--color-muted);
+  }
+  .home .home-banner:has(.ad-slot),
+  .home .home-in-content:has(.ad-slot) {
     margin: 48px 0;
+  }
+  .home .directory {
+    margin-top: 72px;
+    scroll-margin-top: 24px;
+  }
+  .home .directory-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--color-text);
+  }
+  .home .directory-heading h2 {
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: -0.04em;
+  }
+  .home .category-nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .home .category-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    color: var(--color-muted);
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .home .category-nav a:hover {
+    background: var(--color-hover);
+    color: var(--color-text);
+  }
+  .home .category {
+    padding-top: 36px;
+    scroll-margin-top: 16px;
+  }
+  .home .category + .category {
+    margin-top: 36px;
+    border-top: 1px solid var(--color-line);
+  }
+  .home .category-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .home .category-heading h2 {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 0;
+    font-size: 23px;
+    letter-spacing: -0.03em;
+  }
+  .home .category-heading a {
+    text-decoration: none;
+  }
+  .home .category-heading a:hover {
+    text-decoration: underline;
+  }
+  .home .category-number {
+    font: 12px var(--font-mono);
+    color: var(--color-accent);
+  }
+  .home .category-more {
+    font-size: 12px;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+  .home .guide-note h2 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.03em;
+  }
+  .home .guide-note p {
+    max-width: 43em;
+    margin: 8px 0 0;
+    color: var(--color-muted);
+    font-size: 14px;
+    word-break: keep-all;
+  }
+  .home .guide-note a {
+    flex: none;
+    margin-left: auto;
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .home .guide-note a:hover {
+    text-decoration: underline;
+  }
+  .home .guide-note {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 32px 0 16px;
+  }
+  @media (max-width: 767px) {
+    .home .hero {
+      gap: 22px;
+      padding-top: 40px;
+    }
+    .home h1 {
+      font-size: 36px;
+    }
+    .home .hero-actions {
+      gap: 14px;
+    }
+    .home .photo-label {
+      flex-direction: column;
+      font-size: 10px;
+    }
+    .home .photo-result {
+      margin-top: 56px;
+    }
+    .home .directory-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .home .category-nav {
+      gap: 2px;
+    }
+    .home .category-nav a {
+      padding: 6px 10px;
+    }
+    .home .guide-note {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .home .guide-note a {
+      margin: 0;
+    }
+  }
+  @media (max-width: 599px) {
+    .home .hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 28px;
+      padding: 36px 0;
+    }
+    .home h1 {
+      max-width: 10em;
+      font-size: 40px;
+    }
+    .home .local-proof {
+      margin: 0;
+      color: var(--color-accent);
+    }
+    .home .local-proof svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .home .feature-intro {
+      border-top: 1px solid var(--color-line);
+    }
+    .home .feature-intro h2 {
+      margin: 0;
+      font-size: 32px;
+      line-height: 1.3;
+      letter-spacing: -0.04em;
+      word-break: keep-all;
+    }
+    .home .eyebrow {
+      margin-bottom: 16px;
+    }
+    .home .intro {
+      max-width: 24em;
+      margin-top: 16px;
+      font-size: 15px;
+    }
+    .home .hero-actions {
+      margin-top: 22px;
+      gap: 24px;
+    }
+    .home .small-promises {
+      margin-top: 14px;
+    }
+    .home .photo-example {
+      width: min(100%, 360px);
+      justify-self: center;
+    }
+    .home .photo-stage {
+      padding: 16px 18px 12px;
+    }
+
+    .home .photo-arrow {
+      top: 0;
+      font-size: 36px;
+    }
+    .home .photo-result {
+      margin-top: 52px;
+    }
+    .home figcaption {
+      font-size: 10px;
+    }
+    .home .quick-tools {
+      scroll-margin-top: 24px;
+    }
+    .home .section-heading {
+      display: block;
+    }
+    .home .section-heading h2 {
+      font-size: 19px;
+    }
+    .home .section-heading p {
+      margin-top: 4px;
+    }
+    .home .directory {
+      margin-top: 48px;
+    }
+    .home .directory-heading h2 {
+      font-size: 25px;
+    }
+    .home .category-heading h2 {
+      font-size: 21px;
+    }
+  }
+</style>
+<style is:global>
+  /* 홈에서만 설명을 짧게 보여준다. 다른 목록·도구 페이지 스타일은 유지한다. */
+  .home .card {
+    gap: 12px;
+    padding: 18px 16px;
+  }
+  .home .card .icon {
+    width: 34px;
+    height: 34px;
+    background: transparent;
+  }
+  .home .card .name {
+    font-size: 15px;
+  }
+  .home .card .desc {
+    margin-top: 5px;
+    font-size: 12px;
+    line-height: 1.6;
   }
 </style>
