@@ -1,0 +1,28 @@
+{
+  "id": "1794567892509664000-0f536312",
+  "check": "C-VALUE-E2E",
+  "time_ns": 1794567892509706000,
+  "fingerprint": "c992f39716cf9d61128737b7e47b088b2feaaf688d427aff87c3205b47c5c0a7",
+  "harness_version": "0.6.0",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "tests/e2e/home-value.spec.ts",
+    "tests/e2e/home.spec.ts",
+    "tests/e2e/home-showcase.spec.ts",
+    "tests/e2e/home-motion-review.spec.ts",
+    "tests/e2e/site-font.spec.ts",
+    "tests/e2e/i18n.spec.ts",
+    "tests/e2e/perf-budget.spec.ts",
+    "tests/e2e/csp.spec.ts",
+    "--project",
+    "chromium",
+    "--workers",
+    "2"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794567892509664000-0f536312.log",
+  "artifact_hash": "607b4085c5d04349b0433d84b4329c9f51e61292c5d939e6f78c5ee3b10f0717"
+}

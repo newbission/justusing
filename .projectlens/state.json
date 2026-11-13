@@ -45,6 +45,14 @@
       "desired": "파일이 기기를 떠나지 않는 로컬처리 약속과 기기내 흐름을 첫hero로, 기존사진/4동작소개를2순위로 보존",
       "source": "2026-11-13 사용자 요청. 기획·구현·검증 분리 선호 유지. 실제 파일 로컬처리/파일내용·이름비전송/격리에 근거하며 완벽보안·외부통신0·오프라인주장금지",
       "requirements": ["R-HOME-LOCAL-FIRST"]
+    },
+    {
+      "id": "CH-HOME-VALUE",
+      "request": "2026-11-13 사용자: 설치·일회성 결제·업로드 보안 고민부터 어떻게 안전한지, 다양한 무료 도구, 처리용 파일 수신/데이터 소모 안내까지 기능 소개 전에 보여 달라",
+      "previous": "단일 로컬처리 hero와 기기내 3단계 도식만 제공",
+      "desired": "사용자 고민과 구체적 해결 원리·무료 범위·다운로드 안내를 설명한 뒤 기존 기능 소개",
+      "source": "현재 채팅 사용자 요청과 첨부 이미지. 기존 자율 진행·역할분리 선호 적용. 최종 사용자 인수 아님",
+      "requirements": ["R-HOME-VALUE"]
     }
   ],
   "requirements": [
@@ -98,6 +106,11 @@
     {
       "id": "R-HOME-LOCAL-FIRST",
       "text": "홈 최상단에서 파일이 기기를 떠나지 않고 브라우저에서 처리됨을 사실기반 문구·도식으로 전달하고 기존사진압축/4동작을두번째흐름으로배치한다. 한영/모바일/접근성/단회auto/42탐색/CSP·성능유지. .projectlens/home-local-first-plan.md 참고.",
+      "included": true
+    },
+    {
+      "id": "R-HOME-VALUE",
+      "text": "설치/결제/보안 걱정→로컬 처리 원리와 격리→다양한 무료 도구→일부 처리용 데이터 수신 안내→기존 기능 소개의 한영 홈. .projectlens/home-value-story.md 수용기준 참조.",
       "included": true
     }
   ],
@@ -199,6 +212,15 @@
       "depends_on": [],
       "requirements": ["R-HOME-LOCAL-FIRST"],
       "checks": ["C-LOCAL-FIRST-QUALITY", "C-LOCAL-FIRST-E2E", "C-LOCAL-FIRST-VISUAL"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME-VALUE",
+      "title": "사용자 고민과 차별점·처리 원리·무료/데이터 안내 홈 확장",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME-VALUE"],
+      "checks": ["C-VALUE-QUALITY", "C-VALUE-E2E", "C-VALUE-VISUAL"],
       "blocked_reason": ""
     }
   ],
@@ -317,6 +339,21 @@
       "id": "C-LOCAL-FIRST-VISUAL",
       "level": "acceptance",
       "description": "기획/독립검증과 root 실제 모바일/데스크톱에서 사실기반 로컬차별점이 첫인상인지 확인. 사용자 인수와 구별."
+    },
+    {
+      "id": "C-VALUE-QUALITY",
+      "level": "integration",
+      "description": "타입·포맷·프로덕션 빌드·diff·문서 검사"
+    },
+    {
+      "id": "C-VALUE-E2E",
+      "level": "system",
+      "description": "한영 고민/처리원리/무료/데이터 안내 순서, 키보드 실제진입·처리/다운로드·대표장면/단회재생·모바일·폰트·성능·CSP 회귀"
+    },
+    {
+      "id": "C-VALUE-VISUAL",
+      "level": "acceptance",
+      "description": "실제 브라우저의 데스크톱/390px/320px·두테마·한영 화면에서 설명 흐름·도식/데이터 안내 가독성과 기존 기능 연결 확인. 에이전트 관찰이며 사용자 인수와 구별"
     }
   ],
   "documents": [
@@ -397,6 +434,19 @@
         "C-LOCAL-FIRST-QUALITY",
         "C-LOCAL-FIRST-E2E",
         "C-LOCAL-FIRST-VISUAL"
+      ]
+    },
+    {
+      "id": "DOC-HOME-VALUE",
+      "path": ".projectlens/home-value-story.md",
+      "purpose": "홈 차별점 설명 확장 요청·흐름·사실·수용기준",
+      "status": "draft",
+      "related": [
+        "R-HOME-VALUE",
+        "T-HOME-VALUE",
+        "C-VALUE-QUALITY",
+        "C-VALUE-E2E",
+        "C-VALUE-VISUAL"
       ]
     }
   ]
