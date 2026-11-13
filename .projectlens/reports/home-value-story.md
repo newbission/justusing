@@ -28,7 +28,7 @@
 
 품질/E2E/시각 체크3개는 같은 최종 작업트리 지문 `c992f39716cf9d61128737b7e47b088b2feaaf688d427aff87c3205b47c5c0a7`에서 통과했다. [범위 보고서](1794568066147771000-b1436a80.md)는 scoped `verified`, whole project `false`다. 문서 관계 누락은 없다. 전체 프로젝트의 과거 계획 인수 미기록/다른 검사 stale 문제와 이번 좁은 범위의 검증을 구분한다.
 
-원격 리뷰/배포 결과는 완료 뒤 추가한다. 커밋 뒤 지문은 달라지므로 이후 원격 CI 결과를 별도로 확인한다.
+커밋 뒤 지문은 달라지므로 위 로컬 체크는 구현 당시의 검증 기록이다. 아래 원격 CI가 실제 병합/배포 커밋을 검증한다.
 
 ## 화면 증거
 
@@ -36,3 +36,25 @@
 - [원리·무료·데이터 안내 데스크톱](../evidence/home-value-how-desktop.png)
 - [KO390 첫 화면](../evidence/home-value-mobile-ko.png), [처리 경계](../evidence/home-value-mobile-how.png), [데이터 안내](../evidence/home-value-mobile-data.png)
 - [EN320 밝은 화면](../evidence/home-value-mobile-en-320.png), [어두운 화면](../evidence/home-value-mobile-en-320-dark.png), [어두운 도식](../evidence/home-value-mobile-how-en-320-dark.png)
+
+## 커밋·리뷰·운영 배포
+
+2026-11-13에 구현/글꼴/테스트/기획·검증 기록을4개 커밋으로 나눠 올렸다. 기능 PR [#165](https://github.com/newbission/justusing/pull/165)의 head `864f07a04939a19e02e8e7e34497f2ad135d6229`에 대해 Codex 리뷰가 완료됐고, **주요 문제 없음**을 [해당 커밋 수신증](https://github.com/newbission/justusing/pull/165#issuecomment-6851128249)으로 확인했다.
+
+- [기능 CI](https://github.com/newbission/justusing/actions/runs/43414803920):535통과/7설정상제외 후 rebase merge, dev의 마지막 커밋 `77fbfa5572556dd63a62dbc24a767d62289b61f6`.
+- [배포 PR #166](https://github.com/newbission/justusing/pull/166)의 [CI](https://github.com/newbission/justusing/actions/runs/43416963725)도535통과/7제외 후 squash merge. 운영 커밋은 `dff51b15514cca5c38e1936b139c726f5f08d712`.
+- Cloudflare Workers Builds가2026-11-13 20:38경(KST) 성공했다. 공개 사이트는 [운영 홈](https://justus.ing/)과 [영어 홈](https://justus.ing/en/)이다.
+- 즉시 만든 [main→dev 동기화 PR #167](https://github.com/newbission/justusing/pull/167)도 [CI](https://github.com/newbission/justusing/actions/runs/43418471086)535통과/7제외 후 merge commit `ed286eebb63d49071f139add8f728ffc0ef27334`로 반영했다. origin/main은 origin/dev의 조상이며 소스 트리는 같다. 구현 브랜치의 배포 전 소스 트리도 운영과 같다.
+
+[배포 상태](../evidence/home-value-deployment-state.txt), [CI 요약](../evidence/home-value-deployment-ci-summary.txt). 보호 브랜치 직접 push나 관리자 우회는 사용하지 않았다.
+
+## 배포 뒤 확인과 마감 — 2026-11-14
+
+- 실제 한영 운영 URL이 HTML200이고 다운로드 첨부 응답이 아님을 확인했다. 고민→H1→방법→무료→자료 안내→기능 소개 순서와 각 문구가 반영됐으며 참조 Astro 자산12/11개가 모두200이다. [HTTP 결과](../evidence/home-value-production-http.txt).
+- 실제 운영 도메인의 Chromium·WebKit 검사 **28개가 모두 통과(1.9분)**했다. 한영 소개·320/390px 두테마·JS 없음·전체 도구 탐색·직접 호스팅 사진과 실제 사진 처리/다운로드를 확인했다. 로컬 프록시가 아니다. [로그](../evidence/home-value-production-e2e.log), [설정](../evidence/home-value-production.config.ts.txt).
+- 실제 IAB 운영 탭을 새로 고쳐 새 소개를 확인하고 데스크톱·390×844 화면을 캡처했다. 뷰포트는 원래대로 돌렸고 운영 탭을 결과로 남겼다. [운영 데스크톱](../evidence/home-value-production-desktop.png), [운영 모바일](../evidence/home-value-production-mobile.png). 실제 사용자 폰 인수와 구별한다.
+- 병합 뒤 이력 생성기를 실행하고 이번 범위인 site-structure/fonts-and-data 이력만 갱신했다. 이 기록은 `docs/home-value-deployment-record`에 별도로 커밋/원격 보존한다. 운영 런타임을 바꾸거나 추가 배포하는 변경은 아니다.
+
+이번 요청의 구현·검증·커밋·운영 배포·동기화·배포 뒤 확인은 완료됐다. 다음은 사용자 화면 피드백 또는 새 요청을 origin/dev 기반 기능 브랜치에서 진행한다. 전체 제품 인수 완료를 주장하지 않는다.
+
+마감 [기계 보고서](1794585382647553000-0ff84ddf.md)는 로컬 검사 ID를 새로 선택하지 않아 `not_assessed`, 전체 제품은 `false`다. 위 실제 원격 CI/운영 검사 결과를 대신하거나 부정하는 값이 아니며, 커밋 후 오래된 로컬 검사를 현재 통과로 다시 기록하지 않았다. 마감 문서 관계 누락은 없다.

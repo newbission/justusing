@@ -1,0 +1,41 @@
+
+Running 28 tests using 2 workers
+
+(node:92636) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92635) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [production-chromium] › tests/e2e/home-value.spec.ts:26:3 › / 고민에 대한 답과 처리 방식·무료·데이터 안내 뒤 기능을 소개한다 (6.6s)
+  ✓   2 [production-chromium] › tests/e2e/home.spec.ts:31:3 › / 두 번째 기능 소개에서 실제 파일 처리와 다운로드까지 간다 (11.3s)
+  ✓   4 [production-chromium] › tests/e2e/home.spec.ts:55:3 › / 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 (3.8s)
+  ✓   5 [production-chromium] › tests/e2e/home.spec.ts:81:3 › / 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 (4.8s)
+  ✓   3 [production-chromium] › tests/e2e/home-value.spec.ts:82:3 › / 좁은 화면의 두 테마에서도 원리와 데이터 안내를 읽을 수 있다 (14.9s)
+  ✓   6 [production-chromium] › tests/e2e/home.spec.ts:103:3 › / 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 (6.2s)
+  ✓   7 [production-chromium] › tests/e2e/home-value.spec.ts:111:3 › / 자바스크립트 없이도 차별점과 다운로드 안내가 남는다 (6.3s)
+  ✓   9 [production-chromium] › tests/e2e/home-value.spec.ts:26:3 › /en/ 고민에 대한 답과 처리 방식·무료·데이터 안내 뒤 기능을 소개한다 (4.4s)
+  ✓  10 [production-chromium] › tests/e2e/home-value.spec.ts:82:3 › /en/ 좁은 화면의 두 테마에서도 원리와 데이터 안내를 읽을 수 있다 (9.5s)
+  ✓   8 [production-chromium] › tests/e2e/home.spec.ts:31:3 › /en/ 두 번째 기능 소개에서 실제 파일 처리와 다운로드까지 간다 (18.2s)
+  ✓  11 [production-chromium] › tests/e2e/home-value.spec.ts:111:3 › /en/ 자바스크립트 없이도 차별점과 다운로드 안내가 남는다 (4.7s)
+(node:93414) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  12 [production-chromium] › tests/e2e/home.spec.ts:55:3 › /en/ 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 (4.9s)
+  ✓  13 [production-webkit] › tests/e2e/home-value.spec.ts:26:3 › / 고민에 대한 답과 처리 방식·무료·데이터 안내 뒤 기능을 소개한다 (2.1s)
+  ✓  14 [production-chromium] › tests/e2e/home.spec.ts:81:3 › /en/ 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 (4.3s)
+  ✓  15 [production-webkit] › tests/e2e/home-value.spec.ts:82:3 › / 좁은 화면의 두 테마에서도 원리와 데이터 안내를 읽을 수 있다 (8.9s)
+  ✓  16 [production-chromium] › tests/e2e/home.spec.ts:103:3 › /en/ 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 (6.9s)
+(node:93557) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  17 [production-webkit] › tests/e2e/home-value.spec.ts:111:3 › / 자바스크립트 없이도 차별점과 다운로드 안내가 남는다 (7.7s)
+  ✓  19 [production-webkit] › tests/e2e/home-value.spec.ts:26:3 › /en/ 고민에 대한 답과 처리 방식·무료·데이터 안내 뒤 기능을 소개한다 (3.4s)
+  ✓  18 [production-webkit] › tests/e2e/home.spec.ts:31:3 › / 두 번째 기능 소개에서 실제 파일 처리와 다운로드까지 간다 (11.4s)
+  ✓  20 [production-webkit] › tests/e2e/home-value.spec.ts:82:3 › /en/ 좁은 화면의 두 테마에서도 원리와 데이터 안내를 읽을 수 있다 (5.7s)
+  ✓  21 [production-webkit] › tests/e2e/home.spec.ts:55:3 › / 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 (3.2s)
+  ✓  22 [production-webkit] › tests/e2e/home-value.spec.ts:111:3 › /en/ 자바스크립트 없이도 차별점과 다운로드 안내가 남는다 (2.8s)
+  ✓  23 [production-webkit] › tests/e2e/home.spec.ts:81:3 › / 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 (5.1s)
+  ✓  24 [production-webkit] › tests/e2e/home.spec.ts:103:3 › / 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 (6.3s)
+  ✓  25 [production-webkit] › tests/e2e/home.spec.ts:31:3 › /en/ 두 번째 기능 소개에서 실제 파일 처리와 다운로드까지 간다 (12.3s)
+  ✓  26 [production-webkit] › tests/e2e/home.spec.ts:55:3 › /en/ 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 (4.5s)
+  ✓  27 [production-webkit] › tests/e2e/home.spec.ts:81:3 › /en/ 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 (5.6s)
+  ✓  28 [production-webkit] › tests/e2e/home.spec.ts:103:3 › /en/ 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 (3.4s)
+
+  28 passed (1.9m)
