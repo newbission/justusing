@@ -1,0 +1,12 @@
+{
+  "id": "1794526115921757000-f6768fe5",
+  "check": "C-DIRECTORY-VISUAL",
+  "time_ns": 1794526115921789000,
+  "fingerprint": "19cd1897b7dfaca1c1ba794370935c178f267c8eba75a2e24bd4c760c5a1669c",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "기획 담당이 한영 문구를 정하고 구현 담당이 기존 스타일로 적용했다. 독립 검증이 최종 HTML의 안내→목록 순서와42개 고유 도구/광고48px유지/CSS예산을 확인했다. root는 실제 CUA390px 한영 및 데스크톱에서 문구 줄바꿈과 도구 모아보기 연결을 직접 확인했다. 사용자 인수와 구별한다.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-directory-mobile-ko.png",
+  "artifact_hash": "92609528e77fbb6bf24d167aee3982914eec5288f926c238e8a8134e373ecc0c"
+}

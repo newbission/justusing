@@ -1,0 +1,12 @@
+{
+  "id": "1794542584991060000-908b8fe7",
+  "check": "C-AUTOPLAY-VISUAL",
+  "time_ns": 1794542584991095000,
+  "fingerprint": "8593f233fb01e2ccede72fbe2829ac0eafc57b5b8f3a262dce308ab8a5550060",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "root가 실제 Tailscale IAB390px에서 첫 화면 모든 장면 idle→스크롤로 첫 장면 노출 직후 playing(클릭없음)→자연 종료 done→스크롤 아웃/재진입에도 done→다시 재생 버튼으로 playing을 확인했다. 재진입 캡처 home-autoplay-reentry.png. 뷰포트 복구/홈 초기화 완료. 사용자 실제 폰 인수와 구별한다.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-autoplay-first-visible.png",
+  "artifact_hash": "6a77c7209ad9c990374a3b6e35b5d1fb8d685bb13a49681b44cfe0667c50b4e9"
+}

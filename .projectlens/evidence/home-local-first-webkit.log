@@ -1,0 +1,19 @@
+
+Running 12 tests using 1 worker
+
+(node:584) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/home-motion-review.spec.ts:5:3 › / 처음 보일 때 재생하고 키보드 일시정지는 실제로 멈춘다 (6.1s)
+  ✓   2 tests/e2e/home-motion-review.spec.ts:80:3 › / 네 장면은 각각 첫 노출에 한 번만 재생하고 다시 스크롤해도 반복하지 않는다 (1.3s)
+  ✓   3 tests/e2e/home-motion-review.spec.ts:118:3 › / 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (736ms)
+  ✓   4 tests/e2e/home-motion-review.spec.ts:144:3 › / 수동 정지를 자동 노출이 덮어쓰지 않고 한 장면씩만 움직인다 (5.6s)
+  ✓   5 tests/e2e/home-motion-review.spec.ts:183:3 › / 320px 화면 두 테마에서 핵심 장면과 시작 링크가 잘리지 않는다 (910ms)
+  ✓   6 tests/e2e/home-motion-review.spec.ts:212:5 › / 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 (485ms)
+  ✓   7 tests/e2e/home-motion-review.spec.ts:5:3 › /en 처음 보일 때 재생하고 키보드 일시정지는 실제로 멈춘다 (5.6s)
+  ✓   8 tests/e2e/home-motion-review.spec.ts:80:3 › /en 네 장면은 각각 첫 노출에 한 번만 재생하고 다시 스크롤해도 반복하지 않는다 (1.2s)
+  ✓   9 tests/e2e/home-motion-review.spec.ts:118:3 › /en 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (448ms)
+  ✓  10 tests/e2e/home-motion-review.spec.ts:144:3 › /en 수동 정지를 자동 노출이 덮어쓰지 않고 한 장면씩만 움직인다 (5.6s)
+  ✓  11 tests/e2e/home-motion-review.spec.ts:183:3 › /en 320px 화면 두 테마에서 핵심 장면과 시작 링크가 잘리지 않는다 (897ms)
+  ✓  12 tests/e2e/home-motion-review.spec.ts:212:5 › /en 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 (419ms)
+
+  12 passed (30.0s)

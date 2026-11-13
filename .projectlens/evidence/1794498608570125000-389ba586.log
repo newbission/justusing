@@ -1,0 +1,696 @@
+
+Running 71 tests using 4 workers
+
+(node:82579) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82577) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82580) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82578) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 [chromium] › tests/e2e/category.spec.ts:6:1 › PDF 목록은 묶음별 소제목 아래 도구를 보여준다 (853ms)
+  ✓   3 [chromium] › tests/e2e/adblock.spec.ts:20:1 › 광고 스크립트는 바깥 페이지에만 있고 도구 frame에는 없다 (1.0s)
+  ✘   5 [chromium] › tests/e2e/category.spec.ts:37:1 › 홈에서도 묶음별로 나누고, 영어판은 영어 소제목을 쓴다 (536ms)
+(node:82653) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [chromium] › tests/e2e/adblock.spec.ts:29:1 › 광고 차단이 없으면 안내 창이 뜨지 않는다 (1.6s)
+  -   8 [chromium] › tests/e2e/adblock.spec.ts:46:5 › 안내 창을 켰을 때 › 광고 차단이 켜져 있으면 / 에서 안내 창이 뜬다
+  -   9 [chromium] › tests/e2e/adblock.spec.ts:46:5 › 안내 창을 켰을 때 › 광고 차단이 켜져 있으면 /pdf/ 에서 안내 창이 뜬다
+  -  10 [chromium] › tests/e2e/adblock.spec.ts:46:5 › 안내 창을 켰을 때 › 광고 차단이 켜져 있으면 /pdf/merge/ 에서 안내 창이 뜬다
+  -  11 [chromium] › tests/e2e/adblock.spec.ts:46:5 › 안내 창을 켰을 때 › 광고 차단이 켜져 있으면 /about/ 에서 안내 창이 뜬다
+  -  12 [chromium] › tests/e2e/adblock.spec.ts:53:3 › 안내 창을 켰을 때 › 안내 창은 ×, 닫기 버튼, Esc, 바깥 누르기로 닫는다
+  -  13 [chromium] › tests/e2e/adblock.spec.ts:69:3 › 안내 창을 켰을 때 › 도구를 쓸 때마다 다시 뜨고, 닫아도 하던 일은 그대로 된다
+  -  14 [chromium] › tests/e2e/adblock.spec.ts:96:3 › 안내 창을 켰을 때 › "껐어요, 새로 고침"은 페이지를 다시 열고, 광고가 받아지면 더는 뜨지 않는다
+  ✘   1 [chromium] › tests/e2e/home-showcase.spec.ts:13:3 › / 대표 예시 6개를 키보드로 열어 실제 도구 화면에 들어간다 (2.4s)
+(node:82673) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  15 [chromium] › tests/e2e/adblock.spec.ts:115:1 › 안내 창을 끄면 광고가 막혀도 뜨지 않는다 (1.2s)
+  ✘   7 [chromium] › tests/e2e/home.spec.ts:31:3 › / 첫 화면 도구에서 실제 파일 처리와 다운로드까지 간다 (856ms)
+  ✓  17 [chromium] › tests/e2e/adblock.spec.ts:124:1 › 도구 frame이 보내는 신호에는 내용이 없다 (760ms)
+(node:82699) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  16 [chromium] › tests/e2e/home-showcase.spec.ts:32:3 › / 전후 사진은 직접 호스팅하고 스크롤하면 빠짐없이 열린다 (715ms)
+  ✘  18 [chromium] › tests/e2e/i18n.spec.ts:19:1 › 영어 페이지는 lang과 문구가 영어다 (274ms)
+(node:82717) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82718) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  21 [chromium] › tests/e2e/i18n.spec.ts:29:3 › 영어 글 페이지 /en/about/ 가 열리고 바닥글이 영어 페이지로 이어진다 (391ms)
+  ✘  19 [chromium] › tests/e2e/home.spec.ts:52:3 › / 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 (605ms)
+  ✓  22 [chromium] › tests/e2e/i18n.spec.ts:29:3 › 영어 글 페이지 /en/privacy/ 가 열리고 바닥글이 영어 페이지로 이어진다 (220ms)
+(node:82751) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  23 [chromium] › tests/e2e/i18n.spec.ts:29:3 › 영어 글 페이지 /en/terms/ 가 열리고 바닥글이 영어 페이지로 이어진다 (210ms)
+  ✓  25 [chromium] › tests/e2e/i18n.spec.ts:29:3 › 영어 글 페이지 /en/contact/ 가 열리고 바닥글이 영어 페이지로 이어진다 (247ms)
+  ✘  20 [chromium] › tests/e2e/home-showcase.spec.ts:56:3 › / 모바일 두 테마에서 예시가 한 열로 나오고 가로로 넘치지 않는다 (972ms)
+  ✓  26 [chromium] › tests/e2e/i18n.spec.ts:40:1 › 영어 도구 화면도 영어로 나오고, 합친 파일 이름도 영어다 (825ms)
+(node:82783) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  27 [chromium] › tests/e2e/i18n.spec.ts:54:1 › 영어 나누기 도구의 범위 오류도 영어다 (628ms)
+  ✘  24 [chromium] › tests/e2e/home.spec.ts:69:3 › / 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 (504ms)
+(node:82805) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  29 [chromium] › tests/e2e/i18n.spec.ts:62:1 › 다른 언어판을 검색엔진에 알린다 (454ms)
+  ✓  30 [chromium] › tests/e2e/i18n.spec.ts:75:1 › 사이트맵에 영어 페이지가 있다 (26ms)
+  ✓  31 [chromium] › tests/e2e/i18n.spec.ts:84:3 › 처음 방문 언어 › 영어 브라우저로 한국어 페이지에 오면 영어판으로 간다 (490ms)
+  ✘  33 [chromium] › tests/e2e/i18n.spec.ts:90:3 › 처음 방문 언어 › 직접 한국어를 고르면 다음부터 한국어로 연다 (975ms)
+  ✘  32 [chromium] › tests/e2e/home.spec.ts:90:3 › / 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 (939ms)
+(node:82848) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82850) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  28 [chromium] › tests/e2e/home-showcase.spec.ts:13:3 › /en 대표 예시 6개를 키보드로 열어 실제 도구 화면에 들어간다 (2.7s)
+(node:82864) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  34 [chromium] › tests/e2e/i18n.spec.ts:99:3 › 처음 방문 언어 › 검색 로봇은 보내지 않는다 (1.3s)
+  ✓  37 [chromium] › tests/e2e/i18n.spec.ts:116:3 › 한국어 브라우저 › 한국어 브라우저로 영어 페이지에 오면 한국어판으로 간다 (259ms)
+  ✘  38 [chromium] › tests/e2e/i18n.spec.ts:123:1 › 홈의 간결한 안전 안내가 언어에 맞게 나온다 (349ms)
+  ✘  35 [chromium] › tests/e2e/home.spec.ts:31:3 › /en/ 첫 화면 도구에서 실제 파일 처리와 다운로드까지 간다 (1.2s)
+(node:82919) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  36 [chromium] › tests/e2e/home-showcase.spec.ts:32:3 › /en 전후 사진은 직접 호스팅하고 스크롤하면 빠짐없이 열린다 (835ms)
+(node:82920) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:82921) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  40 [chromium] › tests/e2e/home.spec.ts:52:3 › /en/ 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 (742ms)
+(node:82975) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  41 [chromium] › tests/e2e/home-showcase.spec.ts:56:3 › /en 모바일 두 테마에서 예시가 한 열로 나오고 가로로 넘치지 않는다 (916ms)
+(node:82977) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  39 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 홈 / (2.5s)
+(node:83004) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  42 [chromium] › tests/e2e/home.spec.ts:69:3 › /en/ 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 (458ms)
+(node:83006) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  43 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 카테고리(PDF) /pdf/ (2.4s)
+  ✘  45 [chromium] › tests/e2e/home.spec.ts:90:3 › /en/ 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 (542ms)
+(node:83047) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  44 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 카테고리(이미지) /image/ (2.3s)
+  ✓  46 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 카테고리(텍스트) /text/ (2.2s)
+  ✓  47 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 도구(PDF 합치기) /pdf/merge/ (2.5s)
+  ✓  48 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 도구(이미지 글자 추출) /image/ocr/ (2.4s)
+  ✓  49 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 가이드 목록 /guide/ (2.2s)
+  ✓  50 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 가이드 글 /guide/compress-pdf/ (2.3s)
+  ✓  51 [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 안전 설명 /safety/ (2.3s)
+  ✓  52 [chromium] › tests/e2e/perf-budget.spec.ts:148:3 › 도구 frame 첫 화면 예산: PDF 합치기 /pdf/merge/ (2.3s)
+  ✓  53 [chromium] › tests/e2e/perf-budget.spec.ts:148:3 › 도구 frame 첫 화면 예산: 이미지 글자 추출 /image/ocr/ (2.4s)
+  ✓  54 [chromium] › tests/e2e/perf-budget.spec.ts:167:3 › 도구 frame 첫 화면에 큰 파일이 없다: /pdf/merge/ (2.4s)
+  ✓  55 [chromium] › tests/e2e/perf-budget.spec.ts:167:3 › 도구 frame 첫 화면에 큰 파일이 없다: /pdf/ocr/ (2.4s)
+  ✓  56 [chromium] › tests/e2e/perf-budget.spec.ts:167:3 › 도구 frame 첫 화면에 큰 파일이 없다: /image/ocr/ (2.4s)
+  ✓  57 [chromium] › tests/e2e/perf-budget.spec.ts:167:3 › 도구 frame 첫 화면에 큰 파일이 없다: /image/id-photo/ (2.4s)
+  ✓  58 [chromium] › tests/e2e/perf-budget.spec.ts:167:3 › 도구 frame 첫 화면에 큰 파일이 없다: /image/mosaic/ (2.6s)
+  ✘  61 [chromium] › tests/e2e/seo.spec.ts:19:1 › 홈에 사이트 정보가 있다 (286ms)
+(node:83170) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  59 [chromium] › tests/e2e/perf-budget.spec.ts:167:3 › 도구 frame 첫 화면에 큰 파일이 없다: /image/heic-to-jpg/ (2.4s)
+  ✓  60 [chromium] › tests/e2e/perf-budget.spec.ts:167:3 › 도구 frame 첫 화면에 큰 파일이 없다: /pdf/watermark/ (2.4s)
+  ✓  63 [chromium] › tests/e2e/site-font.spec.ts:60:1 › 바깥 페이지의 글자가 모두 사이트 글꼴에 있다 (215ms)
+  ✓  62 [chromium] › tests/e2e/seo.spec.ts:25:1 › 도구 페이지의 FAQ 데이터가 화면의 질문과 같다 (547ms)
+  ✓  65 [chromium] › tests/e2e/seo.spec.ts:34:1 › 도구 페이지에 무료 웹 도구 정보가 있고 제목과 이름이 같다 (336ms)
+  ✓  64 [chromium] › tests/e2e/site-font.spec.ts:75:1 › 사이트 글꼴만 받는다 (Pretendard 원래 조각은 받지 않는다) (913ms)
+(node:83198) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  66 [chromium] › tests/e2e/seo.spec.ts:42:1 › 구조화 데이터가 문서 틀(<html>) 안에 있고 페이지가 표준 방식으로 그려진다 (487ms)
+(node:83218) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  68 [chromium] › tests/e2e/seo.spec.ts:54:1 › 사이트맵의 고친 날은 가이드 머리말 날짜이고, git 기록이 잘렸으면 도구 날짜를 적지 않는다 (77ms)
+  ✓  67 [webkit-smoke] › tests/e2e/webkit-smoke.spec.ts:20:1 › WebKit: 격리·외부 연결 차단을 유지하며 PDF를 돌려 내려받는다 (1.4s)
+  ✓  69 [webkit-smoke] › tests/e2e/webkit-smoke.spec.ts:62:1 › WebKit: 이미지 워커로 PNG를 JPG로 바꾸고 결과를 내려받는다 (813ms)
+  ✓  70 [webkit-smoke] › tests/e2e/webkit-smoke.spec.ts:89:1 › WebKit: 한글 PDF의 보조 파일과 스타일이 CSP에서 허용된다 (654ms)
+  ✘   4 [chromium] › tests/e2e/csp.spec.ts:27:1 › 사이트맵의 모든 페이지에서 CSP 위반이 없다 (펼침 메뉴·테마 바꾸기 포함) (1.9m)
+
+
+  1) [chromium] › tests/e2e/category.spec.ts:37:1 › 홈에서도 묶음별로 나누고, 영어판은 영어 소제목을 쓴다 ─────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/category-홈에서도-묶음별로-나누고-영어판은-영어-소제목을-쓴다-chromium/error-context.md
+
+  2) [chromium] › tests/e2e/home-showcase.spec.ts:13:3 › / 대표 예시 6개를 키보드로 열어 실제 도구 화면에 들어간다 ────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home-showcase--대표-예시-6개를-키보드로-열어-실제-도구-화면에-들어간다-chromium/error-context.md
+
+  3) [chromium] › tests/e2e/home-showcase.spec.ts:32:3 › / 전후 사진은 직접 호스팅하고 스크롤하면 빠짐없이 열린다 ──────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home-showcase--전후-사진은-직접-호스팅하고-스크롤하면-빠짐없이-열린다-chromium/error-context.md
+
+  4) [chromium] › tests/e2e/home-showcase.spec.ts:56:3 › / 모바일 두 테마에서 예시가 한 열로 나오고 가로로 넘치지 않는다 ─────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home-showcase--모바일-두-테마에서-예시가-한-열로-나오고-가로로-넘치지-않는다-chromium/error-context.md
+
+  5) [chromium] › tests/e2e/home-showcase.spec.ts:13:3 › /en 대표 예시 6개를 키보드로 열어 실제 도구 화면에 들어간다 ──────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home-showcase--en-대표-예시-6개를-키보드로-열어-실제-도구-화면에-들어간다-chromium/error-context.md
+
+  6) [chromium] › tests/e2e/home-showcase.spec.ts:32:3 › /en 전후 사진은 직접 호스팅하고 스크롤하면 빠짐없이 열린다 ────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home-showcase--en-전후-사진은-직접-호스팅하고-스크롤하면-빠짐없이-열린다-chromium/error-context.md
+
+  7) [chromium] › tests/e2e/home-showcase.spec.ts:56:3 › /en 모바일 두 테마에서 예시가 한 열로 나오고 가로로 넘치지 않는다 ───
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home-showcase--en-모바일-두-테마에서-예시가-한-열로-나오고-가로로-넘치지-않는다-chromium/error-context.md
+
+  8) [chromium] › tests/e2e/home.spec.ts:31:3 › / 첫 화면 도구에서 실제 파일 처리와 다운로드까지 간다 ────────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--첫-화면-도구에서-실제-파일-처리와-다운로드까지-간다-chromium/error-context.md
+
+  9) [chromium] › tests/e2e/home.spec.ts:52:3 › / 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 ────────────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--전체-도구로-건너뛰고-카테고리와-도구를-찾는다-chromium/error-context.md
+
+  10) [chromium] › tests/e2e/home.spec.ts:69:3 › / 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 ──────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--사진-견본은-직접-호스팅하며-실제-결과-크기를-표시한다-chromium/error-context.md
+
+  11) [chromium] › tests/e2e/home.spec.ts:90:3 › / 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 ───────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--모바일-두-테마에서-진입-링크가-보이고-가로로-넘치지-않는다-chromium/error-context.md
+
+  12) [chromium] › tests/e2e/home.spec.ts:31:3 › /en/ 첫 화면 도구에서 실제 파일 처리와 다운로드까지 간다 ────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--en-첫-화면-도구에서-실제-파일-처리와-다운로드까지-간다-chromium/error-context.md
+
+  13) [chromium] › tests/e2e/home.spec.ts:52:3 › /en/ 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 ────────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--en-전체-도구로-건너뛰고-카테고리와-도구를-찾는다-chromium/error-context.md
+
+  14) [chromium] › tests/e2e/home.spec.ts:69:3 › /en/ 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 ───────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--en-사진-견본은-직접-호스팅하며-실제-결과-크기를-표시한다-chromium/error-context.md
+
+  15) [chromium] › tests/e2e/home.spec.ts:90:3 › /en/ 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 ────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/home--en-모바일-두-테마에서-진입-링크가-보이고-가로로-넘치지-않는다-chromium/error-context.md
+
+  16) [chromium] › tests/e2e/i18n.spec.ts:19:1 › 영어 페이지는 lang과 문구가 영어다 ─────────────────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/i18n-영어-페이지는-lang과-문구가-영어다-chromium/error-context.md
+
+  17) [chromium] › tests/e2e/i18n.spec.ts:90:3 › 처음 방문 언어 › 직접 한국어를 고르면 다음부터 한국어로 연다 ───────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/i18n-처음-방문-언어-직접-한국어를-고르면-다음부터-한국어로-연다-chromium/error-context.md
+
+  18) [chromium] › tests/e2e/i18n.spec.ts:123:1 › 홈의 간결한 안전 안내가 언어에 맞게 나온다 ─────────────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/i18n-홈의-간결한-안전-안내가-언어에-맞게-나온다-chromium/error-context.md
+
+  19) [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 홈 / ────────────────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/perf-budget-바깥-페이지-예산-홈--chromium/error-context.md
+
+  20) [chromium] › tests/e2e/seo.spec.ts:19:1 › 홈에 사이트 정보가 있다 ──────────────────────────────────────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/seo-홈에-사이트-정보가-있다-chromium/error-context.md
+
+  21) [chromium] › tests/e2e/seo.spec.ts:42:1 › 구조화 데이터가 문서 틀(<html>) 안에 있고 페이지가 표준 방식으로 그려진다 ──────
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error Context: test-results/home-showcase/seo-구조화-데이터가-문서-틀-html-안에-있고-페이지가-표준-방식으로-그려진다-chromium/error-context.md
+
+  22) [chromium] › tests/e2e/csp.spec.ts:27:1 › 사이트맵의 모든 페이지에서 CSP 위반이 없다 (펼침 메뉴·테마 바꾸기 포함) ────────
+
+    Test was interrupted.
+
+    Error: http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+
+    expect(received).not.toContain(expected) // indexOf
+
+    Expected substring: not "photos"
+    Received string:        "http://localhost:4322/_astro/photos.DpgzcdKo_ZudnYa.webp
+    "
+
+       at local-only.ts:112
+
+      110 |       : sent;
+      111 |     const found = suspect && MARKS.find((text) => checked.includes(text));
+    > 112 |     if (found) expect(checked, request.url()).not.toContain(found);
+          |                                                   ^
+      113 |
+      114 |     const fromOuterPage = request.frame() === page.mainFrame();
+      115 |     if (fromOuterPage && OUTER_ORIGINS.includes(url.origin)) continue;
+        at expectLocalOnly (/Users/jm/development/projects/justusing/tests/e2e/local-only.ts:112:51)
+        at Object.page (/Users/jm/development/projects/justusing/tests/e2e/test.ts:63:5)
+
+    Error: page.waitForLoadState: Test ended.
+
+      22 |     await page.frameLocator('iframe[data-tool-frame]').locator('#app *').first().waitFor();
+      23 |   }
+    > 24 |   await page.waitForLoadState('networkidle');
+         |              ^
+      25 | }
+      26 |
+      27 | test('사이트맵의 모든 페이지에서 CSP 위반이 없다 (펼침 메뉴·테마 바꾸기 포함)', async ({
+        at open (/Users/jm/development/projects/justusing/tests/e2e/csp.spec.ts:24:14)
+        at /Users/jm/development/projects/justusing/tests/e2e/csp.spec.ts:34:5
+
+    Error Context: test-results/home-showcase/csp-사이트맵의-모든-페이지에서-CSP-위반이-없다-펼침-메뉴·테마-바꾸기-포함--chromium/error-context.md
+
+  21 failed
+    [chromium] › tests/e2e/category.spec.ts:37:1 › 홈에서도 묶음별로 나누고, 영어판은 영어 소제목을 쓴다 ──────────────────
+    [chromium] › tests/e2e/home-showcase.spec.ts:13:3 › / 대표 예시 6개를 키보드로 열어 실제 도구 화면에 들어간다 ─────────
+    [chromium] › tests/e2e/home-showcase.spec.ts:32:3 › / 전후 사진은 직접 호스팅하고 스크롤하면 빠짐없이 열린다 ───────────
+    [chromium] › tests/e2e/home-showcase.spec.ts:56:3 › / 모바일 두 테마에서 예시가 한 열로 나오고 가로로 넘치지 않는다 ──────
+    [chromium] › tests/e2e/home-showcase.spec.ts:13:3 › /en 대표 예시 6개를 키보드로 열어 실제 도구 화면에 들어간다 ───────
+    [chromium] › tests/e2e/home-showcase.spec.ts:32:3 › /en 전후 사진은 직접 호스팅하고 스크롤하면 빠짐없이 열린다 ─────────
+    [chromium] › tests/e2e/home-showcase.spec.ts:56:3 › /en 모바일 두 테마에서 예시가 한 열로 나오고 가로로 넘치지 않는다 ────
+    [chromium] › tests/e2e/home.spec.ts:31:3 › / 첫 화면 도구에서 실제 파일 처리와 다운로드까지 간다 ─────────────────────
+    [chromium] › tests/e2e/home.spec.ts:52:3 › / 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 ─────────────────────────
+    [chromium] › tests/e2e/home.spec.ts:69:3 › / 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 ────────────────────
+    [chromium] › tests/e2e/home.spec.ts:90:3 › / 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 ─────────────────
+    [chromium] › tests/e2e/home.spec.ts:31:3 › /en/ 첫 화면 도구에서 실제 파일 처리와 다운로드까지 간다 ──────────────────
+    [chromium] › tests/e2e/home.spec.ts:52:3 › /en/ 전체 도구로 건너뛰고 카테고리와 도구를 찾는다 ──────────────────────
+    [chromium] › tests/e2e/home.spec.ts:69:3 › /en/ 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다 ─────────────────
+    [chromium] › tests/e2e/home.spec.ts:90:3 › /en/ 모바일 두 테마에서 진입 링크가 보이고 가로로 넘치지 않는다 ──────────────
+    [chromium] › tests/e2e/i18n.spec.ts:19:1 › 영어 페이지는 lang과 문구가 영어다 ───────────────────────────────
+    [chromium] › tests/e2e/i18n.spec.ts:90:3 › 처음 방문 언어 › 직접 한국어를 고르면 다음부터 한국어로 연다 ─────────────────
+    [chromium] › tests/e2e/i18n.spec.ts:123:1 › 홈의 간결한 안전 안내가 언어에 맞게 나온다 ───────────────────────────
+    [chromium] › tests/e2e/perf-budget.spec.ts:135:3 › 바깥 페이지 예산: 홈 / ──────────────────────────────
+    [chromium] › tests/e2e/seo.spec.ts:19:1 › 홈에 사이트 정보가 있다 ────────────────────────────────────────
+    [chromium] › tests/e2e/seo.spec.ts:42:1 › 구조화 데이터가 문서 틀(<html>) 안에 있고 페이지가 표준 방식으로 그려진다 ────────
+  1 interrupted
+    [chromium] › tests/e2e/csp.spec.ts:27:1 › 사이트맵의 모든 페이지에서 CSP 위반이 없다 (펼침 메뉴·테마 바꾸기 포함) ──────────
+  7 skipped
+  1 did not run
+  41 passed (1.9m)

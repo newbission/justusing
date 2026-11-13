@@ -1,0 +1,33 @@
+{
+  "id": "1794498792675891000-57128346",
+  "check": "C-SHOWCASE",
+  "time_ns": 1794498792675925000,
+  "fingerprint": "b22f1f5b276df9e0e152da432b26f8ca318d979029d582ba98ce75cbbd6d406d",
+  "harness_version": "0.6.0",
+  "command": [
+    "env",
+    "PLAYWRIGHT_CHANNEL=chrome",
+    "E2E_PORT=4322",
+    "npx",
+    "playwright",
+    "test",
+    "tests/e2e/home-showcase.spec.ts",
+    "tests/e2e/home.spec.ts",
+    "tests/e2e/category.spec.ts",
+    "tests/e2e/i18n.spec.ts",
+    "tests/e2e/seo.spec.ts",
+    "tests/e2e/site-font.spec.ts",
+    "tests/e2e/perf-budget.spec.ts",
+    "tests/e2e/adblock.spec.ts",
+    "tests/e2e/csp.spec.ts",
+    "tests/e2e/webkit-smoke.spec.ts",
+    "--project=chromium",
+    "--project=webkit-smoke",
+    "--workers=4",
+    "--output=test-results/home-showcase-final"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794498792675891000-57128346.log",
+  "artifact_hash": "80181f31624d85a9882cfe461933e03a02bdfbe08ca268409ab29537ccd56bb8"
+}

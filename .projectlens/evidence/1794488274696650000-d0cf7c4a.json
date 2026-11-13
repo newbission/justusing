@@ -1,0 +1,30 @@
+{
+  "id": "1794488274696650000-d0cf7c4a",
+  "check": "C-HOME",
+  "time_ns": 1794488274696692000,
+  "fingerprint": "42e2eeb7ef8ca95da60d1e949a931be5e4df07ce8feab37719edddc718bc9d6b",
+  "harness_version": "0.6.0",
+  "command": [
+    "env",
+    "PLAYWRIGHT_CHANNEL=chrome",
+    "E2E_PORT=4322",
+    "npx",
+    "playwright",
+    "test",
+    "tests/e2e/home.spec.ts",
+    "tests/e2e/category.spec.ts",
+    "tests/e2e/i18n.spec.ts",
+    "tests/e2e/seo.spec.ts",
+    "tests/e2e/site-font.spec.ts",
+    "tests/e2e/perf-budget.spec.ts",
+    "tests/e2e/adblock.spec.ts",
+    "tests/e2e/csp.spec.ts",
+    "--project=chromium",
+    "--workers=4",
+    "--output=test-results/home-refresh"
+  ],
+  "exit_code": 130,
+  "result": "fail",
+  "artifact": ".projectlens/evidence/1794488274696650000-d0cf7c4a.log",
+  "artifact_hash": "b3cf740258cc447c79d3e5b729bb7b8fd7d52ae939c1a643484c6e946376101e"
+}

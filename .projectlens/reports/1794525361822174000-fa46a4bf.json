@@ -1,0 +1,248 @@
+{
+  "harness_version": "0.6.0",
+  "created_utc": "2026-11-12T23:16:01Z",
+  "mode": "change",
+  "scope": "한영 홈 주요4개 동작 장면 및 역할분리 검증",
+  "fingerprint": "5c952007bbda4eb6f6d77ff2f6c94410559f3f78de65fed03c9d8742c7d5e00c",
+  "source_fingerprint": "5c952007bbda4eb6f6d77ff2f6c94410559f3f78de65fed03c9d8742c7d5e00c",
+  "scoped_check_result": "verified",
+  "selected_checks": {
+    "C-MOTION-QUALITY": "pass",
+    "C-MOTION-E2E": "pass",
+    "C-MOTION-VISUAL": "pass"
+  },
+  "whole_project": {
+    "complete": false,
+    "problems": [
+      "Planning baseline has no recorded acceptance source",
+      "Check C-RECOVERY: stale",
+      "Check C-TYPES: stale",
+      "Check C-FORMAT: stale",
+      "Check C-DEPS: stale",
+      "Check C-WEBKIT: stale",
+      "Check C-BUILD: stale",
+      "Check C-SYSTEM: stale",
+      "Check C-VISUAL: stale",
+      "Check C-HOME: stale",
+      "Check C-HOME-QUALITY: stale",
+      "Check C-SHOWCASE: stale",
+      "Check C-SHOWCASE-QUALITY: stale"
+    ],
+    "checks": {
+      "C-RECOVERY": "stale",
+      "C-TYPES": "stale",
+      "C-FORMAT": "stale",
+      "C-DEPS": "stale",
+      "C-WEBKIT": "stale",
+      "C-BUILD": "stale",
+      "C-SYSTEM": "stale",
+      "C-VISUAL": "stale",
+      "C-HOME": "stale",
+      "C-HOME-QUALITY": "stale",
+      "C-SHOWCASE": "stale",
+      "C-SHOWCASE-QUALITY": "stale",
+      "C-MOTION-QUALITY": "pass",
+      "C-MOTION-E2E": "pass",
+      "C-MOTION-VISUAL": "pass"
+    },
+    "consecutive_failures": {
+      "C-RECOVERY": 0,
+      "C-DEPS": 0,
+      "C-BUILD": 0,
+      "C-TYPES": 0,
+      "C-FORMAT": 0,
+      "C-WEBKIT": 0,
+      "C-SYSTEM": 1,
+      "C-VISUAL": 0,
+      "C-HOME-QUALITY": 0,
+      "C-HOME": 0,
+      "C-SHOWCASE-QUALITY": 0,
+      "C-SHOWCASE": 0,
+      "C-MOTION-QUALITY": 0,
+      "C-MOTION-E2E": 0,
+      "C-MOTION-VISUAL": 0
+    }
+  },
+  "reviews": [],
+  "documents": [
+    {
+      "id": "DOC-SPEC",
+      "path": ".projectlens/spec.md",
+      "purpose": "이번 개선 범위·수용 기준·결정 출처",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY",
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "709e6d0ce885e3a182a5ab013e1028390bebf6c054ed1b4911f7d2ac51c7c364",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PDF",
+      "path": "docs/foundations/pdf-common/README.md",
+      "purpose": "PDF 공통 처리의 기준 문서",
+      "status": "draft",
+      "related": [
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "9dd8276240d93060fcb4b9884375b36b09714c062e087986a19c8f8726bccabc",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-FRAME",
+      "path": "docs/foundations/frame-isolation/README.md",
+      "purpose": "격리·CSP·워커·WebKit 검증",
+      "status": "draft",
+      "related": [
+        "R-WEBKIT",
+        "R-RECOVERY"
+      ],
+      "exists": true,
+      "sha256": "3a7381c30deeb393db4ea230a2ea29a47abe3dfc0487a52d4ba07522f6225eb8",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-PROCESS",
+      "path": "docs/foundations/process/README.md",
+      "purpose": "검사 범위·의존성 갱신·WebKit 실행 방법",
+      "status": "draft",
+      "related": [
+        "R-QUALITY",
+        "R-DEPS",
+        "R-WEBKIT"
+      ],
+      "exists": true,
+      "sha256": "8012d3914c6aa74e4583391174a2d8fa32c45351466095d409e8c9939051327d",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-HOME",
+      "path": ".projectlens/home-refresh.md",
+      "purpose": "홈 개선 요청·설계·수용 기준",
+      "status": "draft",
+      "related": [
+        "R-HOME",
+        "T-HOME",
+        "C-HOME",
+        "C-HOME-QUALITY",
+        "R-SHOWCASE",
+        "T-SHOWCASE",
+        "C-SHOWCASE",
+        "C-SHOWCASE-QUALITY"
+      ],
+      "exists": true,
+      "sha256": "52d79124341314c595912948e0c3d1375995c0106502b1fcc2eabd887d99e7f1",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-HOME-MOTION",
+      "path": ".projectlens/home-motion-plan.md",
+      "purpose": "기획 담당이 작성하는 대표 장면 baseline·문구·wireframe·수용 기준",
+      "status": "draft",
+      "related": [
+        "R-HOME-MOTION",
+        "T-HOME-MOTION",
+        "C-MOTION-QUALITY",
+        "C-MOTION-E2E",
+        "C-MOTION-VISUAL"
+      ],
+      "exists": true,
+      "sha256": "a8ed7503bbe02583ceb1ad65eca1b8cba67065019ae84e24673f7451fd65a5c0",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "path": ".projectlens/handoff.md",
+      "exists": true,
+      "health": "unregistered",
+      "registered": false,
+      "review_current": false
+    }
+  ],
+  "evidence": {
+    "C-MOTION-QUALITY": {
+      "id": "1794525119123770000-9e57cfee",
+      "check": "C-MOTION-QUALITY",
+      "time_ns": 1794525119123798000,
+      "fingerprint": "5c952007bbda4eb6f6d77ff2f6c94410559f3f78de65fed03c9d8742c7d5e00c",
+      "harness_version": "0.6.0",
+      "command": [
+        "/bin/zsh",
+        "-lc",
+        "npm run format:check && npm run check && npm run build && git diff --check"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1794525119123770000-9e57cfee.log",
+      "artifact_hash": "6aa2245b576af91604c17aaf426ee34fa888265f17057f289e09befaa09169ef"
+    },
+    "C-MOTION-E2E": {
+      "id": "1794525154572099000-afc65ec3",
+      "check": "C-MOTION-E2E",
+      "time_ns": 1794525154572130000,
+      "fingerprint": "5c952007bbda4eb6f6d77ff2f6c94410559f3f78de65fed03c9d8742c7d5e00c",
+      "harness_version": "0.6.0",
+      "command": [
+        "/usr/bin/env",
+        "PLAYWRIGHT_CHANNEL=chrome",
+        "E2E_PORT=4322",
+        "npx",
+        "playwright",
+        "test",
+        "tests/e2e/home-showcase.spec.ts",
+        "tests/e2e/home-motion-review.spec.ts",
+        "tests/e2e/home.spec.ts",
+        "tests/e2e/category.spec.ts",
+        "tests/e2e/i18n.spec.ts",
+        "tests/e2e/seo.spec.ts",
+        "tests/e2e/site-font.spec.ts",
+        "tests/e2e/perf-budget.spec.ts",
+        "tests/e2e/adblock.spec.ts",
+        "tests/e2e/csp.spec.ts",
+        "tests/e2e/webkit-smoke.spec.ts",
+        "--project=chromium",
+        "--project=webkit-smoke",
+        "--workers=4",
+        "--output=test-results/home-motion-final"
+      ],
+      "exit_code": 0,
+      "result": "pass",
+      "artifact": ".projectlens/evidence/1794525154572099000-afc65ec3.log",
+      "artifact_hash": "a79576581155ff6150b892bcae30b15c3d2f4a691603e0b86927aa7f8b6d80d7"
+    },
+    "C-MOTION-VISUAL": {
+      "id": "1794525212659579000-ef7a9937",
+      "check": "C-MOTION-VISUAL",
+      "time_ns": 1794525212659618000,
+      "fingerprint": "5c952007bbda4eb6f6d77ff2f6c94410559f3f78de65fed03c9d8742c7d5e00c",
+      "harness_version": "0.6.0",
+      "result": "pass",
+      "note": "독립 기획 담당이 한영 모바일/데스크톱 캡처에서 문구·계층·단일PDF 의미를 검토했고 별도 검증 담당이 실제 출력과 모바일 캡처를 확인했다. root가 최종 수정본 IAB 390px에서 입력4+2 라벨이 가려지지 않고 단계11px가 읽히는 것을 확인했으며, 한영/두테마·PDF재생·최종 데스크톱4장면을 실제로 보았다. 캡처: home-motion-mobile-merge-final.png 및 home-motion-mobile-en-light.png. 사용자 인수는 대신하지 않는다.",
+      "kind": "manual",
+      "artifact": ".projectlens/evidence/home-motion-gallery.webp",
+      "artifact_hash": "6ec536e9151f92ed747b8214d95b3701a105af8d6f7d5adaf1730c9f1fe963d7"
+    }
+  },
+  "interpretation": "Selected check verification is not mode completion or whole-product acceptance. Review findings and unverified areas still require assessment."
+}

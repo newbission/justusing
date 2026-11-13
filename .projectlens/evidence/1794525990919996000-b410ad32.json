@@ -1,0 +1,16 @@
+{
+  "id": "1794525990919996000-b410ad32",
+  "check": "C-DIRECTORY-HANDOFF",
+  "time_ns": 1794525990920026000,
+  "fingerprint": "19cd1897b7dfaca1c1ba794370935c178f267c8eba75a2e24bd4c760c5a1669c",
+  "harness_version": "0.6.0",
+  "command": [
+    "/bin/zsh",
+    "-lc",
+    "npm run format:check && npm run check && npm run build && git diff --check && PLAYWRIGHT_CHANNEL=chrome E2E_PORT=4322 npx playwright test tests/e2e/home.spec.ts tests/e2e/site-font.spec.ts tests/e2e/perf-budget.spec.ts --project=chromium --workers=4 --output=test-results/home-directory-final"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794525990919996000-b410ad32.log",
+  "artifact_hash": "8509a49e560085f09ad004193d4b031679d886c3cab447184d5b78a32cd5068a"
+}

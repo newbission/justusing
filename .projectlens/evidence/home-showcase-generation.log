@@ -1,0 +1,10 @@
+실제 도구 결과: cutout.png
+실제 도구 결과: crop.jpg
+실제 도구 결과: stitch.jpg
+실제 도구 결과: photos.pdf
+실제 도구 결과: merge-ko.pdf
+실제 도구 결과: redact-ko.pdf
+실제 도구 결과: merge-en.pdf
+실제 도구 결과: redact-en.pdf
+warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+PDF 쪽 수·가린 글자 삭제 확인 및 실제 결과 렌더링 완료.
