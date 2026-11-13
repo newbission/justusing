@@ -31,14 +31,16 @@ interface Limits {
 
 /** 바깥 페이지 종류별 상한 */
 const OUTER: { name: string; path: string; limits: Limits }[] = [
-  // 홈·안전 페이지는 움직이는 그림(SVG)이 HTML에 들어 있어 HTML이 크다.
+  // 안전 페이지는 움직이는 그림(SVG)이 HTML에 들어 있어 HTML이 크다.
   // 글꼴은 사이트 글자만 담은 조각 네 개(src/styles/site-font.css): 영문·기호 36 + 홈·많이 쓰는 한글 58 + 나머지 31·31.
   // 줄인 뒤 잰 값(HTML / JS / CSS / 글꼴 / 그림 / 요청, 2026-10-24 글꼴·frame CSS·SVG 줄이기,
   // HTML은 CSP 해시를 페이지마다 줄인 뒤 src/integrations/csp-per-page.ts)을 줄 끝에 적는다
   {
     name: '홈',
     path: '/',
-    limits: { html: 24, js: 4, css: 10, font: 117, image: 5, requests: 10 }, // 20.7 / 0 / 8.7 / 94 / 0 / 7
+    // 2026-11-13: 사용자 요청으로 실제 전후 예시 6개를 추가(기존 대표 사진 2장 포함).
+    // 고정 크기·지연 로딩 WebP만 전송. 측정 약145KB/16요청에서 여유를 두며 JS·CSS·글꼴 예산은 유지한다.
+    limits: { html: 24, js: 4, css: 10, font: 117, image: 170, requests: 18 },
   },
   {
     name: '카테고리(PDF)',
