@@ -8,15 +8,16 @@ import ToolCard from './ToolCard.astro';
 interface Props {
   tools: Tool[];
   headingLevel?: 2 | 3 | 4;
+  compact?: boolean;
 }
 
-const { tools, headingLevel } = Astro.props;
+const { tools, headingLevel, compact } = Astro.props;
 ---
 
 <ul class="grid">
   {tools.map((tool) => (
     <li>
-      <ToolCard tool={tool} headingLevel={headingLevel} />
+      <ToolCard tool={tool} headingLevel={headingLevel} {compact} />
     </li>
   ))}
 </ul>

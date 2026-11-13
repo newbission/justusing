@@ -12,9 +12,10 @@ interface Props {
   category: CategoryId;
   /** 소제목의 제목 수준. 카드는 그 아래 수준 */
   headingLevel?: 2 | 3;
+  compact?: boolean;
 }
 
-const { category, headingLevel = 2 } = Astro.props;
+const { category, headingLevel = 2, compact } = Astro.props;
 const locale = localeOf(Astro.url.pathname);
 const Heading = `h${headingLevel}` as const;
 const cardLevel = (headingLevel + 1) as 3 | 4;
@@ -24,7 +25,7 @@ const cardLevel = (headingLevel + 1) as 3 | 4;
   {sectionsInCategory(category).map((section) => (
     <section class="section">
       <Heading class="section-title">{section.text[locale]}</Heading>
-      <ToolGrid tools={section.tools} headingLevel={cardLevel} />
+      <ToolGrid tools={section.tools} headingLevel={cardLevel} {compact} />
     </section>
   ))}
 </div>
