@@ -1,5 +1,5 @@
 ---
-/** 처음 방문한 사람이 겪는 부담과 기기 안 처리 원리, 무료 범위·데이터 수신을 순서대로 설명한다. */
+/** 작업 효용과 즉시 진입, 기기 안의 처리 경계와 자료 수신을 설명한다. */
 import HomeLocalFlow from './HomeLocalFlow.astro';
 import { localeOf, localizePath } from '../i18n/locales';
 import { ui } from '../i18n/ui';
@@ -16,59 +16,48 @@ const examples = ['pdf/merge', 'image/target-size', 'text/csv-encoding', 'video/
 
 <div class="home-value-story">
   <section class="local-hero" aria-labelledby="home-title">
-    <div class="story-problem">
-      <p>{s.lead}</p>
-      <ul class="home-pains">
-        {s.pains.map((pain) => (
-          <li>{pain}</li>
-        ))}
-      </ul>
-    </div>
-    <p class="eyebrow">{t.localEyebrow}</p>
-    <h1 id="home-title">{siteConfig.text[locale].tagline}</h1>
-    <p class="intro">{t.localIntro}</p>
-    <div class="hero-actions">
-      <a class="primary" href="#tools">
-        {t.localPrimary}
-        <span aria-hidden="true">↓</span>
-      </a>
-      <a class="browse" href={localizePath('/safety/', locale)}>
-        {t.localMore}
-        <span aria-hidden="true">↗</span>
-      </a>
-    </div>
-  </section>
-
-  <section class="hero home-how" aria-labelledby="how-title">
-    <div>
-      <div class="section-heading">
-        <h2 id="how-title">{s.howTitle}</h2>
+    <div class="story-copy">
+      <p class="eyebrow">{t.localEyebrow}</p>
+      <h1 id="home-title">{siteConfig.text[locale].tagline}</h1>
+      <p class="intro">{t.localIntro}</p>
+      <p class="story-scope">
+        {s.toolCount(liveTools.length)} · {s.offerText}
+      </p>
+      <div class="hero-actions">
+        <a class="primary" href="#tools">
+          {t.localPrimary}
+          <span aria-hidden="true">↓</span>
+        </a>
+        <a class="browse" href={localizePath('/safety/', locale)}>
+          {t.localMore}
+          <span aria-hidden="true">↗</span>
+        </a>
       </div>
-      <dl class="story-reasons">
-        {s.reasons.map((reason) => (
-          <>
-            <dt>{reason.title}</dt>
-            <dd>{reason.text}</dd>
-          </>
+      <nav class="story-start" aria-label={s.startLabel}>
+        {examples.map((tool) => (
+          <a href={localizePath(`/${tool.id}/`, locale)}>
+            {tool.text[locale].name}
+            <span aria-hidden="true">↗</span>
+          </a>
         ))}
-      </dl>
+      </nav>
     </div>
     <HomeLocalFlow />
   </section>
 
-  <section class="guide-note home-offer" aria-labelledby="offer-title">
-    <div>
-      <h2 id="offer-title">{s.offerTitle}</h2>
-      <p>{s.offerText}</p>
-      <p class="story-scope">
-        <strong>{s.toolCount(liveTools.length)}</strong>
-        <span aria-hidden="true"> · </span>
-        {examples.map((tool) => tool.text[locale].name).join(' · ')}
-      </p>
-    </div>
+  <section class="home-how" aria-labelledby="how-title">
+    <h2 id="how-title">{s.howTitle}</h2>
+    <dl class="story-reasons">
+      {s.reasons.map((reason) => (
+        <div>
+          <dt>{reason.title}</dt>
+          <dd>{reason.text}</dd>
+        </div>
+      ))}
+    </dl>
   </section>
 
-  <aside class="guide-note home-data-note" aria-labelledby="data-note-title">
+  <aside class="home-data-note" aria-labelledby="data-note-title">
     <div>
       <h2 id="data-note-title">{s.dataTitle}</h2>
       <p>{s.dataText}</p>
@@ -79,36 +68,50 @@ const examples = ['pdf/merge', 'image/target-size', 'text/csv-encoding', 'video/
 
 <style is:global>
   .home-value-story .local-hero {
-    padding: 36px 0;
+    display: grid;
+    grid-template-columns: 1.08fr 1fr;
+    align-items: center;
+    gap: 48px;
+    padding: 56px 0 40px;
   }
   .home-value-story .local-hero h1 {
-    max-width: 14em;
+    max-width: 10em;
   }
   .home-value-story .local-hero .intro {
-    max-width: 42em;
+    max-width: 29em;
   }
-  .home-value-story .story-problem {
-    margin-bottom: 32px;
+  .home-value-story .story-scope {
+    margin: 16px 0 0;
+    color: var(--color-muted);
+    font-size: 14px;
   }
-  .home-value-story .story-problem p {
-    margin: 0 0 12px;
-    font-size: 16px;
+  .home-value-story .story-start {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin-top: 28px;
+    font-size: 13px;
   }
-  .home-value-story .home-pains {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: 16px;
-    font-weight: 600;
+  .home-value-story .story-start a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    text-decoration-color: var(--color-line);
   }
-  .home-value-story .home-pains li {
-    padding-top: 12px;
+  .home-value-story .home-how {
+    padding: 24px 0;
     border-top: 1px solid var(--color-line);
   }
+  .home-value-story .home-how h2 {
+    margin: 0 0 20px;
+    font-size: 24px;
+    letter-spacing: -0.03em;
+  }
   .home-value-story .story-reasons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
     margin: 0;
   }
   .home-value-story .story-reasons dt {
@@ -116,26 +119,39 @@ const examples = ['pdf/merge', 'image/target-size', 'text/csv-encoding', 'video/
     font-weight: 600;
   }
   .home-value-story .story-reasons dd {
-    margin: 8px 0 24px;
+    margin: 8px 0 0;
     font-size: 14px;
     color: var(--color-muted);
     word-break: keep-all;
   }
-  .home-value-story .story-reasons dd:last-child {
-    margin-bottom: 0;
-  }
   .home-value-story .home-data-note {
-    border-top: 1px solid var(--color-line);
-    margin-top: 16px;
-    padding-bottom: 36px;
+    margin: 0 0 32px;
+    padding: 20px;
+    border-left: 2px solid var(--color-accent);
+    background: var(--color-accent-soft);
   }
-  .home-value-story .story-scope strong {
-    color: var(--color-accent);
+  .home-value-story .home-data-note h2 {
+    margin: 0;
+    font-size: 16px;
   }
-  @media (max-width: 599px) {
-    .home-value-story .home-pains {
+  .home-value-story .home-data-note p {
+    max-width: 52em;
+    margin: 8px 0 0;
+    color: var(--color-text);
+    font-size: 14px;
+    word-break: keep-all;
+  }
+  @media (max-width: 767px) {
+    .home-value-story .local-hero,
+    .home-value-story .story-reasons {
       grid-template-columns: minmax(0, 1fr);
-      gap: 10px;
+      gap: 28px;
+    }
+    .home-value-story .local-hero {
+      padding: 36px 0 28px;
+    }
+    .home-value-story .home-data-note {
+      padding: 16px;
     }
   }
 </style>

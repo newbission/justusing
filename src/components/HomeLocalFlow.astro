@@ -14,7 +14,6 @@ const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
   <div class="proof-device">
     <strong>{t.device}</strong>
     <div class="proof-browser">
-      <span>{t.browser}</span>
       <div class="proof-tool">
         <strong>{t.toolArea}</strong>
         <ol class="proof-steps">
@@ -70,26 +69,17 @@ const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
     line-height: 1;
   }
   .home .proof-device {
-    padding: 12px;
+    padding: 16px;
     border: 1px solid var(--color-accent);
     border-radius: var(--radius);
     background: var(--color-accent-soft);
   }
-  .home .proof-browser {
-    margin-top: 12px;
-    padding: 10px;
-    border: 1px solid var(--color-line);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-  }
-  .home .proof-browser > span {
-    color: var(--color-muted);
-  }
   .home .proof-tool {
     margin-top: 12px;
-    padding: 10px;
+    padding: 16px 10px;
     border: 1px solid var(--color-accent);
     border-radius: var(--radius);
+    background: var(--color-surface);
   }
   .home .proof-tool > strong {
     color: var(--color-accent);
@@ -128,6 +118,10 @@ const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
   }
   .home .proof-outside {
     margin: 12px 0 0;
-    color: var(--color-muted);
+    color: var(--color-text);
+    font-size: 12px;
+  }
+  .home .local-proof figcaption {
+    font-size: 13px;
   }
 </style>
