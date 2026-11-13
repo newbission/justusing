@@ -1,0 +1,141 @@
+---
+/** 처음 방문한 사람이 겪는 부담과 기기 안 처리 원리, 무료 범위·데이터 수신을 순서대로 설명한다. */
+import HomeLocalFlow from './HomeLocalFlow.astro';
+import { localeOf, localizePath } from '../i18n/locales';
+import { ui } from '../i18n/ui';
+import { siteConfig } from '../site.config';
+import { getTool, liveTools } from '../tools/registry';
+
+const locale = localeOf(Astro.url.pathname);
+const t = ui(locale).home;
+const s = t.story;
+const examples = ['pdf/merge', 'image/target-size', 'text/csv-encoding', 'video/extract-audio'].map(
+  (id) => getTool(id)!,
+);
+---
+
+<div class="home-value-story">
+  <section class="local-hero" aria-labelledby="home-title">
+    <div class="story-problem">
+      <p>{s.lead}</p>
+      <ul class="home-pains">
+        {s.pains.map((pain) => (
+          <li>{pain}</li>
+        ))}
+      </ul>
+    </div>
+    <p class="eyebrow">{t.localEyebrow}</p>
+    <h1 id="home-title">{siteConfig.text[locale].tagline}</h1>
+    <p class="intro">{t.localIntro}</p>
+    <div class="hero-actions">
+      <a class="primary" href="#tools">
+        {t.localPrimary}
+        <span aria-hidden="true">↓</span>
+      </a>
+      <a class="browse" href={localizePath('/safety/', locale)}>
+        {t.localMore}
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="hero home-how" aria-labelledby="how-title">
+    <div>
+      <div class="section-heading">
+        <h2 id="how-title">{s.howTitle}</h2>
+      </div>
+      <dl class="story-reasons">
+        {s.reasons.map((reason) => (
+          <>
+            <dt>{reason.title}</dt>
+            <dd>{reason.text}</dd>
+          </>
+        ))}
+      </dl>
+    </div>
+    <HomeLocalFlow />
+  </section>
+
+  <section class="guide-note home-offer" aria-labelledby="offer-title">
+    <div>
+      <h2 id="offer-title">{s.offerTitle}</h2>
+      <p>{s.offerText}</p>
+      <p class="story-scope">
+        <strong>{s.toolCount(liveTools.length)}</strong>
+        <span aria-hidden="true"> · </span>
+        {examples.map((tool) => tool.text[locale].name).join(' · ')}
+      </p>
+    </div>
+  </section>
+
+  <aside class="guide-note home-data-note" aria-labelledby="data-note-title">
+    <div>
+      <h2 id="data-note-title">{s.dataTitle}</h2>
+      <p>{s.dataText}</p>
+      <p>{s.dataReuse}</p>
+    </div>
+  </aside>
+</div>
+
+<style is:global>
+  .home-value-story .local-hero {
+    padding: 36px 0;
+  }
+  .home-value-story .local-hero h1 {
+    max-width: 14em;
+  }
+  .home-value-story .local-hero .intro {
+    max-width: 42em;
+  }
+  .home-value-story .story-problem {
+    margin-bottom: 32px;
+  }
+  .home-value-story .story-problem p {
+    margin: 0 0 12px;
+    font-size: 16px;
+  }
+  .home-value-story .home-pains {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .home-value-story .home-pains li {
+    padding-top: 12px;
+    border-top: 1px solid var(--color-line);
+  }
+  .home-value-story .story-reasons {
+    margin: 0;
+  }
+  .home-value-story .story-reasons dt {
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .home-value-story .story-reasons dd {
+    margin: 8px 0 24px;
+    font-size: 14px;
+    color: var(--color-muted);
+    word-break: keep-all;
+  }
+  .home-value-story .story-reasons dd:last-child {
+    margin-bottom: 0;
+  }
+  .home-value-story .home-data-note {
+    border-top: 1px solid var(--color-line);
+    margin-top: 16px;
+    padding-bottom: 36px;
+  }
+  .home-value-story .story-scope strong {
+    color: var(--color-accent);
+  }
+  @media (max-width: 599px) {
+    .home-value-story .home-pains {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+    }
+  }
+</style>
