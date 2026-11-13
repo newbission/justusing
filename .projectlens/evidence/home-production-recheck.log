@@ -1,0 +1,143 @@
+
+Running 6 tests using 1 worker
+
+(node:85855) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [production-chromium] › tests/e2e/home-motion-review.spec.ts:118:3 › / 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (2.3s)
+  ✓  2 [production-chromium] › tests/e2e/home-motion-review.spec.ts:118:3 › /en 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (2.3s)
+  ✘  3 [production-chromium] › tests/e2e/home-showcase.spec.ts:8:3 › / 대표 장면 4개에서 키보드로 실제 도구 화면에 들어간다 (30.3s)
+(node:86260) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  4 [production-chromium] › tests/e2e/home-showcase.spec.ts:8:3 › /en 대표 장면 4개에서 키보드로 실제 도구 화면에 들어간다 (10.7s)
+(node:86339) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  5 [production-webkit] › tests/e2e/home-motion-review.spec.ts:118:3 › / 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (2.8s)
+(node:86363) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  6 [production-webkit] › tests/e2e/home-motion-review.spec.ts:118:3 › /en 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (3.4s)
+
+
+  1) [production-chromium] › tests/e2e/home-showcase.spec.ts:8:3 › / 대표 장면 4개에서 키보드로 실제 도구 화면에 들어간다 
+
+    Error: expect(locator).toBeAttached() failed
+
+    Locator: locator('iframe[data-tool-frame]').contentFrame().locator('input[type=file]').first()
+    Expected: attached
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeAttached" locator('iframe[data-tool-frame]').contentFrame().locator('input[type=file]').first() with timeout 5000ms
+      - waiting for locator('iframe[data-tool-frame]').contentFrame().locator('input[type=file]').first()
+
+
+      21 |       await expect(
+      22 |         page.frameLocator('iframe[data-tool-frame]').locator('input[type=file]').first(),
+    > 23 |       ).toBeAttached();
+         |         ^
+      24 |     }
+      25 |   });
+      26 |
+        at /Users/jm/development/projects/justusing/tests/e2e/home-showcase.spec.ts:23:9
+
+    Error Context: test-results/home-production-recheck/home-showcase--대표-장면-4개에서-키보드로-실제-도구-화면에-들어간다-production-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/home-production-recheck/home-showcase--대표-장면-4개에서-키보드로-실제-도구-화면에-들어간다-production-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/home-production-recheck/home-showcase--대표-장면-4개에서-키보드로-실제-도구-화면에-들어간다-production-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [production-chromium] › tests/e2e/home-showcase.spec.ts:8:3 › /en 대표 장면 4개에서 키보드로 실제 도구 화면에 들어간다 
+
+    Error: expect(locator).toBeAttached() failed
+
+    Locator: locator('iframe[data-tool-frame]').contentFrame().locator('input[type=file]').first()
+    Expected: attached
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeAttached" locator('iframe[data-tool-frame]').contentFrame().locator('input[type=file]').first() with timeout 5000ms
+      - waiting for locator('iframe[data-tool-frame]').contentFrame().locator('input[type=file]').first()
+
+
+      21 |       await expect(
+      22 |         page.frameLocator('iframe[data-tool-frame]').locator('input[type=file]').first(),
+    > 23 |       ).toBeAttached();
+         |         ^
+      24 |     }
+      25 |   });
+      26 |
+        at /Users/jm/development/projects/justusing/tests/e2e/home-showcase.spec.ts:23:9
+
+    Error Context: test-results/home-production-recheck/home-showcase--en-대표-장면-4개에서-키보드로-실제-도구-화면에-들어간다-production-chromium/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/home-production-recheck/home-showcase--en-대표-장면-4개에서-키보드로-실제-도구-화면에-들어간다-production-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/home-production-recheck/home-showcase--en-대표-장면-4개에서-키보드로-실제-도구-화면에-들어간다-production-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [production-webkit] › tests/e2e/home-motion-review.spec.ts:118:3 › / 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 10
+
+      126 |       await scene.scrollIntoViewIfNeeded();
+      127 |       await expect(scene.locator('[data-motion-control]')).toBeHidden();
+    > 128 |       expect(await scene.evaluate((el) => el.getAnimations({ subtree: true }).length)).toBe(0);
+          |                                                                                        ^
+      129 |       await expect(scene.locator('.demo-stage')).toHaveAttribute('aria-label', /.+/);
+      130 |     }
+      131 |     const album = page.locator('[data-demo="album"]');
+        at /Users/jm/development/projects/justusing/tests/e2e/home-motion-review.spec.ts:128:88
+
+    Error Context: test-results/home-production-recheck/home-motion-review--움직임-줄이-3369c-여러-장의-결과가-PDF-한-파일임을-알-수-있다-production-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/home-production-recheck/home-motion-review--움직임-줄이-3369c-여러-장의-결과가-PDF-한-파일임을-알-수-있다-production-webkit/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/home-production-recheck/home-motion-review--움직임-줄이-3369c-여러-장의-결과가-PDF-한-파일임을-알-수-있다-production-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [production-webkit] › tests/e2e/home-motion-review.spec.ts:118:3 › /en 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 10
+
+      126 |       await scene.scrollIntoViewIfNeeded();
+      127 |       await expect(scene.locator('[data-motion-control]')).toBeHidden();
+    > 128 |       expect(await scene.evaluate((el) => el.getAnimations({ subtree: true }).length)).toBe(0);
+          |                                                                                        ^
+      129 |       await expect(scene.locator('.demo-stage')).toHaveAttribute('aria-label', /.+/);
+      130 |     }
+      131 |     const album = page.locator('[data-demo="album"]');
+        at /Users/jm/development/projects/justusing/tests/e2e/home-motion-review.spec.ts:128:88
+
+    Error Context: test-results/home-production-recheck/home-motion-review--en-움직임-9dbb1-여러-장의-결과가-PDF-한-파일임을-알-수-있다-production-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/home-production-recheck/home-motion-review--en-움직임-9dbb1-여러-장의-결과가-PDF-한-파일임을-알-수-있다-production-webkit/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/home-production-recheck/home-motion-review--en-움직임-9dbb1-여러-장의-결과가-PDF-한-파일임을-알-수-있다-production-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [production-chromium] › tests/e2e/home-showcase.spec.ts:8:3 › / 대표 장면 4개에서 키보드로 실제 도구 화면에 들어간다 ─
+    [production-chromium] › tests/e2e/home-showcase.spec.ts:8:3 › /en 대표 장면 4개에서 키보드로 실제 도구 화면에 들어간다 
+    [production-webkit] › tests/e2e/home-motion-review.spec.ts:118:3 › / 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 
+    [production-webkit] › tests/e2e/home-motion-review.spec.ts:118:3 › /en 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 
+  2 passed (55.5s)

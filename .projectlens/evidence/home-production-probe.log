@@ -1,0 +1,112 @@
+
+Running 4 tests using 1 worker
+
+(node:86665) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ pdf/from-image 초기화 ms 4982
+ image/remove-bg 초기화 ms 2961
+ pdf/merge 초기화 ms 4996
+ pdf/redact 초기화 ms 5006
+  ✓  1 [probe-chromium] › .cache/release/production-probe.spec.ts:3:2 ›  도구 초기화 시간 (39.7s)
+/en pdf/from-image 초기화 ms 3927
+/en image/remove-bg 초기화 ms 4510
+/en pdf/merge 초기화 ms 4447
+/en pdf/redact 초기화 ms 3988
+  ✓  2 [probe-chromium] › .cache/release/production-probe.spec.ts:3:2 › /en 도구 초기화 시간 (26.0s)
+(node:87155) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+  ✓  3 [probe-webkit] › .cache/release/production-probe.spec.ts:13:2 ›  모션 실제 상태 (7.1s)
+초기 {
+  media: true,
+  playback: 'idle',
+  animations: [
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: '',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: '',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-stage scene-album',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-stage scene-album',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'album-inputs',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'pdf-viewer album-output',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-steps',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-steps',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-status',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-status',
+      time: 0
+    }
+  ]
+}
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+  ✓  4 [probe-webkit] › .cache/release/production-probe.spec.ts:13:2 › /en 모션 실제 상태 (3.3s)
+
+  4 passed (1.3m)

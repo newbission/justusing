@@ -1,0 +1,23 @@
+import {test,expect} from '../../tests/e2e/test';
+for(const prefix of ['', '/en']){
+ test(`${prefix} 도구 초기화 시간`,async({page})=>{
+  for(const id of ['pdf/from-image','image/remove-bg','pdf/merge','pdf/redact']){
+   await page.goto(`${prefix}/`);
+   const link=page.locator('.feature-demo').filter({has:page.locator(`a[href="${prefix}/${id}/"]`)}).getByRole('link');
+   await link.focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(`${prefix}/${id}/`);
+   const start=Date.now();
+   await expect(page.frameLocator('iframe[data-tool-frame]').locator('input[type=file]').first()).toBeAttached({timeout:30000});
+   console.log(prefix,id,'초기화 ms',Date.now()-start);
+  }
+ });
+ test(`${prefix} 모션 실제 상태`,async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});await page.goto(`${prefix}/`);
+  for(const scene of await page.locator('.feature-demo').all()){
+   await scene.scrollIntoViewIfNeeded();
+   const read=()=>scene.evaluate(el=>({media:matchMedia('(prefers-reduced-motion: reduce)').matches,playback:(el as HTMLElement).dataset.playback,animations:el.getAnimations({subtree:true}).map(a=>({type:a.constructor.name,name:(a as CSSAnimation).animationName,state:a.playState,target:(a.effect as KeyframeEffect)?.target instanceof Element?((a.effect as KeyframeEffect).target as Element).className:'',time:a.currentTime}))}));
+   console.log('초기',await read());
+   await expect.poll(async()=>{const s=await read();return s.animations.length;},{timeout:10000}).toBe(0);
+   console.log('안정화',await read());
+  }
+ });
+}

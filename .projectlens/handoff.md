@@ -119,3 +119,15 @@ C-LOCAL-FIRST-QUALITY pass(포맷/type/build/diff), 증거1794543823938337000-44
 ## 홈 개편 커밋·배포 착수 (2026-11-13)
 
 사용자가 “우선 커밋했어? 배포까지 해놔”로 현재 전체 홈 변경의 커밋·원격반영·배포를 명시 승인했다. 아직 미커밋 상태였음을 알렸고 저장소 절차로 진행한다. origin/dev는 작업 기준 c6071ea7과 같아 충돌이 없다. 독립 검증/구현 담당의 read-only 릴리스 감사에서 배포 차단 문제나 비밀키/개인 파일은 발견하지 못했다. 실제 견본/compact목록/대표장면/로컬흐름/홈조합/폰트/테스트/문서를 나눠 커밋하고 기능PR→dev(rebase, 현재head Codex리뷰+CI)→main(squash,CI)→main→dev반영→Cloudflare실배포/사이트확인을 수행한다. 기존 배포 연결은 이미 되어 있어 새 수동 설정을 하지 않는다. 로컬 Wrangler는 로그인하지 않았지만 GitHub 연동 Workers Builds가 현재 운영 배포 경로라 별도 로그인은 필요하지 않다.
+
+## 홈 개편 운영 배포 확인 (2026-11-13)
+
+사용자의 커밋·배포 요청을 진행했다. 구현 8개 커밋을 기능 PR #162로 보내 현재 head 24f39909의 Codex 주요 문제 없음 답변과 CI 529통과/7설정상제외를 확인한 뒤 rebase merge했다. 배포 PR #163도 CI 529통과/7제외 후 squash merge해 운영 커밋 2cbe6d23으로 배포했다. Cloudflare Workers Builds 성공, 한영 홈의 새 H1·참조 자산 HTTP200 확인. 실제 운영 홈 390×844·데스크톱 캡처는 evidence/home-production-{mobile,desktop}.png다.
+
+운영 E2E 원본은 43통과/3실패였다. 후속 동일조건 실행과 진단으로 도구 입력 준비의 5초 대기 초과, WebKit 초기 CSSTransition 집계를 구별했다. 운영 전용 진단 4개는 모두 통과했고, 실제 사진 처리·다운로드는 원래 home.spec에서 두언어·두엔진 통과했다. 전체 원본 E2E를 통과로 고쳐 기록하지 않았다. 보고서 reports/home-deployment.md와 evidence/home-production-*.log 참조. 런타임 코드는 배포 뒤 수정하지 않았다. 실제 사용자 폰·네이티브 Safari 인수는 아니다.
+
+병합 뒤 site-structure·fonts-and-data 자동 히스토리를 갱신했고 ProjectLens docs 관계 누락 없음. 기계 보고서1794562876198023000-2e6322d9는 등록 로컬 검사 ID 미선택으로 not_assessed이며 전체 제품 인수를 의미하지 않는다. 동기화 PR #164의 최종 CI·병합 결과와 기록 커밋은 아래에 추가한다.
+
+### 배포 마감
+
+#164 CI도529통과/7설정상제외 후 merge commit848049c5로 반영됐다. 배포 오케스트레이션 phase=complete, 원격main은dev의조상이며 두브랜치소스트리동일. 운영main은2cbe6d23. docs/home-deployment-record 브랜치에서 배포 뒤 문서·증거만 별도 커밋/원격 보존한다. 앱을 다시 배포하는 변경은 아니다. 현재 요청 범위의 필수 작업은 남지 않았다. 다음 정확한 행동은 사용자 피드백이나 새 작업이 있을 때 origin/dev에서 기능 브랜치를 만드는 것이다. 정식 E2E의 운영 대기/전환 폴링 개선은 다음 테스트 작업의 선택 항목이다.

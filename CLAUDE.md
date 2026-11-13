@@ -534,3 +534,7 @@ Co-Authored-By: ...
   통합 버전이 필요하면 나중에 별도 도구로 만들고, 공통 모듈(조립 워커·썸네일 등)을 재사용한다.
 - pdf-lib: 원본(`pdf-lib`)은 2022년 이후 릴리스가 없어 관리되는 포크 `@cantoo/pdf-lib`를 쓴다.
   API가 원본과 같고, 원본에 없는 암호 PDF 열기(복호화)를 지원한다.
+
+### 홈 개편 운영 배포 (2026-11-13)
+
+사용자의 커밋·배포 요청에 따라 홈 개편을8개 작은 커밋으로 나눠 기능PR #162에 반영했다. 현재head의 Codex 주요 문제 없음 답변과 CI529통과/7설정상제외 후 dev에rebase merge, 배포PR #163도 같은 CI결과 후main에squash merge했다. 운영커밋2cbe6d23의 Cloudflare Workers Builds 성공과 한영홈·자산HTTP200, 모바일/데스크톱 운영화면을 확인했다. 즉시 만든main→dev PR #164도 CI529통과/7제외 후merge commit848049c5로 반영했다. 운영E2E는43통과/3타이밍실패를 보존했고, 입력준비대기와 WebKit 초기스타일전환을 구별한 추가진단4개가 통과했다. 사진처리·다운로드는 두언어·두엔진에서 통과했다. 상세근거는 .projectlens/reports/home-deployment.md. 배포뒤 기록은 문서 전용 브랜치에 보존하며 런타임 추가변경은 없다.

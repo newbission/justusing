@@ -1,0 +1,175 @@
+
+Running 2 tests using 1 worker
+
+(node:86929) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+초기 {
+  media: true,
+  playback: 'idle',
+  animations: [
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-copy',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-copy',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: '',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-visual',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-visual',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-stage scene-album',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-steps',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-actions',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-actions',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-status',
+      time: 0
+    }
+  ]
+}
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+  ✓  1 [probe-webkit] › .cache/release/production-probe.spec.ts:13:2 ›  모션 실제 상태 (9.8s)
+초기 {
+  media: true,
+  playback: 'idle',
+  animations: [
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-copy',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-copy',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: '',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-visual',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-visual',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-stage scene-album',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-steps',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-actions',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-actions',
+      time: 0
+    },
+    {
+      type: 'CSSTransition',
+      name: undefined,
+      state: 'running',
+      target: 'demo-status',
+      time: 0
+    }
+  ]
+}
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+초기 { media: true, playback: 'idle', animations: [] }
+안정화 { media: true, playback: 'idle', animations: [] }
+  ✓  2 [probe-webkit] › .cache/release/production-probe.spec.ts:13:2 › /en 모션 실제 상태 (3.2s)
+
+  2 passed (13.7s)

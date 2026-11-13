@@ -1,0 +1,14 @@
+{
+  "releasePR": 163,
+  "expectedHead": "7f8591cc758add9a54f74010b02c708e67eb0ba6",
+  "phase": "complete",
+  "updatedAt": "2026-11-13T09:45:56.593Z",
+  "releaseCI": "https://github.com/newbission/justusing/actions/runs/43399847380/job/131799687313",
+  "productionSha": "2cbe6d23f596d6db66802300b2f45e3636e88bfb",
+  "syncPR": 164,
+  "syncURL": "https://github.com/newbission/justusing/pull/164",
+  "cloudflare": "https://dash.cloudflare.com/5e90cae3829190790ea2591891b92aa4/workers/services/view/justusing/production/builds/bd0f136f-268c-4072-8cd2-e68552e49042",
+  "httpVerified": true,
+  "syncCI": "https://github.com/newbission/justusing/actions/runs/43402126119/job/131807290317",
+  "syncSha": "848049c56b3ae60ab252ebd5f188ea32854bd286"
+}

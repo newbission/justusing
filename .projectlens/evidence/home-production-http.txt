@@ -1,0 +1,19 @@
+{
+  "verified": true,
+  "pages": [
+    {
+      "url": "https://justus.ing/",
+      "status": 200,
+      "h1": "파일은 내 기기에. 처리는 브라우저에서.",
+      "assets": 12,
+      "contentType": "text/html"
+    },
+    {
+      "url": "https://justus.ing/en/",
+      "status": 200,
+      "h1": "Your files stay on your device. Your browser does the work.",
+      "assets": 11,
+      "contentType": "text/html"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+import {defineConfig} from '@playwright/test';
+import {siteUrl} from '../../src/site.config';
+export default defineConfig({testDir:'.',testMatch:'production-probe.spec.ts',workers:1,timeout:120000,reporter:'list',use:{baseURL:siteUrl,trace:'retain-on-failure'},projects:[{name:'probe-chromium',use:{browserName:'chromium',channel:'chrome'},grep:/도구/},{name:'probe-webkit',use:{browserName:'webkit',viewport:{width:390,height:844}},grep:/모션/}],outputDir:'../../test-results/production-probe'});

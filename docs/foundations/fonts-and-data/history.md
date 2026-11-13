@@ -28,7 +28,7 @@
 
 - #47 feat(pdf-watermark): 한글 글꼴 기반과 PDF 글자 워터마크 추가 (병합 2026-10-16)
 
-### 커밋 (12개)
+### 커밋 (13개)
 
 <details><summary>기능 3개</summary>
 
@@ -56,9 +56,10 @@
 
 </details>
 
-<details><summary>빌드 1개</summary>
+<details><summary>빌드 2개</summary>
 
 - 2026-10-15 `f7266cb0` 한글 글꼴을 만드는 스크립트 추가
+- 2026-11-13 `9908ee0a` 홈과 카테고리 글꼴 묶음 조정
 
 </details>
 
