@@ -1,0 +1,12 @@
+{
+  "id": "1795082023814419000-41d49e4f",
+  "check": "C-HOME-VISUAL-STORY-RENDER",
+  "time_ns": 1795082023814462000,
+  "fingerprint": "0cc73ff2ed1bcda32140024426f800f28b247c547de1db60e959c5306a70f169",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "독립 검증자 Chrome·WebKit 32건. 한영 1280·390·320px 및 밝고 어두운 모드 24건, JS 없는 상태 4건, 320×568 키보드와 모션 감소 전환 및 재생 시에만 같은 출처 MP4 수신 4건. 가로 넘침, 실제 페이지 CSP 위반, 런타임 오류 0.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-visual-release/render.json",
+  "artifact_hash": "e6434e1a3dc4df197753377e9ce84e9f771cea3269c5607f7106d31ec62975ee"
+}
