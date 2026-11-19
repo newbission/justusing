@@ -61,6 +61,38 @@
       "desired": "실제10개사이트 데스크톱/모바일 근거와3안비교로 선정한 구성. 효용·무료범위·즉시진입과 자료수신/기기내처리/격리의 시각설명, 기존 실제사진·단회자동장면 보존",
       "source": "현재 사용자 명시 요청. 중요한 결정이 아니면 합리적으로 계속하고 검증·리뷰뒤 커밋·PR·배포·동기화까지 승인. 최종 사용자 인수와 구별",
       "requirements": ["R-HOME-REFERENCE"]
+    },
+    {
+      "id": "CH-HOME-VISUAL-STORY",
+      "request": "2026-11-19 사용자 피드백: 한 영역에 한 가지씩 보여주고 이미지·영상·GIF·모션이 더 있는 홈을 시도한다.",
+      "previous": "첫 구간에서 대표 도구와 로컬 처리 도식을 함께 보여주고, 원리 설명과 자료 안내가 바로 이어진다.",
+      "desired": "짧은 첫 소개, 실제 사진, 로컬 처리 모션, GIF 결과 영상, 기존 장면, 자료 안내와 도구 목록을 독립 구간으로 배치한다.",
+      "source": "첨부한 운영 홈 화면과 현재 요청. 구현은 로컬 시안으로 해석했다.",
+      "requirements": ["R-HOME-VISUAL-STORY"]
+    },
+    {
+      "id": "CH-HOME-VISUAL-BOUNDARY",
+      "request": "2026-11-19 로컬 홈 피드백: 파일 보호 경계와 일상어 설명을 시안에 적용하고, 사진을 서비스 설명 뒤로 옮기며 캡션에 서비스명을 쓴다.",
+      "previous": "사진 비교가 서비스 소개와 파일 보호 설명 사이에 있다. 도식은 처리 흐름과 기술 용어를 보여주고, 문장 두 개가 한 문단이다.",
+      "desired": "도입→보호 설명→추가 다운로드 안내→실제 결과 순서. 일상어로 나눈 두 문장과 작업 공간 안팎을 설명하는 정적 도식·모션, 자연스러운 브랜드 캡션.",
+      "source": "localhost:8856 시안에 대한 사용자 후속 피드백.",
+      "requirements": ["R-HOME-VISUAL-STORY"]
+    },
+    {
+      "id": "CH-HOME-VISUAL-SEPARATION",
+      "request": "2026-11-19 사용자 피드백: 어떻게 분리되는지 보기 버튼으로 별도 작업 공간이 생기고 접근이 제한되는 과정이 보여야 한다.",
+      "previous": "이미 그려진 작업 공간을 배경으로 파일 위치를 나타내는 점이 움직인다.",
+      "desired": "작업 공간 열기→바깥에서 읽기 제한→내부에서만 파일 선택·처리·저장이 드러나는 3장면을 재생한다.",
+      "source": "localhost:8856에 적용한 기존 보호 모션에 대한 사용자 피드백.",
+      "requirements": ["R-HOME-VISUAL-STORY"]
+    },
+    {
+      "id": "CH-HOME-VISUAL-PROCESSING-SERVER",
+      "request": "2026-11-19 사용자 피드백: 방문자에게 개발자 도구 검증을 요구하는 설명보다 파일 처리 서버 없이 기기에서 끝나는 점을 강조한다.",
+      "previous": "홈 보호 구간의 제목은 도구 데이터가 사용자 기기로 내려오는 방향을 강조한다.",
+      "desired": "한영 제목은 파일을 받아 처리하는 서버가 없음을 말하고, 본문은 기기 내 작업과 파일 비전송을 별개 문장으로 설명한다. 도식은 실행 데이터 다운로드와 경계 밖 광고·사이트 개선용 방문 통계를 유지한다.",
+      "source": "홈 보호 설명에 대한 사용자 후속 피드백.",
+      "requirements": ["R-HOME-VISUAL-STORY"]
     }
   ],
   "requirements": [
@@ -126,6 +158,11 @@
     {
       "id": "R-HOME-REFERENCE",
       "text": "실제10개사이트 데스크톱/390px 첫화면과후속흐름 조사·URL/캡처·3개와이어비교로 홈상단재기획. 한영 무료작업/앱설치가입결제없음/파일내용이름비전송·자료수신·격리/데이터안내를 정확히 전달. desktop390320 두테마/reduced/noJS/실제처리다운로드/단회자동/폰트CSP성능 독립확인과 저장소절차 운영배포·동기화",
+      "included": true
+    },
+    {
+      "id": "R-HOME-VISUAL-STORY",
+      "text": "한영 홈의 첫 구간에 전체 도구 버튼 하나를 배치한다. 보호 공간, 도구 실행 데이터와 파일 내용·이름 보호를 분리해 설명하고, 추가 다운로드 안내 뒤에 서비스명을 쓴 사진 비교와 실제 GIF 재생 예시를 보여준다. 영상은 재생 전 받지 않는다. 좁은 화면, 두 테마, 움직임 줄이기, 스크립트 없음, 기존 기능과 성능 예산을 확인한다.",
       "included": true
     }
   ],
@@ -263,6 +300,15 @@
       "depends_on": ["T-REFERENCE-PLAN"],
       "requirements": ["R-HOME-REFERENCE"],
       "checks": ["C-REFERENCE-QUALITY"],
+      "blocked_reason": ""
+    },
+    {
+      "id": "T-HOME-VISUAL-STORY",
+      "title": "한 구간에 한 장면을 보여주는 로컬 홈 시안",
+      "parent": null,
+      "depends_on": [],
+      "requirements": ["R-HOME-VISUAL-STORY"],
+      "checks": ["C-HOME-VISUAL-STORY-E2E", "C-HOME-VISUAL-STORY-RENDER"],
       "blocked_reason": ""
     }
   ],
@@ -421,6 +467,16 @@
       "id": "C-REFERENCE-RELEASE",
       "level": "system",
       "description": "현재head Codex리뷰·CI→dev rebase→main squash→main/dev동기화·Cloudflare실배포·운영재검증"
+    },
+    {
+      "id": "C-HOME-VISUAL-STORY-E2E",
+      "level": "system",
+      "description": "홈 진입, 사진 처리, 로컬 흐름과 모션, 요청 시 GIF 예시 재생, 기존 장면과 성능·글꼴 회귀"
+    },
+    {
+      "id": "C-HOME-VISUAL-STORY-RENDER",
+      "level": "acceptance",
+      "description": "실제 데스크톱·390·320px의 한영 밝고 어두운 테마에서 각 구간이 한 가지 메시지와 장면으로 읽힌다"
     }
   ],
   "documents": [
