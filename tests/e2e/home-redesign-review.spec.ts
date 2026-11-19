@@ -1,15 +1,15 @@
-/** 구현과 독립된 새 홈 바로가기의 키보드 진입·실제 로컬 처리·다운로드 검증. */
+/** 사진 결과 구간에서 키보드 진입·실제 로컬 처리·다운로드를 확인한다. */
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from './test';
 
 for (const prefix of ['', '/en']) {
-  test(`${prefix || '/'} 첫 소개의 작업 바로가기에서 키보드로 들어가 실제 사진을 처리한다`, async ({
+  test(`${prefix || '/'} 사진 견본의 도구 링크에서 키보드로 들어가 실제 사진을 처리한다`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${prefix}/`);
-    const shortcut = page.locator(`.story-start a[href="${prefix}/image/target-size/"]`);
+    const shortcut = page.locator(`.feature-intro a[href="${prefix}/image/target-size/"]`);
     await shortcut.focus();
     await expect(shortcut).toBeFocused();
     await page.keyboard.press('Enter');
@@ -82,7 +82,7 @@ test('두 테마에서 격리 경계와 자료 다운로드 안내의 본문 대
     await page.emulateMedia({ colorScheme });
     await page.goto('/');
     const contrasts = await page
-      .locator('.proof-outside, .home-data-note p')
+      .locator('.how-intro p, .proof-outside strong, .proof-outside p, .home-data-note p')
       .evaluateAll((elements) => {
         type Rgba = [number, number, number, number];
         const canvas = document.createElement('canvas');
@@ -127,7 +127,7 @@ test('두 테마에서 격리 경계와 자료 다운로드 안내의 본문 대
           };
         });
       });
-    expect(contrasts).toHaveLength(3);
+    expect(contrasts).toHaveLength(6);
     for (const contrast of contrasts)
       expect(contrast.ratio, `${colorScheme}: ${contrast.text}`).toBeGreaterThanOrEqual(4.5);
   }
