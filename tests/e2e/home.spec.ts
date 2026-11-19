@@ -12,7 +12,7 @@ const locales = [
   {
     path: '/',
     primary: '사진 용량 줄이기',
-    choose: '도구 골라 시작하기',
+    choose: '무료 도구 보기',
     tools: '도구 모아보기',
     category: '이미지',
     prefix: '',
@@ -20,7 +20,7 @@ const locales = [
   {
     path: '/en/',
     primary: 'Shrink a photo',
-    choose: 'Choose a tool',
+    choose: 'Explore free tools',
     tools: 'A tool for the task',
     category: 'Image',
     prefix: '/en',
@@ -60,7 +60,7 @@ for (const locale of locales) {
     await expect(page.locator('.feature-intro').getByRole('heading', { level: 2 })).toBeVisible();
     await expect(
       local.getByRole('link', {
-        name: locale.prefix ? 'How file processing works' : '파일 처리 방식 보기',
+        name: locale.prefix ? 'How it works' : '처리 방식 알아보기',
       }),
     ).toHaveAttribute('href', `${locale.prefix}/safety/`);
     await local.getByRole('link', { name: locale.choose }).click();

@@ -1,0 +1,31 @@
+{
+  "id": "1794607270399424000-69e0f296",
+  "check": "C-REFERENCE-E2E",
+  "time_ns": 1794607270399460000,
+  "fingerprint": "c001849a116e8d5ba920930589f9902359220214c5260765231504c4b4d36b8d",
+  "harness_version": "0.6.0",
+  "command": [
+    "env",
+    "PLAYWRIGHT_CHANNEL=chrome",
+    "E2E_PORT=8788",
+    "npx",
+    "playwright",
+    "test",
+    "--project=chromium",
+    "--workers=3",
+    "tests/e2e/home.spec.ts",
+    "tests/e2e/home-value.spec.ts",
+    "tests/e2e/home-showcase.spec.ts",
+    "tests/e2e/home-motion-review.spec.ts",
+    "tests/e2e/home-redesign-review.spec.ts",
+    "tests/e2e/i18n.spec.ts",
+    "tests/e2e/site-font.spec.ts",
+    "tests/e2e/perf-budget.spec.ts",
+    "tests/e2e/csp.spec.ts",
+    "tests/e2e/adblock.spec.ts"
+  ],
+  "exit_code": 0,
+  "result": "pass",
+  "artifact": ".projectlens/evidence/1794607270399424000-69e0f296.log",
+  "artifact_hash": "23d4cfb5c6d6f6d982f56ac2e7dd347de03253558862c5cc4d030fa781367ae3"
+}

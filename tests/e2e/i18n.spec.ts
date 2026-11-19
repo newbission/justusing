@@ -20,7 +20,7 @@ test('영어 페이지는 lang과 문구가 영어다', async ({ page }) => {
   await page.goto('/en/');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    'Your files stay on your device. Your browser does the work.',
+    'Quick file tasks. Your files stay with you.',
   );
   await expect(
     page.locator('.quick-tools').getByRole('link', { name: 'Merge PDF', exact: true }),
@@ -124,13 +124,8 @@ test.describe('한국어 브라우저', () => {
 
 test('홈의 첫 구간에서 로컬 처리 약속과 설명 링크가 언어에 맞게 나온다', async ({ page }) => {
   for (const [path, title, link, target] of [
-    ['/', '파일은 내 기기에. 처리는 브라우저에서.', '파일 처리 방식 보기', '/safety/'],
-    [
-      '/en/',
-      'Your files stay on your device. Your browser does the work.',
-      'How file processing works',
-      '/en/safety/',
-    ],
+    ['/', '파일 작업은 가볍게. 내 파일은 내 기기에.', '처리 방식 알아보기', '/safety/'],
+    ['/en/', 'Quick file tasks. Your files stay with you.', 'How it works', '/en/safety/'],
   ] as const) {
     await page.goto(path);
     const safety = page.getByRole('region', { name: title });

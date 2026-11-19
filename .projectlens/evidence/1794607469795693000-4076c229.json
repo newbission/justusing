@@ -1,0 +1,12 @@
+{
+  "id": "1794607469795693000-4076c229",
+  "check": "C-REFERENCE-RESEARCH",
+  "time_ns": 1794607469795719000,
+  "fingerprint": "c001849a116e8d5ba920930589f9902359220214c5260765231504c4b4d36b8d",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "실제10곳/3안/B선정과코드사실대조, 기획최종12조합필수지적없음. 이후색상수정은정보구조·카피변경없고root최종36렌더/12접근성으로읽힘재확인. 사용자위임판단/인수구별.",
+  "kind": "manual",
+  "artifact": ".projectlens/reports/home-research.md",
+  "artifact_hash": "8f26b303e9b58ad4c0822447d17280004e90f30cbb44db402ace61ed13de8c56"
+}

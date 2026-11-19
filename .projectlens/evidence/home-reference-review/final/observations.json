@@ -1,0 +1,470 @@
+[
+  {
+    "locale": "ko",
+    "width": 1440,
+    "theme": "light",
+    "h1": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+    "overflow": false,
+    "heroHeight": 554.359375,
+    "ctaTop": 424.96875,
+    "ctaText": "무료 도구 보기\n↓",
+    "dataFont": "14px",
+    "dataText": "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.\n\n글자 인식·배경 제거처럼 큰 자료가 필요한 도구는 용량을 먼저 보여주고 받을지 묻습니다. 자료를 내려받을 때 모바일 데이터가 소모될 수 있어요.\n\n이 브라우저에 보관한 자료는 재사용하지만, 삭제되면 다시 받을 수 있습니다.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "PDF 합치기\n↗",
+        "href": "/pdf/merge/"
+      },
+      {
+        "text": "이미지 용량 맞추기\n↗",
+        "href": "/image/target-size/"
+      },
+      {
+        "text": "CSV 한글 깨짐 고치기\n↗",
+        "href": "/text/csv-encoding/"
+      },
+      {
+        "text": "동영상 소리 추출\n↗",
+        "href": "/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "파일 대신, 도구가 내 기기로 옵니다.",
+      "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.",
+      "이 사진, 100KB 아래로 줄였습니다.",
+      "이렇게 바뀝니다.",
+      "다른 도구도 살펴보세요.",
+      "도구 모아보기"
+    ]
+  },
+  {
+    "locale": "ko",
+    "width": 1440,
+    "theme": "dark",
+    "h1": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+    "overflow": false,
+    "heroHeight": 554.359375,
+    "ctaTop": 424.96875,
+    "ctaText": "무료 도구 보기\n↓",
+    "dataFont": "14px",
+    "dataText": "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.\n\n글자 인식·배경 제거처럼 큰 자료가 필요한 도구는 용량을 먼저 보여주고 받을지 묻습니다. 자료를 내려받을 때 모바일 데이터가 소모될 수 있어요.\n\n이 브라우저에 보관한 자료는 재사용하지만, 삭제되면 다시 받을 수 있습니다.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "PDF 합치기\n↗",
+        "href": "/pdf/merge/"
+      },
+      {
+        "text": "이미지 용량 맞추기\n↗",
+        "href": "/image/target-size/"
+      },
+      {
+        "text": "CSV 한글 깨짐 고치기\n↗",
+        "href": "/text/csv-encoding/"
+      },
+      {
+        "text": "동영상 소리 추출\n↗",
+        "href": "/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "파일 대신, 도구가 내 기기로 옵니다.",
+      "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.",
+      "이 사진, 100KB 아래로 줄였습니다.",
+      "이렇게 바뀝니다.",
+      "다른 도구도 살펴보세요.",
+      "도구 모아보기"
+    ]
+  },
+  {
+    "locale": "ko",
+    "width": 390,
+    "theme": "light",
+    "h1": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+    "overflow": false,
+    "heroHeight": 875.515625,
+    "ctaTop": 374.1875,
+    "ctaText": "무료 도구 보기\n↓",
+    "dataFont": "14px",
+    "dataText": "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.\n\n글자 인식·배경 제거처럼 큰 자료가 필요한 도구는 용량을 먼저 보여주고 받을지 묻습니다. 자료를 내려받을 때 모바일 데이터가 소모될 수 있어요.\n\n이 브라우저에 보관한 자료는 재사용하지만, 삭제되면 다시 받을 수 있습니다.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "PDF 합치기\n↗",
+        "href": "/pdf/merge/"
+      },
+      {
+        "text": "이미지 용량 맞추기\n↗",
+        "href": "/image/target-size/"
+      },
+      {
+        "text": "CSV 한글 깨짐 고치기\n↗",
+        "href": "/text/csv-encoding/"
+      },
+      {
+        "text": "동영상 소리 추출\n↗",
+        "href": "/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "파일 대신, 도구가 내 기기로 옵니다.",
+      "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.",
+      "이 사진, 100KB 아래로 줄였습니다.",
+      "이렇게 바뀝니다.",
+      "다른 도구도 살펴보세요.",
+      "도구 모아보기"
+    ]
+  },
+  {
+    "locale": "ko",
+    "width": 390,
+    "theme": "dark",
+    "h1": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+    "overflow": false,
+    "heroHeight": 875.515625,
+    "ctaTop": 374.1875,
+    "ctaText": "무료 도구 보기\n↓",
+    "dataFont": "14px",
+    "dataText": "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.\n\n글자 인식·배경 제거처럼 큰 자료가 필요한 도구는 용량을 먼저 보여주고 받을지 묻습니다. 자료를 내려받을 때 모바일 데이터가 소모될 수 있어요.\n\n이 브라우저에 보관한 자료는 재사용하지만, 삭제되면 다시 받을 수 있습니다.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "PDF 합치기\n↗",
+        "href": "/pdf/merge/"
+      },
+      {
+        "text": "이미지 용량 맞추기\n↗",
+        "href": "/image/target-size/"
+      },
+      {
+        "text": "CSV 한글 깨짐 고치기\n↗",
+        "href": "/text/csv-encoding/"
+      },
+      {
+        "text": "동영상 소리 추출\n↗",
+        "href": "/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "파일 대신, 도구가 내 기기로 옵니다.",
+      "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.",
+      "이 사진, 100KB 아래로 줄였습니다.",
+      "이렇게 바뀝니다.",
+      "다른 도구도 살펴보세요.",
+      "도구 모아보기"
+    ]
+  },
+  {
+    "locale": "ko",
+    "width": 320,
+    "theme": "light",
+    "h1": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+    "overflow": false,
+    "heroHeight": 1015.90625,
+    "ctaTop": 422.1875,
+    "ctaText": "무료 도구 보기\n↓",
+    "dataFont": "14px",
+    "dataText": "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.\n\n글자 인식·배경 제거처럼 큰 자료가 필요한 도구는 용량을 먼저 보여주고 받을지 묻습니다. 자료를 내려받을 때 모바일 데이터가 소모될 수 있어요.\n\n이 브라우저에 보관한 자료는 재사용하지만, 삭제되면 다시 받을 수 있습니다.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "PDF 합치기\n↗",
+        "href": "/pdf/merge/"
+      },
+      {
+        "text": "이미지 용량 맞추기\n↗",
+        "href": "/image/target-size/"
+      },
+      {
+        "text": "CSV 한글 깨짐 고치기\n↗",
+        "href": "/text/csv-encoding/"
+      },
+      {
+        "text": "동영상 소리 추출\n↗",
+        "href": "/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "파일 대신, 도구가 내 기기로 옵니다.",
+      "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.",
+      "이 사진, 100KB 아래로 줄였습니다.",
+      "이렇게 바뀝니다.",
+      "다른 도구도 살펴보세요.",
+      "도구 모아보기"
+    ]
+  },
+  {
+    "locale": "ko",
+    "width": 320,
+    "theme": "dark",
+    "h1": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+    "overflow": false,
+    "heroHeight": 1015.90625,
+    "ctaTop": 422.1875,
+    "ctaText": "무료 도구 보기\n↓",
+    "dataFont": "14px",
+    "dataText": "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.\n\n글자 인식·배경 제거처럼 큰 자료가 필요한 도구는 용량을 먼저 보여주고 받을지 묻습니다. 자료를 내려받을 때 모바일 데이터가 소모될 수 있어요.\n\n이 브라우저에 보관한 자료는 재사용하지만, 삭제되면 다시 받을 수 있습니다.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "PDF 합치기\n↗",
+        "href": "/pdf/merge/"
+      },
+      {
+        "text": "이미지 용량 맞추기\n↗",
+        "href": "/image/target-size/"
+      },
+      {
+        "text": "CSV 한글 깨짐 고치기\n↗",
+        "href": "/text/csv-encoding/"
+      },
+      {
+        "text": "동영상 소리 추출\n↗",
+        "href": "/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "파일 대신, 도구가 내 기기로 옵니다.",
+      "앱 설치는 없어요. 처리용 자료는 필요할 수 있어요.",
+      "이 사진, 100KB 아래로 줄였습니다.",
+      "이렇게 바뀝니다.",
+      "다른 도구도 살펴보세요.",
+      "도구 모아보기"
+    ]
+  },
+  {
+    "locale": "en",
+    "width": 1440,
+    "theme": "light",
+    "h1": "Quick file tasks. Your files stay with you.",
+    "overflow": false,
+    "heroHeight": 644.75,
+    "ctaTop": 515.359375,
+    "ctaText": "Explore free tools\n↓",
+    "dataFont": "14px",
+    "dataText": "No app installation. Some tools need processing resources.\n\nTools such as text recognition and background removal show the size of large resources and ask before downloading them. These downloads may use mobile data.\n\nResources kept in this browser are reused, but may need downloading again if removed.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "Merge PDF\n↗",
+        "href": "/en/pdf/merge/"
+      },
+      {
+        "text": "Compress to Target Size\n↗",
+        "href": "/en/image/target-size/"
+      },
+      {
+        "text": "Fix CSV Encoding\n↗",
+        "href": "/en/text/csv-encoding/"
+      },
+      {
+        "text": "Extract Audio from Video\n↗",
+        "href": "/en/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "The tools come to your files.",
+      "No app installation. Some tools need processing resources.",
+      "This photo, reduced to under 100 KB.",
+      "See the change.",
+      "Explore more tools.",
+      "A tool for the task"
+    ]
+  },
+  {
+    "locale": "en",
+    "width": 1440,
+    "theme": "dark",
+    "h1": "Quick file tasks. Your files stay with you.",
+    "overflow": false,
+    "heroHeight": 644.75,
+    "ctaTop": 515.359375,
+    "ctaText": "Explore free tools\n↓",
+    "dataFont": "14px",
+    "dataText": "No app installation. Some tools need processing resources.\n\nTools such as text recognition and background removal show the size of large resources and ask before downloading them. These downloads may use mobile data.\n\nResources kept in this browser are reused, but may need downloading again if removed.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "Merge PDF\n↗",
+        "href": "/en/pdf/merge/"
+      },
+      {
+        "text": "Compress to Target Size\n↗",
+        "href": "/en/image/target-size/"
+      },
+      {
+        "text": "Fix CSV Encoding\n↗",
+        "href": "/en/text/csv-encoding/"
+      },
+      {
+        "text": "Extract Audio from Video\n↗",
+        "href": "/en/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "The tools come to your files.",
+      "No app installation. Some tools need processing resources.",
+      "This photo, reduced to under 100 KB.",
+      "See the change.",
+      "Explore more tools.",
+      "A tool for the task"
+    ]
+  },
+  {
+    "locale": "en",
+    "width": 390,
+    "theme": "light",
+    "h1": "Quick file tasks. Your files stay with you.",
+    "overflow": false,
+    "heroHeight": 875.515625,
+    "ctaTop": 374.1875,
+    "ctaText": "Explore free tools\n↓",
+    "dataFont": "14px",
+    "dataText": "No app installation. Some tools need processing resources.\n\nTools such as text recognition and background removal show the size of large resources and ask before downloading them. These downloads may use mobile data.\n\nResources kept in this browser are reused, but may need downloading again if removed.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "Merge PDF\n↗",
+        "href": "/en/pdf/merge/"
+      },
+      {
+        "text": "Compress to Target Size\n↗",
+        "href": "/en/image/target-size/"
+      },
+      {
+        "text": "Fix CSV Encoding\n↗",
+        "href": "/en/text/csv-encoding/"
+      },
+      {
+        "text": "Extract Audio from Video\n↗",
+        "href": "/en/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "The tools come to your files.",
+      "No app installation. Some tools need processing resources.",
+      "This photo, reduced to under 100 KB.",
+      "See the change.",
+      "Explore more tools.",
+      "A tool for the task"
+    ]
+  },
+  {
+    "locale": "en",
+    "width": 390,
+    "theme": "dark",
+    "h1": "Quick file tasks. Your files stay with you.",
+    "overflow": false,
+    "heroHeight": 875.515625,
+    "ctaTop": 374.1875,
+    "ctaText": "Explore free tools\n↓",
+    "dataFont": "14px",
+    "dataText": "No app installation. Some tools need processing resources.\n\nTools such as text recognition and background removal show the size of large resources and ask before downloading them. These downloads may use mobile data.\n\nResources kept in this browser are reused, but may need downloading again if removed.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "Merge PDF\n↗",
+        "href": "/en/pdf/merge/"
+      },
+      {
+        "text": "Compress to Target Size\n↗",
+        "href": "/en/image/target-size/"
+      },
+      {
+        "text": "Fix CSV Encoding\n↗",
+        "href": "/en/text/csv-encoding/"
+      },
+      {
+        "text": "Extract Audio from Video\n↗",
+        "href": "/en/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "The tools come to your files.",
+      "No app installation. Some tools need processing resources.",
+      "This photo, reduced to under 100 KB.",
+      "See the change.",
+      "Explore more tools.",
+      "A tool for the task"
+    ]
+  },
+  {
+    "locale": "en",
+    "width": 320,
+    "theme": "light",
+    "h1": "Quick file tasks. Your files stay with you.",
+    "overflow": false,
+    "heroHeight": 1079.90625,
+    "ctaTop": 446.1875,
+    "ctaText": "Explore free tools\n↓",
+    "dataFont": "14px",
+    "dataText": "No app installation. Some tools need processing resources.\n\nTools such as text recognition and background removal show the size of large resources and ask before downloading them. These downloads may use mobile data.\n\nResources kept in this browser are reused, but may need downloading again if removed.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "Merge PDF\n↗",
+        "href": "/en/pdf/merge/"
+      },
+      {
+        "text": "Compress to Target Size\n↗",
+        "href": "/en/image/target-size/"
+      },
+      {
+        "text": "Fix CSV Encoding\n↗",
+        "href": "/en/text/csv-encoding/"
+      },
+      {
+        "text": "Extract Audio from Video\n↗",
+        "href": "/en/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "The tools come to your files.",
+      "No app installation. Some tools need processing resources.",
+      "This photo, reduced to under 100 KB.",
+      "See the change.",
+      "Explore more tools.",
+      "A tool for the task"
+    ]
+  },
+  {
+    "locale": "en",
+    "width": 320,
+    "theme": "dark",
+    "h1": "Quick file tasks. Your files stay with you.",
+    "overflow": false,
+    "heroHeight": 1079.90625,
+    "ctaTop": 446.1875,
+    "ctaText": "Explore free tools\n↓",
+    "dataFont": "14px",
+    "dataText": "No app installation. Some tools need processing resources.\n\nTools such as text recognition and background removal show the size of large resources and ask before downloading them. These downloads may use mobile data.\n\nResources kept in this browser are reused, but may need downloading again if removed.",
+    "diagramFont": "14px",
+    "storyLinks": [
+      {
+        "text": "Merge PDF\n↗",
+        "href": "/en/pdf/merge/"
+      },
+      {
+        "text": "Compress to Target Size\n↗",
+        "href": "/en/image/target-size/"
+      },
+      {
+        "text": "Fix CSV Encoding\n↗",
+        "href": "/en/text/csv-encoding/"
+      },
+      {
+        "text": "Extract Audio from Video\n↗",
+        "href": "/en/video/extract-audio/"
+      }
+    ],
+    "titles": [
+      "The tools come to your files.",
+      "No app installation. Some tools need processing resources.",
+      "This photo, reduced to under 100 KB.",
+      "See the change.",
+      "Explore more tools.",
+      "A tool for the task"
+    ]
+  }
+]

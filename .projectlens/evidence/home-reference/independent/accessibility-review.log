@@ -1,0 +1,15 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: {"locale":"ko","width":1280,"theme":"light","failures":[{"text":"광고·방문 통계는 도구 영역 바깥에","size":12,"ratio":4.000062663708312,"required":4.5,"color":"rgb(110, 110, 106)","bg":[222.05098039215687,229.10196078431372,224.30588235294118,1],"tag":"P"},{"text":"글자 인식·배경 제거처럼 큰 자료가 필요한 도구는 용량을 먼저 보여주고 받을지 묻습니다. 자료를 내려받을 때 모바일 데이터가 소모될 수 있어요.","size":14,"ratio":4.000062663708312,"required":4.5,"color":"rgb(110, 110, 106)","bg":[222.05098039215687,229.10196078431372,224.30588235294118,1],"tag":"P"},{"text":"이 브라우저에 보관한 자료는 재사용하지만, 삭제되면 다시 받을 수 있습니다.","size":14,"ratio":4.000062663708312,"required":4.5,"color":"rgb(110, 110, 106)","bg":[222.05098039215687,229.10196078431372,224.30588235294118,1],"tag":"P"}]}
+    at file:///Users/jm/development/projects/justusing/.projectlens/evidence/home-reference/independent/accessibility-review.mjs:23:9 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.13.0

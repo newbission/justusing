@@ -1,0 +1,12 @@
+{
+  "id": "1794586682206407000-8c4b8dc4",
+  "check": "C-REFERENCE-RESEARCH",
+  "time_ns": 1794586682206455000,
+  "fingerprint": "7f06f2c097f67408289ef0cc2b78b9a306d853db63310f223cd67da6859e78d6",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "기획 담당이 실제10곳 데스크톱/390px 첫·다음·소개를 탐색, 초기Squoosh내부스크롤과PairDrop정보접근한계보완. root가10개contact/본문/세와이어선택B근거검토. 최종기획리뷰12조합필수지적없음. 사용자위임판단이며사용자인수아님.",
+  "kind": "manual",
+  "artifact": ".projectlens/reports/home-research.md",
+  "artifact_hash": "8f26b303e9b58ad4c0822447d17280004e90f30cbb44db402ace61ed13de8c56"
+}

@@ -1,0 +1,57 @@
+
+Running 18 tests using 1 worker
+
+(node:9707) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/e2e/home-motion-review.spec.ts:5:3 › / 처음 보일 때 재생하고 키보드 일시정지는 실제로 멈춘다 (6.4s)
+  ✓   2 tests/e2e/home-motion-review.spec.ts:80:3 › / 네 장면은 각각 첫 노출에 한 번만 재생하고 다시 스크롤해도 반복하지 않는다 (1.3s)
+  ✓   3 tests/e2e/home-motion-review.spec.ts:118:3 › / 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (511ms)
+  ✓   4 tests/e2e/home-motion-review.spec.ts:144:3 › / 수동 정지를 자동 노출이 덮어쓰지 않고 한 장면씩만 움직인다 (5.5s)
+  ✓   5 tests/e2e/home-motion-review.spec.ts:183:3 › / 320px 화면 두 테마에서 핵심 장면과 시작 링크가 잘리지 않는다 (573ms)
+  ✘   6 tests/e2e/home-motion-review.spec.ts:212:5 › / 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 (5.2s)
+(node:10428) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   7 tests/e2e/home-motion-review.spec.ts:5:3 › /en 처음 보일 때 재생하고 키보드 일시정지는 실제로 멈춘다 (5.9s)
+  ✓   8 tests/e2e/home-motion-review.spec.ts:80:3 › /en 네 장면은 각각 첫 노출에 한 번만 재생하고 다시 스크롤해도 반복하지 않는다 (1.1s)
+  ✓   9 tests/e2e/home-motion-review.spec.ts:118:3 › /en 움직임 줄이기에서도 사진 여러 장의 결과가 PDF 한 파일임을 알 수 있다 (486ms)
+  ✓  10 tests/e2e/home-motion-review.spec.ts:144:3 › /en 수동 정지를 자동 노출이 덮어쓰지 않고 한 장면씩만 움직인다 (5.5s)
+  ✓  11 tests/e2e/home-motion-review.spec.ts:183:3 › /en 320px 화면 두 테마에서 핵심 장면과 시작 링크가 잘리지 않는다 (1.2s)
+  ✓  12 tests/e2e/home-motion-review.spec.ts:212:5 › /en 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 (460ms)
+  ✓  13 tests/e2e/home-value.spec.ts:26:3 › / 작업과 진입을 먼저 보여 주고 처리 경계·자료 수신·실제 결과로 이어진다 (418ms)
+  ✓  14 tests/e2e/home-value.spec.ts:93:3 › / 좁은 화면의 두 테마에서도 원리와 데이터 안내를 읽을 수 있다 (1.4s)
+  ✓  15 tests/e2e/home-value.spec.ts:122:3 › / 자바스크립트 없이도 차별점과 다운로드 안내가 남는다 (319ms)
+  ✓  16 tests/e2e/home-value.spec.ts:26:3 › /en/ 작업과 진입을 먼저 보여 주고 처리 경계·자료 수신·실제 결과로 이어진다 (389ms)
+  ✓  17 tests/e2e/home-value.spec.ts:93:3 › /en/ 좁은 화면의 두 테마에서도 원리와 데이터 안내를 읽을 수 있다 (1.4s)
+  ✓  18 tests/e2e/home-value.spec.ts:122:3 › /en/ 자바스크립트 없이도 차별점과 다운로드 안내가 남는다 (296ms)
+
+
+  1) tests/e2e/home-motion-review.spec.ts:212:5 › / 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 ───
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('.feature-demo')
+    Expected: 4
+    Received: 0
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" locator('.feature-demo') with timeout 5000ms
+      - waiting for locator('.feature-demo')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+
+
+      213 |       await page.goto(`${prefix}/`);
+      214 |       const scenes = page.locator('.feature-demo');
+    > 215 |       await expect(scenes).toHaveCount(4);
+          |                            ^
+      216 |       for (const scene of await scenes.all()) {
+      217 |         await scene.scrollIntoViewIfNeeded();
+      218 |         await expect(scene.locator('.demo-stage')).toBeVisible();
+        at /Users/jm/development/projects/justusing/tests/e2e/home-motion-review.spec.ts:215:28
+
+    Error Context: test-results/home-reference-webkit/home-motion-review--자바스크립트-9af05-과-결과가-남고-작동하지-않는-재생-버튼은-숨긴다/error-context.md
+
+  1 failed
+    tests/e2e/home-motion-review.spec.ts:212:5 › / 자바스크립트 없이 › 정적 입력과 결과가 남고 작동하지 않는 재생 버튼은 숨긴다 ────
+  17 passed (40.0s)

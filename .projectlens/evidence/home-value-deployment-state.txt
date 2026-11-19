@@ -1,0 +1,18 @@
+{
+  "featurePR": 165,
+  "featureHead": "864f07a04939a19e02e8e7e34497f2ad135d6229",
+  "phase": "complete",
+  "updatedAt": "2026-11-13T11:48:00.878Z",
+  "featureCI": "https://github.com/newbission/justusing/actions/runs/43414803920/job/131849898717",
+  "reviewReceipt": "https://github.com/newbission/justusing/pull/165#issuecomment-6851128249",
+  "devHead": "77fbfa5572556dd63a62dbc24a767d62289b61f6",
+  "releasePR": 166,
+  "releaseURL": "https://github.com/newbission/justusing/pull/166",
+  "releaseCI": "https://github.com/newbission/justusing/actions/runs/43416963725/job/131857169325",
+  "productionSha": "dff51b15514cca5c38e1936b139c726f5f08d712",
+  "syncPR": 167,
+  "syncURL": "https://github.com/newbission/justusing/pull/167",
+  "cloudflare": "https://dash.cloudflare.com/5e90cae3829190790ea2591891b92aa4/workers/services/view/justusing/production/builds/97c97212-6f92-4a24-992e-62a53ebe5853",
+  "syncCI": "https://github.com/newbission/justusing/actions/runs/43418471086/job/131862199964",
+  "syncSha": "ed286eebb63d49071f139add8f728ffc0ef27334"
+}

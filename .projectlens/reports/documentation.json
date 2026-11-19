@@ -155,6 +155,42 @@
       "registered": true
     },
     {
+      "id": "DOC-HOME-REFERENCE",
+      "path": ".projectlens/reports/home-research.md",
+      "purpose": "운영10사이트 직접관찰·출처·A/B/C비교·선택정보구조·한영카피·수용기준",
+      "status": "reviewed",
+      "related": [
+        "R-HOME-REFERENCE",
+        "T-REFERENCE-PLAN",
+        "C-REFERENCE-RESEARCH"
+      ],
+      "review_source": "기획에이전트직접조사10곳/세안와이어·root의10contact와본문·보완스크린샷검토. 사용자에게위임받은선정B,사용자인수와구별",
+      "reviewed_sha256": "8f26b303e9b58ad4c0822447d17280004e90f30cbb44db402ace61ed13de8c56",
+      "exists": true,
+      "sha256": "8f26b303e9b58ad4c0822447d17280004e90f30cbb44db402ace61ed13de8c56",
+      "review_current": true,
+      "health": "reviewed",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
+      "id": "DOC-HOME-REFERENCE-WIRES",
+      "path": ".projectlens/home-reference-wireframes.html",
+      "purpose": "서로다른세안의데스크톱/모바일정보순서와선택비교",
+      "status": "draft",
+      "related": [
+        "R-HOME-REFERENCE",
+        "T-REFERENCE-PLAN",
+        "C-REFERENCE-RESEARCH"
+      ],
+      "exists": true,
+      "sha256": "0f9725385bbef7b4c7f62d3ed05d8d495247935090ae3c01ffc018456608efd1",
+      "review_current": false,
+      "health": "draft",
+      "unknown_related_ids": [],
+      "registered": true
+    },
+    {
       "path": ".projectlens/handoff.md",
       "exists": true,
       "health": "unregistered",

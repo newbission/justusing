@@ -1,0 +1,2 @@
+최종성능측정첫시도: 8852서버연결거부(ERR_CONNECTION_REFUSED)로측정미완료.
+사용자'이어서'후기존세션서버가종료된것을확인했고같은최종dist의Wrangler서버를재시작했다. 소스변경/재build없음. home-reference-final-perf.txt는정상재측정결과로작성한다.

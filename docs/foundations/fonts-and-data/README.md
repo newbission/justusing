@@ -1,6 +1,6 @@
 # 글꼴과 도구 데이터 보관 (fonts-and-data)
 
-쓴 날 2026-10-16 · 고친 날 2026-10-24
+쓴 날 2026-10-16 · 고친 날 2026-11-14
 
 - 쓰는 곳: 글꼴 — PDF 워터마크·머리말·꼬리말·편집·양식 채우기 / 데이터 보관 — 글꼴 + PDF·이미지 글자 인식(OCR, 같은 묶음) + 증명사진 얼굴 찾기 + 배경 제거(엔진은 증명사진과 같은 파일)
 - 상태: live (글꼴 기반은 2026-10-15 만들고 PR #47로 dev 병합, 2026-10-16)
@@ -133,6 +133,8 @@ python3 scripts/fonts/build_fonts.py
 - 캐시 이름(`justusing-data-v1`)을 바꾸면 모든 사용자의 보관본이 버려진다. E2E도 이 이름으로 보관소를 비운다
 - 글자를 PDF에 넣는 일(fontkit, 쓴 글자만 넣기, 글꼴에 없는 글자 미리 알리기)은 [PDF 공통](../pdf-common/README.md)의
   `text-pdf` 워커가 한다
+
+2026-11-14 홈 상단 재기획의 한영 카피에 맞춰 사이트 화면 글꼴 조각을 다시 만들었다. 도구용 글꼴·데이터 보관 경로는 그대로다. `scripts/fonts/build_site_font.py` 실행 후 사이트 글자 누락 검사와 홈 전송량을 다시 확인한다. 조사·구성 근거는 [홈 재기획](../../../.projectlens/reports/home-research.md), 최종 검증은 [범위 보고서](../../../.projectlens/reports/home-reference-redesign.md)에 기록한다.
 
 ## 3. 구현 체크리스트
 

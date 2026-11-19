@@ -1,0 +1,12 @@
+{
+  "id": "1794607469574974000-0d700176",
+  "check": "C-REFERENCE-VISUAL",
+  "time_ns": 1794607469575005000,
+  "fingerprint": "c001849a116e8d5ba920930589f9902359220214c5260765231504c4b4d36b8d",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "독립기획12조합/독립검증36렌더·18WebKit과대비지적. 최종색수정뒤root가남겨진독립스크립트로36렌더·12접근성및IAB직접확인, light13.02/dark11.81대비. 독립검증에이전트한도와root마감검증구별.",
+  "kind": "manual",
+  "artifact": ".projectlens/reports/home-reference-verification.md",
+  "artifact_hash": "5822492c8d43f5bc40b2ba25820a53e5aa67d2cb227eb249b499e89202ab2247"
+}
