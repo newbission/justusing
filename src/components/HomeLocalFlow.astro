@@ -1,57 +1,127 @@
 ---
-/** 받는 공개 처리 파일과 기기 안에 머무는 사용자 파일을 구분하는 정적 도식. */
+/** 도구 실행 데이터의 수신 방향과 브라우저가 분리한 파일 처리 공간을 보여준다. */
 import { localeOf } from '../i18n/locales';
 import { ui } from '../i18n/ui';
 const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
 ---
 
-<figure class="local-proof">
+<figure class="local-proof" data-local-proof>
+  <div class="proof-controls" hidden>
+    <button type="button" class="proof-play" data-proof-play>
+      <span aria-hidden="true">▷</span> {t.play}
+    </button>
+    <p
+      class="proof-cue"
+      role="status"
+      data-open={t.motionOpen}
+      data-blocked={t.motionBlocked}
+      data-files={t.motionFiles}
+    >
+      {t.motionReady}
+    </p>
+  </div>
   <div class="proof-source">
     <strong>{t.source}</strong>
     <span>{t.download}</span>
-    <span aria-hidden="true">↓</span>
+    <span class="proof-incoming" aria-hidden="true">
+      ↓
+    </span>
   </div>
   <div class="proof-device">
     <strong>{t.device}</strong>
-    <div class="proof-browser">
-      <div class="proof-tool">
-        <strong>{t.toolArea}</strong>
-        <ol class="proof-steps">
-          <li>
-            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-              <path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6m-6 4h6" />
-            </svg>
-            <span>{t.choose}</span>
-          </li>
-          <li>
-            <span class="proof-next" aria-hidden="true">
-              →
-            </span>
-            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-              <path d="M7 6h10v12H7zM10 3v3m4-3v3m-4 12v3m4-3v3M3 10h4m-4 4h4m10-4h4m-4 4h4m-11-3 2 2 3-4" />
-            </svg>
-            <span>{t.process.join(' ')}</span>
-          </li>
-          <li>
-            <span class="proof-next" aria-hidden="true">
-              →
-            </span>
-            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
-              <path d="M6 3h8l4 4v14H6zM14 3v5h4M12 10v7m-3-3 3 3 3-3" />
-            </svg>
-            <span>{t.save}</span>
-          </li>
-        </ol>
-      </div>
-      <p class="proof-outside">{t.outside}</p>
+    <div class="proof-tool">
+      <strong class="proof-boundary">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5zM12 14v3" />
+        </svg>
+        {t.toolArea}
+      </strong>
+      <ol class="proof-steps">
+        <li>
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6m-6 4h6" />
+          </svg>
+          <span>{t.choose}</span>
+        </li>
+        <li>
+          <span class="proof-next" aria-hidden="true">
+            →
+          </span>
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M7 6h10v12H7zM10 3v3m4-3v3m-4 12v3m4-3v3M3 10h4m-4 4h4m10-4h4m-4 4h4m-11-3 2 2 3-4" />
+          </svg>
+          <span>{t.process}</span>
+        </li>
+        <li>
+          <span class="proof-next" aria-hidden="true">
+            →
+          </span>
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M6 3h8l4 4v14H6zM14 3v5h4M12 10v7m-3-3 3 3 3-3" />
+          </svg>
+          <span>{t.save}</span>
+        </li>
+      </ol>
+    </div>
+    <div class="proof-attempt" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="28" height="28">
+        <path d="M5 2h14" />
+        <path d="M12 22V6m-4 4 4-4 4 4" />
+      </svg>
+      <strong>{t.blocked}</strong>
+    </div>
+    <div class="proof-outside">
+      <strong>{t.outside}</strong>
+      <p>{t.outsideDetail}</p>
     </div>
   </div>
-  <figcaption>{t.alt}</figcaption>
 </figure>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  for (const figure of document.querySelectorAll<HTMLElement>('[data-local-proof]')) {
+    const button = figure.querySelector<HTMLButtonElement>('[data-proof-play]')!;
+    const controls = figure.querySelector<HTMLElement>('.proof-controls')!;
+    const cue = figure.querySelector<HTMLElement>('.proof-cue')!;
+    const barrier = figure.querySelector('.proof-attempt')!;
+    const ready = cue.textContent!.trim();
+    let timers: number[] = [];
+
+    function stop() {
+      timers.forEach(clearTimeout);
+      timers = [];
+      delete figure.dataset.stage;
+      cue.textContent = ready;
+    }
+    function show(stage: 'open' | 'blocked' | 'files') {
+      figure.dataset.stage = stage;
+      cue.textContent = cue.dataset[stage]!;
+    }
+
+    controls.hidden = false;
+    reduce.addEventListener('change', () => {
+      if (reduce.matches) stop();
+    });
+    button.addEventListener('click', () => {
+      if (reduce.matches) return;
+      stop();
+      if (barrier.getBoundingClientRect().bottom > innerHeight) {
+        controls.scrollIntoView({ block: 'start', behavior: 'instant' });
+      }
+      show('open');
+      timers = [
+        window.setTimeout(() => show('blocked'), 1250),
+        window.setTimeout(() => show('files'), 2700),
+        window.setTimeout(stop, 4200),
+      ];
+    });
+  }
+</script>
 
 <style is:global>
   .home .local-proof {
-    margin: 0;
+    max-width: 660px;
+    margin: 0 auto;
     font-size: 14px;
     word-break: keep-all;
   }
@@ -63,25 +133,28 @@ const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
     margin-bottom: 8px;
     color: var(--color-muted);
   }
-  .home .proof-source > span:last-child {
+  .home .proof-incoming {
     color: var(--color-accent);
     font-size: 24px;
     line-height: 1;
   }
   .home .proof-device {
-    padding: 16px;
+    padding: clamp(10px, 3vw, 24px);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+  }
+  .home .proof-tool {
+    margin-top: 12px;
+    padding: clamp(10px, 3vw, 24px) 8px;
     border: 1px solid var(--color-accent);
     border-radius: var(--radius);
     background: var(--color-accent-soft);
   }
-  .home .proof-tool {
-    margin-top: 12px;
-    padding: 16px 10px;
-    border: 1px solid var(--color-accent);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-  }
-  .home .proof-tool > strong {
+  .home .proof-boundary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--color-accent);
   }
   .home .proof-steps {
@@ -103,25 +176,110 @@ const t = ui(localeOf(Astro.url.pathname)).home.localFlow;
   }
   .home .proof-steps .proof-next {
     position: absolute;
-    top: 2px;
+    top: 6px;
     left: -12px;
     margin: 0;
     color: var(--color-accent);
   }
-  .home .proof-steps svg {
-    margin-inline: auto;
+  .home :is(.proof-tool, .proof-attempt) svg {
     fill: none;
     stroke: var(--color-accent);
     stroke-width: 1.5;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .home .proof-outside {
-    margin: 12px 0 0;
-    color: var(--color-text);
-    font-size: 12px;
+  .home .proof-steps svg {
+    width: 32px;
+    height: 32px;
+    margin-inline: auto;
   }
-  .home .local-proof figcaption {
+  .home .proof-attempt {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 28px;
+    visibility: hidden;
+  }
+  .home .proof-attempt strong {
+    position: absolute;
+    inset-inline-start: calc(50% + 16px);
     font-size: 13px;
+  }
+  .home .proof-outside {
+    padding: 8px;
+    border: 1px dashed var(--color-line);
+    border-radius: var(--radius);
+    color: var(--color-text);
+    font-size: 13px;
+  }
+  .home .proof-outside p {
+    margin: 4px 0 0;
+    text-wrap: balance;
+  }
+  .home .proof-play {
+    min-height: 44px;
+    padding: 6px 14px;
+    border: 1px solid var(--color-muted);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    cursor: pointer;
+  }
+  .home .proof-play:hover {
+    background: var(--color-hover);
+  }
+  .home .proof-controls {
+    scroll-margin-top: 64px;
+  }
+  .home .proof-cue {
+    min-height: 2.8em;
+    margin: 8px 0 12px;
+    line-height: 1.4;
+    text-wrap: balance;
+  }
+  .home [data-stage='open'] .proof-tool {
+    animation: proof-open 600ms ease-out both;
+  }
+  .home [data-stage]:not([data-stage='files']) .proof-steps {
+    visibility: hidden;
+  }
+  .home :is([data-stage='blocked'], [data-stage='files']) .proof-tool {
+    box-shadow: inset 0 -3px var(--color-accent);
+  }
+  .home :is([data-stage='blocked'], [data-stage='files']) .proof-attempt {
+    visibility: visible;
+  }
+  .home [data-stage='blocked'] .proof-attempt path:last-child {
+    animation: proof-rise 450ms ease-out;
+  }
+  .home [data-stage='files'] .proof-steps li {
+    animation: proof-rise 260ms ease-out both;
+  }
+  .home [data-stage='files'] .proof-steps li:nth-child(2) {
+    animation-delay: 240ms;
+  }
+  .home [data-stage='files'] .proof-steps li:nth-child(3) {
+    animation-delay: 480ms;
+  }
+  @keyframes proof-open {
+    from {
+      opacity: 0;
+      clip-path: inset(0 0 90% 0);
+    }
+    to {
+      clip-path: inset(0);
+    }
+  }
+  @keyframes proof-rise {
+    from {
+      opacity: 0;
+      transform: translateY(7px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .home .proof-controls {
+      display: none;
+    }
   }
 </style>
