@@ -1,0 +1,10 @@
+
+Running 3 tests using 1 worker
+
+(node:9718) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/home-redesign-review.spec.ts:7:3 › / 첫 소개의 작업 바로가기에서 키보드로 들어가 실제 사진을 처리한다 (1.2s)
+  ✓  2 [chromium] › tests/e2e/home-redesign-review.spec.ts:7:3 › /en 첫 소개의 작업 바로가기에서 키보드로 들어가 실제 사진을 처리한다 (1.0s)
+  ✓  3 [chromium] › tests/e2e/home-redesign-review.spec.ts:79:1 › 두 테마에서 격리 경계와 자료 다운로드 안내의 본문 대비가 AA를 충족한다 (314ms)
+
+  3 passed (3.5s)

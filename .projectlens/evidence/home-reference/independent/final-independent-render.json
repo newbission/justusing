@@ -1,0 +1,85 @@
+{
+  "created": "2026-11-13T22:30:39.612Z",
+  "results": [
+    {
+      "locale": "ko",
+      "width": 1280,
+      "theme": "light",
+      "http": 200,
+      "errors": [],
+      "title": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+      "scrollWidth": 1280,
+      "notePadding": "20px",
+      "noteFont": "14px",
+      "proofOutsideColor": "rgb(30, 30, 30)",
+      "dataTextColor": "rgb(30, 30, 30)",
+      "steps": [
+        "파일 선택",
+        "→브라우저 처리",
+        "→결과 저장"
+      ],
+      "caption": "파일 내용과 이름은 서버로 보내지 않습니다.",
+      "sceneCount": 4
+    },
+    {
+      "locale": "en",
+      "width": 1280,
+      "theme": "dark",
+      "http": 200,
+      "errors": [],
+      "title": "Quick file tasks. Your files stay with you.",
+      "scrollWidth": 1280,
+      "notePadding": "20px",
+      "noteFont": "14px",
+      "proofOutsideColor": "rgb(228, 228, 225)",
+      "dataTextColor": "rgb(228, 228, 225)",
+      "steps": [
+        "Choose a file",
+        "→Process locally",
+        "→Save the result"
+      ],
+      "caption": "File contents and names are not sent to a server.",
+      "sceneCount": 4
+    },
+    {
+      "locale": "ko",
+      "width": 390,
+      "theme": "light",
+      "http": 200,
+      "errors": [],
+      "title": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+      "scrollWidth": 390,
+      "notePadding": "16px",
+      "noteFont": "14px",
+      "proofOutsideColor": "rgb(30, 30, 30)",
+      "dataTextColor": "rgb(30, 30, 30)",
+      "steps": [
+        "파일 선택",
+        "→브라우저 처리",
+        "→결과 저장"
+      ],
+      "caption": "파일 내용과 이름은 서버로 보내지 않습니다.",
+      "sceneCount": 4
+    },
+    {
+      "locale": "en",
+      "width": 320,
+      "theme": "dark",
+      "http": 200,
+      "errors": [],
+      "title": "Quick file tasks. Your files stay with you.",
+      "scrollWidth": 320,
+      "notePadding": "16px",
+      "noteFont": "14px",
+      "proofOutsideColor": "rgb(228, 228, 225)",
+      "dataTextColor": "rgb(228, 228, 225)",
+      "steps": [
+        "Choose a file",
+        "→Process locally",
+        "→Save the result"
+      ],
+      "caption": "File contents and names are not sent to a server.",
+      "sceneCount": 4
+    }
+  ]
+}
