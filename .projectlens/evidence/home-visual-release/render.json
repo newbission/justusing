@@ -1,0 +1,234 @@
+{
+  "count": 32,
+  "results": [
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 1280,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 390,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 1280,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 320,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 390,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 320,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 1280,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 1280,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 320,
+      "theme": "dark",
+      "js": false
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 320,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 390,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 390,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 320,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 320,
+      "theme": "dark",
+      "js": false
+    },
+    {
+      "engine": "Chrome",
+      "lang": "en",
+      "width": 320,
+      "height": 568,
+      "motion": true,
+      "previewNetworking": true
+    },
+    {
+      "engine": "Chrome",
+      "lang": "ko",
+      "width": 320,
+      "height": 568,
+      "motion": true,
+      "previewNetworking": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 1280,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 390,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 1280,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 390,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 320,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 320,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 320,
+      "theme": "dark",
+      "js": false
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 1280,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 1280,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 390,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 320,
+      "theme": "light",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 390,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 320,
+      "theme": "dark",
+      "js": false
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 320,
+      "theme": "dark",
+      "js": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "en",
+      "width": 320,
+      "height": 568,
+      "motion": true,
+      "previewNetworking": true
+    },
+    {
+      "engine": "WebKit",
+      "lang": "ko",
+      "width": 320,
+      "height": 568,
+      "motion": true,
+      "previewNetworking": true
+    }
+  ],
+  "errors": []
+}

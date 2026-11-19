@@ -122,14 +122,16 @@ test.describe('한국어 브라우저', () => {
   });
 });
 
-test('홈의 첫 구간에서 로컬 처리 약속과 설명 링크가 언어에 맞게 나온다', async ({ page }) => {
+test('홈 첫 제목과 별도 처리 원리의 링크가 언어에 맞게 나온다', async ({ page }) => {
   for (const [path, title, link, target] of [
     ['/', '파일 작업은 가볍게. 내 파일은 내 기기에.', '처리 방식 알아보기', '/safety/'],
     ['/en/', 'Quick file tasks. Your files stay with you.', 'How it works', '/en/safety/'],
   ] as const) {
     await page.goto(path);
-    const safety = page.getByRole('region', { name: title });
-    await expect(safety.getByRole('heading', { name: title })).toBeVisible();
-    await expect(safety.getByRole('link', { name: link })).toHaveAttribute('href', target);
+    await expect(page.getByRole('heading', { name: title, level: 1 })).toBeVisible();
+    await expect(page.locator('.home-how').getByRole('link', { name: link })).toHaveAttribute(
+      'href',
+      target,
+    );
   }
 });

@@ -1,6 +1,7 @@
 /** 새 홈의 실제 진입 흐름·사진 견본·키보드·모바일 레이아웃. 빌드한 사이트에서 확인한다. */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { siteConfig } from '../../src/site.config';
 import { expect, test } from './test';
 
 const sample = JSON.parse(readFileSync('src/assets/home/result.json', 'utf8')) as {
@@ -28,9 +29,7 @@ const locales = [
 ];
 
 for (const locale of locales) {
-  test(`${locale.path} 두 번째 기능 소개에서 실제 파일 처리와 다운로드까지 간다`, async ({
-    page,
-  }) => {
+  test(`${locale.path} 사진 비교 구간에서 실제 파일 처리와 다운로드까지 간다`, async ({ page }) => {
     await page.goto(locale.path);
     const primary = page.locator('.feature-intro').getByRole('link', { name: locale.primary });
     await primary.scrollIntoViewIfNeeded();
@@ -58,11 +57,6 @@ for (const locale of locales) {
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(local.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.locator('.feature-intro').getByRole('heading', { level: 2 })).toBeVisible();
-    await expect(
-      local.getByRole('link', {
-        name: locale.prefix ? 'How it works' : '처리 방식 알아보기',
-      }),
-    ).toHaveAttribute('href', `${locale.prefix}/safety/`);
     await local.getByRole('link', { name: locale.choose }).click();
     await expect(page.locator('#directory-title')).toBeInViewport();
     await page
@@ -80,6 +74,9 @@ for (const locale of locales) {
 
   test(`${locale.path} 사진 견본은 직접 호스팅하며 실제 결과 크기를 표시한다`, async ({ page }) => {
     await page.goto(locale.path);
+    await expect(
+      page.locator('.photo-example figcaption').filter({ hasText: siteConfig.name }),
+    ).toBeVisible();
     await page.locator('.photo-example').scrollIntoViewIfNeeded();
     const photos = page.locator('.photo-example img');
     await expect(photos).toHaveCount(2);

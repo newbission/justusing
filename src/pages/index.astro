@@ -5,6 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ToolSections from '../components/ToolSections.astro';
 import HomeShowcase from '../components/HomeShowcase.astro';
 import HomeValueStory from '../components/HomeValueStory.astro';
+import HomeLocalFlow from '../components/HomeLocalFlow.astro';
 import RailShell from '../components/RailShell.astro';
 import AdSlot from '../components/AdSlot.astro';
 import { siteConfig } from '../site.config';
@@ -15,6 +16,8 @@ import { visibleCategories } from '../tools/registry';
 import original from '../assets/home/original.webp';
 import result from '../assets/home/result.webp';
 import sample from '../assets/home/result.json';
+import sailboatClip from '../assets/home/sailboat-gif-preview.mp4?url';
+import sailboatPoster from '../assets/home/sailboat-gif-poster.webp';
 
 const locale = localeOf(Astro.url.pathname);
 const text = siteConfig.text[locale];
@@ -37,18 +40,31 @@ const jsonLd = {
     <div class="home">
       <HomeValueStory />
 
+      <section class="home-how" aria-labelledby="how-title">
+        <h2 id="how-title">{t.story.howTitle}</h2>
+        <div class="how-intro">
+          <p>{t.story.howProcess}</p>
+          <p>{t.story.howFiles}</p>
+        </div>
+        <HomeLocalFlow />
+        <a href={href('/safety/')}>
+          {t.localMore} <span aria-hidden="true">↗</span>
+        </a>
+      </section>
+
+      <aside class="home-data-note" aria-labelledby="data-note-title">
+        <h2 id="data-note-title">{t.story.dataTitle}</h2>
+        <p>{t.story.dataText}</p>
+        <p>{t.story.dataReuse}</p>
+      </aside>
+
       <section class="hero feature-intro" aria-labelledby="feature-title">
         <div class="hero-copy">
           <h2 id="feature-title">{t.featureTitle}</h2>
-          <p class="intro">{t.intro}</p>
           <div class="hero-actions">
             <a class="primary" href={href('/image/target-size/')}>
               {t.primary}
               <span aria-hidden="true">↗</span>
-            </a>
-            <a class="browse" href="#tools">
-              {t.browse}
-              <span aria-hidden="true">↓</span>
             </a>
           </div>
         </div>
@@ -56,17 +72,14 @@ const jsonLd = {
         <figure class="photo-example" aria-label={t.example}>
           <div class="photo-stage">
             <div class="photo photo-original">
-              <Image src={original} alt={t.exampleAlt} width={560} height={840} loading="lazy" />
+              <Image src={original} alt={t.exampleAlt} width={416} height={624} loading="lazy" />
               <div class="photo-label">
                 <span>{t.before}</span>
                 <strong>{kb(sample.inputBytes)}</strong>
               </div>
             </div>
-            <span class="photo-arrow" aria-hidden="true">
-              ↘
-            </span>
             <div class="photo photo-result">
-              <Image src={result} alt={t.resultAlt} width={400} height={600} loading="lazy" />
+              <Image src={result} alt={t.resultAlt} width={416} height={624} loading="lazy" />
               <div class="photo-label">
                 <span>{t.after}</span>
                 <strong>{kb(sample.outputBytes)}</strong>
@@ -74,7 +87,7 @@ const jsonLd = {
             </div>
           </div>
           <figcaption>
-            <span>{t.sampleNote}</span>
+            <span>{t.sampleNote(siteConfig.name)}</span>
             <a
               href="https://unsplash.com/photos/green-plant-in-brown-clay-pot-6PkcqHAFsZA"
               rel="noreferrer"
@@ -83,6 +96,26 @@ const jsonLd = {
             </a>
           </figcaption>
         </figure>
+      </section>
+
+      <section class="hero home-video" aria-labelledby="home-video-title">
+        <div class="video-copy">
+          <h2 id="home-video-title">{t.video.title}</h2>
+          <p class="intro">{t.video.note}</p>
+        </div>
+        <video
+          aria-label={t.video.playLabel}
+          src={sailboatClip}
+          poster={sailboatPoster.src}
+          width="480"
+          height="270"
+          preload="none"
+          controls
+          playsinline
+        ></video>
+        <a class="video-tool" href={href('/video/to-gif/')}>
+          {t.video.tool} <span aria-hidden="true">↗</span>
+        </a>
       </section>
 
       <section id="examples" class="quick-tools" aria-labelledby="quick-title">
@@ -169,34 +202,93 @@ const jsonLd = {
   }
   .home .hero {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
     align-items: center;
-    gap: 32px;
-    padding: 44px 0 36px;
+    gap: clamp(26px, 5vw, 64px);
   }
-  .home .feature-intro {
+  .home :is(.hero, .home-how, .quick-tools, .home-data-note) {
+    padding-block: clamp(36px, 7vw, 88px);
     border-top: 1px solid var(--color-line);
   }
-  .home .feature-intro h2 {
+  .home :is(.hero, .home-how) h2 {
     margin: 0;
-    font-size: 32px;
-    line-height: 1.3;
-    letter-spacing: -0.04em;
+    font-size: clamp(27px, 4vw, 40px);
+    line-height: 1.25;
+    letter-spacing: -0.045em;
     word-break: keep-all;
+    text-wrap: balance;
   }
-  .home .eyebrow {
-    display: flex;
+  .home .home-how {
+    text-align: center;
+  }
+  .home .how-intro {
+    max-width: 37em;
+    margin: 16px auto 28px;
+    color: var(--color-muted);
+    word-break: keep-all;
+    text-wrap: balance;
+  }
+  .home .how-intro p {
+    margin: 0;
+  }
+  .home .home-how > a {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin: 0 0 20px;
-    color: var(--color-accent);
-    font-size: 13px;
-    font-weight: 600;
+    min-height: 44px;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  .home .feature-intro {
+    padding-top: clamp(32px, 4.5vw, 56px);
+  }
+  .home .home-video {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    grid-template-areas: 'clip copy' 'clip link';
+    grid-template-rows: 1fr 1fr;
+    row-gap: 12px;
+  }
+  .home .video-copy {
+    grid-area: copy;
+    align-self: end;
+  }
+  .home .video-tool {
+    grid-area: link;
+    display: inline-flex;
+    align-self: start;
+    justify-self: start;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-size: 14px;
+  }
+  .home .home-video video {
+    grid-area: clip;
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    background: var(--color-video);
+  }
+  .home .home-data-note {
+    padding-block: 32px;
+  }
+  .home .home-data-note h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .home .home-data-note p {
+    max-width: 56em;
+    margin: 8px 0 0;
+    color: var(--color-text);
+    font-size: 14px;
+    word-break: keep-all;
   }
   .home h1 {
     max-width: 8.5em;
     margin: 0;
-    font-size: clamp(36px, 4.3vw, 54px);
+    font-size: clamp(38px, 5.8vw, 67px);
     line-height: 1.2;
     letter-spacing: -0.055em;
     font-weight: 700;
@@ -235,72 +327,40 @@ const jsonLd = {
   .home .primary:hover {
     text-decoration: underline;
   }
-  .home .browse:hover {
-    text-decoration: underline;
-  }
   .home .photo-example {
-    max-width: 400px;
-    justify-self: end;
     min-width: 0;
     margin: 0;
   }
   .home .photo-stage {
-    display: flex;
-    align-items: flex-start;
-    position: relative;
-    padding: 22px 18px 20px;
-    isolation: isolate;
-  }
-  .home .photo-stage::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset: 15% 0 6%;
-    background: var(--color-accent-soft);
-    border-radius: 50%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
   .home .photo {
-    flex: none;
-    padding: 7px;
-    background: var(--color-paper);
-    color: var(--color-paper-text);
-    box-shadow: var(--shadow-page);
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius);
+    background: var(--color-surface);
   }
   .home .photo img {
+    display: block;
     width: 100%;
     height: auto;
-  }
-  .home .photo-original {
-    width: 58%;
-    transform: rotate(-7deg);
-  }
-  .home .photo-result {
-    width: 49%;
-    margin: 68px 0 0 -7%;
-    transform: rotate(6deg);
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
   }
   .home .photo-label {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: baseline;
-    gap: 4px;
-    padding: 10px 4px 3px;
-    font-size: 11px;
+    gap: 4px 8px;
+    padding: 8px 10px;
+    font-size: 12px;
   }
   .home .photo-label strong {
-    font-family: var(--font-mono);
-    font-size: 13px;
+    font: 600 13px var(--font-mono);
     white-space: nowrap;
-  }
-  .home .photo-arrow {
-    position: absolute;
-    z-index: 1;
-    left: 53%;
-    top: 3%;
-    font-size: 42px;
-    line-height: 1;
-    color: var(--color-accent);
   }
   .home figcaption {
     display: flex;
@@ -440,22 +500,8 @@ const jsonLd = {
     padding: 32px 0 16px;
   }
   @media (max-width: 767px) {
-    .home .hero {
-      gap: 22px;
-      padding-top: 40px;
-    }
-    .home h1 {
-      font-size: 36px;
-    }
     .home .hero-actions {
       gap: 14px;
-    }
-    .home .photo-label {
-      flex-direction: column;
-      font-size: 10px;
-    }
-    .home .photo-result {
-      margin-top: 56px;
     }
     .home .directory-heading {
       align-items: flex-start;
@@ -480,15 +526,12 @@ const jsonLd = {
   @media (max-width: 599px) {
     .home .hero {
       grid-template-columns: minmax(0, 1fr);
-      gap: 28px;
-      padding: 36px 0;
+      gap: 24px;
     }
-    .home h1 {
-      max-width: 10em;
-      font-size: 40px;
-    }
-    .home .eyebrow {
-      margin-bottom: 16px;
+    .home .home-video {
+      grid-template-areas: 'copy' 'clip' 'link';
+      grid-template-rows: auto;
+      gap: 16px;
     }
     .home .intro {
       max-width: 24em;
@@ -498,27 +541,6 @@ const jsonLd = {
     .home .hero-actions {
       margin-top: 22px;
       gap: 24px;
-    }
-    .home .photo-example {
-      width: min(100%, 360px);
-      justify-self: center;
-    }
-    .home .photo-stage {
-      padding: 16px 18px 12px;
-    }
-
-    .home .photo-arrow {
-      top: 0;
-      font-size: 36px;
-    }
-    .home .photo-result {
-      margin-top: 52px;
-    }
-    .home figcaption {
-      font-size: 10px;
-    }
-    .home .quick-tools {
-      scroll-margin-top: 24px;
     }
     .home .section-heading {
       display: block;
