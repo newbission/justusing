@@ -1,0 +1,22 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ '파일은 내 기기에. 처리는 브라우저에서.'
+- '파일 작업은 가볍게. 내 파일은 내 기기에.'
+     ^
+
+    at file:///Users/jm/development/projects/justusing/.cache/home-reference-verify-production.mjs:14:10
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '파일은 내 기기에. 처리는 브라우저에서.',
+  expected: '파일 작업은 가볍게. 내 파일은 내 기기에.',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.13.0

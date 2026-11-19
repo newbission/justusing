@@ -1,6 +1,6 @@
 # 홈 상단 재기획·구현·배포
 
-쓴 날 2026-11-14 · 상태: 진행 중
+쓴 날 2026-11-14 · 고친 날 2026-11-19 · 상태: 운영 배포·main/dev 동기화 완료
 
 ## 범위와 기준
 
@@ -56,3 +56,28 @@
 PR #168의head3eabcb72 리뷰에서기획와이어HTML의CSS시스템색(GrayText/Canvas/CanvasText/ButtonFace)도색토큰규칙을따르라는지적1건을받았다. 같은파일의모든색지정을찾아src/styles/tokens.css를직접불러오고공통변수로바꿨다. 문서기본head구조도명시했다. 운영앱소스변경없음.
 
 wireframe-token-review.mjs가리뷰대상옛커밋의직접색지정을재현하고수정본토큰사용을검사하며,실제Chrome두테마에서3안렌더/오류없음을확인했다. 최초검증에서prettier가나눈title태그때문에스타일시트link치환이빠진것을잡았고head를명시해수정했다. 최종light배경rgb246/246/244·글자30/30/30, dark배경21/21/21·글자228/228/225로공통토큰과일치했다. 로그/두테마캡처는evidence/home-reference/wireframe-token-*에보존했다. 수정커밋현재head로Codex재리뷰와CI를다시받는다.
+
+## 최종 독립 검토 보완
+
+[후속 독립 검토](./home-reference-final-independent-review.md)가 실제로 마감되어 있음을 재개 시 확인했다. 독립 담당은 마지막 두 스타일과 자료 박스 여백, 한영 바로가기의 실제 처리·다운로드 및 격리, 두 테마 대비 회귀 3개(3.5초), 최종 4개 렌더를 재확인해 배포 차단 지적이 없다고 기록했다. 앞선 root 대행 이력은 역사적 기록으로 보존하며 후속 독립 결과와 구별한다.
+
+## 운영 배포 — 2026-11-19 재개
+
+PR #169의 현재 head `ee937a9e`는 CI 538개 통과·광고 안내 설정상 7개 제외(11.0분)로 성공했다. 재개 시 같은 head와 원격 상태, 로컬 앱·테스트 트리 일치를 확인한 뒤 main에 squash 병합했다. 운영 SHA는 `9ae341f3c12ecb5779a14560a3670b34a6e1368d`다. 곧바로 main→dev PR #170을 만들었고 CI `44487388105/job135434143934`를 확인 중이다. 동기화 PR에는 저장소 규칙대로 Codex 리뷰를 추가 호출하지 않았다.
+
+Cloudflare Workers Builds `61ba0382-75a6-4814-a9ca-075146a28b25`의 성공을 GitHub check-run에서 확인했다. 전환 직전 첫 HTTP 검사는 옛 H1을 감지했으며 `home-reference-production-before-deploy.log`로 보존했다. 빌드 성공 후 재검사에서 실제 운영 한영 HTML 200·text/html·첨부 헤더 없음, 새 H1·도식·소개 순서·대표 장면과 참조 자산 KO 12개/EN 11개 모두 200을 확인했다. 운영 버전과 로컬 src/tests 트리도 같다.
+
+실제 운영 Chromium+WebKit **58개(1.5분) 모두 통과**했다. 범위는 한영 홈, 390·320px의 두 테마, JS 없는 화면, 전체 도구 42개, 새 바로가기의 키보드 진입, 실제 100KB JPG 처리와 Blob 다운로드, 파일명 요청·제목 미노출, opaque 격리, 안내 대비, 대표 장면의 첫 노출 단회 자동·이후 수동·정지/재개다. 근거는 `home-reference-production-e2e.log`와 `home-reference-production.config.ts.txt`다.
+
+root는 실제 운영 IAB에서 KO1280 light/390 light의 첫 화면과 자료 안내·사진 연결, EN320 dark의 시작점과 줄바꿈을 직접 확인했다. 임시 viewport를 복원하고 한국어 밝은 운영 홈을 결과 탭으로 유지했다. 별도 운영 캡처는 `home-reference-production-ko-1280-light.png`, `ko-390-light.png`, `en-320-dark.png`, `mobile-detail.png`다. 실제 사용자 폰·네이티브 Safari 인수를 받았다고 주장하지 않는다.
+
+운영 이후 증거와 해당 기반 history 갱신은 `docs/home-reference-deployment-record` 브랜치에 보존한다. 앱을 추가 변경하거나 두 번째 배포를 일으키는 수정은 없다. 동기화 PR #170도 CI 538개 통과·설정상 7개 제외(13.9분) 후 merge commit `50c6ba29dbabba2d80a7ea37bf5671b1d1056cc2`로 병합했다. main이 dev의 조상이며 두 파일 트리는 `413f8269277fefd34eda59a387c8110294c7e962`로 동일하다. 로컬 main/dev도 비강제 fast-forward로 원격과 맞췄다.
+
+
+## 마감 판정
+
+요청한 조사·재기획·구현·독립 검증·현재 커밋 Codex 리뷰·기능/배포/동기화 CI·운영 배포·운영 검증·원격과 로컬 브랜치 동기화를 완료했다. 기능/배포/동기화 CI는 각각 538개 통과·기존 광고 안내 설정상 7개 제외다. 운영 버전은 `9ae341f3`, dev는 `50c6ba29`이며 앱 코드와 전체 파일 트리가 같다.
+
+변경 범위 검증과 배포 완료를 전체 프로젝트 사용자 인수와 혼동하지 않는다. ProjectLens의 이전 전체 프로젝트 baseline/체크는 역사적 상태로 남는다. 배포 뒤 문서·증거 브랜치에는 운영 코드 변경이 없으며 추가 배포하지 않는다. 필수 잔여 작업은 없고 다음 작업은 사용자 피드백 또는 새로운 요청이 있을 때 최신 origin/dev에서 시작한다.
+
+최종 보고서 생성 중 ProjectLens가 evidence 루트의 운영 상태 JSON을 검사 기록으로 읽어 `time_ns` 누락 오류를 냈다. 운영 상태 파일을 이전 배포 기록과 같은 `.txt` 이름으로 옮기고 릴리스 체크를 새 경로로 다시 기록했다. 운영 상태 내용이나 앱 코드를 바꾸지 않은 기록 분류 수정이다.

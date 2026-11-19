@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import { writeFile } from 'node:fs/promises';
+import { siteUrl, siteConfig } from '../src/site.config.ts';
+import { ui } from '../src/i18n/ui.ts';
+const pages=[];
+for (const [prefix,locale] of [['','ko'],['/en','en']]) {
+  const url=`${siteUrl}${prefix}/`;
+  const response=await fetch(url,{cache:'no-store'});
+  const html=await response.text();
+  assert.equal(response.status,200,url);
+  assert.match(response.headers.get('content-type')??'',/text\/html/);
+  assert.doesNotMatch(response.headers.get('content-disposition')??'',/attachment/);
+  const h1=html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)?.[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+  assert.equal(h1,siteConfig.text[locale].tagline);
+  const main=html.match(/<main[\s\S]*<\/main>/)?.[0];
+  assert.ok(main,'Main content');
+  const sequence=['id="home-title"','class="story-start"','class="local-proof"','class="home-how"','class="home-data-note"','class="hero feature-intro"'];
+  const positions=sequence.map((marker)=>main.indexOf(marker));
+  assert.ok(positions.every((position,index)=>position>=0&&(!index||position>positions[index-1])),'Chosen information flow is deployed');
+  assert.doesNotMatch(main,/home-pains/);
+  assert.ok(main.includes(ui(locale).home.story.dataTitle));
+  assert.ok(main.includes('data-demo="album"')&&main.includes('data-demo="redact"'));
+  const assets=[...new Set([...html.matchAll(/(?:src|href)="(\/_astro\/[^"?#]+)"/g)].map((m)=>m[1]))];
+  const checked=await Promise.all(assets.map(async(path)=>{
+    const result=await fetch(new URL(path,siteUrl),{method:'HEAD'});
+    assert.equal(result.status,200,path);
+    return path;
+  }));
+  await writeFile(`.cache/home-reference-production-${locale}.html`,html);
+  pages.push({url,status:response.status,h1,storyOrder:true,assets:checked.length,contentType:response.headers.get('content-type')});
+}
+console.log(JSON.stringify({verified:true,pages},null,2));

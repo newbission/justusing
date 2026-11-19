@@ -1,0 +1,12 @@
+{
+  "id": "1795077786333718000-67fbcfe1",
+  "check": "C-REFERENCE-RELEASE",
+  "time_ns": 1795077786333758000,
+  "fingerprint": "78acd0ffd399681ce70d14eb2abf7673fc5a4ef4f7a971d3309149c20d19559a",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "PR168현재headCodex재리뷰/CI538pass, PR169CI538pass후main squash9ae341f3와Cloudflarebuild성공, 실제운영58Chrome/WebKit/한영HTTP·자산200/IAB렌더확인. PR170CI538pass후merge50c6ba29, main조상·전체트리동일·로컬main/dev비강제ff확인. 각CI광고안내설정상7제외. 운영앱원격커밋검증이며문서증거브랜치와전체프로젝트인수를구별.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-reference-release-state.json",
+  "artifact_hash": "b268b1c78be58969332687db59336ab58d29a36abd42efa08b1f5bbfcea4089f"
+}

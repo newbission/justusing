@@ -1,0 +1,12 @@
+{
+  "id": "1795077848989867000-e9c7817e",
+  "check": "C-REFERENCE-RELEASE",
+  "time_ns": 1795077848990138000,
+  "fingerprint": "78acd0ffd399681ce70d14eb2abf7673fc5a4ef4f7a971d3309149c20d19559a",
+  "harness_version": "0.6.0",
+  "result": "pass",
+  "note": "PR168현재head리뷰/CI538pass, PR169CI538pass/main squash9ae341f3/Cloudflare성공, 운영58검사·HTTP/자산/IAB확인. PR170CI538pass/merge50c6ba29, main조상·전체트리동일·로컬ff완료. 운영상태JSON이harness검사JSON으로해석되는문제를피해내용그대로txt로이동하고현재경로재기록. 앱·테스트변경없음.",
+  "kind": "manual",
+  "artifact": ".projectlens/evidence/home-reference-release-state.txt",
+  "artifact_hash": "b268b1c78be58969332687db59336ab58d29a36abd42efa08b1f5bbfcea4089f"
+}

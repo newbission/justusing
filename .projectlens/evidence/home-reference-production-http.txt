@@ -1,0 +1,21 @@
+{
+  "verified": true,
+  "pages": [
+    {
+      "url": "https://justus.ing/",
+      "status": 200,
+      "h1": "파일 작업은 가볍게. 내 파일은 내 기기에.",
+      "storyOrder": true,
+      "assets": 12,
+      "contentType": "text/html"
+    },
+    {
+      "url": "https://justus.ing/en/",
+      "status": 200,
+      "h1": "Quick file tasks. Your files stay with you.",
+      "storyOrder": true,
+      "assets": 11,
+      "contentType": "text/html"
+    }
+  ]
+}

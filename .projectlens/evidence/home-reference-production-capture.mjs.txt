@@ -1,0 +1,16 @@
+import {chromium} from '@playwright/test';
+import {siteUrl,siteConfig} from '../src/site.config.ts';
+import assert from 'node:assert/strict';
+const browser=await chromium.launch({channel:'chrome'});
+try{
+ for(const [locale,width,height,theme] of [['ko',1280,900,'light'],['ko',390,844,'light'],['en',320,844,'dark']]){
+  const context=await browser.newContext({viewport:{width,height},colorScheme:theme,reducedMotion:'reduce'});
+  await context.route(/googlesyndication|doubleclick|adtrafficquality|googletagservices|cloudflareinsights/,r=>r.fulfill({contentType:'text/javascript',body:''}));
+  const page=await context.newPage();await page.goto(siteUrl+(locale==='en'?'/en/':'/'),{waitUntil:'networkidle'});await page.evaluate(()=>document.fonts.ready);
+  assert.equal(await page.locator('h1').innerText(),siteConfig.text[locale].tagline);
+  await page.screenshot({path:`.projectlens/evidence/home-reference-production-${locale}-${width}-${theme}.png`});
+  if(width===390){await page.locator('.home-data-note').scrollIntoViewIfNeeded();await page.screenshot({path:'.projectlens/evidence/home-reference-production-mobile-detail.png'});}
+  await context.close();
+ }
+}finally{await browser.close();}
+console.log('production desktop/mobile/English-dark captures verified');

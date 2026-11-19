@@ -1,0 +1,4 @@
+check	Run npm run test:e2e	2026-11-19T08:41:21.5460683Z   7 skipped
+check	Run npm run test:e2e	2026-11-19T08:41:21.5470419Z   538 passed (13.9m)
+check	Run npm run test:e2e	2026-11-19T08:41:21.5510995Z ##[notice]  7 skipped
+check	Run npm run test:e2e	  538 passed (13.9m)

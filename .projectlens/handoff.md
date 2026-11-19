@@ -153,3 +153,27 @@ B선정보고서reports/home-research.md/3안home-reference-wireframes.html, 기
 자료안내공용CSS충돌수정, 독립검증자의light대비4.00지적을두본문color-text로수정/영구대비E2E추가. 독립검증에이전트는초기36렌더/18WebKit/새바로가기2개완료뒤실행한도. root가최종수정빌드로독립스크립트36렌더·12접근성실행/캡처확인하여본문light13.02/dark11.81확인. 독립agent새pass로과장하지않음.
 
 최종C-REFERENCE-QUALITY1794586823726900000-66e6817c, E2E1794607270399424000-69e0f296(Chromium75pass/7설정상제외2.5분), VISUAL1794607469574974000-0d700176, RESEARCH1794607469795693000-4076c229모두c001849a...같은최종소스지문. 초기74pass실행은대비수정중소스변경harnessfail보존, 최종과구별. 자료/성능서버재build·세션종료경합기록도남김. 최종KO21.5/CSS10.2/font102.8/image98KB11요청. 보고서reports/home-reference-redesign.md와home-reference-verification.md. 다음정확한행동은작은커밋/기능PR현재head리뷰CI→dev→main배포/동기화/운영재확인이다. 사용자최종인수아님.
+
+## 홈 재기획 PR 검토 진행 (2026-11-14)
+
+기능브랜치feat/home-reference-redesign에기존배포기록보존98dc6a04/구현ed9cf5de/폰트6fd1d4db/테스트4cd19d23/조사검증3eabcb72를커밋하고PR #168→dev생성. 초기리뷰가와이어HTML의시스템색도토큰규칙을따르라고지적하여4686e9f0에서공통tokens.css/색변수적용. 기존코드직접색재현·수정본두테마Chrome3안렌더통과,답변/resolve완료. 현재head4686e9f0f332ee760988b5e05d408691b88d5bcf의Codex 'Didn't find any major issues'영수증 https://github.com/newbission/justusing/pull/168#issuecomment-6866177915 확보.
+
+현재CI43516932982/job132201157520는전체E2E중. 이전headCI43516403653은새head가나와취소(실패아님). 아직기능PR병합/운영배포안함. 다음정확한행동: 현headCI통과확인→PR168rebase→dev/main배포PR CI/squash→즉시main/dev동기화PR CI/merge→Cloudflare실배포/운영확인. 사용자명시배포권한지속. 현재운영실행상태JSON evidence/home-reference-release-state.txt, 운영테스트준비 .cache/home-reference-production.config.ts 및 HTTP확인 .cache/home-reference-verify-production.mjs. 같은명칭production.config.ts.txt는evidence에보존대기. root최종로컬75pass/7제외,독립스크립트36렌더/12접근성pass. 로컬8852(root53558)/8862(검증자기존서버)는동일dist제공중. 실제운영에새화면배포전이므로지금은productiontest실행하면안됨.
+
+기능PR168은현head4686e9f0재리뷰주요지적없음/CI538pass·7설정상제외(10.8분)뒤rebase병합완료. origin/dev ee937a9e1044bf55acef5f729f683ca03252463f, 로컬feature와src트리동일확인. 배포PR169(dev→main)생성, releaseCI43518786304/job132207460925진행중. 아직main병합/실배포안함. 다음은PR169head ee937a9e의CI성공확인후squash→즉시main/dev동기화PR생성/CI/merge와병행해Cloudflare/운영HTTP·58Chrome/WebKit검사/캡처확인. 미래운영test는준비만했고아직실행하지않음.
+
+## 운영 배포 확인·main/dev 동기화 대기 (2026-11-19)
+
+사용자명시후속요청으로PR169CI결과부터재개. 기존변경은handoff와미커밋운영증거/독립최종검토뿐이며보존했다. PR169현head ee937a9e CI538pass7설정상제외11.0분성공확인후main squash9ae341f3c12ecb5779a14560a3670b34a6e1368d완료. 즉시main→dev PR170생성,현재CI44487388105/job135434143934진행중. Codex추가호출없음.
+
+Cloudflare빌드61ba0382-75a6-4814-a9ca-075146a28b25success. 실제운영한영200/새소개/자산12·11개200확인, Chromium+WebKit58개1.5분모두pass. IAB운영KO1280/390light·EN320dark직접확인후viewport복원/한국어밝은운영탭유지. 첫HTTP검사는CF배포진행중옛H1을잡은것으로before-deploy.log보존하고success뒤정상재검사했다.
+
+마지막독립담당의final-independent-review.md와실행3pass/최종4렌더가실제로작성되어있어읽고보존. 이전quota/root대행이력과후속독립확인을구별. 현재로컬docs/home-reference-deployment-record브랜치(origin/dev기준)로전환,앱/테스트변경없고운영증거·handoff·후속보고서와site-structure/fonts-and-data자동history만정리중. 다음정확한행동: PR170현head9ae341f3의CI성공확인→merge commit→fetch/main이dev조상·두트리동일확인→docs브랜치ff→기록/문서인덱스/커밋push→최종운영URL보고. 운영검사는이미통과했으므로변경없이는반복불필요.
+
+## 홈 상단 재기획 운영 배포·동기화 마감 (2026-11-19)
+
+PR169는CI538pass/7설정상제외(11.0분)뒤main squash9ae341f3로배포. Cloudflare61ba0382-75a6-4814-a9ca-075146a28b25success, 운영한영HTML/자산KO12·EN11개200, Chrome+WebKit58개(1.5분)모두pass, IAB운영desktop/390·EN320dark확인/viewport복원/한국어밝은운영탭유지. PR170도CI538pass/7설정상제외(13.9분)뒤merge commit50c6ba29dbabba2d80a7ea37bf5671b1d1056cc2로병합완료.
+
+fetch뒤main은dev조상이고두전체트리413f8269277fefd34eda59a387c8110294c7e962로동일확인. 로컬main/dev도비강제fetch로각origin/main9ae341f3/origin/dev50c6ba29에fast-forward. 문서증거브랜치도origin/dev로ff했고앱/테스트변경없음. docs/home-reference-deployment-record에는독립담당마지막3pass/4렌더기록과운영증거·보고서·자동history만보존해추가배포하지않는다. 원본다른tool-chaining작업트리보존.
+
+요청필수작업완료. 상세reports/home-reference-redesign.md, 독립최종reports/home-reference-final-independent-review.md, 릴리스evidence/home-reference-release-state.txt과세CI요약/운영58검사·HTTP·캡처참고. 전체프로젝트인수로과장하지않음. 다음정확한행동은사용자피드백/새요청시최신origin/dev에서새기능브랜치를만드는것이며, 변경없이는이미통과한검사를반복하지않는다.
