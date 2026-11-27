@@ -66,6 +66,7 @@ const DOCS = {
   'features/video-extract-audio': { scopes: ['video-extract-audio'], prs: [] },
   // 기반 (여러 도구·페이지가 같이 쓰는 것)
   'foundations/frame-isolation': { scopes: ['frame'], prs: [40] },
+  'foundations/tool-chaining': { scopes: ['chain'], prs: [] },
   'foundations/pdf-common': { scopes: ['pdf'], prs: [76, 77] },
   'foundations/image-common': { scopes: ['image'], prs: [] },
   'foundations/video-common': { scopes: ['video'], prs: [] },

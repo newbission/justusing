@@ -22,4 +22,6 @@ export default defineTool({
   },
   related: ['image/resize', 'image/compress', 'pdf/from-image'],
   flow: { from: { kind: 'jpg', mark: 'photo' }, to: { kind: 'jpg', mark: 'photo', small: true } },
+  // 다른 도구 결과를 받는다 (사진 한 장, docs/foundations/tool-chaining)
+  receives: { multiple: false },
 });

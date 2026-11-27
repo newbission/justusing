@@ -76,13 +76,23 @@ test('휴대폰 메뉴·가이드 창·따라 하기·예시 파일·움직이�
     // 따라 하기보다 먼저 한다 (따라 하기가 끝나는 신호가 frame에 닿기 전에 누르면 눌리지 않는다)
     const frame = page.frameLocator('iframe[data-tool-frame]');
     await frame.getByRole('button', { name: sample }).click();
-    // 다른 테스트와 함께 돌면 견본을 받고 여는 데 오래 걸릴 수 있다
-    await expect(frame.getByRole('button', { name: sample })).toHaveCount(0, { timeout: 30_000 });
+    // 견본을 받기 시작하면 버튼 문구부터 바뀐다. 파일이 실제로 열리고 바깥 페이지가
+    // show-tool 요청으로 도구 칸을 위쪽 16px에 맞춰야 다음 버튼이 클릭 중 움직이지 않는다.
+    await expect(frame.locator('.drop .sample')).toHaveCount(0, { timeout: 30_000 });
+    await expect
+      .poll(() =>
+        page
+          .locator('iframe[data-tool-frame]')
+          .evaluate((node) => node.getBoundingClientRect().top),
+      )
+      .toBeCloseTo(16, 0);
     // 가이드 창: 가이드 페이지를 받아 본문을 옮겨 넣는다
     const guide = page.locator('[data-guide-open]');
     if (await guide.count()) {
       await guide.click();
-      await expect(page.locator('[data-guide-body] p').first()).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByRole('dialog').locator('[data-guide-body] h2').first()).toBeVisible({
+        timeout: 15_000,
+      });
       await page.keyboard.press('Escape');
     }
     // 따라 하기 창

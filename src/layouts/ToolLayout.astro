@@ -52,7 +52,8 @@ const jsonLd = {
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   <RailShell>
     <article class="tool-page">
-      <header class="tool-header">
+      <!-- data-swap: 결과를 다음 도구로 넘기면 바뀌는 구역 (src/lib/tool-switch.ts). 도구 칸·광고 칸은 그 자리 그대로다 -->
+      <header class="tool-header" data-swap="header">
         <Breadcrumb items={breadcrumb} {siblings} />
         <h1>{name}</h1>
         <p class="lead">{description}</p>
@@ -65,7 +66,7 @@ const jsonLd = {
         <AdSlot id="top-banner" />
       </div>
 
-      <section class="tool-area" aria-label={name}>
+      <section class="tool-area" aria-label={name} data-tool-area>
         <slot name="tool" />
       </section>
 
@@ -75,14 +76,20 @@ const jsonLd = {
         <AdSlot id="below-tool" />
       </div>
 
-      <slot name="how-to" />
+      <div class="swap" data-swap="how-to">
+        <slot name="how-to" />
+      </div>
 
       <div class="in-content">
         <AdSlot id="in-content" />
       </div>
 
-      <slot name="faq" />
-      <slot name="related" />
+      <div class="swap" data-swap="faq">
+        <slot name="faq" />
+      </div>
+      <div class="swap" data-swap="related">
+        <slot name="related" />
+      </div>
     </article>
   </RailShell>
 </BaseLayout>
@@ -90,6 +97,10 @@ const jsonLd = {
 <style>
   .tool-page {
     padding-top: 24px;
+  }
+  /* 바꾸는 구역을 묶을 뿐 상자를 만들지 않는다 (안의 글은 전과 같이 놓인다) */
+  .swap {
+    display: contents;
   }
   .tool-header h1 {
     margin: 12px 0 0;

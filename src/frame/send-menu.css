@@ -1,0 +1,91 @@
+/*
+ * '다음 도구로' 메뉴 모양 (src/frame/SendMenu.svelte). 메뉴를 띄울 때 <link>로 받는다.
+ * 부품 안 <style>로 두면 Astro가 이 CSS를 메뉴를 부르는 모든 도구의 첫 화면에 넣어서 따로 둔다.
+ * 다른 도구 화면과 겹치지 않게 이름 앞에 send-menu를 붙인다.
+ */
+.send-menu-trigger,
+.send-menu-item {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
+}
+.send-menu-trigger {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.send-menu-trigger svg {
+  flex: none;
+}
+.send-menu-trigger:hover:not(:disabled),
+.send-menu-item:hover:not(:disabled) {
+  border-color: var(--color-muted);
+  background: var(--color-hover);
+}
+.send-menu-trigger:disabled,
+.send-menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 목록: popover(맨 위 층)로 띄워 실행 막대·결과 영역의 높이와 자리를 바꾸지 않는다 */
+.send-menu-panel {
+  position: fixed;
+  inset: auto;
+  z-index: 95;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: max-content;
+  min-width: 220px;
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-dialog);
+}
+.send-menu-panel p {
+  margin: 0 2px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.send-menu-panel .send-menu-note {
+  max-width: 260px;
+  font-size: 12px;
+}
+.send-menu-panel .send-menu-failed {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.send-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 15px;
+  text-align: left;
+}
+.send-menu-item span + span {
+  color: var(--color-muted);
+  font-size: 12px;
+}

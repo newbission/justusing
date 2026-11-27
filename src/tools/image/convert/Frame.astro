@@ -10,10 +10,10 @@ import FrameLayout from '../../../frame/FrameLayout.astro';
 </FrameLayout>
 
 <script>
-  import { mount } from 'svelte';
+  import { startTool } from '../../../frame/mount';
   import App from './App.svelte';
 
-  mount(App, { target: document.getElementById('app')! });
+  startTool(App);
 </script>
 
 <style>

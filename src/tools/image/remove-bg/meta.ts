@@ -30,4 +30,8 @@ export default defineTool({
   },
   related: ['image/id-photo', 'image/crop', 'image/compress'],
   flow: { from: { kind: 'jpg', mark: 'photo' }, to: { kind: 'png', mark: 'cutout' } },
+  // 결과를 내려받지 않고 바로 넘길 도구 (docs/foundations/tool-chaining)
+  sendTo: ['image/id-photo', 'pdf/from-image'],
+  // 다른 도구 결과를 받는다 (여러 장, docs/foundations/tool-chaining)
+  receives: { multiple: true },
 });

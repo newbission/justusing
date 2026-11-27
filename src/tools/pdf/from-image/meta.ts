@@ -22,4 +22,6 @@ export default defineTool({
   },
   related: ['pdf/to-image', 'pdf/merge'],
   flow: { from: { kind: 'jpg', count: 3 }, to: { kind: 'pdf' } },
+  // 다른 도구 결과를 받는다 (여러 장, docs/foundations/tool-chaining)
+  receives: { multiple: true },
 });

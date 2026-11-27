@@ -22,7 +22,8 @@
  * frame과 주고받는 메시지 (내용 없이 신호만):
  *   바깥 → frame: { type: 'theme', theme }, { type: 'drag-start', width, height }
  *   frame → 바깥: { type: 'drag-request' }(도구 칸 안에서 끌기 시작), { type: 'drag-ready' },
- *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤)
+ *                 { type: 'drag-end' }, { type: 'show-tool' }(도구 칸이 화면을 채우도록 스크롤),
+ *                 { type: 'tool-change', path }(공개 도구 페이지 주소와 준비·완료 여부를 주고받을 포트)
  *   글꼴 같은 도구 데이터 요청은 src/lib/data-store.ts가 받는다 (우리 사이트 공개 파일만, 사용자 파일 없음)
  */
 interface Props {
@@ -61,6 +62,11 @@ import { ui } from '../i18n/ui';
     const theme = document.documentElement.dataset.theme;
     frame.src = frame.dataset.src + (theme ? `#theme=${theme}` : '');
     serveData(frame);
+
+    // 뒤로 가서 새로 열린 문서에서도 앞으로 가기를 받는다. 같은 도구 안의 해시 이동은 그대로 둔다.
+    addEventListener('popstate', () => {
+      if (frame.dataset.src !== location.pathname + 'frame/') location.reload();
+    });
 
     document.addEventListener('themechange', (event) => {
       const detail = (event as CustomEvent<string>).detail;
@@ -107,6 +113,17 @@ import { ui } from '../i18n/ui';
       if (event.data?.type === 'activity') document.dispatchEvent(new CustomEvent('toolactivity'));
       if (event.data?.type === 'show-tool') {
         scrollTo({ top: frame.getBoundingClientRect().top + scrollY - 16, behavior: 'instant' });
+      }
+      // 새 페이지가 준비됐다고 포트로 답해야 frame이 원래 결과를 내려놓는다.
+      const path = event.data?.type === 'tool-change' ? event.data.path : undefined;
+      const port = event.ports[0];
+      if (port && typeof path === 'string' && /^(\/[a-z]{2})?\/[a-z]+\/[a-z0-9-]+\/$/.test(path)) {
+        import('../lib/tool-switch')
+          .then(({ preparePage }) => preparePage(frame, path, port))
+          .catch(() => {
+            port.postMessage(false);
+            port.close();
+          });
       }
     });
   }

@@ -22,4 +22,6 @@ export default defineTool({
   },
   related: ['pdf/extract-images', 'pdf/from-image', 'pdf/split'],
   flow: { from: { kind: 'pdf', count: 3 }, to: { kind: 'jpg', count: 3 } },
+  // 결과를 내려받지 않고 바로 넘길 도구 (docs/foundations/tool-chaining)
+  sendTo: ['image/compress', 'image/crop'],
 });

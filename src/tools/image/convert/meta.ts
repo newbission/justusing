@@ -29,4 +29,6 @@ export default defineTool({
   },
   related: ['image/heic-to-jpg', 'image/compress', 'image/resize'],
   flow: { from: { kind: 'png' }, to: { kind: 'jpg' } },
+  // 결과를 내려받지 않고 바로 넘길 도구 (docs/foundations/tool-chaining)
+  sendTo: ['pdf/from-image'],
 });

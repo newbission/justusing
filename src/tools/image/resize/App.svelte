@@ -8,6 +8,7 @@
   import { FRAME_MESSAGES } from '../../../frame/messages';
   import { MESSAGES, type Mode } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { downloadFile } from '../../../frame/download';
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
@@ -178,6 +179,16 @@
     downloadFile(await makeZip(files), t.zipName, 'application/zip');
   }
 
+  /** 받을 때와 같은 결과 파일을 다음 도구로 넘긴다 (src/frame/SendTo.svelte) */
+  async function sendResults(): Promise<File[]> {
+    return batch.ready.flatMap((item) => {
+      const outcome = outcomeOf(item);
+      if (outcome?.state !== 'done') return [];
+      const bytes = outcome.bytes as Uint8Array<ArrayBuffer>;
+      return [new File([bytes], outcome.name, { type: saveType(item) })];
+    });
+  }
+
   const dimensions = (size: { width: number; height: number }) => `${size.width}×${size.height}`;
 </script>
 
@@ -207,6 +218,7 @@
           {t.ready(batch.ready.length)}
         {/if}
       {/snippet}
+      <SendTo count={summary?.done.length ?? 0} collect={sendResults} disabled={working} />
       {#if summary && summary.done.length > 0 && batch.ready.length === 1}
         <button type="button" class="btn primary" onclick={() => downloadOne(summary.done[0]!)}
           >{common.action.download}</button

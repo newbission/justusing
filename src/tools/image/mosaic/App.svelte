@@ -12,6 +12,7 @@
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { dataStatus, loadData, missingData } from '../../../frame/data';
   import { downloadFile } from '../../../frame/download';
   import { onFrameFiles } from '../../../frame/drop';
@@ -22,6 +23,7 @@
   import { clampRect, resizeRect, type Edge, type Rect } from '../../../lib/image/crop-geometry';
   import {
     MosaicError,
+    closeImage,
     exportImage,
     openImage,
     previewImage,
@@ -126,6 +128,7 @@
       off();
       photo?.preview.close();
       dropFinder();
+      closeImage();
     };
   });
 
@@ -593,6 +596,28 @@
       save = { kind: 'failed', reason: error instanceof MosaicError ? error.reason : 'tooLarge' };
     }
   }
+
+  /** 받을 때와 같은 파일을 만들어 다음 도구로 넘긴다 (src/frame/SendTo.svelte). 만들지 못하면 까닭을 막대에 보인다 */
+  async function sendResult(): Promise<File[]> {
+    if (!photo || regions.length === 0 || save.kind === 'saving') throw new Error('not ready');
+    const ticket = generation;
+    const entitlement = await canUse('image/mosaic');
+    if (ticket !== generation) throw new Error('stale');
+    if (!entitlement.allowed) throw new Error('not allowed');
+    const wanted = { regions, format, name: photo.name };
+    save = { kind: 'saving' };
+    try {
+      const bytes = await exportImage(wanted.regions, wanted.format, QUALITY);
+      if (ticket !== generation) throw new Error('stale');
+      save = { kind: 'idle' };
+      const name = `${baseName(wanted.name)}_${t.suffix}.${EXTENSIONS[wanted.format]}`;
+      return [new File([bytes as Uint8Array<ArrayBuffer>], name, { type: wanted.format })];
+    } catch (error) {
+      if (ticket === generation)
+        save = { kind: 'failed', reason: error instanceof MosaicError ? error.reason : 'tooLarge' };
+      throw error;
+    }
+  }
 </script>
 
 <div class="tool">
@@ -617,6 +642,11 @@
           {t.ready(regions.length, board.width, board.height, t.formats[format])}
         {/if}
       {/snippet}
+      <SendTo
+        count={regions.length > 0 ? 1 : 0}
+        collect={sendResult}
+        disabled={save.kind === 'saving'}
+      />
       <button
         type="button"
         class="btn primary"

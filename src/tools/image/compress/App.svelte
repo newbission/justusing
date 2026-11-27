@@ -8,6 +8,7 @@
   import { FRAME_MESSAGES } from '../../../frame/messages';
   import { MESSAGES, type Format, type Level } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { downloadFile } from '../../../frame/download';
   import { baseName, formatSize } from '../../../frame/format';
   import { canUse } from '../../../lib/entitlement';
@@ -155,6 +156,18 @@
     if (outcome?.state === 'done') downloadFile(outcome.bytes, outcome.name, outputType(item));
   }
 
+  /** ZIP에 담는 것과 같은 파일을 다음 도구로 넘긴다: 줄어든 것은 결과, 그대로 둔 것은 원본 (src/frame/SendTo.svelte) */
+  async function sendResults(): Promise<File[]> {
+    return batch.ready.flatMap((item) => {
+      const outcome = outcomeOf(item);
+      if (outcome?.state === 'done') {
+        const bytes = outcome.bytes as Uint8Array<ArrayBuffer>;
+        return [new File([bytes], outcome.name, { type: outputType(item) })];
+      }
+      return outcome?.state === 'kept' ? [item.file] : [];
+    });
+  }
+
   function percentSaved(before: number, after: number) {
     return Math.max(1, Math.round((1 - after / before) * 100));
   }
@@ -188,6 +201,11 @@
           {blocker ?? t.ready(batch.ready.length)}
         {/if}
       {/snippet}
+      <SendTo
+        count={summary && summary.shrunk.length > 0 ? zipCount : 0}
+        collect={sendResults}
+        disabled={working}
+      />
       {#if summary && summary.shrunk.length > 0 && batch.ready.length === 1}
         <button type="button" class="btn primary" onclick={() => downloadOne(summary.shrunk[0]!)}
           >{common.action.download}</button

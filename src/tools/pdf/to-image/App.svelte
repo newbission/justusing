@@ -10,9 +10,15 @@
   const common = pick(FRAME_MESSAGES);
   const t = pick(MESSAGES);
   import ActionBar from '../../../frame/ActionBar.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
   import { makeZip } from '../../../lib/zip';
+  import { createWorkerClient } from '../../../lib/worker-client';
+  import type { UnpackRequest, UnpackResponse } from './unpack.worker';
+  import unpackUrl from './unpack.worker.ts?worker&url';
+
+  const unpack = createWorkerClient<UnpackRequest, UnpackResponse>(unpackUrl);
   import PageSelectGrid from '../../../lib/pdf/PageSelectGrid.svelte';
   import { IMAGE_TYPES, renderPageImage, type ImageFormat } from '../../../lib/pdf/render-image';
   import SinglePdfTool, { type LoadedPdf } from '../../../lib/pdf/SinglePdfTool.svelte';
@@ -49,7 +55,14 @@
   type Run =
     | { kind: 'idle' }
     | { kind: 'working'; done: number; total: number }
-    | { kind: 'done'; name: string; bytes: Uint8Array; type: string; signature: string }
+    | {
+        kind: 'done';
+        file: File;
+        imageType: string;
+        signature: string;
+        /** 만든 쪽 이미지 수 (여러 장이면 file은 ZIP) */
+        count: number;
+      }
     | { kind: 'failed'; message: string };
   let run = $state<Run>({ kind: 'idle' });
 
@@ -92,19 +105,29 @@
       const zip = images.length === 1 ? undefined : await makeZip(images);
       // ZIP을 묶는 동안 다른 파일을 열었으면 버린다
       if (pdf !== source) return;
-      run = zip
-        ? {
-            kind: 'done',
-            name: `${base}_${t.zipSuffix}.zip`,
-            bytes: zip,
-            type: 'application/zip',
-            signature: startedWith,
-          }
-        : { kind: 'done', ...images[0]!, type, signature: startedWith };
+      const bytes = zip ?? images[0]!.bytes;
+      const file = new File(
+        [bytes as Uint8Array<ArrayBuffer>],
+        zip ? `${base}_${t.zipSuffix}.zip` : images[0]!.name,
+        { type: zip ? 'application/zip' : type },
+      );
+      run = { kind: 'done', file, imageType: type, signature: startedWith, count: plan.length };
     } catch {
       if (pdf !== source) return;
       run = { kind: 'failed', message: t.failed };
     }
+  }
+
+  /**
+   * 받을 때와 같은 쪽 이미지를 다음 도구로 넘긴다 (src/frame/SendTo.svelte). 여러 장이면 만든 ZIP에서 꺼낸다
+   * (쪽 이미지는 ZIP 워커로 옮겨져 따로 남아 있지 않다). ZIP 풀기는 이때 받는다
+   */
+  async function sendResults(): Promise<File[]> {
+    if (!result) throw new Error('not ready');
+    if (result.count === 1) return [result.file];
+    const response = await unpack({ archive: result.file, imageType: result.imageType });
+    if (response.kind === 'error') throw new Error(response.message);
+    return response.files;
   }
 
   function formatSize(size: number) {
@@ -131,7 +154,7 @@
         {#if run.kind === 'working'}
           {t.working(run.done, run.total)}
         {:else if result}
-          {common.action.done(result.name, formatSize(result.bytes.length))}
+          {common.action.done(result.file.name, formatSize(result.file.size))}
         {:else if run.kind === 'failed'}
           <strong>{run.message}</strong>
         {:else if pages.length === 0}
@@ -142,11 +165,12 @@
           {t.manyFiles(pages.length)}
         {/if}
       {/snippet}
+      <SendTo count={result?.count ?? 0} collect={sendResults} disabled={run.kind === 'working'} />
       {#if result}
         <button
           type="button"
           class="primary"
-          onclick={() => downloadFile(result.bytes, result.name, result.type)}
+          onclick={() => downloadFile(result.file, result.file.name)}
           >{common.action.download}</button
         >
       {:else}

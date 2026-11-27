@@ -41,6 +41,7 @@
 | 폴더                                                 | 내용                                                                                             |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [frame-isolation](./foundations/frame-isolation)     | 도구를 격리된 iframe에서 돌리는 구조, CSP, 워커 띄우기, 파일 놓기, 다운로드                      |
+| [tool-chaining](./foundations/tool-chaining)         | 결과를 내려받지 않고 다음 도구로 넘기기: 같은 frame 안에서 화면 바꾸기, 바깥 주소·글 바꾸기      |
 | [pdf-common](./foundations/pdf-common)               | PDF 도구 공통: pdf.js 열기·썸네일·쪽 그리기, pdf-lib 워커(조립·고치기·글자 넣기), 공통 화면 부품 |
 | [image-common](./foundations/image-common)           | 이미지 도구 공통: 여러 장 목록 화면, 읽기·크기 바꾸기·저장 워커                                  |
 | [video-common](./foundations/video-common)           | 동영상 도구 공통: mediabunny + WebCodecs, 열기·지원 확인·진행률·그만두기, 결과 Blob 조각         |

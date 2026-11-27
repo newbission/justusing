@@ -10,13 +10,20 @@
   import { MESSAGES, RATIOS, type Ratio } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { downloadFile } from '../../../frame/download';
   import { onFrameFiles } from '../../../frame/drop';
   import { baseName, formatSize } from '../../../frame/format';
   import { requestShowTool } from '../../../frame/parent';
   import { canUse } from '../../../lib/entitlement';
   import { EXTENSIONS } from '../../../lib/image/batch.svelte';
-  import { CropError, exportImage, openImage, type CropFailure } from '../../../lib/image/crop';
+  import {
+    CropError,
+    closeImage,
+    exportImage,
+    openImage,
+    type CropFailure,
+  } from '../../../lib/image/crop';
   import {
     MAX_ANGLE,
     NO_TURN,
@@ -87,6 +94,7 @@
     return () => {
       off();
       photo?.preview.close();
+      closeImage();
     };
   });
 
@@ -294,6 +302,28 @@
       save = { kind: 'failed', reason: error instanceof CropError ? error.reason : 'tooLarge' };
     }
   }
+
+  /** 받을 때와 같은 파일을 만들어 다음 도구로 넘긴다 (src/frame/SendTo.svelte). 만들지 못하면 까닭을 막대에 보인다 */
+  async function sendResult(): Promise<File[]> {
+    if (!photo || save.kind === 'saving') throw new Error('not ready');
+    const ticket = generation;
+    const entitlement = await canUse('image/crop');
+    if (ticket !== generation) throw new Error('stale');
+    if (!entitlement.allowed) throw new Error('not allowed');
+    const wanted = { turn, rect, format, name: photo.name };
+    save = { kind: 'saving' };
+    try {
+      const bytes = await exportImage(wanted.turn, wanted.rect, wanted.format, QUALITY);
+      if (ticket !== generation) throw new Error('stale');
+      save = { kind: 'idle' };
+      const name = `${baseName(wanted.name)}_${t.suffix}.${EXTENSIONS[wanted.format]}`;
+      return [new File([bytes as Uint8Array<ArrayBuffer>], name, { type: wanted.format })];
+    } catch (error) {
+      if (ticket === generation)
+        save = { kind: 'failed', reason: error instanceof CropError ? error.reason : 'tooLarge' };
+      throw error;
+    }
+  }
 </script>
 
 <div class="tool">
@@ -316,6 +346,7 @@
           {t.ready(rect.width, rect.height, t.formats[format])}
         {/if}
       {/snippet}
+      <SendTo count={1} collect={sendResult} disabled={save.kind === 'saving'} />
       <button type="button" class="btn primary" disabled={save.kind === 'saving'} onclick={download}
         >{t.download}</button
       >

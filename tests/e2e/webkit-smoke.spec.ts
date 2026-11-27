@@ -109,3 +109,25 @@ test('WebKit: 한글 PDF의 보조 파일과 스타일이 CSP에서 허용된다
     await frame.locator('.viewer').evaluate((element) => getComputedStyle(element).display),
   ).toBe('flex');
 });
+
+test('WebKit: 돌린 이미지를 같은 격리 화면에서 PDF로 넘기고 결과의 크기를 확인한다', async ({
+  page,
+}) => {
+  await page.goto('/image/crop/');
+  const frame = page.frameLocator('iframe[data-tool-frame]');
+  await frame.locator('input[type=file]').setInputFiles(fixture('wide.png'));
+  await frame.getByRole('button', { name: '오른쪽으로 90°', exact: true }).click();
+  await frame.getByRole('button', { name: '다음 도구로', exact: true }).click();
+  await frame.getByRole('button', { name: '이미지를 PDF로', exact: true }).click();
+  await expect(page).toHaveURL(/\/pdf\/from-image\/$/);
+  await expect(frame.getByText('wide_편집.png', { exact: true })).toBeVisible();
+  await frame.getByText('이미지에 맞춤', { exact: true }).click();
+  await frame.getByRole('button', { name: 'PDF 만들기', exact: true }).click();
+  const event = page.waitForEvent('download');
+  await frame.getByRole('button', { name: '다운로드', exact: true }).click();
+  const file = await event;
+  expect(file.suggestedFilename().normalize('NFC')).toBe('wide_편집.pdf');
+  const doc = await PDFDocument.load(await readFile(await file.path()));
+  // 400×300px → 오른쪽 회전 300×400px → 96dpi PDF 225×300pt
+  expect(doc.getPages().map((page) => page.getSize())).toEqual([{ width: 225, height: 300 }]);
+});

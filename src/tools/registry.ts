@@ -105,6 +105,21 @@ for (const tool of tools) {
   }
 }
 
+// 결과를 넘길 도구: 있고, 공개돼 있고, 받을 수 있어야 한다 (자기 자신으로는 넘기지 않는다)
+for (const tool of tools) {
+  for (const targetId of tool.sendTo ?? []) {
+    const target = tools.find((other) => other.id === targetId);
+    if (!target) throw new Error(`${tool.id}의 sendTo가 레지스트리에 없습니다: ${targetId}`);
+    if (target.id === tool.id) throw new Error(`${tool.id}가 자기 자신으로 넘깁니다`);
+    if (tool.status !== 'live' || target.status !== 'live') {
+      throw new Error(`공개(live) 도구끼리만 넘길 수 있습니다: ${tool.id} → ${targetId}`);
+    }
+    if (!target.receives) {
+      throw new Error(`${targetId}가 결과를 받지 않습니다 (meta.ts에 receives가 없음): ${tool.id}`);
+    }
+  }
+}
+
 export function getTool(id: string): Tool | undefined {
   return tools.find((tool) => tool.id === id);
 }

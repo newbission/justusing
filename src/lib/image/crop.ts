@@ -99,6 +99,17 @@ export async function openImage(file: Blob, previewSide: number): Promise<Opened
   throw new CropError(response.kind === 'error' ? response.reason : 'decode');
 }
 
+/**
+ * 원본을 들고 있는 워커를 끝낸다. 도구 화면을 내릴 때 부른다 (결과를 다음 도구로 넘기면 같은 문서에서 화면만 바뀌어
+ * 그대로 두면 원본이 메모리에 남는다). 다음에 열면 새 워커를 띄운다
+ */
+export function closeImage() {
+  workerPromise?.then((worker) => worker.terminate()).catch(() => {});
+  workerPromise = undefined;
+  // 끝낸 워커에 걸린 요청을 기다리지 않게 줄을 새로 시작한다
+  queue = Promise.resolve();
+}
+
 /** 마지막으로 연 사진을 돌리고 잘라 저장한다. 실패하면 CropError */
 export async function exportImage(
   turn: Turn,

@@ -13,6 +13,7 @@
   import { MESSAGES } from './messages';
   import ActionBar from '../../../frame/ActionBar.svelte';
   import FileDrop from '../../../frame/FileDrop.svelte';
+  import SendTo from '../../../frame/SendTo.svelte';
   import { dataStatus, loadData, missingData } from '../../../frame/data';
   import { downloadFile } from '../../../frame/download';
   import { onFrameFiles } from '../../../frame/drop';
@@ -763,6 +764,28 @@
     }
   }
 
+  /** 받는 것과 같은 파일 (다음 도구로 넘길 때) */
+  const asFile = (saved: Awaited<ReturnType<typeof exportOne>>) =>
+    new File([saved.bytes as Uint8Array<ArrayBuffer>], saved.name, { type: saved.type });
+
+  /** 고치는 사진 한 장을 다음 도구로 넘길 파일로 만든다 (src/frame/SendTo.svelte) */
+  async function sendOne(): Promise<File[]> {
+    const entry = photo?.entry;
+    if (!entry?.mask || !canSave) throw new Error('not ready');
+    const ticket = generation;
+    const entitlement = await canUse('image/remove-bg');
+    if (ticket !== generation) throw new Error('stale');
+    if (!entitlement.allowed) throw new Error('not allowed');
+    save = { kind: 'saving' };
+    try {
+      const saved = await exportOne(entry);
+      if (ticket !== generation) throw new Error('stale');
+      return [asFile(saved)];
+    } finally {
+      if (ticket === generation) save = { kind: 'idle' };
+    }
+  }
+
   // 여러 장 받기
   type Zip =
     | { kind: 'idle' }
@@ -889,6 +912,38 @@
   function stop() {
     stopper?.abort();
     zip = { kind: 'stopped' };
+  }
+
+  /** 받을 수 있는 사진을 모두 다음 도구로 넘길 파일로 만든다. 저장하지 못한 사진은 뺀다 (여러 장 받기와 같다) */
+  async function sendAll(): Promise<File[]> {
+    if (!canSaveAll) throw new Error('not ready');
+    const entitlement = await canUse('image/remove-bg');
+    if (!entitlement.allowed) throw new Error('not allowed');
+    const controller = new AbortController();
+    stopper = controller;
+    const list = [...exportable];
+    let done = 0;
+    zip = { kind: 'saving', done, total: list.length };
+    try {
+      const results = await Promise.all(
+        list.map(async (entry) => {
+          try {
+            return asFile(await exportOne(entry, controller.signal));
+          } catch {
+            return undefined;
+          } finally {
+            done++;
+            if (!controller.signal.aborted) zip = { kind: 'saving', done, total: list.length };
+          }
+        }),
+      );
+      // '그만두기'를 눌렀으면 넘기지 않는다
+      if (controller.signal.aborted) throw new Error('stopped');
+      return results.filter((file) => file !== undefined);
+    } finally {
+      if (stopper === controller) stopper = undefined;
+      if (!controller.signal.aborted) zip = { kind: 'idle' };
+    }
   }
 
   const position = $derived(current ? entries.indexOf(current) : -1);
@@ -1028,6 +1083,7 @@
           {t.separated(entry.points.length)}
         {/if}
       {/snippet}
+      <SendTo count={canSave ? 1 : 0} collect={sendOne} />
       <button type="button" class="btn primary" disabled={!canSave} onclick={download}
         >{t.download(formatName)}</button
       >
@@ -1235,6 +1291,7 @@
             .join(' ')}
         {/if}
       {/snippet}
+      <SendTo count={canSaveAll ? exportable.length : 0} collect={sendAll} disabled={busy} />
       {#if busy}
         <button type="button" class="btn primary" onclick={stop}>{t.stop}</button>
       {:else}

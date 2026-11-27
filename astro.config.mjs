@@ -6,13 +6,15 @@ import { siteUrl } from './src/site.config.ts';
 import { devPreview } from './src/integrations/dev-preview.ts';
 import { toolFrames } from './src/integrations/tool-frames.ts';
 import { cspPerPage } from './src/integrations/csp-per-page.ts';
+import { toolChain } from './src/integrations/tool-chain.ts';
 
 // https://astro.build/config
 export default defineConfig({
   site: siteUrl,
   // GitHub Pages는 /pdf/merge 를 /pdf/merge/ 로 리다이렉트하므로 처음부터 끝 슬래시로 통일
   trailingSlash: 'always',
-  integrations: [svelte(), toolFrames(), cspPerPage(), devPreview()],
+  // toolChain: 결과를 다음 도구로 넘길 때 쓰는 목록 (빌드 뒤 frame 페이지에서 만든다, docs/foundations/tool-chaining)
+  integrations: [svelte(), toolFrames(), cspPerPage(), toolChain(), devPreview()],
   // 모든 페이지에 CSP <meta>를 넣는다. 페이지의 스크립트·스타일은 해시로 허용된다.
   // Astro는 사이트 전체의 해시를 모든 페이지에 넣어서, 빌드 뒤 페이지마다 그 페이지 것만 남긴다 (cspPerPage).
   // (개발 서버에서는 동작하지 않으므로 build + preview로 확인)
