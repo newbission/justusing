@@ -14,6 +14,11 @@
   import { downloadFile } from '../../../frame/download';
   import { canUse } from '../../../lib/entitlement';
   import { makeZip } from '../../../lib/zip';
+  import { createWorkerClient } from '../../../lib/worker-client';
+  import type { UnpackRequest, UnpackResponse } from './unpack.worker';
+  import unpackUrl from './unpack.worker.ts?worker&url';
+
+  const unpack = createWorkerClient<UnpackRequest, UnpackResponse>(unpackUrl);
   import PageSelectGrid from '../../../lib/pdf/PageSelectGrid.svelte';
   import { IMAGE_TYPES, renderPageImage, type ImageFormat } from '../../../lib/pdf/render-image';
   import SinglePdfTool, { type LoadedPdf } from '../../../lib/pdf/SinglePdfTool.svelte';
@@ -52,11 +57,10 @@
     | { kind: 'working'; done: number; total: number }
     | {
         kind: 'done';
-        name: string;
-        bytes: Uint8Array;
-        type: string;
+        file: File;
+        imageType: string;
         signature: string;
-        /** 만든 쪽 이미지 수 (여러 장이면 bytes는 ZIP) */
+        /** 만든 쪽 이미지 수 (여러 장이면 file은 ZIP) */
         count: number;
       }
     | { kind: 'failed'; message: string };
@@ -101,16 +105,13 @@
       const zip = images.length === 1 ? undefined : await makeZip(images);
       // ZIP을 묶는 동안 다른 파일을 열었으면 버린다
       if (pdf !== source) return;
-      run = zip
-        ? {
-            kind: 'done',
-            name: `${base}_${t.zipSuffix}.zip`,
-            bytes: zip,
-            type: 'application/zip',
-            signature: startedWith,
-            count: plan.length,
-          }
-        : { kind: 'done', ...images[0]!, type, signature: startedWith, count: 1 };
+      const bytes = zip ?? images[0]!.bytes;
+      const file = new File(
+        [bytes as Uint8Array<ArrayBuffer>],
+        zip ? `${base}_${t.zipSuffix}.zip` : images[0]!.name,
+        { type: zip ? 'application/zip' : type },
+      );
+      run = { kind: 'done', file, imageType: type, signature: startedWith, count: plan.length };
     } catch {
       if (pdf !== source) return;
       run = { kind: 'failed', message: t.failed };
@@ -123,15 +124,10 @@
    */
   async function sendResults(): Promise<File[]> {
     if (!result) throw new Error('not ready');
-    if (result.type !== 'application/zip') {
-      const bytes = result.bytes as Uint8Array<ArrayBuffer>;
-      return [new File([bytes], result.name, { type: result.type })];
-    }
-    const { unzipSync } = await import('fflate');
-    const type = IMAGE_TYPES[format];
-    return Object.entries(unzipSync(result.bytes)).map(
-      ([name, bytes]) => new File([bytes as Uint8Array<ArrayBuffer>], name, { type }),
-    );
+    if (result.count === 1) return [result.file];
+    const response = await unpack({ archive: result.file, imageType: result.imageType });
+    if (response.kind === 'error') throw new Error(response.message);
+    return response.files;
   }
 
   function formatSize(size: number) {
@@ -158,7 +154,7 @@
         {#if run.kind === 'working'}
           {t.working(run.done, run.total)}
         {:else if result}
-          {common.action.done(result.name, formatSize(result.bytes.length))}
+          {common.action.done(result.file.name, formatSize(result.file.size))}
         {:else if run.kind === 'failed'}
           <strong>{run.message}</strong>
         {:else if pages.length === 0}
@@ -174,7 +170,7 @@
         <button
           type="button"
           class="primary"
-          onclick={() => downloadFile(result.bytes, result.name, result.type)}
+          onclick={() => downloadFile(result.file, result.file.name)}
           >{common.action.download}</button
         >
       {:else}
