@@ -6,15 +6,17 @@
  * - 다음 도구 코드는 빌드가 적어 둔 목록(/_chain/<id>.json, src/integrations/tool-chain.ts)으로 불러온다.
  *   우리 사이트 파일이라 지금 frame CSP('self' + 사이트 주소)로 열린다. 실행 중에 <style>·인라인 스크립트는 만들지 않는다
  * - 다 받은 뒤에 앞 화면을 내린다. 받다가 실패하면 앞 화면이 그대로 남는다
- * - 바깥 페이지에는 '도구가 바뀌었다'는 신호(도구 ID)만 보낸다. 바깥이 주소·글을 바꾼다 (src/lib/tool-switch.ts)
+ * - 바깥 페이지에는 '도구가 바뀌었다'는 신호(그 도구 페이지 주소)만 보낸다. 바깥이 주소·글을 바꾼다 (src/lib/tool-switch.ts)
  *
  * 이 모듈은 '다음 도구로' 메뉴(SendMenu)를 띄울 때 받는다 (도구 첫 화면 무게에 들지 않는다).
+ * Svelte 기능은 모든 frame이 같이 받는 실행 코드에 들어가므로 이미 쓰는 것(mount·unmount·tick)만 쓴다.
  */
+import { mount, tick, unmount, type Component } from 'svelte';
 import { localizePath, type Locale } from '../i18n/locales';
 import { deliverFiles } from './drop';
 import { frameLocale } from './locale';
-import { loadTool, showTool } from './mount';
-import { setCurrentTool } from './tool';
+import { tools } from './mount';
+import { firstTool, setCurrentTool } from './tool';
 
 interface Manifest {
   /** 그 도구 frame 페이지가 부르는 모듈 스크립트 (순서대로) */
@@ -97,6 +99,29 @@ export function prepareStatus() {
 }
 
 /**
+ * 도구 스크립트를 불러와 그 도구의 App을 돌려준다. 아직 띄우지 않는다: 스크립트가 부르는 startTool이
+ * 넘기는 중임을 보고 App만 넘긴다 (src/frame/mount.ts)
+ */
+async function loadApp(id: string, scripts: string[]): Promise<Component> {
+  if (id === firstTool && tools.first) return tools.first;
+  if (!tools.apps.has(id)) {
+    tools.loading = id;
+    try {
+      for (const src of scripts) {
+        // 이미 이 문서에 있는 스크립트(frame 틀 등)는 다시 부르지 않는다 (같은 주소면 어차피 한 번만 돈다)
+        if (document.querySelector(`script[type=module][src="${src}"]`)) continue;
+        await import(/* @vite-ignore */ src);
+      }
+    } finally {
+      tools.loading = undefined;
+    }
+  }
+  const App = tools.apps.get(id);
+  if (!App) throw new Error(`도구 화면을 받지 못했습니다: ${id}`);
+  return App;
+}
+
+/**
  * id 도구로 화면을 바꾸고 files를 넘긴다. announce는 바꾼 뒤 화면 읽기가 읽을 글.
  * 다음 도구를 불러오지 못하면 던지고, 그때 앞 화면은 그대로다
  */
@@ -104,17 +129,15 @@ export async function sendFiles(id: string, files: File[], announce: string): Pr
   prepareStatus();
   const { scripts, styles, title } = await manifest(id);
   await Promise.all(styles.map(loadStyle));
-  const App = await loadTool(id, async () => {
-    for (const src of scripts) {
-      // 이미 이 문서에 있는 스크립트(frame 틀 등)는 다시 부르지 않는다 (같은 주소면 어차피 한 번만 돈다)
-      if (document.querySelector(`script[type=module][src="${src}"]`)) continue;
-      await import(/* @vite-ignore */ src);
-    }
-  });
+  const App = await loadApp(id, scripts);
 
+  // 앞 화면을 내리고(정리 코드가 워커·그림을 놓는다) 다음 도구를 띄운다
   setCurrentTool(id);
-  showTool(App);
+  if (tools.shown) void unmount(tools.shown);
+  tools.shown = mount(App, { target: document.getElementById('app')! });
   document.title = title[frameLocale];
+  // 새 화면의 처음 효과(onMount: 놓은 파일 받기)까지 마친 뒤 놓은 파일처럼 넘긴다
+  await tick();
   deliverFiles(files);
 
   // 포커스를 새 도구 화면으로 (넘기기 버튼은 앞 화면과 함께 사라졌다)
@@ -126,6 +149,9 @@ export async function sendFiles(id: string, files: File[], announce: string): Pr
     root.focus({ preventScroll: true });
   }
   status!.textContent = announce;
-  // 바깥에는 도구가 바뀌었다는 것만 알린다 (파일 이름·내용·개수 없음)
-  if (parent !== window) parent.postMessage({ type: 'tool-change', tool: id }, '*');
+  // 바깥에는 도구가 바뀌었다는 것(그 도구 페이지 주소)만 알린다. 파일 이름·내용·개수는 없다.
+  // 주소는 frame이 언어에 맞춰 만든다 (바깥이 주소 규칙 코드를 따로 받지 않게)
+  if (parent !== window) {
+    parent.postMessage({ type: 'tool-change', path: localizePath(`/${id}/`, frameLocale) }, '*');
+  }
 }

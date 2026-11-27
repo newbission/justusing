@@ -15,7 +15,7 @@
     disabled?: boolean;
   }
 
-  let props: Props = $props();
+  let { count, collect, disabled = false }: Props = $props();
   let Menu = $state.raw<Component<Props>>();
 
   const touring = new URLSearchParams(location.hash.slice(1)).get('tour') === '1';
@@ -29,5 +29,6 @@
 </script>
 
 {#if Menu}
-  <Menu {...props} />
+  <!-- 속성을 하나씩 넘긴다 ({...props}는 모든 frame이 받는 Svelte 실행 코드를 늘린다) -->
+  <Menu {count} {collect} {disabled} />
 {/if}

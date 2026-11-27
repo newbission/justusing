@@ -1,7 +1,8 @@
 /**
  * 결과를 다음 도구로 넘긴 뒤 바깥 페이지를 그 도구 페이지로 바꾼다 (docs/foundations/tool-chaining). 바깥 페이지에서 돈다.
  *
- * 도구 칸(격리 frame)은 이미 다음 도구 화면이다. 바깥이 받은 것은 'tool-change' 신호(도구 ID)뿐이고 파일은 모른다.
+ * 도구 칸(격리 frame)은 이미 다음 도구 화면이다. 바깥이 받은 것은 'tool-change' 신호(그 도구 페이지 주소)뿐이고
+ * 파일은 모른다. 주소는 frame이 언어에 맞춰 만든다 (이 모듈이 주소 규칙 코드를 따로 받지 않게, 그러면 첫 화면에 조각이 는다).
  * - 다음 도구 페이지(우리 공개 페이지)를 받아 [data-swap] 구역(머리·쓰임새와 사용법·FAQ·관련 글),
  *   <head>의 제목·설명·주소·언어판, 머리글의 언어 바꾸기 링크·메뉴의 '지금 페이지' 표시, 도구 칸 이름을 맞춘다
  * - 도구 칸과 광고 칸은 DOM에서 옮기지 않는다 (iframe을 옮기면 다시 불러와 넘긴 파일을 잃고, 광고는 다시 그려진다)
@@ -10,7 +11,6 @@
  *
  * ToolFrame이 신호를 받을 때만 이 모듈을 받는다 (도구 페이지 첫 화면 무게에 들지 않는다).
  */
-import { localeOf, localizePath } from '../i18n/locales';
 
 /** 지금 화면에 그려 둔 페이지의 경로 */
 let shown = location.pathname;
@@ -22,9 +22,12 @@ addEventListener('popstate', () => {
   if (location.pathname !== shown) location.reload();
 });
 
-/** 신호로 받은 도구 페이지로 바꾼다. 받지 못하면 바깥은 그대로 둔다 (도구 칸은 이미 다음 도구로 바뀌어 있다) */
-export function switchPage(frame: HTMLIFrameElement, tool: string): Promise<void> {
-  queue = queue.then(() => swap(frame, tool)).catch(() => {});
+/**
+ * 신호로 받은 도구 페이지(path, 예: /en/image/id-photo/)로 바꾼다.
+ * 받지 못하거나 도구 페이지가 아니면 바깥은 그대로 둔다 (도구 칸은 이미 다음 도구로 바뀌어 있다)
+ */
+export function switchPage(frame: HTMLIFrameElement, path: string): Promise<void> {
+  queue = queue.then(() => swap(frame, path)).catch(() => {});
   return queue;
 }
 
@@ -60,8 +63,7 @@ function syncHead(next: Document) {
   }
 }
 
-async function swap(frame: HTMLIFrameElement, tool: string) {
-  const path = localizePath(`/${tool}/`, localeOf(location.pathname));
+async function swap(frame: HTMLIFrameElement, path: string) {
   if (path === shown) return;
   const response = await fetch(path);
   if (!response.ok) return;

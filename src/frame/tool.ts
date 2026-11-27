@@ -12,7 +12,10 @@ function fromAddress(): string {
   return category && name ? `${category}/${name}` : '';
 }
 
-let current = fromAddress();
+/** 이 문서를 열 때의 도구 (frame 주소) */
+export const firstTool = fromAddress();
+
+let current = firstTool;
 
 export function currentTool(): string {
   return current;

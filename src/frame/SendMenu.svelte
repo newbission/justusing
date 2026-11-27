@@ -5,6 +5,10 @@
   이 부품을 부르는 모든 도구의 첫 화면에 넣는다.
   목록은 popover(맨 위 층)로 띄워 실행 막대·결과 영역의 높이와 자리를 바꾸지 않는다.
 -->
+<script lang="ts" module>
+  let menus = 0;
+</script>
+
 <script lang="ts">
   import { tick } from 'svelte';
   import chains from 'virtual:tool-chain';
@@ -26,7 +30,8 @@
   let { count, collect, disabled = false }: Props = $props();
   const t = pick(CHAIN_MESSAGES);
   const targets = chains[currentTool()] ?? [];
-  const panelId = $props.id();
+  // 목록 칸 id ($props.id()는 모든 frame이 받는 Svelte 실행 코드를 늘려 쓰지 않는다)
+  const panelId = `send-menu-${++menus}`;
 
   /** 모양 파일을 받았다 (받기 전에는 버튼을 그리지 않아 모양 없는 버튼이 비치지 않는다) */
   let styled = $state(false);
