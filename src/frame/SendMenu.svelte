@@ -10,11 +10,12 @@
 </script>
 
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { onDestroy, tick } from 'svelte';
   import chains from 'virtual:tool-chain';
   import styleUrl from './send-menu.css?url';
   import { CHAIN_MESSAGES } from './chain-messages';
   import { loadStyle, prepareStatus, sendFiles } from './chain';
+  import { onFilesArrived } from './drop';
   import { frameLocale, pick } from './locale';
   import { currentTool } from './tool';
 
@@ -36,7 +37,8 @@
   /** 모양 파일을 받았다 (받기 전에는 버튼을 그리지 않아 모양 없는 버튼이 비치지 않는다) */
   let styled = $state(false);
   let open = $state(false);
-  let sending = $state(false);
+  let pending = $state.raw<AbortController>();
+  const sending = $derived(!!pending);
   let failed = $state(false);
   let trigger: HTMLButtonElement | undefined = $state();
   let panel: HTMLElement | undefined = $state();
@@ -134,21 +136,49 @@
     };
   });
 
+  // 받는 도구를 기다리는 사이 새 파일을 고르거나 현재 화면을 닫으면 지난 전환을 취소한다.
+  function cancelSend() {
+    pending?.abort();
+    pending = undefined;
+    open = false;
+  }
+
+  onDestroy(cancelSend);
+
   async function choose(target: Target) {
-    if (sending || !usable(target)) return;
-    sending = true;
+    if (pending || !usable(target)) return;
+    const controller = new AbortController();
+    pending = controller;
     failed = false;
+    const off = onFilesArrived(cancelSend);
+    controller.signal.addEventListener('abort', off, { once: true });
+    // 여러 장 도구의 ‘사진 추가’는 기존 목록에 바로 더하므로 FileDrop의 알림이 없다.
+    const fileChosen = (event: Event) => {
+      const input = event.target;
+      if (input instanceof HTMLInputElement && input.type === 'file' && input.files?.length)
+        cancelSend();
+    };
+    document.addEventListener('change', fileChosen, { capture: true, signal: controller.signal });
     try {
       const files = await collect();
-      if (files.length === 0) throw new Error('결과가 없습니다');
-      const chosen = target.multiple ? files : files.slice(0, 1);
-      await sendFiles(target.id, chosen, t.moved(target.name[frameLocale], chosen.length));
+      controller.signal.throwIfAborted();
+      if (files.length === 0 || (!target.multiple && files.length !== 1))
+        throw new Error('결과 파일 수가 바뀌었습니다');
+      await sendFiles(
+        target.id,
+        files,
+        t.moved(target.name[frameLocale], files.length),
+        controller.signal,
+      );
       // 여기까지 오면 이 부품은 앞 도구 화면과 함께 내려졌다
     } catch {
-      sending = false;
+      if (controller.signal.aborted) return;
+      pending = undefined;
       failed = true;
       await tick();
       items()[0]?.focus();
+    } finally {
+      controller.abort();
     }
   }
 </script>
