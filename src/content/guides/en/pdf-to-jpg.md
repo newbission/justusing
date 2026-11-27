@@ -3,7 +3,7 @@ title: How to convert PDF to JPG images
 description: Turn PDF pages into JPG or PNG images. Converting every page or only some, choosing between JPG and PNG, and the difference between 150 and 300 DPI.
 tool: pdf/to-image
 published: 2026-10-15
-updated: 2026-10-19
+updated: 2026-11-27
 order: 5
 ---
 
@@ -48,7 +48,7 @@ This is the same spot enlarged to the same size from the actual results at both 
 - **Password-protected PDFs** can be converted after you open them with the password. The images have no password, so store them carefully.
 - **Whole pages are drawn as they look.** Each image shows the page exactly as it appears on screen. To pull out only the photos inside a PDF at their original quality, use [Extract Images from PDF](/en/pdf/extract-images/).
 - **To go the other way** and put images into a PDF, use [Image to PDF](/en/pdf/from-image/).
-- If the images are too big, shrink them with [Compress Image](/en/image/compress/) or [Resize Image](/en/image/resize/).
+- If your images exceed a submission limit, choose **Send to… → Compress Image** after conversion. You can send several pages together. For a single page, the same menu also lets you crop its margins. To change the pixel dimensions, save the images and open [Resize Image](/en/image/resize/).
 
 ## Where does my file go?
 
