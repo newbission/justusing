@@ -12,14 +12,6 @@
  * ToolFrame이 신호를 받을 때만 이 모듈을 받는다 (도구 페이지 첫 화면 무게에 들지 않는다).
  */
 
-/** 지금 화면에 그려 둔 페이지의 경로 */
-let shown = location.pathname;
-
-addEventListener('popstate', () => {
-  // 같은 페이지 안의 # 이동은 경로가 같아 그대로 둔다
-  if (location.pathname !== shown) location.reload();
-});
-
 /** 같은 순서로 놓인 요소들의 속성을 다음 페이지 것으로 맞춘다 (메뉴처럼 모든 페이지에서 모양이 같은 곳) */
 function syncAttributes(next: Document, selector: string, names: string[]) {
   const mine = document.querySelectorAll(selector);
@@ -105,7 +97,6 @@ export async function preparePage(frame: HTMLIFrameElement, path: string, port: 
     frame.dataset.src = nextFrame.dataset.src;
 
     history.pushState(null, '', path);
-    shown = path;
     // 위쪽(머리) 높이가 달라진 만큼 바로 스크롤해 도구 칸을 그 자리에 둔다
     const moved = area.getBoundingClientRect().top - before;
     if (moved !== 0) scrollBy({ top: moved, behavior: 'instant' });

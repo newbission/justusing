@@ -63,6 +63,11 @@ import { ui } from '../i18n/ui';
     frame.src = frame.dataset.src + (theme ? `#theme=${theme}` : '');
     serveData(frame);
 
+    // 뒤로 가서 새로 열린 문서에서도 앞으로 가기를 받는다. 같은 도구 안의 해시 이동은 그대로 둔다.
+    addEventListener('popstate', () => {
+      if (frame.dataset.src !== location.pathname + 'frame/') location.reload();
+    });
+
     document.addEventListener('themechange', (event) => {
       const detail = (event as CustomEvent<string>).detail;
       frame.contentWindow?.postMessage({ type: 'theme', theme: detail }, '*');
