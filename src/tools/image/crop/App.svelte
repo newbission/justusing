@@ -306,17 +306,21 @@
   /** 받을 때와 같은 파일을 만들어 다음 도구로 넘긴다 (src/frame/SendTo.svelte). 만들지 못하면 까닭을 막대에 보인다 */
   async function sendResult(): Promise<File[]> {
     if (!photo || save.kind === 'saving') throw new Error('not ready');
+    const ticket = generation;
     const entitlement = await canUse('image/crop');
+    if (ticket !== generation) throw new Error('stale');
     if (!entitlement.allowed) throw new Error('not allowed');
     const wanted = { turn, rect, format, name: photo.name };
     save = { kind: 'saving' };
     try {
       const bytes = await exportImage(wanted.turn, wanted.rect, wanted.format, QUALITY);
+      if (ticket !== generation) throw new Error('stale');
       save = { kind: 'idle' };
       const name = `${baseName(wanted.name)}_${t.suffix}.${EXTENSIONS[wanted.format]}`;
       return [new File([bytes as Uint8Array<ArrayBuffer>], name, { type: wanted.format })];
     } catch (error) {
-      save = { kind: 'failed', reason: error instanceof CropError ? error.reason : 'tooLarge' };
+      if (ticket === generation)
+        save = { kind: 'failed', reason: error instanceof CropError ? error.reason : 'tooLarge' };
       throw error;
     }
   }

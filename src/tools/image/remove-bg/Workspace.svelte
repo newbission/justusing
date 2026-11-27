@@ -772,13 +772,17 @@
   async function sendOne(): Promise<File[]> {
     const entry = photo?.entry;
     if (!entry?.mask || !canSave) throw new Error('not ready');
+    const ticket = generation;
     const entitlement = await canUse('image/remove-bg');
+    if (ticket !== generation) throw new Error('stale');
     if (!entitlement.allowed) throw new Error('not allowed');
     save = { kind: 'saving' };
     try {
-      return [asFile(await exportOne(entry))];
+      const saved = await exportOne(entry);
+      if (ticket !== generation) throw new Error('stale');
+      return [asFile(saved)];
     } finally {
-      save = { kind: 'idle' };
+      if (ticket === generation) save = { kind: 'idle' };
     }
   }
 
